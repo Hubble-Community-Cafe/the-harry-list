@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class TheHarryListBackendApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(TheHarryListBackendApplication.class, args);
+        SpringApplication.run(TheHarryListBackendApplication.class, args);
 	}
 
 }
