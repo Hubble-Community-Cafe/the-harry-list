@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  build-test-security-docs:
+  mvn-testing:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,10 +17,12 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Run tests
+      - name: Run unit tests
         run: mvn test
+        working-directory: the-harry-list-backend
 
       - name: Check for security vulnerabilities
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: mvn org.owasp:dependency-check-maven:check
+        working-directory: the-harry-list-backend
