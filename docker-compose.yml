@@ -8,4 +8,22 @@ services:
         - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: tst
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/harrylist
     restart: unless-stopped
+
+  mariadb:
+    image: mariadb:latest
+    restart: always
+    ports:
+      - "3306:3306"
+    # all dummy info so is fine here
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: harrylist
+      MARIADB_USER: harryuser
+      MARIADB_PASSWORD: harrypass
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+volumes:
+  mariadb_data:
