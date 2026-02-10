@@ -1,0 +1,33 @@
+# Template for Portainer deployment (DO NOT PUT SECRETS HERE)
+version: '3.9'
+services:
+  the-harry-list-backend:
+    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-backend:latest
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+    ports:
+      - "9802:8080"
+    networks:
+      - harry-list
+      - mariadb_mariadb-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - TZ=Europe/Amsterdam
+      # Fill these in Portainer UI or in your private compose file:
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/harrylist
+      - SPRING_DATASOURCE_USERNAME=__FILL_IN__
+      - SPRING_DATASOURCE_PASSWORD=__FILL_IN__
+      - SPRING_SECURITY_USER_NAME=__FILL_IN__
+      - SPRING_SECURITY_USER_PASSWORD=__FILL_IN__
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MariaDBDialect
+      - SPRING_JPA_SHOW_SQL=false
+      - LOGGING_LEVEL_ROOT=INFO
+      - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG
+
+networks:
+  harry-list:
+  mariadb_mariadb-network:
+    external: true

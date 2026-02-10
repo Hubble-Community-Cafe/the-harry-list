@@ -4,3 +4,9 @@ target/
 *.log
 *.class
 .env
+
+# Docker Compose files with secrets (DO NOT COMMIT)
+docker-compose.portainer.yml
+docker-compose.prod.yml
+docker-compose.*.local.yml
+

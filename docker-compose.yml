@@ -1,29 +1,62 @@
-version: '3.8'
+# Local Development Docker Compose
+# This file is for LOCAL DEVELOPMENT ONLY
+# For Portainer deployment, use docker-compose.portainer.template.yml
+
+version: '3.9'
 services:
-  backend:
+  the-harry-list-backend:
     build:
       context: ./the-harry-list-backend
       dockerfile: Dockerfile
     ports:
-        - "8080:8080"
+      - "8080:8080"
+    networks:
+      - harry-list
+      - mariadb_mariadb-network
+    depends_on:
+      - mariadb
     environment:
-      SPRING_PROFILES_ACTIVE: tst
-      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/harrylist
-    restart: unless-stopped
+      # Spring Boot Configuration
+      - SPRING_PROFILES_ACTIVE=dev
+      - TZ=Europe/Amsterdam
+
+      # Database Configuration - UPDATE for your local setup
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/harrylist
+      - SPRING_DATASOURCE_USERNAME=harrylist_user
+      - SPRING_DATASOURCE_PASSWORD=local_dev_password
+
+      # JPA/Hibernate Configuration
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MariaDBDialect
+      - SPRING_JPA_SHOW_SQL=true
+
+      # Security Configuration
+      - SPRING_SECURITY_USER_NAME=admin
+      - SPRING_SECURITY_USER_PASSWORD=admin
+
+      # Logging
+      - LOGGING_LEVEL_ROOT=INFO
+      - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG
 
   mariadb:
     image: mariadb:latest
     restart: always
     ports:
       - "3306:3306"
-    # all dummy info so is fine here
     environment:
       MARIADB_ROOT_PASSWORD: rootpassword
       MARIADB_DATABASE: harrylist
-      MARIADB_USER: harryuser
-      MARIADB_PASSWORD: harrypass
+      MARIADB_USER: harrylist_user
+      MARIADB_PASSWORD: local_dev_password
     volumes:
       - mariadb_data:/var/lib/mysql
+    networks:
+      - mariadb_mariadb-network
 
 volumes:
   mariadb_data:
+
+networks:
+  harry-list:
+  mariadb_mariadb-network:
+    external: false
