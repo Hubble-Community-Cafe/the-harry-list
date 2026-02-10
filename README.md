@@ -1,5 +1,5 @@
 # The Harry List 
-Bar Reservation System for Stichting Bar Potential
+Bar Reservation System for Stichting Bar Potential Under Development
 
 ## 🚀 Quick Start
 
