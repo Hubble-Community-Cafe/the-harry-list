@@ -64,14 +64,32 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - TZ=Europe/Amsterdam
+      
+      # Database Configuration
       - SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/harrylist
       - SPRING_DATASOURCE_USERNAME=harrylist_user
       - SPRING_DATASOURCE_PASSWORD=YOUR_DB_PASSWORD_HERE
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MariaDBDialect
       - SPRING_JPA_SHOW_SQL=false
+      
+      # Security Configuration
       - SPRING_SECURITY_USER_NAME=admin
       - SPRING_SECURITY_USER_PASSWORD=YOUR_ADMIN_PASSWORD_HERE
+      
+      # Email Configuration (Microsoft Graph - Recommended)
+      # Use 'graph' for Microsoft 365 or 'smtp' for traditional email
+      # Leave empty to disable email notifications
+      - APP_MAIL_PROVIDER=graph
+      - APP_MAIL_FROM=noreply@hubble.cafe
+      - APP_MAIL_STAFF=info@hubble.cafe
+      
+      # Microsoft Graph Configuration (See MICROSOFT_GRAPH_SETUP.md)
+      - GRAPH_TENANT_ID=YOUR_TENANT_ID_HERE
+      - GRAPH_CLIENT_ID=YOUR_CLIENT_ID_HERE
+      - GRAPH_CLIENT_SECRET=YOUR_CLIENT_SECRET_HERE
+      
+      # Logging
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG
 
@@ -85,11 +103,27 @@ networks:
    - `YOUR_GITHUB_USERNAME` → Your GitHub username (e.g., `pimvanleeuwen`)
    - `YOUR_DB_PASSWORD_HERE` → Your database password from step 1
    - `YOUR_ADMIN_PASSWORD_HERE` → Choose a secure password for API access
+   - `YOUR_TENANT_ID_HERE` → Azure AD Tenant ID (see MICROSOFT_GRAPH_SETUP.md)
+   - `YOUR_CLIENT_ID_HERE` → Azure AD Client ID (see MICROSOFT_GRAPH_SETUP.md)
+   - `YOUR_CLIENT_SECRET_HERE` → Azure AD Client Secret (see MICROSOFT_GRAPH_SETUP.md)
    - `db` in the database URL → Your actual MariaDB container name (if different)
+
+   **Note**: To disable email notifications during initial setup, set `APP_MAIL_PROVIDER=` (empty) and skip the Graph variables.
 
 5. **Click "Deploy the stack"**
 
-### 4️⃣ Verify Deployment
+### 4️⃣ (Optional) Configure Email Notifications
+
+To enable email notifications for reservation events:
+
+1. **Follow the setup guide**: [MICROSOFT_GRAPH_SETUP.md](MICROSOFT_GRAPH_SETUP.md)
+2. **Get your Azure AD credentials** (takes ~5 minutes)
+3. **Update your stack** in Portainer with the Graph credentials
+4. **Redeploy** the stack
+
+You can deploy without email first and add it later!
+
+### 5️⃣ Verify Deployment
 
 1. **Check container logs** in Portainer:
    - Go to **Containers**

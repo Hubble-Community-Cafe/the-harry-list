@@ -3,12 +3,14 @@ package com.pimvanleeuwen.the_harry_list_backend.controller;
 import com.pimvanleeuwen.the_harry_list_backend.dto.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
+import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.ReservationMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +29,9 @@ public class AdminReservationController {
     private final ReservationRepository reservationRepository;
     private final ReservationMapper reservationMapper;
 
+    @Autowired(required = false)
+    private EmailNotificationService emailService;
+
     public AdminReservationController(ReservationRepository reservationRepository, ReservationMapper reservationMapper) {
         this.reservationRepository = reservationRepository;
         this.reservationMapper = reservationMapper;
@@ -37,17 +42,29 @@ public class AdminReservationController {
     public ResponseEntity<Reservation> updateStatus(
             @PathVariable Long id,
             @RequestParam ReservationStatus status,
-            @RequestParam(required = false) String confirmedBy) {
+            @RequestParam(required = false) String confirmedBy,
+            @RequestParam(required = false, defaultValue = "true") boolean sendEmail) {
 
-        log.info("Updating reservation {} status to {}", id, status);
+        log.info("Updating reservation {} status to {} (sendEmail: {})", id, status, sendEmail);
 
         return reservationRepository.findById(id)
                 .map(reservation -> {
+                    ReservationStatus oldStatus = reservation.getStatus();
                     reservation.setStatus(status);
                     if (confirmedBy != null && status == ReservationStatus.CONFIRMED) {
                         reservation.setConfirmedBy(confirmedBy);
                     }
                     com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
+
+                    // Send email notification if enabled
+                    if (sendEmail && emailService != null) {
+                        try {
+                            emailService.sendStatusChangeEmail(saved, oldStatus, confirmedBy);
+                        } catch (Exception e) {
+                            log.error("Failed to send status change email, but status was updated successfully", e);
+                        }
+                    }
+
                     return ResponseEntity.ok(reservationMapper.toDto(saved));
                 })
                 .orElse(ResponseEntity.notFound().build());

@@ -15,15 +15,33 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - TZ=Europe/Amsterdam
-      # Fill these in Portainer UI or in your private compose file:
+
+      # Database Configuration
       - SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/harrylist
       - SPRING_DATASOURCE_USERNAME=__FILL_IN__
       - SPRING_DATASOURCE_PASSWORD=__FILL_IN__
-      - SPRING_SECURITY_USER_NAME=__FILL_IN__
-      - SPRING_SECURITY_USER_PASSWORD=__FILL_IN__
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MariaDBDialect
       - SPRING_JPA_SHOW_SQL=false
+
+      # Security Configuration
+      - SPRING_SECURITY_USER_NAME=__FILL_IN__
+      - SPRING_SECURITY_USER_PASSWORD=__FILL_IN__
+
+      # Email Configuration (Microsoft Graph for Microsoft 365)
+      # Set APP_MAIL_ENABLED=false to disable email notifications
+      # See MICROSOFT_GRAPH_SETUP.md for Azure AD setup instructions
+      - APP_MAIL_ENABLED=true
+      - APP_MAIL_FROM=noreply@hubble.cafe
+      - APP_MAIL_STAFF=info@hubble.cafe
+      - APP_BAR_NAME=Hubble and Meteor Community Cafes
+
+      # Microsoft Graph Configuration (required for email)
+      - GRAPH_TENANT_ID=__FILL_IN__
+      - GRAPH_CLIENT_ID=__FILL_IN__
+      - GRAPH_CLIENT_SECRET=__FILL_IN__
+
+      # Logging
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG
 

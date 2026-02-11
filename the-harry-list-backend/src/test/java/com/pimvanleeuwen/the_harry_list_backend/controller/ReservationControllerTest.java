@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -123,7 +124,7 @@ class ReservationControllerTest {
         // Given
         sampleReservation.setId(1L);
         sampleReservation.setContactName("Updated Name");
-        when(updateReservationService.execute(any(Reservation.class)))
+        when(updateReservationService.executeWithEmail(any(Reservation.class), anyBoolean()))
                 .thenReturn(ResponseEntity.ok(sampleReservation));
 
         // When & Then
@@ -139,7 +140,7 @@ class ReservationControllerTest {
     @WithMockUser
     void deleteReservation_shouldReturnNoContent() throws Exception {
         // Given
-        when(deleteReservationService.execute(1L)).thenReturn(ResponseEntity.noContent().build());
+        when(deleteReservationService.executeWithEmail(1L, true)).thenReturn(ResponseEntity.noContent().build());
 
         // When & Then
         mockMvc.perform(delete("/api/reservations/1")
@@ -151,7 +152,7 @@ class ReservationControllerTest {
     @WithMockUser
     void deleteReservation_shouldReturnNotFoundWhenNotExists() throws Exception {
         // Given
-        when(deleteReservationService.execute(999L)).thenReturn(ResponseEntity.notFound().build());
+        when(deleteReservationService.executeWithEmail(999L, true)).thenReturn(ResponseEntity.notFound().build());
 
         // When & Then
         mockMvc.perform(delete("/api/reservations/999")

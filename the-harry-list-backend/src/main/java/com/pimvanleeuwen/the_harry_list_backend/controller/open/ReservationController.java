@@ -59,16 +59,21 @@ public class ReservationController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update a reservation", description = "Update an existing reservation (staff only)")
-    public ResponseEntity<Reservation> updateReservation(@PathVariable Long id, @Valid @RequestBody Reservation reservation) {
+    @Operation(summary = "Update a reservation", description = "Update an existing reservation (staff only). Set sendEmail=false to skip email notification.")
+    public ResponseEntity<Reservation> updateReservation(
+            @PathVariable Long id,
+            @Valid @RequestBody Reservation reservation,
+            @RequestParam(required = false, defaultValue = "true") boolean sendEmail) {
         reservation.setId(id);
-        return updateReservationService.execute(reservation);
+        return updateReservationService.executeWithEmail(reservation, sendEmail);
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a reservation", description = "Delete a reservation by its ID (staff only)")
-    public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
-        return deleteReservationService.execute(id);
+    @Operation(summary = "Delete a reservation", description = "Delete a reservation by its ID (staff only). Set sendEmail=false to skip email notification.")
+    public ResponseEntity<Void> deleteReservation(
+            @PathVariable Long id,
+            @RequestParam(required = false, defaultValue = "true") boolean sendEmail) {
+        return deleteReservationService.executeWithEmail(id, sendEmail);
     }
 
 }
