@@ -24,13 +24,13 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
             .csrf(csrf -> csrf.disable()) // Disable CSRF for API
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints - no authentication required
+                // Public endpoints - no authentication required (ORDER MATTERS!)
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/api/options/**").permitAll()
 
-                // Public reservation submission - anyone can create a reservation
+                // Public reservation submission - MUST come before /api/reservations/**
                 .requestMatchers(HttpMethod.POST, "/api/public/reservations").permitAll()
+                .requestMatchers("/api/options/**").permitAll()
 
                 // Protected endpoints - authentication required
                 .requestMatchers("/api/reservations/**").authenticated()
