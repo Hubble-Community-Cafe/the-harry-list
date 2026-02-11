@@ -1,24 +1,33 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller.open;
 
-import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
+import com.pimvanleeuwen.the_harry_list_backend.dto.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.service.CreateReservationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.DeleteReservationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.GetReservationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.UpdateReservationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Staff/Admin controller for managing reservations.
+ * All endpoints require authentication.
+ * Use this to view, edit, and delete reservations submitted by users.
+ */
 @RestController
+@RequestMapping("/api/reservations")
+@Tag(name = "Staff - Reservations", description = "Staff endpoints for managing reservations (login required)")
+@SecurityRequirement(name = "basicAuth")
 public class ReservationController {
 
     private final GetReservationService getReservationService;
-
     private final DeleteReservationService deleteReservationService;
-
     private final CreateReservationService createReservationService;
-
     private final UpdateReservationService updateReservationService;
 
     public ReservationController(GetReservationService getReservationService,
@@ -31,26 +40,35 @@ public class ReservationController {
         this.updateReservationService = updateReservationService;
     }
 
-    @GetMapping("/reservations/all")
+    @GetMapping
+    @Operation(summary = "Get all reservations", description = "Retrieve a list of all reservations (staff only)")
     public ResponseEntity<List<Reservation>> getReservations() {
-
-        System.out.println("GET /reservations/all called");
         return getReservationService.execute(null);
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "Get reservation by ID", description = "Retrieve a single reservation by its ID (staff only)")
+    public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
+        return getReservationService.getById(id);
+    }
+
     @PostMapping
-    public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation) {
-        return createReservationService.execute(null);
+    @Operation(summary = "Create a reservation (staff)", description = "Create a new reservation as staff member")
+    public ResponseEntity<Reservation> createReservation(@Valid @RequestBody Reservation reservation) {
+        return createReservationService.execute(reservation);
     }
 
-    @PutMapping
-    public ResponseEntity<Reservation> updateReservation(@RequestBody Reservation reservation) {
-        return updateReservationService.execute(null);
+    @PutMapping("/{id}")
+    @Operation(summary = "Update a reservation", description = "Update an existing reservation (staff only)")
+    public ResponseEntity<Reservation> updateReservation(@PathVariable Long id, @Valid @RequestBody Reservation reservation) {
+        reservation.setId(id);
+        return updateReservationService.execute(reservation);
     }
 
-    @DeleteMapping
-    public ResponseEntity<Reservation> deleteReservation(@RequestParam long id) {
-        return deleteReservationService.execute(null);
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a reservation", description = "Delete a reservation by its ID (staff only)")
+    public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
+        return deleteReservationService.execute(id);
     }
 
 }

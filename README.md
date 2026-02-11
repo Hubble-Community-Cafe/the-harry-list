@@ -57,11 +57,12 @@ See `application-prod.properties` for all available options.
 - Database passwords should be stored securely
 - Consider using Portainer secrets for sensitive values
 
-## 🧪 Testing
+## 🧪 Unit Testing
 
+Run the test suite:
 ```bash
 cd the-harry-list-backend
-mvn test
+./mvnw test
 ```
 
 ## 📦 CI/CD

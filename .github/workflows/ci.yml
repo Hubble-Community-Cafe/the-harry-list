@@ -21,11 +21,12 @@ jobs:
         run: mvn test
         working-directory: the-harry-list-backend
 
-      - name: Check for security vulnerabilities
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: mvn org.owasp:dependency-check-maven:check
-        working-directory: the-harry-list-backend
+      # Commented out until NVD_API_KEY is configured - can take 20+ minutes without it
+      # - name: Check for security vulnerabilities
+      #   env:
+      #     NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+      #   run: mvn org.owasp:dependency-check-maven:check
+      #   working-directory: the-harry-list-backend
 
   docker-build-push:
     runs-on: ubuntu-latest

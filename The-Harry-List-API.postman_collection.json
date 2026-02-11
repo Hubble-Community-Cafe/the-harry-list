@@ -1,0 +1,324 @@
+{
+  "info": {
+    "name": "The Harry List API",
+    "description": "Postman collection for testing The Harry List reservation API.\n\n## Authentication\n\n**Public Endpoints (No Login):**\n- POST /api/public/reservations - Submit a reservation\n- GET /api/options/* - Form options\n\n**Staff Endpoints (Login Required):**\n- All /api/reservations/* endpoints\n- All /api/admin/* endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "admin",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "admin",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Public (No Login Required)",
+      "item": [
+        {
+          "name": "Submit Reservation (Public)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactName\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phoneNumber\": \"+31612345678\",\n  \"organizationName\": \"Test Association\",\n  \"eventTitle\": \"Annual Borrel\",\n  \"description\": \"Our yearly drinks event\",\n  \"eventType\": \"BORREL\",\n  \"organizerType\": \"ASSOCIATION\",\n  \"expectedGuests\": 50,\n  \"eventDate\": \"2026-03-15\",\n  \"startTime\": \"16:00:00\",\n  \"endTime\": \"22:00:00\",\n  \"location\": \"HUBBLE\",\n  \"paymentOption\": \"PIN\",\n  \"foodRequired\": true,\n  \"dietaryPreference\": \"VEGETARIAN\",\n  \"termsAccepted\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/public/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "public", "reservations"]
+            },
+            "description": "Submit a new reservation request. NO LOGIN REQUIRED.\n\nAfter submission, users cannot view or edit their reservation.\nStaff will contact them via email."
+          }
+        },
+        {
+          "name": "Get All Form Options",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/options/all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "options", "all"]
+            },
+            "description": "Get all dropdown options for the reservation form. NO LOGIN REQUIRED."
+          }
+        },
+        {
+          "name": "Get Event Types",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/options/event-types",
+              "host": ["{{base_url}}"],
+              "path": ["api", "options", "event-types"]
+            }
+          }
+        },
+        {
+          "name": "Get Organizer Types",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/options/organizer-types",
+              "host": ["{{base_url}}"],
+              "path": ["api", "options", "organizer-types"]
+            }
+          }
+        },
+        {
+          "name": "Get Payment Options",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/options/payment-options",
+              "host": ["{{base_url}}"],
+              "path": ["api", "options", "payment-options"]
+            }
+          }
+        },
+        {
+          "name": "Get Locations",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/options/locations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "options", "locations"]
+            }
+          }
+        },
+        {
+          "name": "Get Dietary Preferences",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/options/dietary-preferences",
+              "host": ["{{base_url}}"],
+              "path": ["api", "options", "dietary-preferences"]
+            }
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/health",
+              "host": ["{{base_url}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Check if the application is running"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Staff - Manage Reservations (Login Required)",
+      "item": [
+        {
+          "name": "Get All Reservations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations"]
+            },
+            "description": "Retrieve all reservations. LOGIN REQUIRED."
+          }
+        },
+        {
+          "name": "Get Reservation by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reservations/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", "1"]
+            },
+            "description": "Retrieve a single reservation by ID. LOGIN REQUIRED."
+          }
+        },
+        {
+          "name": "Create Reservation (Staff)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactName\": \"Staff Created\",\n  \"email\": \"staff@example.com\",\n  \"phoneNumber\": \"+31612345678\",\n  \"eventTitle\": \"Staff Created Event\",\n  \"eventType\": \"BORREL\",\n  \"organizerType\": \"ASSOCIATION\",\n  \"expectedGuests\": 50,\n  \"eventDate\": \"2026-03-15\",\n  \"startTime\": \"16:00:00\",\n  \"endTime\": \"22:00:00\",\n  \"location\": \"HUBBLE\",\n  \"paymentOption\": \"PIN\",\n  \"termsAccepted\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations"]
+            },
+            "description": "Create a reservation as staff (returns full details). LOGIN REQUIRED."
+          }
+        },
+        {
+          "name": "Update Reservation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactName\": \"John Doe Updated\",\n  \"email\": \"john.doe@example.com\",\n  \"phoneNumber\": \"+31612345678\",\n  \"eventTitle\": \"Annual Borrel - Updated\",\n  \"eventType\": \"BORREL\",\n  \"organizerType\": \"ASSOCIATION\",\n  \"expectedGuests\": 60,\n  \"eventDate\": \"2026-03-15\",\n  \"startTime\": \"17:00:00\",\n  \"endTime\": \"23:00:00\",\n  \"location\": \"HUBBLE\",\n  \"paymentOption\": \"INVOICE\",\n  \"termsAccepted\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reservations/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", "1"]
+            },
+            "description": "Update an existing reservation. LOGIN REQUIRED."
+          }
+        },
+        {
+          "name": "Delete Reservation",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reservations/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", "1"]
+            },
+            "description": "Delete a reservation by ID. LOGIN REQUIRED."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Actions (Login Required)",
+      "item": [
+        {
+          "name": "Update Reservation Status",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/reservations/1/status?status=CONFIRMED&confirmedBy=admin",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "reservations", "1", "status"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "CONFIRMED",
+                  "description": "Options: PENDING, CONFIRMED, REJECTED, CANCELLED, COMPLETED"
+                },
+                {
+                  "key": "confirmedBy",
+                  "value": "admin"
+                }
+              ]
+            },
+            "description": "Update the status of a reservation. LOGIN REQUIRED.\n\nStatus options:\n- PENDING\n- CONFIRMED\n- REJECTED\n- CANCELLED\n- COMPLETED"
+          }
+        },
+        {
+          "name": "Update Internal Notes",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "text/plain"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "Customer called to confirm special dietary requirements. Table reserved upstairs."
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/reservations/1/notes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "reservations", "1", "notes"]
+            },
+            "description": "Update internal notes for a reservation. LOGIN REQUIRED."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Swagger UI",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/swagger-ui/index.html",
+          "host": ["{{base_url}}"],
+          "path": ["swagger-ui", "index.html"]
+        },
+        "description": "Open Swagger UI in browser"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}
+
