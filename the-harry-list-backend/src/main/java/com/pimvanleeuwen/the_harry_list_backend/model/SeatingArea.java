@@ -6,7 +6,7 @@ package com.pimvanleeuwen.the_harry_list_backend.model;
 public enum SeatingArea {
     INSIDE("Inside"),
     OUTSIDE("Outside (Terrace)"),
-    BOTH("Both / No Preference");
+    BOTH("No Preference");
 
     private final String displayName;
 
