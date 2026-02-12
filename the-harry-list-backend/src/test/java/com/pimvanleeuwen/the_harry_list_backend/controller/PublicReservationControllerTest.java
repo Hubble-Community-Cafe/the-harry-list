@@ -54,6 +54,7 @@ class PublicReservationControllerTest {
     void submitReservation_shouldWorkWithoutAuthentication() throws Exception {
         // Given
         sampleReservation.setId(1L);
+        sampleReservation.setConfirmationNumber("ABC123");
         when(createReservationService.execute(any(Reservation.class)))
                 .thenReturn(ResponseEntity.status(201).body(sampleReservation));
 
@@ -62,7 +63,7 @@ class PublicReservationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(sampleReservation)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.confirmationNumber").value(1))
+                .andExpect(jsonPath("$.confirmationNumber").value("ABC123"))
                 .andExpect(jsonPath("$.eventTitle").value("Annual Borrel"))
                 .andExpect(jsonPath("$.contactName").value("John Doe"))
                 .andExpect(jsonPath("$.email").value("john@example.com"))
@@ -73,6 +74,7 @@ class PublicReservationControllerTest {
     void submitReservation_shouldReturnConfirmationMessage() throws Exception {
         // Given
         sampleReservation.setId(42L);
+        sampleReservation.setConfirmationNumber("XYZ789");
         when(createReservationService.execute(any(Reservation.class)))
                 .thenReturn(ResponseEntity.status(201).body(sampleReservation));
 
@@ -81,7 +83,7 @@ class PublicReservationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(sampleReservation)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.confirmationNumber").value(42))
+                .andExpect(jsonPath("$.confirmationNumber").value("XYZ789"))
                 .andExpect(jsonPath("$.message").value(
                     "Your reservation request has been submitted successfully. " +
                     "We will review your request and contact you at john@example.com soon."
