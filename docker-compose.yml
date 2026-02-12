@@ -44,34 +44,36 @@ services:
     build:
       context: ./the-harry-list-public
       dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=http://localhost:8080
     ports:
       - "5173:80"
     networks:
       - harry-list
     depends_on:
       - the-harry-list-backend
+    environment:
+      # Runtime configuration (injected at container startup)
+      - API_URL=http://localhost:8080
 
   # Admin Portal Frontend
   the-harry-list-admin:
     build:
       context: ./the-harry-list-admin
       dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=http://localhost:8080
-        - VITE_API_USERNAME=admin
-        - VITE_API_PASSWORD=admin
-        - VITE_DEV_MODE=true
-        - VITE_AZURE_CLIENT_ID=${VITE_AZURE_CLIENT_ID:-}
-        - VITE_AZURE_TENANT_ID=${VITE_AZURE_TENANT_ID:-}
-        - VITE_REDIRECT_URI=http://localhost:5174
     ports:
       - "5174:80"
     networks:
       - harry-list
     depends_on:
       - the-harry-list-backend
+    environment:
+      # Runtime configuration (injected at container startup)
+      - API_URL=http://localhost:8080
+      # Azure AD - set these in .env file or environment for Microsoft login
+      # Leave empty to use dev mode authentication
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
+      - REDIRECT_URI=http://localhost:5174
+      - ALLOWED_GROUP_ID=${ALLOWED_GROUP_ID:-}
 
   # Local MariaDB for development
   mariadb:

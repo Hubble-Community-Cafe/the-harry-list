@@ -30,6 +30,14 @@ const AZURE_CLIENT_ID = getConfig('AZURE_CLIENT_ID', 'VITE_AZURE_CLIENT_ID');
 const AZURE_TENANT_ID = getConfig('AZURE_TENANT_ID', 'VITE_AZURE_TENANT_ID');
 const REDIRECT_URI = getConfig('REDIRECT_URI', 'VITE_REDIRECT_URI') || window.location.origin;
 
+// Debug logging for auth configuration
+console.log('Auth Config:', {
+  clientId: AZURE_CLIENT_ID ? `${AZURE_CLIENT_ID.substring(0, 8)}...` : '(not set)',
+  tenantId: AZURE_TENANT_ID ? `${AZURE_TENANT_ID.substring(0, 8)}...` : '(not set)',
+  redirectUri: REDIRECT_URI,
+  runtimeConfig: window.__RUNTIME_CONFIG__ ? 'loaded' : 'not loaded',
+});
+
 // Allowed group ID - only members of this group can access the admin portal
 export const ALLOWED_GROUP_ID = getConfig('ALLOWED_GROUP_ID', 'VITE_ALLOWED_GROUP_ID');
 

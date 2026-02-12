@@ -84,7 +84,7 @@ services:
       - APP_MAIL_FROM=noreply@hubble.cafe
       - APP_MAIL_STAFF=info@hubble.cafe
       
-      # Microsoft Graph Configuration (See MICROSOFT_GRAPH_SETUP.md)
+      # Microsoft Graph Configuration
       - GRAPH_TENANT_ID=YOUR_TENANT_ID_HERE
       - GRAPH_CLIENT_ID=YOUR_CLIENT_ID_HERE
       - GRAPH_CLIENT_SECRET=YOUR_CLIENT_SECRET_HERE
@@ -103,9 +103,9 @@ networks:
    - `YOUR_GITHUB_USERNAME` → Your GitHub username (e.g., `pimvanleeuwen`)
    - `YOUR_DB_PASSWORD_HERE` → Your database password from step 1
    - `YOUR_ADMIN_PASSWORD_HERE` → Choose a secure password for API access
-   - `YOUR_TENANT_ID_HERE` → Azure AD Tenant ID (see MICROSOFT_GRAPH_SETUP.md)
-   - `YOUR_CLIENT_ID_HERE` → Azure AD Client ID (see MICROSOFT_GRAPH_SETUP.md)
-   - `YOUR_CLIENT_SECRET_HERE` → Azure AD Client Secret (see MICROSOFT_GRAPH_SETUP.md)
+   - `YOUR_TENANT_ID_HERE` → Azure AD Tenant ID 
+   - `YOUR_CLIENT_ID_HERE` → Azure AD Client ID
+   - `YOUR_CLIENT_SECRET_HERE` → Azure AD Client Secret 
    - `db` in the database URL → Your actual MariaDB container name (if different)
 
    **Note**: To disable email notifications during initial setup, set `APP_MAIL_PROVIDER=` (empty) and skip the Graph variables.
@@ -116,10 +116,9 @@ networks:
 
 To enable email notifications for reservation events:
 
-1. **Follow the setup guide**: [MICROSOFT_GRAPH_SETUP.md](MICROSOFT_GRAPH_SETUP.md)
-2. **Get your Azure AD credentials** (takes ~5 minutes)
-3. **Update your stack** in Portainer with the Graph credentials
-4. **Redeploy** the stack
+1 **Get your Azure AD credentials** (takes ~5 minutes)
+2 **Update your stack** in Portainer with the Graph credentials
+3 **Redeploy** the stack
 
 You can deploy without email first and add it later!
 

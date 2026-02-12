@@ -20,7 +20,7 @@ services:
       - TZ=Europe/Amsterdam
 
       # Database Configuration
-      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/harry_list
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/harrylist
       - SPRING_DATASOURCE_USERNAME=__DB_USERNAME__
       - SPRING_DATASOURCE_PASSWORD=__DB_PASSWORD__
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update

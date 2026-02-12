@@ -37,17 +37,11 @@ export function LoginPage() {
     setError(null);
 
     try {
-      await instance.loginPopup(loginRequest);
-      // If env credentials exist, go directly to dashboard
-      if (hasEnvCreds) {
-        navigate('/');
-      } else {
-        setStep('api');
-      }
+      // Use redirect instead of popup - more reliable across browsers
+      await instance.loginRedirect(loginRequest);
     } catch (err) {
       setError('Microsoft login failed. Please try again.');
       console.error(err);
-    } finally {
       setIsLoading(false);
     }
   };
