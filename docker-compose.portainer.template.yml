@@ -47,6 +47,7 @@ services:
       # Azure AD Configuration (for OAuth2 JWT authentication from admin portal)
       # Same tenant ID as GRAPH_TENANT_ID
       - AZURE_TENANT_ID=__AZURE_TENANT_ID__
+      - AZURE_CLIENT_ID=__AZURE_CLIENT_ID__
 
       # Logging
       - LOGGING_LEVEL_ROOT=INFO
