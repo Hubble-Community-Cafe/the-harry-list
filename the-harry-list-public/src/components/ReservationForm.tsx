@@ -5,7 +5,7 @@ import { z } from 'zod';
 import {
   User, Mail, Phone, Building2, Calendar, MapPin,
   CreditCard, UtensilsCrossed, MessageSquare, Send, Loader2,
-  ChevronRight, ChevronLeft, Sparkles
+  ChevronRight, ChevronLeft, Sparkles, Plus, Minus, CalendarDays
 } from 'lucide-react';
 import { submitReservation, fetchFormOptions } from '../lib/api';
 import type { ReservationFormData } from '../types/reservation';
@@ -39,7 +39,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   eventType: z.string().min(1, 'Please select an event type'),
   organizerType: z.string().min(1, 'Please select an organizer type'),
-  expectedGuests: z.number().min(1, 'Expected guests must be at least 1'),
+  expectedGuests: z.number().min(8, 'Minimum reservation size is 8 people'),
   eventDate: z.string().min(1, 'Please select a date'),
   startTime: z.string().min(1, 'Please select a start time'),
   endTime: z.string().min(1, 'Please select an end time'),
@@ -125,13 +125,14 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
     handleSubmit,
     watch,
     trigger,
+    setValue,
     formState: { errors },
   } = useForm<ReservationFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       foodRequired: false,
       termsAccepted: false,
-      expectedGuests: 10,
+      expectedGuests: 8,
     },
   });
 
@@ -377,14 +378,39 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               </div>
 
               <div className="form-group">
-                <label className="label">Expected Guests *</label>
-                <input
-                  type="number"
-                  {...register('expectedGuests', { valueAsNumber: true })}
-                  className="input-field"
-                  min="1"
-                  placeholder="50"
-                />
+                <label className="label">Expected Number of Guests *</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = watch('expectedGuests') || 8;
+                      if (current > 8) setValue('expectedGuests', current - 1);
+                    }}
+                    className="w-12 h-12 rounded-xl bg-dark-800 border border-dark-700 flex items-center justify-center text-dark-400 hover:text-white hover:bg-dark-700 hover:border-hubble-500 transition-all disabled:opacity-50"
+                    disabled={watch('expectedGuests') <= 8}
+                  >
+                    <Minus className="w-5 h-5" />
+                  </button>
+                  <div className="flex-1 relative">
+                    <input
+                      type="number"
+                      {...register('expectedGuests', { valueAsNumber: true })}
+                      className="input-field text-center text-xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      min="8"
+                      placeholder="50"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = watch('expectedGuests') || 8;
+                      setValue('expectedGuests', current + 1);
+                    }}
+                    className="w-12 h-12 rounded-xl bg-dark-800 border border-dark-700 flex items-center justify-center text-dark-400 hover:text-white hover:bg-dark-700 hover:border-hubble-500 transition-all"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
                 {errors.expectedGuests && <p className="error-text">{errors.expectedGuests.message}</p>}
                 {/* Guest count constraints */}
                 <div className="mt-2 text-xs text-dark-400 space-y-1">
@@ -397,12 +423,15 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
 
               <div className="form-group">
                 <label className="label">Event Date *</label>
-                <input
-                  type="date"
-                  {...register('eventDate')}
-                  className="input-field"
-                  min={new Date().toISOString().split('T')[0]}
-                />
+                <div className="relative">
+                  <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 pointer-events-none" />
+                  <input
+                    type="date"
+                    {...register('eventDate')}
+                    className="input-field pl-10 pr-4 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
                 {errors.eventDate && <p className="error-text">{errors.eventDate.message}</p>}
               </div>
 
