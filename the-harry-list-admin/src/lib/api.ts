@@ -79,8 +79,23 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<an
   }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message || 'Request failed');
+    let errorMessage = 'Request failed';
+    try {
+      const errorData = await response.json();
+      // Handle Spring Boot validation errors
+      if (errorData.errors && Array.isArray(errorData.errors)) {
+        errorMessage = errorData.errors.map((e: any) => e.defaultMessage || e.message).join(', ');
+      } else if (errorData.message) {
+        errorMessage = errorData.message;
+      } else if (errorData.error) {
+        errorMessage = errorData.error;
+      } else {
+        errorMessage = JSON.stringify(errorData);
+      }
+    } catch {
+      errorMessage = `Request failed with status ${response.status}`;
+    }
+    throw new Error(errorMessage);
   }
 
   // Handle empty responses (e.g., DELETE)
@@ -102,9 +117,18 @@ export async function fetchReservation(id: number) {
 }
 
 export async function updateReservation(id: number, data: any, sendEmail: boolean = true) {
+  // Clean up empty strings to null for enum fields that the backend expects
+  const cleanedData = { ...data };
+  const enumFields = ['dietaryPreference', 'seatingArea', 'eventType', 'organizerType', 'location', 'paymentOption'];
+  enumFields.forEach(field => {
+    if (cleanedData[field] === '') {
+      cleanedData[field] = null;
+    }
+  });
+
   return fetchWithAuth(`${API_BASE_URL}/api/reservations/${id}?sendEmail=${sendEmail}`, {
     method: 'PUT',
-    body: JSON.stringify(data),
+    body: JSON.stringify(cleanedData),
   });
 }
 
