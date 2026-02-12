@@ -111,7 +111,11 @@ public class CalendarFeedController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("text/calendar; charset=utf-8"));
         headers.set("Content-Disposition", "inline; filename=\"" + filename + "\"");
-        headers.setCacheControl("public, max-age=300"); // 5 minutes cache
+        // Short cache time to encourage frequent refreshes
+        // Note: Google Calendar may still cache longer, but this helps other clients
+        headers.setCacheControl("no-cache, no-store, must-revalidate");
+        headers.set("Pragma", "no-cache");
+        headers.set("Expires", "0");
 
         return ResponseEntity.ok()
                 .headers(headers)

@@ -94,6 +94,9 @@ public class ICalendarService {
         ics.append("METHOD:PUBLISH\r\n");
         ics.append("X-WR-CALNAME:").append(calendarName).append("\r\n");
         ics.append("X-WR-TIMEZONE:").append(TIMEZONE).append("\r\n");
+        // Hint to calendar apps to refresh every 15 minutes (PT15M)
+        ics.append("REFRESH-INTERVAL;VALUE=DURATION:PT15M\r\n");
+        ics.append("X-PUBLISHED-TTL:PT15M\r\n");
         ics.append(getTimezoneDefinition());
 
         for (Reservation reservation : reservations) {
