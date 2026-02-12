@@ -16,8 +16,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ReservationSubmissionResponse {
 
-    /** Confirmation number (reservation ID) */
-    private Long confirmationNumber;
+    /** Confirmation number (e.g., "A3X7K9") */
+    private String confirmationNumber;
 
     /** Event title for reference */
     private String eventTitle;

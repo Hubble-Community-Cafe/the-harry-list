@@ -10,6 +10,7 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Random;
 
 /**
  * Reservation entity representing a bar/event reservation.
@@ -24,6 +25,10 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
+
+    /** Random confirmation number for the reservation (e.g., "A3X7K9") */
+    @Column(name = "confirmation_number", unique = true, nullable = false, length = 6)
+    private String confirmationNumber;
 
     // ===== Contact Information =====
 
@@ -102,6 +107,11 @@ public class Reservation {
     @Column(name = "location", nullable = false)
     @Enumerated(EnumType.STRING)
     private BarLocation location;
+
+    /** Seating area preference (inside/outside) */
+    @Column(name = "seating_area")
+    @Enumerated(EnumType.STRING)
+    private SeatingArea seatingArea;
 
     /** Specific area within the bar (if applicable) */
     @Column(name = "specific_area")
@@ -198,10 +208,27 @@ public class Reservation {
         if (status == null) {
             status = ReservationStatus.PENDING;
         }
+        if (confirmationNumber == null) {
+            confirmationNumber = generateConfirmationNumber();
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Generate a random 6-character alphanumeric confirmation number.
+     * Format: XXXXXX (e.g., "A3X7K9")
+     */
+    private String generateConfirmationNumber() {
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Exclude similar looking chars (I, O, 0, 1)
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder(6);
+        for (int i = 0; i < 6; i++) {
+            sb.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return sb.toString();
     }
 }

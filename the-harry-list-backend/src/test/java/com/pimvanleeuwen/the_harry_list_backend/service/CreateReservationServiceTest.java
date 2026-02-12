@@ -93,7 +93,7 @@ class CreateReservationServiceTest {
                 .startTime(LocalTime.of(16, 0))
                 .endTime(LocalTime.of(22, 0))
                 .location(BarLocation.HUBBLE)
-                .paymentOption(PaymentOption.PIN)
+                .paymentOption(PaymentOption.INDIVIDUAL)
                 .build();
     }
 
@@ -107,7 +107,7 @@ class CreateReservationServiceTest {
         entity.setEventType(EventType.BORREL);
         entity.setOrganizerType(OrganizerType.ASSOCIATION);
         entity.setLocation(BarLocation.HUBBLE);
-        entity.setPaymentOption(PaymentOption.PIN);
+        entity.setPaymentOption(PaymentOption.INDIVIDUAL);
         entity.setStatus(ReservationStatus.PENDING);
         return entity;
     }

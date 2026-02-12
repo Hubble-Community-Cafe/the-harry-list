@@ -123,6 +123,21 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
         }
     }
 
+    @Override
+    public void sendCustomEmail(Reservation reservation, String subject, String messageContent) {
+        try {
+            log.info("Sending custom email to: {} via Microsoft Graph with subject: {}", reservation.getEmail(), subject);
+
+            String htmlBody = EmailTemplates.buildCustomEmailBody(reservation, messageContent, barName, staffEmail);
+
+            sendEmail(reservation.getEmail(), subject, htmlBody);
+
+        } catch (Exception e) {
+            log.error("Failed to send custom email to: {}", reservation.getEmail(), e);
+            throw new RuntimeException("Failed to send custom email", e);
+        }
+    }
+
     private void notifyStaffNewReservation(Reservation reservation) {
         try {
             String subject = "[New Reservation] " + reservation.getEventTitle() + " - " + reservation.getContactName();

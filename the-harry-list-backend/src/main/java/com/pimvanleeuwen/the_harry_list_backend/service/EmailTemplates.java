@@ -40,7 +40,7 @@ public class EmailTemplates {
                         <p>This is not a confirmation, your reservation still awaits approval! Please note that we generally do not reply within 72 hours.</p>
                         
                         <div class="details">
-                            <p><strong>Confirmation Number:</strong> <span class="confirmation-number">#%d</span></p>
+                            <p><strong>Confirmation Number:</strong> <span class="confirmation-number">%s</span></p>
                             <p><strong>Event:</strong> %s</p>
                             <p><strong>Date:</strong> %s</p>
                             <p><strong>Time:</strong> %s - %s</p>
@@ -59,7 +59,7 @@ public class EmailTemplates {
             </html>
             """,
             reservation.getContactName(),
-            reservation.getId(),
+            reservation.getConfirmationNumber(),
             reservation.getEventTitle(),
             reservation.getEventDate().format(DATE_FORMATTER),
             reservation.getStartTime().format(TIME_FORMATTER),
@@ -119,7 +119,7 @@ public class EmailTemplates {
                         <p>%s</p>
                         
                         <div class="details">
-                            <p><strong>Confirmation Number:</strong> #%d</p>
+                            <p><strong>Confirmation Number:</strong> %s</p>
                             <p><strong>Event:</strong> %s</p>
                             <p><strong>Date:</strong> %s</p>
                             <p><strong>Time:</strong> %s - %s</p>
@@ -140,7 +140,7 @@ public class EmailTemplates {
             reservation.getStatus().getDisplayName(),
             reservation.getContactName(),
             statusMessage,
-            reservation.getId(),
+            reservation.getConfirmationNumber(),
             reservation.getEventTitle(),
             reservation.getEventDate().format(DATE_FORMATTER),
             reservation.getStartTime().format(TIME_FORMATTER),
@@ -176,7 +176,7 @@ public class EmailTemplates {
                         <p>Your reservation has been updated. Please review the details below:</p>
                         
                         <div class="details">
-                            <p><strong>Confirmation Number:</strong> #%d</p>
+                            <p><strong>Confirmation Number:</strong> %s</p>
                             <p><strong>Event:</strong> %s</p>
                             <p><strong>Date:</strong> %s</p>
                             <p><strong>Time:</strong> %s - %s</p>
@@ -195,7 +195,7 @@ public class EmailTemplates {
             </html>
             """,
             reservation.getContactName(),
-            reservation.getId(),
+            reservation.getConfirmationNumber(),
             reservation.getEventTitle(),
             reservation.getEventDate().format(DATE_FORMATTER),
             reservation.getStartTime().format(TIME_FORMATTER),
@@ -227,7 +227,7 @@ public class EmailTemplates {
                     </div>
                     <div class="content">
                         <p>Dear %s,</p>
-                        <p>Your reservation <strong>%s</strong> (Confirmation #%d) has been cancelled.</p>
+                        <p>Your reservation <strong>%s</strong> (Confirmation #%s) has been cancelled.</p>
                         
                         <p>We hope to see you again in the future! If you'd like to make a new reservation, please visit our website.</p>
                         
@@ -245,7 +245,7 @@ public class EmailTemplates {
             """,
             reservation.getContactName(),
             reservation.getEventTitle(),
-            reservation.getId(),
+            reservation.getConfirmationNumber(),
             staffEmail,
             barName
         );
@@ -273,7 +273,7 @@ public class EmailTemplates {
                         <p>A new reservation has been submitted and requires review:</p>
                         
                         <div class="details">
-                            <p><strong>ID:</strong> #%d</p>
+                            <p><strong>Reservation Number:</strong> %s</p>
                             <p><strong>Contact:</strong> %s</p>
                             <p><strong>Email:</strong> %s</p>
                             <p><strong>Phone:</strong> %s</p>
@@ -297,7 +297,7 @@ public class EmailTemplates {
             </body>
             </html>
             """,
-            reservation.getId(),
+            reservation.getConfirmationNumber(),
             reservation.getContactName(),
             reservation.getEmail(),
             reservation.getPhoneNumber() != null ? reservation.getPhoneNumber() : "Not provided",
@@ -336,6 +336,65 @@ public class EmailTemplates {
         } else {
             return "Reservation Update - " + reservation.getEventTitle();
         }
+    }
+
+    public static String buildCustomEmailBody(Reservation reservation, String messageContent, String barName, String staffEmail) {
+        // Convert line breaks in the message to HTML
+        String htmlMessage = messageContent.replace("\n", "<br>");
+
+        return String.format("""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background-color: #6b46c1; color: white; padding: 20px; text-align: center; }
+                    .content { padding: 20px; background-color: #f9f9f9; }
+                    .message { background-color: white; padding: 15px; margin: 15px 0; border-left: 4px solid #6b46c1; }
+                    .details { background-color: #f0f0f0; padding: 10px; margin-top: 20px; border-radius: 5px; font-size: 12px; }
+                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Message from %s</h1>
+                    </div>
+                    <div class="content">
+                        <p>Dear %s,</p>
+                        
+                        <div class="message">
+                            %s
+                        </div>
+                        
+                        <div class="details">
+                            <p><strong>Regarding your reservation:</strong></p>
+                            <p>Event: %s<br>
+                            Date: %s<br>
+                            Location: %s<br>
+                            Confirmation #: %s</p>
+                        </div>
+                        
+                        <p>If you have any questions, please reply to this email or contact us at %s.</p>
+                        
+                        <p>Best regards,<br>
+                        %s</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """,
+            barName,
+            reservation.getContactName(),
+            htmlMessage,
+            reservation.getEventTitle(),
+            reservation.getEventDate().format(DATE_FORMATTER),
+            reservation.getLocation().getDisplayName(),
+            reservation.getConfirmationNumber(),
+            staffEmail,
+            barName
+        );
     }
 }
 

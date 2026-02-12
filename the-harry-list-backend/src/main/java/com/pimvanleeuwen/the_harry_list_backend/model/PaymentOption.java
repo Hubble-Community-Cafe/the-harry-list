@@ -5,11 +5,11 @@ package com.pimvanleeuwen.the_harry_list_backend.model;
  * Maps to: "How would you like to pay?" on the forms.
  */
 public enum PaymentOption {
-    PIN("PIN / Card payment on site"),
-    CASH("Cash payment on site"),
-    INVOICE("Invoice afterwards"),
-    COST_CENTER("TU/e Cost Center (Kostenplaats)"),
-    PREPAID("Prepaid / Bank transfer");
+    INDIVIDUAL("People pay individually"),
+    ONE_PERSON("One person pays at the end"),
+    INVOICE("Invoice (>50 euros only)"),
+    COST_CENTER("Kostenplaats"),
+    VOUCHERS("Vouchers/Coins");
 
     private final String displayName;
 

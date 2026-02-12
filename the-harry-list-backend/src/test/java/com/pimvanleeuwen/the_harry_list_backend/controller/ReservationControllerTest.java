@@ -175,7 +175,7 @@ class ReservationControllerTest {
                 .startTime(LocalTime.of(16, 0))
                 .endTime(LocalTime.of(22, 0))
                 .location(BarLocation.HUBBLE)
-                .paymentOption(PaymentOption.PIN)
+                .paymentOption(PaymentOption.INDIVIDUAL)
                 .foodRequired(true)
                 .dietaryPreference(DietaryPreference.VEGETARIAN)
                 .termsAccepted(true)

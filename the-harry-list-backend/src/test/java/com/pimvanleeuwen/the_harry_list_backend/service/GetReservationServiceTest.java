@@ -116,7 +116,7 @@ class GetReservationServiceTest {
                 .eventType(EventType.BORREL)
                 .organizerType(OrganizerType.ASSOCIATION)
                 .location(BarLocation.HUBBLE)
-                .paymentOption(PaymentOption.PIN)
+                .paymentOption(PaymentOption.INDIVIDUAL)
                 .status(ReservationStatus.PENDING)
                 .build();
     }
@@ -131,7 +131,7 @@ class GetReservationServiceTest {
         entity.setEventType(EventType.BORREL);
         entity.setOrganizerType(OrganizerType.ASSOCIATION);
         entity.setLocation(BarLocation.HUBBLE);
-        entity.setPaymentOption(PaymentOption.PIN);
+        entity.setPaymentOption(PaymentOption.INDIVIDUAL);
         entity.setStatus(ReservationStatus.PENDING);
         return entity;
     }

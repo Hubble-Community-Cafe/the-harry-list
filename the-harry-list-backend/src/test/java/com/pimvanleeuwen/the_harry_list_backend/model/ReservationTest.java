@@ -90,7 +90,7 @@ class ReservationTest {
         reservation.setStartTime(LocalTime.of(16, 0));
         reservation.setEndTime(LocalTime.of(22, 0));
         reservation.setLocation(BarLocation.HUBBLE);
-        reservation.setPaymentOption(PaymentOption.PIN);
+        reservation.setPaymentOption(PaymentOption.INDIVIDUAL);
         reservation.setFoodRequired(true);
         reservation.setDietaryPreference(DietaryPreference.VEGETARIAN);
         reservation.setTermsAccepted(true);
@@ -111,7 +111,7 @@ class ReservationTest {
         assertEquals(LocalTime.of(16, 0), reservation.getStartTime());
         assertEquals(LocalTime.of(22, 0), reservation.getEndTime());
         assertEquals(BarLocation.HUBBLE, reservation.getLocation());
-        assertEquals(PaymentOption.PIN, reservation.getPaymentOption());
+        assertEquals(PaymentOption.INDIVIDUAL, reservation.getPaymentOption());
         assertTrue(reservation.getFoodRequired());
         assertEquals(DietaryPreference.VEGETARIAN, reservation.getDietaryPreference());
         assertTrue(reservation.getTermsAccepted());

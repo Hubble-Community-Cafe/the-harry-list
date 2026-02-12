@@ -81,7 +81,7 @@ class DeleteReservationServiceTest {
         reservation.setStartTime(LocalTime.of(16, 0));
         reservation.setEndTime(LocalTime.of(22, 0));
         reservation.setLocation(BarLocation.HUBBLE);
-        reservation.setPaymentOption(PaymentOption.PIN);
+        reservation.setPaymentOption(PaymentOption.INDIVIDUAL);
         reservation.setStatus(ReservationStatus.PENDING);
         return reservation;
     }

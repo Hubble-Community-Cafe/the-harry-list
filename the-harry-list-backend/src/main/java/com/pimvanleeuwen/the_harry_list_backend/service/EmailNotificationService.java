@@ -28,5 +28,10 @@ public interface EmailNotificationService {
      * Send email when reservation is deleted/cancelled.
      */
     void sendReservationCancelledEmail(Reservation reservation);
+
+    /**
+     * Send a custom email to the reservation contact.
+     */
+    void sendCustomEmail(Reservation reservation, String subject, String message);
 }
 

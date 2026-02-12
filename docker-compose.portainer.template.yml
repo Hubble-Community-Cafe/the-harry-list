@@ -1,6 +1,9 @@
-# Template for Portainer deployment (DO NOT PUT SECRETS HERE)
+# Template for Portainer deployment
+# Replace YOUR_GITHUB_USERNAME with your actual GitHub username (lowercase)
+# Replace all __FILL_IN__ values with actual configuration
 version: '3.9'
 services:
+  # Backend API
   the-harry-list-backend:
     image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-backend:latest
     deploy:
@@ -17,33 +20,65 @@ services:
       - TZ=Europe/Amsterdam
 
       # Database Configuration
-      - SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/harrylist
-      - SPRING_DATASOURCE_USERNAME=__FILL_IN__
-      - SPRING_DATASOURCE_PASSWORD=__FILL_IN__
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/harry_list
+      - SPRING_DATASOURCE_USERNAME=__DB_USERNAME__
+      - SPRING_DATASOURCE_PASSWORD=__DB_PASSWORD__
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MariaDBDialect
       - SPRING_JPA_SHOW_SQL=false
 
-      # Security Configuration
-      - SPRING_SECURITY_USER_NAME=__FILL_IN__
-      - SPRING_SECURITY_USER_PASSWORD=__FILL_IN__
+      # Basic Auth for Admin API endpoints
+      - SPRING_SECURITY_USER_NAME=__API_USERNAME__
+      - SPRING_SECURITY_USER_PASSWORD=__API_PASSWORD__
 
       # Email Configuration (Microsoft Graph for Microsoft 365)
       # Set APP_MAIL_ENABLED=false to disable email notifications
-      # See MICROSOFT_GRAPH_SETUP.md for Azure AD setup instructions
       - APP_MAIL_ENABLED=true
       - APP_MAIL_FROM=noreply@hubble.cafe
       - APP_MAIL_STAFF=info@hubble.cafe
       - APP_BAR_NAME=Hubble and Meteor Community Cafes
 
-      # Microsoft Graph Configuration (required for email)
-      - GRAPH_TENANT_ID=__FILL_IN__
-      - GRAPH_CLIENT_ID=__FILL_IN__
-      - GRAPH_CLIENT_SECRET=__FILL_IN__
+      # Microsoft Graph Configuration (required for email sending)
+      # Get these from Azure Portal > App registrations > Your App
+      - GRAPH_TENANT_ID=__AZURE_TENANT_ID__
+      - GRAPH_CLIENT_ID=__AZURE_CLIENT_ID__
+      - GRAPH_CLIENT_SECRET=__AZURE_CLIENT_SECRET__
 
       # Logging
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG
+
+  # Public Reservation Form Frontend
+  the-harry-list-public:
+    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-public:latest
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+    ports:
+      - "9803:80"
+    networks:
+      - harry-list
+    environment:
+      - API_URL=https://api.hubble.cafe
+
+  # Admin Portal Frontend
+  the-harry-list-admin:
+    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-admin:latest
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+    ports:
+      - "9804:80"
+    networks:
+      - harry-list
+    environment:
+      - API_URL=https://api.hubble.cafe
+      - AZURE_CLIENT_ID=__AZURE_CLIENT_ID__
+      - AZURE_TENANT_ID=__AZURE_TENANT_ID__
+      - REDIRECT_URI=https://admin.hubble.cafe
+      - ALLOWED_GROUP_ID=__AZURE_GROUP_ID__
 
 networks:
   harry-list:

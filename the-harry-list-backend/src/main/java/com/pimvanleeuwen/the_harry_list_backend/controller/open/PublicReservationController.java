@@ -37,7 +37,7 @@ public class PublicReservationController {
 
         if (result.getBody() != null) {
             ReservationSubmissionResponse response = new ReservationSubmissionResponse(
-                result.getBody().getId(),
+                result.getBody().getConfirmationNumber(),
                 result.getBody().getEventTitle(),
                 result.getBody().getContactName(),
                 result.getBody().getEmail(),

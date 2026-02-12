@@ -79,6 +79,7 @@ public class ReservationMapper {
 
         return com.pimvanleeuwen.the_harry_list_backend.dto.Reservation.builder()
                 .id(entity.getId())
+                .confirmationNumber(entity.getConfirmationNumber())
                 // Contact
                 .contactName(entity.getContactName())
                 .email(entity.getEmail())

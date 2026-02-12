@@ -26,6 +26,8 @@ public class Reservation {
 
     private Long id;
 
+    private String confirmationNumber;
+
     // ===== Contact Information =====
     @NotBlank(message = "Name is required")
     private String contactName;
@@ -68,6 +70,8 @@ public class Reservation {
     // ===== Location =====
     @NotNull(message = "Location is required")
     private BarLocation location;
+
+    private SeatingArea seatingArea;
 
     private String specificArea;
 

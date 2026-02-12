@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 /**
  * Admin controller for reservation management.
  * These endpoints require authentication.
@@ -83,6 +85,35 @@ public class AdminReservationController {
                     reservation.setInternalNotes(notes);
                     com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
                     return ResponseEntity.ok(reservationMapper.toDto(saved));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{id}/email")
+    @Operation(summary = "Send custom email", description = "Send a custom email to the reservation contact")
+    public ResponseEntity<Map<String, String>> sendCustomEmail(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> emailRequest) {
+
+        String subject = emailRequest.get("subject");
+        String message = emailRequest.get("message");
+
+        log.info("Sending custom email for reservation {} with subject: {}", id, subject);
+
+        return reservationRepository.findById(id)
+                .map(reservation -> {
+                    if (emailService != null) {
+                        try {
+                            emailService.sendCustomEmail(reservation, subject, message);
+                            return ResponseEntity.ok(Map.of("status", "sent", "message", "Email sent successfully"));
+                        } catch (Exception e) {
+                            log.error("Failed to send custom email", e);
+                            return ResponseEntity.internalServerError()
+                                    .body(Map.of("status", "error", "message", "Failed to send email: " + e.getMessage()));
+                        }
+                    } else {
+                        return ResponseEntity.ok(Map.of("status", "disabled", "message", "Email service is disabled"));
+                    }
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

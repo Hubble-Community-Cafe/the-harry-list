@@ -1,0 +1,33 @@
+import { Coffee, Sparkles } from 'lucide-react';
+
+export function Header() {
+  return (
+    <header className="relative z-20 border-b border-dark-800/50 bg-dark-950/80 backdrop-blur-xl">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16 md:h-20">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-hubble-600 to-meteor-500">
+              <Coffee className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg md:text-xl font-bold text-white">
+                The Harry List
+              </h1>
+              <p className="text-xs text-dark-400 hidden sm:block">
+                Event Reservations
+              </p>
+            </div>
+          </div>
+
+          {/* Navigation hint */}
+          <div className="flex items-center gap-2 text-sm text-dark-400">
+            <Sparkles className="w-4 h-4 text-hubble-400" />
+            <span className="hidden sm:inline">Hubble & Meteor Community Cafés</span>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+

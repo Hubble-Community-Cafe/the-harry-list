@@ -67,6 +67,15 @@ public class FormOptionsController {
         return ResponseEntity.ok(options);
     }
 
+    @GetMapping("/seating-areas")
+    @Operation(summary = "Get seating areas", description = "Get all available seating area options (inside/outside)")
+    public ResponseEntity<List<Map<String, String>>> getSeatingAreas() {
+        List<Map<String, String>> options = Arrays.stream(SeatingArea.values())
+                .map(e -> Map.of("value", e.name(), "label", e.getDisplayName()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(options);
+    }
+
     @GetMapping("/all")
     @Operation(summary = "Get all form options", description = "Get all form options in a single request")
     public ResponseEntity<Map<String, List<Map<String, String>>>> getAllOptions() {
@@ -81,6 +90,9 @@ public class FormOptionsController {
                         .map(e -> Map.of("value", e.name(), "label", e.getDisplayName()))
                         .collect(Collectors.toList()),
                 "locations", Arrays.stream(BarLocation.values())
+                        .map(e -> Map.of("value", e.name(), "label", e.getDisplayName()))
+                        .collect(Collectors.toList()),
+                "seatingAreas", Arrays.stream(SeatingArea.values())
                         .map(e -> Map.of("value", e.name(), "label", e.getDisplayName()))
                         .collect(Collectors.toList()),
                 "dietaryPreferences", Arrays.stream(DietaryPreference.values())

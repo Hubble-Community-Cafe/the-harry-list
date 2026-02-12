@@ -47,11 +47,11 @@ class EnumTests {
 
     @Test
     void paymentOption_shouldHaveCorrectDisplayNames() {
-        assertEquals("PIN / Card payment on site", PaymentOption.PIN.getDisplayName());
-        assertEquals("Cash payment on site", PaymentOption.CASH.getDisplayName());
-        assertEquals("Invoice afterwards", PaymentOption.INVOICE.getDisplayName());
-        assertEquals("TU/e Cost Center (Kostenplaats)", PaymentOption.COST_CENTER.getDisplayName());
-        assertEquals("Prepaid / Bank transfer", PaymentOption.PREPAID.getDisplayName());
+        assertEquals("People pay individually", PaymentOption.INDIVIDUAL.getDisplayName());
+        assertEquals("One person pays at the end", PaymentOption.ONE_PERSON.getDisplayName());
+        assertEquals("Invoice (>50 euros only)", PaymentOption.INVOICE.getDisplayName());
+        assertEquals("Kostenplaats", PaymentOption.COST_CENTER.getDisplayName());
+        assertEquals("Vouchers/Coins", PaymentOption.VOUCHERS.getDisplayName());
     }
 
     @Test
