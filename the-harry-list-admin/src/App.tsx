@@ -5,19 +5,15 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ReservationsPage } from './pages/ReservationsPage';
 import { ReservationDetailPage } from './pages/ReservationDetailPage';
 import { Layout } from './components/Layout';
-import { hasApiCredentials, isDevMode, isDevAuthenticated } from './lib/api';
 import { useGroupAuthorization } from './lib/useGroupAuthorization';
 import { Loader2, ShieldX } from 'lucide-react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isMsalAuthenticated = useIsAuthenticated();
-  const hasCredentials = hasApiCredentials();
   const { isLoading: isCheckingGroup, isAuthorized, error: groupError } = useGroupAuthorization();
 
-  // In dev mode, we can bypass Microsoft auth if dev authenticated
-  const isAuthenticated = isDevMode()
-    ? (isDevAuthenticated() || isMsalAuthenticated)
-    : isMsalAuthenticated;
+  // Only Microsoft authentication is allowed
+  const isAuthenticated = isMsalAuthenticated;
 
   // Show loading while checking group membership
   if (isAuthenticated && isCheckingGroup) {
@@ -32,7 +28,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   // Show unauthorized message if user is not in the allowed group
-  if (isAuthenticated && !isAuthorized && !isDevMode()) {
+  if (isAuthenticated && !isAuthorized) {
     return (
       <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-dark-900 border border-dark-800 rounded-xl p-8 text-center">
@@ -43,8 +39,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
           <p className="text-dark-400 mb-6">
             {groupError || 'You are not authorized to access this application. Please contact an administrator to request access.'}
           </p>
-          <a
-            href="/"
+          <button
             onClick={() => {
               sessionStorage.clear();
               window.location.href = '/login';
@@ -52,13 +47,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
             className="inline-block px-4 py-2 bg-dark-800 hover:bg-dark-700 text-white rounded-lg transition-colors"
           >
             Sign out and try again
-          </a>
+          </button>
         </div>
       </div>
     );
   }
 
-  if (!isAuthenticated || !hasCredentials) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
@@ -87,4 +82,3 @@ function App() {
 }
 
 export default App;
-

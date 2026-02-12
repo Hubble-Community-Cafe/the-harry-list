@@ -71,7 +71,13 @@ export const msalConfig: Configuration = {
 };
 
 export const loginRequest = {
-  scopes: ['User.Read', 'openid', 'profile', 'email'],
+  scopes: [
+    'User.Read',
+    'openid',
+    'profile',
+    'email',
+    `api://${AZURE_CLIENT_ID}/access_as_user`
+  ],
 };
 
 // Request for checking group membership
@@ -83,4 +89,3 @@ export const graphConfig = {
   graphMeEndpoint: 'https://graph.microsoft.com/v1.0/me',
   graphMemberOfEndpoint: 'https://graph.microsoft.com/v1.0/me/memberOf',
 };
-

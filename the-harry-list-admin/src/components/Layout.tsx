@@ -5,7 +5,7 @@ import {
   User, Menu
 } from 'lucide-react';
 import { useState } from 'react';
-import { clearApiCredentials, isDevMode, isDevAuthenticated } from '../lib/api';
+import { clearAuth} from '../lib/api';
 
 export function Layout() {
   const { instance, accounts } = useMsal();
@@ -13,18 +13,15 @@ export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const user = accounts[0];
-  const isInDevMode = isDevMode() && isDevAuthenticated();
 
   const handleLogout = () => {
-    clearApiCredentials();
+    clearAuth();
     // In dev mode with dev auth, just navigate to login
-    if (isInDevMode) {
+
+    instance.logoutPopup().then(() => {
       navigate('/login');
-    } else {
-      instance.logoutPopup().then(() => {
-        navigate('/login');
-      });
-    }
+    });
+
   };
 
   const navItems = [
@@ -88,23 +85,16 @@ export function Layout() {
 
           {/* User section */}
           <div className="p-4 border-t border-dark-800">
-            {isInDevMode && (
-              <div className="mb-3 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                <p className="text-xs text-amber-400 text-center font-medium">
-                  🛠️ Dev Mode Active
-                </p>
-              </div>
-            )}
             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-dark-800/50">
               <div className="w-8 h-8 rounded-full bg-hubble-500/20 flex items-center justify-center">
                 <User className="w-4 h-4 text-hubble-400" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-white truncate">
-                  {isInDevMode ? 'Dev User' : (user?.name || 'Staff')}
+                  {user?.name || 'Staff'}
                 </div>
                 <div className="text-xs text-dark-400 truncate">
-                  {isInDevMode ? 'Development Mode' : (user?.username || 'Logged in')}
+                  {user?.username || 'Logged in'}
                 </div>
               </div>
             </div>

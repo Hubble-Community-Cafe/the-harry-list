@@ -44,6 +44,10 @@ services:
       - GRAPH_CLIENT_ID=__AZURE_CLIENT_ID__
       - GRAPH_CLIENT_SECRET=__AZURE_CLIENT_SECRET__
 
+      # Azure AD Configuration (for OAuth2 JWT authentication from admin portal)
+      # Same tenant ID as GRAPH_TENANT_ID
+      - AZURE_TENANT_ID=__AZURE_TENANT_ID__
+
       # Logging
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG
@@ -74,10 +78,13 @@ services:
     networks:
       - harry-list
     environment:
+      # Backend API URL
       - API_URL=https://api.hubble.cafe
+      # Azure AD Configuration for Microsoft Login
       - AZURE_CLIENT_ID=__AZURE_CLIENT_ID__
       - AZURE_TENANT_ID=__AZURE_TENANT_ID__
       - REDIRECT_URI=https://admin.hubble.cafe
+      # Azure AD Security Group - only members can access admin portal
       - ALLOWED_GROUP_ID=__AZURE_GROUP_ID__
 
 networks:

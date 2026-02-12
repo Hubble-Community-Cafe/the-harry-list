@@ -1,3 +1,5 @@
+import { PublicClientApplication } from '@azure/msal-browser';
+
 // Get API URL from runtime config or fall back to build-time env
 const getApiUrl = (): string => {
   const runtimeUrl = (window as any).__RUNTIME_CONFIG__?.API_URL;
@@ -9,71 +11,56 @@ const getApiUrl = (): string => {
 
 const API_BASE_URL = getApiUrl();
 
-// API credentials from environment (for Docker/Portainer setups)
-const ENV_API_USERNAME = import.meta.env.VITE_API_USERNAME;
-const ENV_API_PASSWORD = import.meta.env.VITE_API_PASSWORD;
+// MSAL instance for getting tokens
+let msalInstance: PublicClientApplication | null = null;
 
-// Check if we're in development mode (allows bypassing Microsoft auth)
-export const isDevMode = () => {
-  return import.meta.env.DEV || import.meta.env.VITE_DEV_MODE === 'true';
+export const setMsalInstance = (instance: PublicClientApplication) => {
+  msalInstance = instance;
 };
 
-// Check if API credentials are configured via environment
-export const hasEnvCredentials = () => {
-  return Boolean(ENV_API_USERNAME && ENV_API_PASSWORD);
+export const clearAuth = () => {
+  sessionStorage.clear();
 };
 
-// Dev mode authentication (bypasses Microsoft login)
-export const setDevAuthenticated = (authenticated: boolean) => {
-  if (authenticated) {
-    sessionStorage.setItem('dev_authenticated', 'true');
-  } else {
-    sessionStorage.removeItem('dev_authenticated');
+// Get API scope dynamically from runtime config, as required by Azure Entra setup
+const getApiScope = () => {
+  const clientId = (window as any).__RUNTIME_CONFIG__?.AZURE_CLIENT_ID || import.meta.env.VITE_AZURE_CLIENT_ID;
+  return `api://${clientId}/access_as_user`;
+};
+
+// Get access token from MSAL for calling our backend API
+// Important: We only request the API scope here, not Graph scopes.
+// Azure AD can only return a token for ONE resource at a time.
+// If you mix scopes from different resources (e.g., User.Read + api://xxx/access_as_user),
+// Azure AD will return a token for the first resource (Graph), not your API.
+const getAccessToken = async (): Promise<string | null> => {
+  if (!msalInstance) {
+    console.error('MSAL instance not set');
+    return null;
+  }
+
+  const accounts = msalInstance.getAllAccounts();
+  if (accounts.length === 0) {
+    return null;
+  }
+
+  try {
+    // Request ONLY the API scope - this ensures we get a token for our backend
+    const response = await msalInstance.acquireTokenSilent({
+      scopes: [getApiScope()],
+      account: accounts[0],
+    });
+    return response.accessToken;
+  } catch (error) {
+    console.error('Failed to acquire token silently:', error);
+    return null;
   }
 };
 
-export const isDevAuthenticated = () => {
-  return sessionStorage.getItem('dev_authenticated') === 'true';
-};
-
-// Get stored credentials (env takes priority, then session storage)
-const getAuthHeader = () => {
-  // First check environment variables
-  if (ENV_API_USERNAME && ENV_API_PASSWORD) {
-    return 'Basic ' + btoa(`${ENV_API_USERNAME}:${ENV_API_PASSWORD}`);
-  }
-  // Fallback to session storage
-  const username = sessionStorage.getItem('api_username');
-  const password = sessionStorage.getItem('api_password');
-  if (username && password) {
-    return 'Basic ' + btoa(`${username}:${password}`);
-  }
-  return null;
-};
-
-export const setApiCredentials = (username: string, password: string) => {
-  sessionStorage.setItem('api_username', username);
-  sessionStorage.setItem('api_password', password);
-};
-
-export const clearApiCredentials = () => {
-  sessionStorage.removeItem('api_username');
-  sessionStorage.removeItem('api_password');
-  sessionStorage.removeItem('dev_authenticated');
-};
-
-export const hasApiCredentials = () => {
-  // Check env credentials first
-  if (hasEnvCredentials()) {
-    return true;
-  }
-  // Fallback to session storage
-  return Boolean(sessionStorage.getItem('api_username') && sessionStorage.getItem('api_password'));
-};
-
-async function fetchWithAuth(url: string, options: RequestInit = {}) {
-  const authHeader = getAuthHeader();
-  if (!authHeader) {
+// Main fetch function with authentication
+async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<any> {
+  const token = await getAccessToken();
+  if (!token) {
     throw new Error('Not authenticated');
   }
 
@@ -81,13 +68,13 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     ...options,
     headers: {
       ...options.headers,
-      'Authorization': authHeader,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
   });
 
   if (response.status === 401) {
-    clearApiCredentials();
+    clearAuth();
     throw new Error('Authentication failed');
   }
 
@@ -96,9 +83,16 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     throw new Error(error.message || 'Request failed');
   }
 
-  return response.json();
+  // Handle empty responses (e.g., DELETE)
+  const text = await response.text();
+  if (!text) {
+    return null;
+  }
+
+  return JSON.parse(text);
 }
 
+// API Functions
 export async function fetchReservations() {
   return fetchWithAuth(`${API_BASE_URL}/api/reservations`);
 }
@@ -133,16 +127,12 @@ export async function updateReservationStatus(
   return fetchWithAuth(url, { method: 'PATCH' });
 }
 
-export async function testCredentials(username: string, password: string): Promise<boolean> {
+// Test if authentication is working
+export async function testAuth(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/reservations`, {
-      headers: {
-        'Authorization': 'Basic ' + btoa(`${username}:${password}`),
-      },
-    });
-    return response.ok;
+    await fetchWithAuth(`${API_BASE_URL}/api/reservations`);
+    return true;
   } catch {
     return false;
   }
 }
-

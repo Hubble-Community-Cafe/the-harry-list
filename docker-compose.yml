@@ -35,6 +35,10 @@ services:
       - SPRING_SECURITY_USER_NAME=admin
       - SPRING_SECURITY_USER_PASSWORD=admin
 
+      # Azure AD Tenant ID for JWT authentication
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
+
       # Logging
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG
@@ -68,8 +72,8 @@ services:
     environment:
       # Runtime configuration (injected at container startup)
       - API_URL=http://localhost:8080
-      # Azure AD - set these in .env file or environment for Microsoft login
-      # Leave empty to use dev mode authentication
+      # Azure AD - set these in .env file for Microsoft login
+      # Leave empty to use dev mode authentication with basic auth
       - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
       - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
       - REDIRECT_URI=http://localhost:5174

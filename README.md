@@ -1,73 +1,73 @@
-# The Harry List 
-Bar Reservation System for Stichting Bar Potential Under Development
+# The Harry List
 
-## 🚀 Quick Start
+Bar reservation system for Stichting Bar Potential.
 
-### Local Development
-```bash
-# Run with docker-compose (includes local MariaDB)
-docker-compose up --build
-```
+## Architecture
 
-The backend will be available at: `http://localhost:8080`
+| Component | Stack |
+|-----------|-------|
+| Backend | Spring Boot 3.5 (Java 17), MariaDB |
+| Admin Portal | React + TypeScript, Microsoft Entra ID auth |
+| Public Form | React + TypeScript |
 
-### Production Deployment to Portainer
+## Local Development
 
-**📋 [Quick Start Guide](QUICKSTART.md)** - Step-by-step deployment instructions
+1. **Create `.env`** from the example:
+   ```bash
+   cp .env.example .env
+   ```
 
-**📚 [Full Deployment Guide](DEPLOYMENT.md)** - Comprehensive documentation
+2. **Fill in Azure AD values** in `.env`:
+   ```env
+   AZURE_CLIENT_ID=your-client-id
+   AZURE_TENANT_ID=your-tenant-id
+   ALLOWED_GROUP_ID=your-group-id  # optional
+   ```
 
-**Key Features:**
-- ✅ Automatic Docker builds via GitHub Actions
-- ✅ Deploys to GitHub Container Registry (ghcr.io)
-- ✅ Connects to your existing MariaDB instance
-- ✅ Production-ready configuration
+3. **Start all services**:
+   ```bash
+   docker compose up --build
+   ```
 
-## 🏗️ Architecture
+4. **Access**:
+   - Public form: http://localhost:5173
+   - Admin portal: http://localhost:5174
+   - Backend API: http://localhost:8080
+   - Swagger UI: http://localhost:8080/swagger-ui/index.html
 
-- **Backend**: Spring Boot 3.5.6 (Java 17)
-- **Database**: MariaDB
-- **Security**: Spring Security with Basic Auth
-- **API Documentation**: OpenAPI 3 / Swagger UI
+## Production Deployment
 
-## 📖 API Documentation
+### Prerequisites
+- GitHub repository with Actions enabled
+- Portainer with access to an existing MariaDB instance
+- Azure AD App Registration configured
 
-When running, access Swagger UI at:
-- Local: `http://localhost:8080/swagger-ui/index.html`
-- Production: `http://YOUR_SERVER:9802/swagger-ui/index.html`
+### Setup
 
-## 🔧 Configuration
+1. **Push to `main` branch** — GitHub Actions builds and pushes Docker images to `ghcr.io`
 
-### Environment Variables
+2. **Copy `docker-compose.portainer.template.yml`** and replace:
+   - `YOUR_GITHUB_USERNAME` with your GitHub username (lowercase)
+   - All `__PLACEHOLDER__` values with actual configuration
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SPRING_DATASOURCE_URL` | Database connection URL | `jdbc:mariadb://db:3306/harrylist` |
-| `SPRING_DATASOURCE_USERNAME` | Database username | `harrylist_user` |
-| `SPRING_DATASOURCE_PASSWORD` | Database password | - |
-| `SPRING_SECURITY_USER_NAME` | API admin username | `admin` |
-| `SPRING_SECURITY_USER_PASSWORD` | API admin password | - |
+3. **Required environment variables**:
 
-See `application-prod.properties` for all available options.
+   | Variable | Description |
+   |----------|-------------|
+   | `SPRING_DATASOURCE_URL` | MariaDB connection string |
+   | `SPRING_DATASOURCE_USERNAME` | Database user |
+   | `SPRING_DATASOURCE_PASSWORD` | Database password |
+   | `AZURE_TENANT_ID` | Azure AD tenant ID |
+   | `AZURE_CLIENT_ID` | Azure AD client ID |
+   | `GRAPH_CLIENT_SECRET` | Azure AD client secret (for email) |
+   | `ALLOWED_GROUP_ID` | Azure AD group ID for admin access |
 
-## 🔐 Security
+4. **Deploy** the stack in Portainer using the modified compose file
 
-- API uses HTTP Basic Authentication
-- Change default credentials before deploying
-- Database passwords should be stored securely
-- Consider using Portainer secrets for sensitive values
+## Azure AD App Registration
 
-## 🧪 Unit Testing
-
-Run the test suite:
-```bash
-cd the-harry-list-backend
-./mvnw test
-```
-
-## 📦 CI/CD
-
-GitHub Actions automatically:
-1. Runs tests on every push
-2. Checks for security vulnerabilities
-3. Builds and pushes Docker image to ghcr.io (on main branch)
+Required configuration:
+- **Redirect URIs**: Add your admin portal URL (e.g., `https://admin.yourdomain.com`)
+- **API Permissions**: `User.Read`, `GroupMember.Read.All` (for group-based access)
+- **Expose an API**: Create scope `access_as_user` with Application ID URI `api://{client-id}`
+- **Client Secret**: Generate one for email functionality (backend only)
