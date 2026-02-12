@@ -55,6 +55,33 @@ const formSchema = z.object({
   dietaryNotes: z.string().optional(),
   comments: z.string().optional(),
   termsAccepted: z.boolean().refine(val => val === true, 'You must accept the terms'),
+}).superRefine((data, ctx) => {
+  // Cost center is required when payment option is COST_CENTER
+  if (data.paymentOption === 'COST_CENTER' && (!data.costCenter || data.costCenter.trim() === '')) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Cost center is required for this payment method',
+      path: ['costCenter'],
+    });
+  }
+
+  // Invoice name and address are required when payment option is INVOICE
+  if (data.paymentOption === 'INVOICE') {
+    if (!data.invoiceName || data.invoiceName.trim() === '') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Invoice name is required for invoice payment',
+        path: ['invoiceName'],
+      });
+    }
+    if (!data.invoiceAddress || data.invoiceAddress.trim() === '') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Invoice address is required for invoice payment',
+        path: ['invoiceAddress'],
+      });
+    }
+  }
 });
 
 interface ReservationFormProps {
@@ -110,13 +137,22 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
 
   const watchLocation = watch('location');
   const watchFoodRequired = watch('foodRequired');
+  const watchPaymentOption = watch('paymentOption');
 
   const validateStep = async (step: number) => {
+    // Build step 4 fields dynamically based on payment option
+    let step4Fields: (keyof ReservationFormData)[] = ['paymentOption'];
+    if (watchPaymentOption === 'COST_CENTER') {
+      step4Fields.push('costCenter');
+    } else if (watchPaymentOption === 'INVOICE') {
+      step4Fields.push('invoiceName', 'invoiceAddress');
+    }
+
     const fieldsToValidate: (keyof ReservationFormData)[][] = [
       ['contactName', 'email', 'phoneNumber'], // Step 1
       ['eventTitle', 'eventType', 'organizerType', 'expectedGuests', 'eventDate', 'startTime', 'endTime'], // Step 2
       ['location'], // Step 3
-      ['paymentOption'], // Step 4
+      step4Fields, // Step 4 - dynamic based on payment option
       ['termsAccepted'], // Step 5
     ];
 
@@ -229,8 +265,8 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                 <User className="w-5 h-5 text-hubble-400" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-white">Contact Information</h2>
-                <p className="text-sm text-dark-400">Tell us how to reach you</p>
+                <h2 className="text-xl font-title font-semibold text-white">Contact Information</h2>
+                <p className="text-sm text-dark-400 font-light">Tell us how to reach you</p>
               </div>
             </div>
 
@@ -301,8 +337,8 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                 <Calendar className="w-5 h-5 text-meteor-400" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-white">Event Details</h2>
-                <p className="text-sm text-dark-400">Tell us about your event</p>
+                <h2 className="text-xl font-title font-semibold text-white">Event Details</h2>
+                <p className="text-sm text-dark-400 font-light">Tell us about your event</p>
               </div>
             </div>
 
@@ -445,8 +481,8 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                 <MapPin className="w-5 h-5 text-hubble-400" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-white">Location</h2>
-                <p className="text-sm text-dark-400">Where would you like to host your event?</p>
+                <h2 className="text-xl font-title font-semibold text-white">Location</h2>
+                <p className="text-sm text-dark-400 font-light">Where would you like to host your event?</p>
               </div>
             </div>
 
@@ -474,7 +510,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                   </div>
                 </div>
                 <p className="text-sm text-dark-400">
-                  Modern space perfect for tech meetups, association events, and creative gatherings.
+                  Hubble Community Cafe perfect for that Classic Ducky feeling.
                 </p>
                 {watchLocation === 'HUBBLE' && (
                   <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-hubble-500 flex items-center justify-center">
@@ -508,7 +544,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                   </div>
                 </div>
                 <p className="text-sm text-dark-400">
-                  Cozy atmosphere ideal for intimate gatherings, study sessions, and social events.
+                  The new and modern Meteor, which includes a bear instead of a duck ;). (this is the only location that support private events)
                 </p>
                 {watchLocation === 'METEOR' && (
                   <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-meteor-500 flex items-center justify-center">
@@ -586,8 +622,8 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                 <CreditCard className="w-5 h-5 text-meteor-400" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-white">Payment Information</h2>
-                <p className="text-sm text-dark-400">How will you be paying?</p>
+                <h2 className="text-xl font-title font-semibold text-white">Payment Information</h2>
+                <p className="text-sm text-dark-400 font-light">How will you be paying?</p>
               </div>
             </div>
 
@@ -612,6 +648,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                   className="input-field"
                   placeholder="e.g., CC-12345"
                 />
+                {errors.costCenter && <p className="error-text">{errors.costCenter.message}</p>}
               </div>
             )}
 
@@ -626,6 +663,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                     className="input-field"
                     placeholder="Company or organization name"
                   />
+                  {errors.invoiceName && <p className="error-text">{errors.invoiceName.message}</p>}
                 </div>
 
                 <div className="form-group md:col-span-2">
@@ -635,6 +673,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                     className="input-field min-h-[80px] resize-none"
                     placeholder="Full billing address..."
                   />
+                  {errors.invoiceAddress && <p className="error-text">{errors.invoiceAddress.message}</p>}
                 </div>
               </div>
             )}
@@ -649,8 +688,8 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                 <UtensilsCrossed className="w-5 h-5 text-hubble-400" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-white">Extras & Confirmation</h2>
-                <p className="text-sm text-dark-400">Any special requirements?</p>
+                <h2 className="text-xl font-title font-semibold text-white">Extras & Confirmation</h2>
+                <p className="text-sm text-dark-400 font-light">Any special requirements?</p>
               </div>
             </div>
 

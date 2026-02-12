@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="duckGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#62cad3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2b7184;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="clipboardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f4d64;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2b7184;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="#bde8ec" stroke="#2b7184" stroke-width="8"/>
+
+  <!-- Clipboard body -->
+  <rect x="140" y="140" width="232" height="280" rx="16" fill="url(#clipboardGradient)"/>
+
+  <!-- Clipboard clip -->
+  <rect x="200" y="120" width="112" height="40" rx="8" fill="#053826"/>
+  <circle cx="256" cy="140" r="12" fill="#9B8D6F"/>
+
+  <!-- Clipboard paper -->
+  <rect x="160" y="180" width="192" height="220" rx="8" fill="#FFFFFF"/>
+
+  <!-- Checkmark lines (reservations) -->
+  <rect x="180" y="210" width="100" height="12" rx="4" fill="#bde8ec"/>
+  <rect x="180" y="240" width="140" height="12" rx="4" fill="#bde8ec"/>
+  <rect x="180" y="270" width="80" height="12" rx="4" fill="#bde8ec"/>
+
+  <!-- Duck sitting on clipboard -->
+  <ellipse cx="300" cy="360" rx="60" ry="45" fill="url(#duckGradient)"/>
+
+  <!-- Duck head -->
+  <circle cx="340" cy="320" r="35" fill="url(#duckGradient)"/>
+
+  <!-- Duck beak -->
+  <ellipse cx="375" cy="325" rx="20" ry="10" fill="#9B8D6F"/>
+
+  <!-- Duck eye -->
+  <circle cx="350" cy="312" r="8" fill="#0f4d64"/>
+  <circle cx="352" cy="310" r="3" fill="#FFFFFF"/>
+
+  <!-- Duck wing -->
+  <ellipse cx="280" cy="355" rx="25" ry="20" fill="#2b7184"/>
+
+  <!-- Check marks -->
+  <path d="M295 215 L305 225 L325 200" stroke="#053826" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M295 245 L305 255 L325 230" stroke="#053826" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

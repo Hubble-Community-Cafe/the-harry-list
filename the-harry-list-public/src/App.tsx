@@ -3,6 +3,7 @@ import { ReservationForm } from './components/ReservationForm';
 import { SuccessMessage } from './components/SuccessMessage';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { ThemeProvider } from './lib/ThemeContext';
 
 interface SubmissionResult {
   confirmationNumber: string;
@@ -26,19 +27,20 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-950 flex flex-col">
-      {/* Background decoration */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-hubble-600/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-meteor-600/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 right-1/4 w-80 h-80 bg-hubble-500/10 rounded-full blur-3xl" />
-      </div>
+    <ThemeProvider>
+      <div className="min-h-screen bg-dark-950 flex flex-col">
+        {/* Background decoration */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-hubble-600/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 -left-40 w-80 h-80 bg-meteor-600/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 right-1/4 w-80 h-80 bg-hubble-500/10 rounded-full blur-3xl" />
+        </div>
 
-      <Header />
+        <Header />
 
-      <main className="flex-1 relative z-10">
-        <div className="container mx-auto px-4 py-12">
-          {!submitted ? (
+        <main className="flex-1 relative z-10">
+          <div className="container mx-auto px-4 py-12">
+            {!submitted ? (
             <>
               {/* Hero Section */}
               <div className="text-center mb-12 animate-fade-in">
@@ -67,6 +69,7 @@ function App() {
 
       <Footer />
     </div>
+    </ThemeProvider>
   );
 }
 

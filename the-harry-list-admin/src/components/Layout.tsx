@@ -1,11 +1,12 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
-  Coffee, LayoutDashboard, Calendar, LogOut,
+  LayoutDashboard, Calendar, LogOut,
   User, Menu
 } from 'lucide-react';
 import { useState } from 'react';
 import { clearAuth} from '../lib/api';
+import { ThemeToggle } from './ThemeToggle';
 
 export function Layout() {
   const { instance, accounts } = useMsal();
@@ -49,12 +50,14 @@ export function Layout() {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center gap-3 p-6 border-b border-dark-800">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-hubble-600 to-meteor-500 flex items-center justify-center">
-              <Coffee className="w-5 h-5 text-white" />
-            </div>
+            <img
+              src="/logo.svg"
+              alt="The Harry List Logo"
+              className="w-10 h-10 rounded-xl"
+            />
             <div>
-              <h1 className="font-bold text-white">The Harry List</h1>
-              <p className="text-xs text-dark-400">Admin Portal</p>
+              <h1 className="font-title font-bold text-white">The Harry List</h1>
+              <p className="text-xs text-dark-400 font-light">Admin Portal</p>
             </div>
           </div>
 
@@ -85,6 +88,10 @@ export function Layout() {
 
           {/* User section */}
           <div className="p-4 border-t border-dark-800">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-dark-500 uppercase tracking-wider">Settings</span>
+              <ThemeToggle />
+            </div>
             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-dark-800/50">
               <div className="w-8 h-8 rounded-full bg-hubble-500/20 flex items-center justify-center">
                 <User className="w-4 h-4 text-hubble-400" />
@@ -120,7 +127,7 @@ export function Layout() {
             <Menu className="w-6 h-6" />
           </button>
           <div className="flex items-center gap-2">
-            <Coffee className="w-5 h-5 text-hubble-400" />
+            <img src="/logo.svg" alt="Logo" className="w-6 h-6 rounded" />
             <span className="font-semibold text-white">The Harry List</span>
           </div>
           <div className="w-10" /> {/* Spacer */}

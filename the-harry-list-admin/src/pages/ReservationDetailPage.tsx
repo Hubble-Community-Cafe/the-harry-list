@@ -186,8 +186,8 @@ export function ReservationDetailPage() {
             <ArrowLeft className="w-4 h-4" />
             Back to Reservations
           </Link>
-          <h1 className="text-2xl font-bold text-white">{reservation.eventTitle}</h1>
-          <p className="text-dark-400">
+          <h1 className="text-2xl font-title font-bold text-white">{reservation.eventTitle}</h1>
+          <p className="text-dark-400 font-light">
             Confirmation: <span className="text-white font-mono">{reservation.confirmationNumber || `#${reservation.id}`}</span>
           </p>
         </div>
@@ -196,7 +196,7 @@ export function ReservationDetailPage() {
 
       {/* Actions */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-white mb-4">Actions</h2>
+        <h2 className="text-lg font-title font-semibold text-white mb-4">Actions</h2>
 
         <div className="flex items-center gap-3 mb-4">
           <label className="flex items-center gap-2 cursor-pointer">
@@ -313,7 +313,7 @@ export function ReservationDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Contact Information */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-lg font-title font-semibold text-white mb-4 flex items-center gap-2">
             <Users className="w-5 h-5 text-hubble-400" />
             Contact Information
           </h2>
@@ -327,7 +327,7 @@ export function ReservationDetailPage() {
 
         {/* Event Details */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-lg font-title font-semibold text-white mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-meteor-400" />
             Event Details
           </h2>
@@ -343,7 +343,7 @@ export function ReservationDetailPage() {
 
         {/* Payment Information */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-lg font-title font-semibold text-white mb-4 flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-hubble-400" />
             Payment Information
           </h2>
@@ -357,7 +357,7 @@ export function ReservationDetailPage() {
 
         {/* Food & Additional */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-lg font-title font-semibold text-white mb-4 flex items-center gap-2">
             <UtensilsCrossed className="w-5 h-5 text-meteor-400" />
             Additional Information
           </h2>
@@ -376,7 +376,7 @@ export function ReservationDetailPage() {
       {/* Description & Comments */}
       {(reservation.description || reservation.comments) && (
         <div className="card">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-lg font-title font-semibold text-white mb-4 flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-hubble-400" />
             Notes
           </h2>
@@ -407,7 +407,7 @@ export function ReservationDetailPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-dark-700">
-              <h2 className="text-xl font-semibold text-white">Edit Reservation</h2>
+              <h2 className="text-xl font-title font-semibold text-white">Edit Reservation</h2>
               <button onClick={() => setIsEditing(false)} className="text-dark-400 hover:text-white">
                 <X className="w-6 h-6" />
               </button>

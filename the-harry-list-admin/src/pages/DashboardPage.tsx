@@ -83,8 +83,8 @@ export function DashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-dark-400">Overview of reservation activity</p>
+        <h1 className="text-2xl font-title font-bold text-white">Dashboard</h1>
+        <p className="text-dark-400 font-light">Overview of reservation activity</p>
       </div>
 
       {/* Stats Grid */}

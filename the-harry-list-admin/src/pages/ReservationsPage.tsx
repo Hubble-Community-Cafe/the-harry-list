@@ -90,8 +90,8 @@ export function ReservationsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Reservations</h1>
-        <p className="text-dark-400">Manage all reservation requests</p>
+        <h1 className="text-2xl font-title font-bold text-white">Reservations</h1>
+        <p className="text-dark-400 font-light">Manage all reservation requests</p>
       </div>
 
       {/* Filters */}

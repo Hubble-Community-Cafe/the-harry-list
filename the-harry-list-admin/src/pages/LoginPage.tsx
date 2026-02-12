@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { useNavigate } from 'react-router-dom';
-import { Coffee, Loader2, Shield } from 'lucide-react';
+import { Loader2, Shield } from 'lucide-react';
 import { loginRequest } from '../lib/authConfig';
 
 export function LoginPage() {
@@ -46,11 +46,13 @@ export function LoginPage() {
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-hubble-600 to-meteor-500 mb-4">
-              <Coffee className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-white">The Harry List</h1>
-            <p className="text-dark-400 mt-1">Staff Administration Portal</p>
+            <img
+              src="/logo.svg"
+              alt="The Harry List Logo"
+              className="w-16 h-16 mx-auto mb-4 rounded-2xl"
+            />
+            <h1 className="text-2xl font-title font-bold text-white">The Harry List</h1>
+            <p className="text-dark-400 font-light mt-1">Staff Administration Portal</p>
           </div>
           {/* Login Card */}
           <div className="card">
