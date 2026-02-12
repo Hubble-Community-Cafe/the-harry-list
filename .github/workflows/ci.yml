@@ -42,8 +42,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels)
-        id: meta
+      # ========== BACKEND ==========
+      - name: Extract metadata for Backend
+        id: meta-backend
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository_owner }}/the-harry-list-backend
@@ -52,14 +53,57 @@ jobs:
             type=sha,prefix={{branch}}-
             type=ref,event=branch
 
-      - name: Build and push Docker image
+      - name: Build and push Backend Docker image
         uses: docker/build-push-action@v5
         with:
           context: ./the-harry-list-backend
           file: ./the-harry-list-backend/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # ========== PUBLIC FRONTEND ==========
+      - name: Extract metadata for Public Frontend
+        id: meta-public
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/the-harry-list-public
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix={{branch}}-
+            type=ref,event=branch
+
+      - name: Build and push Public Frontend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./the-harry-list-public
+          file: ./the-harry-list-public/Dockerfile
+          push: true
+          tags: ${{ steps.meta-public.outputs.tags }}
+          labels: ${{ steps.meta-public.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ========== ADMIN FRONTEND ==========
+      - name: Extract metadata for Admin Frontend
+        id: meta-admin
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/the-harry-list-admin
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix={{branch}}-
+            type=ref,event=branch
+
+      - name: Build and push Admin Frontend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./the-harry-list-admin
+          file: ./the-harry-list-admin/Dockerfile
+          push: true
+          tags: ${{ steps.meta-admin.outputs.tags }}
+          labels: ${{ steps.meta-admin.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
