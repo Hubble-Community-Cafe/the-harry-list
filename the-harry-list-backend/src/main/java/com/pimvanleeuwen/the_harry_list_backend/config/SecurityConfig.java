@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/public/reservations").permitAll()
                 .requestMatchers("/api/options/**").permitAll()
+                .requestMatchers("/api/calendar/**").permitAll()  // Calendar feed uses token auth
 
                 // Protected endpoints - authentication required
                 .requestMatchers("/api/reservations/**").authenticated()

@@ -1,7 +1,7 @@
 # Template for Portainer deployment
 # Replace YOUR_GITHUB_USERNAME with your actual GitHub username (lowercase)
 # Replace all __FILL_IN__ values with actual configuration
-version: '3.9'
+
 services:
   # Backend API
   the-harry-list-backend:
@@ -38,16 +38,16 @@ services:
       - APP_MAIL_STAFF=info@hubble.cafe
       - APP_BAR_NAME=Hubble and Meteor Community Cafes
 
-      # Microsoft Graph Configuration (required for email sending)
+      # Azure AD Configuration (for JWT auth and Graph API email)
       # Get these from Azure Portal > App registrations > Your App
-      - GRAPH_TENANT_ID=__AZURE_TENANT_ID__
-      - GRAPH_CLIENT_ID=__AZURE_CLIENT_ID__
-      - GRAPH_CLIENT_SECRET=__AZURE_CLIENT_SECRET__
-
-      # Azure AD Configuration (for OAuth2 JWT authentication from admin portal)
-      # Same tenant ID as GRAPH_TENANT_ID
       - AZURE_TENANT_ID=__AZURE_TENANT_ID__
       - AZURE_CLIENT_ID=__AZURE_CLIENT_ID__
+      - AZURE_CLIENT_SECRET=__AZURE_CLIENT_SECRET__
+
+      # Calendar ICS Feed Tokens (generate with: openssl rand -hex 32)
+      # Public feed: no contact details, Staff feed: includes email/phone
+      - CALENDAR_FEED_TOKEN=__CALENDAR_FEED_TOKEN__
+      - CALENDAR_FEED_STAFF_TOKEN=__CALENDAR_FEED_STAFF_TOKEN__
 
       # Logging
       - LOGGING_LEVEL_ROOT=INFO

@@ -59,8 +59,10 @@ Bar reservation system for Stichting Bar Potential.
    | `SPRING_DATASOURCE_PASSWORD` | Database password |
    | `AZURE_TENANT_ID` | Azure AD tenant ID |
    | `AZURE_CLIENT_ID` | Azure AD client ID |
-   | `GRAPH_CLIENT_SECRET` | Azure AD client secret (for email) |
+   | `AZURE_CLIENT_SECRET` | Azure AD client secret (for Graph API email) |
    | `ALLOWED_GROUP_ID` | Azure AD group ID for admin access |
+   | `CALENDAR_FEED_TOKEN` | Token for public calendar feed |
+   | `CALENDAR_FEED_STAFF_TOKEN` | Token for staff calendar feed (with contact details) |
 
 4. **Deploy** the stack in Portainer using the modified compose file
 
@@ -71,3 +73,53 @@ Required configuration:
 - **API Permissions**: `User.Read`, `GroupMember.Read.All` (for group-based access)
 - **Expose an API**: Create scope `access_as_user` with Application ID URI `api://{client-id}`
 - **Client Secret**: Generate one for email functionality (backend only)
+
+## Calendar Integration
+
+Subscribe to reservations from any calendar app (Google Calendar, Outlook, Apple Calendar) using ICS feeds.
+
+### Two Feeds Available
+
+| Feed | URL | Details Included |
+|------|-----|------------------|
+| **Public** | `/api/calendar/feed.ics` | Event info only, NO email/phone |
+| **Staff** | `/api/calendar/staff-feed.ics` | ALL details including email/phone |
+
+### Setup
+
+1. **Generate two secure tokens** (use different tokens for each feed):
+   ```bash
+   openssl rand -hex 32  # For public feed
+   openssl rand -hex 32  # For staff feed
+   ```
+
+2. **Set environment variables**:
+   ```env
+   CALENDAR_FEED_TOKEN=<public-token>
+   CALENDAR_FEED_STAFF_TOKEN=<staff-token>
+   ```
+
+3. **Subscribe** using the URLs:
+   - Public: `https://your-api/api/calendar/feed.ics?token=PUBLIC_TOKEN`
+   - Staff: `https://your-api/api/calendar/staff-feed.ics?token=STAFF_TOKEN`
+
+### Subscription Instructions
+
+| App | Steps |
+|-----|-------|
+| **Google Calendar** | Settings → Add calendar → From URL → Paste feed URL |
+| **Outlook** | Add calendar → Subscribe from web → Paste feed URL |
+| **Apple Calendar** | File → New Calendar Subscription → Paste feed URL |
+
+### Filter Options
+
+| Parameter | Description |
+|-----------|-------------|
+| `status` | Filter by status: `PENDING`, `CONFIRMED`, `REJECTED`, `CANCELLED` (comma-separated) |
+| `location` | Filter by location: `HUBBLE` or `METEOR` |
+| `upcomingOnly` | Set to `true` for future events only |
+
+**Examples:**
+- All confirmed: `?token=XXX&status=CONFIRMED`
+- Hubble upcoming: `?token=XXX&location=HUBBLE&upcomingOnly=true`
+
