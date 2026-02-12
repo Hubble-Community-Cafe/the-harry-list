@@ -54,10 +54,16 @@ public class UpdateReservationService implements Command<com.pimvanleeuwen.the_h
         }
 
         // Convert DTO to entity, preserving the existing entity's metadata
+        Reservation existing = existingReservation.get();
         Reservation entity = reservationMapper.toEntity(input);
         entity.setId(input.getId());
-        entity.setStatus(existingReservation.get().getStatus()); // Preserve status
-        entity.setCreatedAt(existingReservation.get().getCreatedAt()); // Preserve creation time
+
+        // Preserve fields that should not be changed via update
+        entity.setStatus(existing.getStatus());
+        entity.setCreatedAt(existing.getCreatedAt());
+        entity.setConfirmationNumber(existing.getConfirmationNumber());
+        entity.setConfirmedBy(existing.getConfirmedBy());
+        entity.setInternalNotes(existing.getInternalNotes());
 
         // Save updated entity
         Reservation savedEntity = reservationRepository.save(entity);
