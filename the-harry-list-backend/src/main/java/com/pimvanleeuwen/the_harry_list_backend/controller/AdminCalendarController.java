@@ -10,9 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Admin endpoint to get calendar feed URLs with tokens.
@@ -39,42 +37,96 @@ public class AdminCalendarController {
 
         List<CalendarFeedInfo> feeds = new ArrayList<>();
 
-        // Public feed
-        if (publicFeedToken != null && !publicFeedToken.isEmpty()) {
-            CalendarFeedInfo publicFeed = new CalendarFeedInfo();
-            publicFeed.id = "public";
-            publicFeed.name = "Public Feed";
-            publicFeed.description = "Event details without contact information (email/phone). Safe to share with external partners.";
-            publicFeed.url = baseUrl + "/api/calendar/feed.ics?token=" + publicFeedToken;
-            publicFeed.hasToken = true;
-            feeds.add(publicFeed);
+        // Staff feeds (with contact details)
+        if (staffFeedToken != null && !staffFeedToken.isEmpty()) {
+            // Staff - Hubble
+            CalendarFeedInfo staffHubble = new CalendarFeedInfo();
+            staffHubble.id = "staff-hubble";
+            staffHubble.name = "Staff - Hubble";
+            staffHubble.description = "Hubble reservations with full contact details (email/phone)";
+            staffHubble.url = baseUrl + "/api/calendar/staff-feed.ics?token=" + staffFeedToken + "&location=HUBBLE";
+            staffHubble.hasToken = true;
+            staffHubble.location = "HUBBLE";
+            staffHubble.isStaff = true;
+            feeds.add(staffHubble);
+
+            // Staff - Meteor
+            CalendarFeedInfo staffMeteor = new CalendarFeedInfo();
+            staffMeteor.id = "staff-meteor";
+            staffMeteor.name = "Staff - Meteor";
+            staffMeteor.description = "Meteor reservations with full contact details (email/phone)";
+            staffMeteor.url = baseUrl + "/api/calendar/staff-feed.ics?token=" + staffFeedToken + "&location=METEOR";
+            staffMeteor.hasToken = true;
+            staffMeteor.location = "METEOR";
+            staffMeteor.isStaff = true;
+            feeds.add(staffMeteor);
         } else {
-            CalendarFeedInfo publicFeed = new CalendarFeedInfo();
-            publicFeed.id = "public";
-            publicFeed.name = "Public Feed";
-            publicFeed.description = "Event details without contact information. Token not configured.";
-            publicFeed.url = null;
-            publicFeed.hasToken = false;
-            feeds.add(publicFeed);
+            // Placeholder for unconfigured staff feeds
+            CalendarFeedInfo staffHubble = new CalendarFeedInfo();
+            staffHubble.id = "staff-hubble";
+            staffHubble.name = "Staff - Hubble";
+            staffHubble.description = "Staff token not configured";
+            staffHubble.url = null;
+            staffHubble.hasToken = false;
+            staffHubble.location = "HUBBLE";
+            staffHubble.isStaff = true;
+            feeds.add(staffHubble);
+
+            CalendarFeedInfo staffMeteor = new CalendarFeedInfo();
+            staffMeteor.id = "staff-meteor";
+            staffMeteor.name = "Staff - Meteor";
+            staffMeteor.description = "Staff token not configured";
+            staffMeteor.url = null;
+            staffMeteor.hasToken = false;
+            staffMeteor.location = "METEOR";
+            staffMeteor.isStaff = true;
+            feeds.add(staffMeteor);
         }
 
-        // Staff feed
-        if (staffFeedToken != null && !staffFeedToken.isEmpty()) {
-            CalendarFeedInfo staffFeed = new CalendarFeedInfo();
-            staffFeed.id = "staff";
-            staffFeed.name = "Staff Feed";
-            staffFeed.description = "Full event details including contact information (email/phone). Only share with staff members.";
-            staffFeed.url = baseUrl + "/api/calendar/staff-feed.ics?token=" + staffFeedToken;
-            staffFeed.hasToken = true;
-            feeds.add(staffFeed);
+        // Public feeds (without contact details)
+        if (publicFeedToken != null && !publicFeedToken.isEmpty()) {
+            // Public - Hubble
+            CalendarFeedInfo publicHubble = new CalendarFeedInfo();
+            publicHubble.id = "public-hubble";
+            publicHubble.name = "Public - Hubble";
+            publicHubble.description = "Hubble reservations without contact details (safe to share)";
+            publicHubble.url = baseUrl + "/api/calendar/feed.ics?token=" + publicFeedToken + "&location=HUBBLE";
+            publicHubble.hasToken = true;
+            publicHubble.location = "HUBBLE";
+            publicHubble.isStaff = false;
+            feeds.add(publicHubble);
+
+            // Public - Meteor
+            CalendarFeedInfo publicMeteor = new CalendarFeedInfo();
+            publicMeteor.id = "public-meteor";
+            publicMeteor.name = "Public - Meteor";
+            publicMeteor.description = "Meteor reservations without contact details (safe to share)";
+            publicMeteor.url = baseUrl + "/api/calendar/feed.ics?token=" + publicFeedToken + "&location=METEOR";
+            publicMeteor.hasToken = true;
+            publicMeteor.location = "METEOR";
+            publicMeteor.isStaff = false;
+            feeds.add(publicMeteor);
         } else {
-            CalendarFeedInfo staffFeed = new CalendarFeedInfo();
-            staffFeed.id = "staff";
-            staffFeed.name = "Staff Feed";
-            staffFeed.description = "Full event details including contact information. Token not configured.";
-            staffFeed.url = null;
-            staffFeed.hasToken = false;
-            feeds.add(staffFeed);
+            // Placeholder for unconfigured public feeds
+            CalendarFeedInfo publicHubble = new CalendarFeedInfo();
+            publicHubble.id = "public-hubble";
+            publicHubble.name = "Public - Hubble";
+            publicHubble.description = "Public token not configured";
+            publicHubble.url = null;
+            publicHubble.hasToken = false;
+            publicHubble.location = "HUBBLE";
+            publicHubble.isStaff = false;
+            feeds.add(publicHubble);
+
+            CalendarFeedInfo publicMeteor = new CalendarFeedInfo();
+            publicMeteor.id = "public-meteor";
+            publicMeteor.name = "Public - Meteor";
+            publicMeteor.description = "Public token not configured";
+            publicMeteor.url = null;
+            publicMeteor.hasToken = false;
+            publicMeteor.location = "METEOR";
+            publicMeteor.isStaff = false;
+            feeds.add(publicMeteor);
         }
 
         CalendarFeedsResponse response = new CalendarFeedsResponse();
@@ -107,19 +159,13 @@ public class AdminCalendarController {
         ParameterInfo status = new ParameterInfo();
         status.name = "status";
         status.description = "Filter by status: PENDING, CONFIRMED, REJECTED, CANCELLED (comma-separated)";
-        status.example = "?token=xxx&status=CONFIRMED";
+        status.example = "&status=CONFIRMED";
         params.add(status);
-
-        ParameterInfo location = new ParameterInfo();
-        location.name = "location";
-        location.description = "Filter by location: HUBBLE or METEOR";
-        location.example = "?token=xxx&location=HUBBLE";
-        params.add(location);
 
         ParameterInfo upcomingOnly = new ParameterInfo();
         upcomingOnly.name = "upcomingOnly";
         upcomingOnly.description = "Only show future events";
-        upcomingOnly.example = "?token=xxx&upcomingOnly=true";
+        upcomingOnly.example = "&upcomingOnly=true";
         params.add(upcomingOnly);
 
         return params;
@@ -136,6 +182,8 @@ public class AdminCalendarController {
         public String description;
         public String url;
         public boolean hasToken;
+        public String location;
+        public boolean isStaff;
     }
 
     public static class ParameterInfo {

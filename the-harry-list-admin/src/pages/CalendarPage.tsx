@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Copy, Check, ExternalLink, RefreshCw, Users, Globe, Loader2, AlertCircle } from 'lucide-react';
+import { Calendar, Copy, Check, ExternalLink, RefreshCw, Loader2, AlertCircle, Lock, Unlock } from 'lucide-react';
 import { fetchWithAuth } from '../lib/api';
 
 interface CalendarFeedInfo {
@@ -8,6 +8,8 @@ interface CalendarFeedInfo {
   description: string;
   url: string | null;
   hasToken: boolean;
+  location: string;
+  isStaff: boolean;
 }
 
 interface ParameterInfo {
@@ -59,13 +61,9 @@ export function CalendarPage() {
     }
   };
 
-  const getFeedIcon = (id: string) => {
-    return id === 'public' ? <Globe className="w-5 h-5" /> : <Users className="w-5 h-5" />;
-  };
-
-  const getFeedColor = (id: string) => {
-    return id === 'public' ? 'hubble' : 'meteor';
-  };
+  // Group feeds by location
+  const hubbleFeeds = feeds.filter(f => f.location === 'HUBBLE');
+  const meteorFeeds = feeds.filter(f => f.location === 'METEOR');
 
   if (loading) {
     return (
@@ -90,6 +88,93 @@ export function CalendarPage() {
     );
   }
 
+  const renderFeedCard = (feed: CalendarFeedInfo) => {
+    const isHubble = feed.location === 'HUBBLE';
+
+    return (
+      <div
+        key={feed.id}
+        className="bg-dark-900 border border-dark-800 rounded-xl overflow-hidden"
+      >
+        {/* Header */}
+        <div className={`px-4 py-3 border-b border-dark-800 flex items-center justify-between ${isHubble ? 'bg-hubble-500/10' : 'bg-meteor-500/10'}`}>
+          <div className="flex items-center gap-2">
+            <div className={`p-1.5 rounded-lg ${isHubble ? 'bg-hubble-500/20 text-hubble-400' : 'bg-meteor-500/20 text-meteor-400'}`}>
+              {feed.isStaff ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+            </div>
+            <div>
+              <h4 className="font-medium text-white text-sm">{feed.isStaff ? 'Staff' : 'Public'}</h4>
+              <p className="text-xs text-dark-400">{feed.isStaff ? 'With contact details' : 'No contact details'}</p>
+            </div>
+          </div>
+          {feed.hasToken && feed.url && (
+            <button
+              onClick={() => copyToClipboard(feed.url!, feed.id)}
+              className={`px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-xs ${
+                copiedId === feed.id
+                  ? 'bg-green-500/20 text-green-400'
+                  : 'bg-dark-800 hover:bg-dark-700 text-dark-300 hover:text-white'
+              }`}
+            >
+              {copiedId === feed.id ? (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  Copy URL
+                </>
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="p-4">
+          {feed.hasToken && feed.url ? (
+            <div className="space-y-3">
+              {/* URL Display */}
+              <input
+                type="text"
+                readOnly
+                value={feed.url}
+                className="w-full px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-xs text-dark-400 truncate"
+              />
+
+              {/* Quick Actions */}
+              <div className="flex gap-2">
+                <a
+                  href={feed.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-dark-800 hover:bg-dark-700 text-dark-300 hover:text-white rounded-lg text-xs transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Preview
+                </a>
+                <a
+                  href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(feed.url.replace('https://', 'webcal://').replace('http://', 'webcal://'))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-dark-800 hover:bg-dark-700 text-dark-300 hover:text-white rounded-lg text-xs transition-colors"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  Add to Google
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-2">
+              <p className="text-xs text-dark-500">Token not configured</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -104,125 +189,60 @@ export function CalendarPage() {
       <div className="bg-dark-800/50 border border-dark-700 rounded-xl p-5">
         <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
           <RefreshCw className="w-4 h-4 text-hubble-400" />
-          How Calendar Syncing Works
+          How to Subscribe
         </h3>
         <ul className="text-sm text-dark-300 space-y-2">
-          <li>• Copy the calendar URL and add it as a subscription in your calendar app</li>
-          <li>• <strong>Google Calendar:</strong> Settings → Add calendar → From URL</li>
-          <li>• <strong>Outlook:</strong> Add calendar → Subscribe from web</li>
-          <li>• <strong>Apple Calendar:</strong> File → New Calendar Subscription</li>
-          <li className="text-amber-400/80">⚠️ Google Calendar syncs every 12-24 hours. Other apps sync faster.</li>
+          <li>• <strong>Google Calendar:</strong> Settings → Add calendar → From URL → Paste the URL</li>
+          <li>• <strong>Outlook:</strong> Add calendar → Subscribe from web → Paste the URL</li>
+          <li>• <strong>Apple Calendar:</strong> File → New Calendar Subscription → Paste the URL</li>
+          <li className="text-amber-400/80">⚠️ Google Calendar syncs every 12-24 hours. Apple/Outlook sync faster.</li>
         </ul>
       </div>
 
-      {/* Calendar Feeds */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {feeds.map((feed) => {
-          const color = getFeedColor(feed.id);
-          return (
-            <div
-              key={feed.id}
-              className="bg-dark-900 border border-dark-800 rounded-xl overflow-hidden"
-            >
-              {/* Header */}
-              <div className={`px-5 py-4 border-b border-dark-800 ${color === 'hubble' ? 'bg-hubble-500/10' : 'bg-meteor-500/10'}`}>
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${color === 'hubble' ? 'bg-hubble-500/20 text-hubble-400' : 'bg-meteor-500/20 text-meteor-400'}`}>
-                    {getFeedIcon(feed.id)}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white">{feed.name}</h3>
-                    <p className="text-xs text-dark-400">{feed.description}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-5 space-y-4">
-                {feed.hasToken && feed.url ? (
-                  <>
-                    {/* URL Display */}
-                    <div>
-                      <label className="block text-xs font-medium text-dark-400 mb-1.5">
-                        Subscription URL
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          readOnly
-                          value={feed.url}
-                          className="flex-1 px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-sm text-dark-300 truncate"
-                        />
-                        <button
-                          onClick={() => copyToClipboard(feed.url!, feed.id)}
-                          className={`px-3 py-2 rounded-lg transition-all flex items-center gap-2 ${
-                            copiedId === feed.id
-                              ? 'bg-green-500/20 text-green-400'
-                              : 'bg-dark-800 hover:bg-dark-700 text-dark-300 hover:text-white'
-                          }`}
-                        >
-                          {copiedId === feed.id ? (
-                            <>
-                              <Check className="w-4 h-4" />
-                              <span className="text-sm">Copied!</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-4 h-4" />
-                              <span className="text-sm">Copy</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Quick Actions */}
-                    <div className="flex gap-2 pt-2">
-                      <a
-                        href={feed.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-3 py-2 bg-dark-800 hover:bg-dark-700 text-dark-300 hover:text-white rounded-lg text-sm transition-colors"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        Preview Feed
-                      </a>
-                      <a
-                        href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(feed.url.replace('https://', 'webcal://').replace('http://', 'webcal://'))}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-3 py-2 bg-dark-800 hover:bg-dark-700 text-dark-300 hover:text-white rounded-lg text-sm transition-colors"
-                      >
-                        <Calendar className="w-4 h-4" />
-                        Add to Google Calendar
-                      </a>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-4">
-                    <AlertCircle className="w-8 h-8 text-amber-400 mx-auto mb-2" />
-                    <p className="text-sm text-dark-400">
-                      Token not configured. Set the environment variable on the server.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+      {/* Hubble Feeds */}
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-hubble-500/20 flex items-center justify-center">
+            <span className="text-xl">🦆</span>
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-white">Hubble</h2>
+            <p className="text-xs text-dark-400">Calendar feeds for Hubble Community Café</p>
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {hubbleFeeds.map(renderFeedCard)}
+        </div>
       </div>
 
-      {/* URL Parameters */}
+      {/* Meteor Feeds */}
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-meteor-500/20 flex items-center justify-center">
+            <span className="text-xl">🐻</span>
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-white">Meteor</h2>
+            <p className="text-xs text-dark-400">Calendar feeds for Meteor Community Café</p>
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {meteorFeeds.map(renderFeedCard)}
+        </div>
+      </div>
+
+      {/* Optional Parameters */}
       {parameters.length > 0 && (
         <div className="bg-dark-900 border border-dark-800 rounded-xl p-5">
-          <h3 className="font-semibold text-white mb-4">Optional URL Parameters</h3>
-          <div className="grid gap-4 md:grid-cols-3">
+          <h3 className="font-semibold text-white mb-4">Additional URL Parameters</h3>
+          <p className="text-sm text-dark-400 mb-4">You can append these parameters to customize the feed further:</p>
+          <div className="grid gap-4 md:grid-cols-2">
             {parameters.map((param) => (
               <div key={param.name} className="bg-dark-800/50 rounded-lg p-4">
                 <code className="text-hubble-400 text-sm">{param.name}</code>
                 <p className="text-xs text-dark-400 mt-1">{param.description}</p>
                 <p className="text-xs text-dark-500 mt-2">
-                  Example: <code className="text-dark-300">{param.example}</code>
+                  Append: <code className="text-dark-300">{param.example}</code>
                 </p>
               </div>
             ))}
