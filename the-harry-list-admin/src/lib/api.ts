@@ -58,13 +58,16 @@ const getAccessToken = async (): Promise<string | null> => {
 };
 
 // Main fetch function with authentication
-async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<any> {
+export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const token = await getAccessToken();
   if (!token) {
     throw new Error('Not authenticated');
   }
 
-  const response = await fetch(url, {
+  // Ensure URL is absolute
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+
+  const response = await fetch(fullUrl, {
     ...options,
     headers: {
       ...options.headers,
@@ -77,6 +80,13 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<an
     clearAuth();
     throw new Error('Authentication failed');
   }
+
+  return response;
+}
+
+// Wrapper that also parses JSON and throws on error
+async function fetchJsonWithAuth(url: string, options: RequestInit = {}): Promise<any> {
+  const response = await fetchWithAuth(url, options);
 
   if (!response.ok) {
     let errorMessage = 'Request failed';
@@ -109,11 +119,11 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<an
 
 // API Functions
 export async function fetchReservations() {
-  return fetchWithAuth(`${API_BASE_URL}/api/reservations`);
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/reservations`);
 }
 
 export async function fetchReservation(id: number) {
-  return fetchWithAuth(`${API_BASE_URL}/api/reservations/${id}`);
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/reservations/${id}`);
 }
 
 export async function updateReservation(id: number, data: any, sendEmail: boolean = true) {
@@ -126,14 +136,14 @@ export async function updateReservation(id: number, data: any, sendEmail: boolea
     }
   });
 
-  return fetchWithAuth(`${API_BASE_URL}/api/reservations/${id}?sendEmail=${sendEmail}`, {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/reservations/${id}?sendEmail=${sendEmail}`, {
     method: 'PUT',
     body: JSON.stringify(cleanedData),
   });
 }
 
 export async function deleteReservation(id: number, sendEmail: boolean = true) {
-  return fetchWithAuth(`${API_BASE_URL}/api/reservations/${id}?sendEmail=${sendEmail}`, {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/reservations/${id}?sendEmail=${sendEmail}`, {
     method: 'DELETE',
   });
 }
@@ -148,13 +158,13 @@ export async function updateReservationStatus(
   if (confirmedBy) {
     url += `&confirmedBy=${encodeURIComponent(confirmedBy)}`;
   }
-  return fetchWithAuth(url, { method: 'PATCH' });
+  return fetchJsonWithAuth(url, { method: 'PATCH' });
 }
 
 // Test if authentication is working
 export async function testAuth(): Promise<boolean> {
   try {
-    await fetchWithAuth(`${API_BASE_URL}/api/reservations`);
+    await fetchJsonWithAuth(`${API_BASE_URL}/api/reservations`);
     return true;
   } catch {
     return false;

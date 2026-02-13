@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
   LayoutDashboard, Calendar, LogOut,
-  User, Menu
+  User, Menu, CalendarSync
 } from 'lucide-react';
 import { useState } from 'react';
 import { clearAuth} from '../lib/api';
@@ -28,6 +28,7 @@ export function Layout() {
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/reservations', icon: Calendar, label: 'Reservations' },
+    { to: '/calendar', icon: CalendarSync, label: 'Calendar Feeds' },
   ];
 
   return (
