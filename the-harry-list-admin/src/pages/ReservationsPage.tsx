@@ -6,22 +6,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { fetchReservations } from '../lib/api';
-
-interface Reservation {
-  id: number;
-  confirmationNumber?: string;
-  eventTitle: string;
-  contactName: string;
-  email: string;
-  eventDate: string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  status: string;
-  expectedGuests: number;
-  organizerType: string;
-  eventType: string;
-}
+import type { Reservation } from '../types/reservation';
 
 const statusOptions = ['ALL', 'PENDING', 'CONFIRMED', 'REJECTED', 'CANCELLED', 'COMPLETED'];
 const locationOptions = ['ALL', 'HUBBLE', 'METEOR'];

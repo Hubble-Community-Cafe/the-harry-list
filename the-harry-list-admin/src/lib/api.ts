@@ -1,8 +1,9 @@
 import { PublicClientApplication } from '@azure/msal-browser';
+// Note: Window.__RUNTIME_CONFIG__ type is declared in authConfig.ts
 
 // Get API URL from runtime config or fall back to build-time env
 const getApiUrl = (): string => {
-  const runtimeUrl = (window as any).__RUNTIME_CONFIG__?.API_URL;
+  const runtimeUrl = window.__RUNTIME_CONFIG__?.API_URL;
   if (runtimeUrl && !runtimeUrl.startsWith('__')) {
     return runtimeUrl;
   }
@@ -24,7 +25,7 @@ export const clearAuth = () => {
 
 // Get API scope dynamically from runtime config, as required by Azure Entra setup
 const getApiScope = () => {
-  const clientId = (window as any).__RUNTIME_CONFIG__?.AZURE_CLIENT_ID || import.meta.env.VITE_AZURE_CLIENT_ID;
+  const clientId = window.__RUNTIME_CONFIG__?.AZURE_CLIENT_ID || import.meta.env.VITE_AZURE_CLIENT_ID;
   return `api://${clientId}/access_as_user`;
 };
 
@@ -85,6 +86,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 }
 
 // Wrapper that also parses JSON and throws on error
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchJsonWithAuth(url: string, options: RequestInit = {}): Promise<any> {
   const response = await fetchWithAuth(url, options);
 
@@ -94,7 +96,7 @@ async function fetchJsonWithAuth(url: string, options: RequestInit = {}): Promis
       const errorData = await response.json();
       // Handle Spring Boot validation errors
       if (errorData.errors && Array.isArray(errorData.errors)) {
-        errorMessage = errorData.errors.map((e: any) => e.defaultMessage || e.message).join(', ');
+        errorMessage = errorData.errors.map((e: { defaultMessage?: string; message?: string }) => e.defaultMessage || e.message).join(', ');
       } else if (errorData.message) {
         errorMessage = errorData.message;
       } else if (errorData.error) {
@@ -117,18 +119,21 @@ async function fetchJsonWithAuth(url: string, options: RequestInit = {}): Promis
   return JSON.parse(text);
 }
 
+// Import Reservation type for proper typing
+import type { Reservation } from '../types/reservation';
+
 // API Functions
-export async function fetchReservations() {
-  return fetchJsonWithAuth(`${API_BASE_URL}/api/reservations`);
+export async function fetchReservations(): Promise<Reservation[]> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/reservations`) as Promise<Reservation[]>;
 }
 
-export async function fetchReservation(id: number) {
-  return fetchJsonWithAuth(`${API_BASE_URL}/api/reservations/${id}`);
+export async function fetchReservation(id: number): Promise<Reservation | null> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/reservations/${id}`) as Promise<Reservation | null>;
 }
 
-export async function updateReservation(id: number, data: any, sendEmail: boolean = true) {
+export async function updateReservation(id: number, data: Record<string, unknown>, sendEmail: boolean = true): Promise<Reservation> {
   // Clean up empty strings to null for enum fields that the backend expects
-  const cleanedData = { ...data };
+  const cleanedData: Record<string, unknown> = { ...data };
   const enumFields = ['dietaryPreference', 'seatingArea', 'eventType', 'organizerType', 'location', 'paymentOption'];
   enumFields.forEach(field => {
     if (cleanedData[field] === '') {
@@ -139,11 +144,11 @@ export async function updateReservation(id: number, data: any, sendEmail: boolea
   return fetchJsonWithAuth(`${API_BASE_URL}/api/reservations/${id}?sendEmail=${sendEmail}`, {
     method: 'PUT',
     body: JSON.stringify(cleanedData),
-  });
+  }) as Promise<Reservation>;
 }
 
-export async function deleteReservation(id: number, sendEmail: boolean = true) {
-  return fetchJsonWithAuth(`${API_BASE_URL}/api/reservations/${id}?sendEmail=${sendEmail}`, {
+export async function deleteReservation(id: number, sendEmail: boolean = true): Promise<void> {
+  await fetchJsonWithAuth(`${API_BASE_URL}/api/reservations/${id}?sendEmail=${sendEmail}`, {
     method: 'DELETE',
   });
 }
@@ -153,12 +158,12 @@ export async function updateReservationStatus(
   status: string,
   confirmedBy?: string,
   sendEmail: boolean = true
-) {
+): Promise<Reservation> {
   let url = `${API_BASE_URL}/api/admin/reservations/${id}/status?status=${status}&sendEmail=${sendEmail}`;
   if (confirmedBy) {
     url += `&confirmedBy=${encodeURIComponent(confirmedBy)}`;
   }
-  return fetchJsonWithAuth(url, { method: 'PATCH' });
+  return fetchJsonWithAuth(url, { method: 'PATCH' }) as Promise<Reservation>;
 }
 
 // Test if authentication is working

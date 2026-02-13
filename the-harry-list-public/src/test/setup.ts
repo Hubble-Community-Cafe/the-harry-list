@@ -34,7 +34,11 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 // Mock window.config for runtime config
-(window as any).config = {
+interface TestRuntimeConfig {
+  API_BASE_URL: string;
+}
+
+(window as unknown as { config: TestRuntimeConfig }).config = {
   API_BASE_URL: 'http://localhost:8080',
 };
 

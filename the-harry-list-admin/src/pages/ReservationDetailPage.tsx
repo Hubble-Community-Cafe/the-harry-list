@@ -8,37 +8,7 @@ import {
   Send, Edit, X
 } from 'lucide-react';
 import { fetchReservation, updateReservationStatus, deleteReservation, updateReservation } from '../lib/api';
-
-interface Reservation {
-  id: number;
-  confirmationNumber?: string;
-  contactName: string;
-  email: string;
-  phoneNumber?: string;
-  organizationName?: string;
-  eventTitle: string;
-  description?: string;
-  eventType: string;
-  organizerType: string;
-  expectedGuests: number;
-  eventDate: string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  specificArea?: string;
-  paymentOption: string;
-  costCenter?: string;
-  invoiceName?: string;
-  invoiceAddress?: string;
-  foodRequired?: boolean;
-  dietaryPreference?: string;
-  dietaryNotes?: string;
-  comments?: string;
-  status: string;
-  confirmedBy?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Reservation } from '../types/reservation';
 
 export function ReservationDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -505,8 +475,8 @@ export function ReservationDetailPage() {
 
       {/* Metadata */}
       <div className="text-sm text-dark-500 flex gap-6">
-        <span>Created: {new Date(reservation.createdAt).toLocaleString()}</span>
-        <span>Updated: {new Date(reservation.updatedAt).toLocaleString()}</span>
+        {reservation.createdAt && <span>Created: {new Date(reservation.createdAt).toLocaleString()}</span>}
+        {reservation.updatedAt && <span>Updated: {new Date(reservation.updatedAt).toLocaleString()}</span>}
         {reservation.confirmedBy && <span>Confirmed by: {reservation.confirmedBy}</span>}
       </div>
 

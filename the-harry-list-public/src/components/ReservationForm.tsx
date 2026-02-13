@@ -84,8 +84,15 @@ const formSchema = z.object({
   }
 });
 
+interface ReservationResult {
+  confirmationNumber: string;
+  eventTitle: string;
+  contactName: string;
+  email: string;
+}
+
 interface ReservationFormProps {
-  onSuccess: (result: any) => void;
+  onSuccess: (result: ReservationResult) => void;
 }
 
 const steps = [
@@ -142,7 +149,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
 
   const validateStep = async (step: number) => {
     // Build step 4 fields dynamically based on payment option
-    let step4Fields: (keyof ReservationFormData)[] = ['paymentOption'];
+    const step4Fields: (keyof ReservationFormData)[] = ['paymentOption'];
     if (watchPaymentOption === 'COST_CENTER') {
       step4Fields.push('costCenter');
     } else if (watchPaymentOption === 'INVOICE') {

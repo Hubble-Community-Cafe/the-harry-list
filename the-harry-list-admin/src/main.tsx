@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { PublicClientApplication, EventType } from '@azure/msal-browser';
+import { PublicClientApplication, EventType, type AccountInfo } from '@azure/msal-browser';
 import { MsalProvider } from '@azure/msal-react';
 import { BrowserRouter } from 'react-router-dom';
 import { msalConfig } from './lib/authConfig';
@@ -39,7 +39,7 @@ msalInstance.initialize().then(async () => {
   // Listen for login events
   msalInstance.addEventCallback((event) => {
     if (event.eventType === EventType.LOGIN_SUCCESS && event.payload) {
-      const payload = event.payload as { account: any };
+      const payload = event.payload as { account: AccountInfo | null };
       msalInstance.setActiveAccount(payload.account);
       console.log('Login event - account set:', payload.account?.username);
       window.dispatchEvent(new Event('msal:accountChanged'));

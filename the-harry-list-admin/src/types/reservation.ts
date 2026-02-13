@@ -1,0 +1,39 @@
+export interface Reservation {
+  id: number;
+  confirmationNumber?: string;
+  eventTitle: string;
+  contactName: string;
+  email: string;
+  phoneNumber?: string;
+  organizationName?: string;
+  eventDate: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  specificArea?: string;
+  seatingArea?: string;
+  status: string;
+  expectedGuests: number;
+  organizerType: string;
+  eventType: string;
+  description?: string;
+  paymentOption?: string;
+  costCenter?: string;
+  invoiceName?: string;
+  invoiceAddress?: string;
+  vatNumber?: string;
+  foodRequired?: boolean;
+  dietaryPreference?: string;
+  dietaryNotes?: string;
+  budgetPerPerson?: number;
+  drinksIncluded?: boolean;
+  setupTimeMinutes?: number;
+  comments?: string;
+  internalNotes?: string;
+  referralSource?: string;
+  termsAccepted?: boolean;
+  confirmedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+

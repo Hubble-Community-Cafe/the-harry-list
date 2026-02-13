@@ -26,7 +26,9 @@ export async function fetchFormOptions() {
   return response.json();
 }
 
-export async function submitReservation(data: any) {
+import type { ReservationFormData } from '../types/reservation';
+
+export async function submitReservation(data: ReservationFormData) {
   // Transform empty strings to null for optional enum fields
   const cleanedData = {
     ...data,

@@ -5,16 +5,7 @@ import {
   AlertCircle, Loader2, TrendingUp
 } from 'lucide-react';
 import { fetchReservations } from '../lib/api';
-
-interface Reservation {
-  id: number;
-  eventTitle: string;
-  contactName: string;
-  eventDate: string;
-  location: string;
-  status: string;
-  expectedGuests: number;
-}
+import type { Reservation } from '../types/reservation';
 
 interface Stats {
   total: number;

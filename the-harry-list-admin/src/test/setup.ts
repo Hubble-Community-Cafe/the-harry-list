@@ -23,7 +23,13 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock window.config for runtime config
-(window as any).config = {
+interface TestRuntimeConfig {
+  API_BASE_URL: string;
+  AZURE_CLIENT_ID: string;
+  AZURE_TENANT_ID: string;
+}
+
+(window as unknown as { config: TestRuntimeConfig }).config = {
   API_BASE_URL: 'http://localhost:8080',
   AZURE_CLIENT_ID: 'test-client-id',
   AZURE_TENANT_ID: 'test-tenant-id',

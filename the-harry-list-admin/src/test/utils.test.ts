@@ -16,7 +16,8 @@ describe('utils', () => {
     });
 
     it('filters out falsy values', () => {
-      const result = cn('base', false && 'hidden', null, undefined, 'visible');
+      const shouldHide = false;
+      const result = cn('base', shouldHide && 'hidden', null, undefined, 'visible');
       expect(result).toBe('base visible');
     });
 

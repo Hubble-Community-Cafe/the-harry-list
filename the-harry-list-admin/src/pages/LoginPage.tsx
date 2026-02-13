@@ -29,7 +29,7 @@ export function LoginPage() {
     setError(null);
     try {
       await instance.loginRedirect(loginRequest);
-    } catch (err) {
+    } catch {
       setError('Microsoft login failed. Please try again.');
       setIsLoading(false);
     }
