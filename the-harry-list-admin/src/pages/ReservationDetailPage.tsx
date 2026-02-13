@@ -50,6 +50,10 @@ export function ReservationDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [sendEmail, setSendEmail] = useState(true);
 
   // Edit mode state
@@ -236,7 +240,7 @@ export function ReservationDetailPage() {
           {reservation.status === 'PENDING' && (
             <>
               <button
-                onClick={() => handleStatusChange('CONFIRMED')}
+                onClick={() => setShowConfirmDialog(true)}
                 disabled={isUpdating}
                 className="btn-primary flex items-center gap-2"
               >
@@ -244,7 +248,7 @@ export function ReservationDetailPage() {
                 Confirm
               </button>
               <button
-                onClick={() => handleStatusChange('REJECTED')}
+                onClick={() => setShowRejectDialog(true)}
                 disabled={isUpdating}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
               >
@@ -256,7 +260,7 @@ export function ReservationDetailPage() {
 
           {reservation.status === 'CONFIRMED' && (
             <button
-              onClick={() => handleStatusChange('COMPLETED')}
+              onClick={() => setShowCompleteDialog(true)}
               disabled={isUpdating}
               className="btn-secondary flex items-center gap-2"
             >
@@ -267,7 +271,7 @@ export function ReservationDetailPage() {
 
           {(reservation.status === 'PENDING' || reservation.status === 'CONFIRMED') && (
             <button
-              onClick={() => handleStatusChange('CANCELLED')}
+              onClick={() => setShowCancelDialog(true)}
               disabled={isUpdating}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
             >
@@ -303,6 +307,110 @@ export function ReservationDetailPage() {
                 className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Confirm Reservation Dialog */}
+        {showConfirmDialog && (
+          <div className="mt-4 p-4 rounded-xl bg-green-500/10 border border-green-500/50">
+            <p className="text-green-400 mb-3">Are you sure you want to confirm this reservation? {sendEmail && 'A confirmation email will be sent to the customer.'}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  handleStatusChange('CONFIRMED');
+                  setShowConfirmDialog(false);
+                }}
+                disabled={isUpdating}
+                className="px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors flex items-center gap-2"
+              >
+                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                Yes, Confirm Reservation
+              </button>
+              <button
+                onClick={() => setShowConfirmDialog(false)}
+                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Reject Reservation Dialog */}
+        {showRejectDialog && (
+          <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/50">
+            <p className="text-red-400 mb-3">Are you sure you want to reject this reservation? {sendEmail && 'A rejection email will be sent to the customer.'}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  handleStatusChange('REJECTED');
+                  setShowRejectDialog(false);
+                }}
+                disabled={isUpdating}
+                className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors flex items-center gap-2"
+              >
+                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                Yes, Reject Reservation
+              </button>
+              <button
+                onClick={() => setShowRejectDialog(false)}
+                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Complete Reservation Dialog */}
+        {showCompleteDialog && (
+          <div className="mt-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/50">
+            <p className="text-blue-400 mb-3">Are you sure you want to mark this reservation as completed?</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  handleStatusChange('COMPLETED');
+                  setShowCompleteDialog(false);
+                }}
+                disabled={isUpdating}
+                className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors flex items-center gap-2"
+              >
+                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                Yes, Mark Completed
+              </button>
+              <button
+                onClick={() => setShowCompleteDialog(false)}
+                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Cancel Reservation Dialog */}
+        {showCancelDialog && (
+          <div className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/50">
+            <p className="text-amber-400 mb-3">Are you sure you want to cancel this reservation? {sendEmail && 'A cancellation email will be sent to the customer.'}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  handleStatusChange('CANCELLED');
+                  setShowCancelDialog(false);
+                }}
+                disabled={isUpdating}
+                className="px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors flex items-center gap-2"
+              >
+                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                Yes, Cancel Reservation
+              </button>
+              <button
+                onClick={() => setShowCancelDialog(false)}
+                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+              >
+                Go Back
               </button>
             </div>
           </div>
