@@ -1,6 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
-import com.lowagie.text.DocumentException;
+import org.openpdf.text.DocumentException;
 import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
 import com.pimvanleeuwen.the_harry_list_backend.service.PdfExportService;
 import org.junit.jupiter.api.Test;
