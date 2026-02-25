@@ -151,7 +151,7 @@ jobs:
             type=ref,event=branch
 
       - name: Build and push Backend Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./the-harry-list-backend
           file: ./the-harry-list-backend/Dockerfile
@@ -173,7 +173,7 @@ jobs:
             type=ref,event=branch
 
       - name: Build and push Public Frontend Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./the-harry-list-public
           file: ./the-harry-list-public/Dockerfile
@@ -195,7 +195,7 @@ jobs:
             type=ref,event=branch
 
       - name: Build and push Admin Frontend Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./the-harry-list-admin
           file: ./the-harry-list-admin/Dockerfile
