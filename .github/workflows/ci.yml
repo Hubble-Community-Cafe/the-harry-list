@@ -10,6 +10,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Minimal default permissions for all jobs
+permissions:
+  contents: read
+
 jobs:
   # ==================== BACKEND ====================
   backend-test:
