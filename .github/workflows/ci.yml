@@ -19,10 +19,10 @@ jobs:
       run:
         working-directory: the-harry-list-backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
@@ -32,7 +32,7 @@ jobs:
         run: mvn test -B
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: backend-test-results
@@ -46,10 +46,10 @@ jobs:
       run:
         working-directory: the-harry-list-backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
@@ -66,10 +66,10 @@ jobs:
       run:
         working-directory: the-harry-list-public
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
@@ -95,10 +95,10 @@ jobs:
       run:
         working-directory: the-harry-list-admin
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
@@ -127,7 +127,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -151,7 +151,7 @@ jobs:
             type=ref,event=branch
 
       - name: Build and push Backend Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./the-harry-list-backend
           file: ./the-harry-list-backend/Dockerfile
@@ -173,7 +173,7 @@ jobs:
             type=ref,event=branch
 
       - name: Build and push Public Frontend Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./the-harry-list-public
           file: ./the-harry-list-public/Dockerfile
@@ -195,7 +195,7 @@ jobs:
             type=ref,event=branch
 
       - name: Build and push Admin Frontend Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./the-harry-list-admin
           file: ./the-harry-list-admin/Dockerfile
