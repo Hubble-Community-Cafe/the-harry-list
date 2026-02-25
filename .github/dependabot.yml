@@ -1,0 +1,117 @@
+version: 2
+updates:
+  # ── Backend (Maven) ──────────────────────────────────────────────────────────
+  - package-ecosystem: "maven"
+    directory: "/the-harry-list-backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Amsterdam"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "PimVanLeeuwen"
+    labels:
+      - "dependencies"
+      - "backend"
+    groups:
+      # Group all Spring Boot updates into one PR
+      spring-boot:
+        patterns:
+          - "org.springframework*"
+          - "spring-*"
+      # Group Microsoft/Azure updates into one PR
+      microsoft-azure:
+        patterns:
+          - "com.microsoft*"
+          - "com.azure*"
+
+  # ── Admin Frontend (npm) ──────────────────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/the-harry-list-admin"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Amsterdam"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "PimVanLeeuwen"
+    labels:
+      - "dependencies"
+      - "frontend"
+      - "admin"
+    groups:
+      # Group all React/UI related updates
+      react:
+        patterns:
+          - "react*"
+          - "@types/react*"
+          - "react-*"
+      # Group Azure MSAL updates
+      msal:
+        patterns:
+          - "@azure/msal-*"
+      # Group Radix UI / shadcn
+      radix-ui:
+        patterns:
+          - "@radix-ui/*"
+      # Group build tooling
+      build-tools:
+        patterns:
+          - "vite*"
+          - "@vitejs/*"
+          - "typescript"
+          - "eslint*"
+          - "@typescript-eslint/*"
+          - "vitest*"
+          - "@vitest/*"
+          - "tailwindcss*"
+
+  # ── Public Frontend (npm) ─────────────────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/the-harry-list-public"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Amsterdam"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "PimVanLeeuwen"
+    labels:
+      - "dependencies"
+      - "frontend"
+      - "public"
+    groups:
+      react:
+        patterns:
+          - "react*"
+          - "@types/react*"
+          - "react-*"
+      build-tools:
+        patterns:
+          - "vite*"
+          - "@vitejs/*"
+          - "typescript"
+          - "eslint*"
+          - "@typescript-eslint/*"
+          - "vitest*"
+          - "@vitest/*"
+          - "tailwindcss*"
+
+  # ── GitHub Actions ────────────────────────────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Amsterdam"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "PimVanLeeuwen"
+    labels:
+      - "dependencies"
+      - "ci"
+
