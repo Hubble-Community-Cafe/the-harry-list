@@ -43,6 +43,9 @@ services:
       - CALENDAR_FEED_TOKEN=${CALENDAR_FEED_TOKEN:-}
       - CALENDAR_FEED_STAFF_TOKEN=${CALENDAR_FEED_STAFF_TOKEN:-}
 
+      # CORS - Allowed origins (comma-separated)
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
+
       # Logging
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG

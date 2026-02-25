@@ -49,6 +49,9 @@ services:
       - CALENDAR_FEED_TOKEN=__CALENDAR_FEED_TOKEN__
       - CALENDAR_FEED_STAFF_TOKEN=__CALENDAR_FEED_STAFF_TOKEN__
 
+      # CORS - Allowed origins (comma-separated, must match your frontend URLs)
+      - CORS_ALLOWED_ORIGINS=https://harry.hubble.cafe,https://harry-admin.hubble.cafe
+
       # Logging
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG

@@ -33,6 +33,9 @@ public class SecurityConfig {
     @Value("${azure.client-id:}")
     private String azureClientId;
 
+    @Value("${cors.allowed-origins:}")
+    private String corsAllowedOrigins;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -123,7 +126,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+
+        // Use configured origins if available, otherwise fall back to permissive for dev
+        if (corsAllowedOrigins != null && !corsAllowedOrigins.isEmpty()) {
+            configuration.setAllowedOrigins(Arrays.asList(corsAllowedOrigins.split(",")));
+        } else {
+            configuration.setAllowedOriginPatterns(List.of("http://localhost:*"));
+        }
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList(
             "Authorization",

@@ -14,6 +14,20 @@ public class EmailTemplates {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
+    /**
+     * HTML-encode a string to prevent XSS/HTML injection in email templates.
+     * Converts special HTML characters to their entity equivalents.
+     */
+    private static String escapeHtml(String input) {
+        if (input == null) return "";
+        return input
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#x27;");
+    }
+
     public static String buildSubmittedEmailBody(Reservation reservation, String barName) {
         return String.format("""
             <!DOCTYPE html>
@@ -58,15 +72,15 @@ public class EmailTemplates {
             </body>
             </html>
             """,
-            reservation.getContactName(),
-            reservation.getConfirmationNumber(),
-            reservation.getEventTitle(),
+            escapeHtml(reservation.getContactName()),
+            escapeHtml(reservation.getConfirmationNumber()),
+            escapeHtml(reservation.getEventTitle()),
             reservation.getEventDate().format(DATE_FORMATTER),
             reservation.getStartTime().format(TIME_FORMATTER),
             reservation.getEndTime().format(TIME_FORMATTER),
             reservation.getLocation().getDisplayName(),
             reservation.getExpectedGuests(),
-            barName
+            escapeHtml(barName)
         );
     }
 
@@ -138,17 +152,17 @@ public class EmailTemplates {
             statusColor,
             statusColor,
             reservation.getStatus().getDisplayName(),
-            reservation.getContactName(),
+            escapeHtml(reservation.getContactName()),
             statusMessage,
-            reservation.getConfirmationNumber(),
-            reservation.getEventTitle(),
+            escapeHtml(reservation.getConfirmationNumber()),
+            escapeHtml(reservation.getEventTitle()),
             reservation.getEventDate().format(DATE_FORMATTER),
             reservation.getStartTime().format(TIME_FORMATTER),
             reservation.getEndTime().format(TIME_FORMATTER),
             reservation.getLocation().getDisplayName(),
             reservation.getExpectedGuests(),
             reservation.getStatus().getDisplayName(),
-            barName
+            escapeHtml(barName)
         );
     }
 
@@ -194,16 +208,16 @@ public class EmailTemplates {
             </body>
             </html>
             """,
-            reservation.getContactName(),
-            reservation.getConfirmationNumber(),
-            reservation.getEventTitle(),
+            escapeHtml(reservation.getContactName()),
+            escapeHtml(reservation.getConfirmationNumber()),
+            escapeHtml(reservation.getEventTitle()),
             reservation.getEventDate().format(DATE_FORMATTER),
             reservation.getStartTime().format(TIME_FORMATTER),
             reservation.getEndTime().format(TIME_FORMATTER),
             reservation.getLocation().getDisplayName(),
             reservation.getExpectedGuests(),
             reservation.getStatus().getDisplayName(),
-            barName
+            escapeHtml(barName)
         );
     }
 
@@ -243,11 +257,11 @@ public class EmailTemplates {
             </body>
             </html>
             """,
-            reservation.getContactName(),
-            reservation.getEventTitle(),
-            reservation.getConfirmationNumber(),
-            staffEmail,
-            barName
+            escapeHtml(reservation.getContactName()),
+            escapeHtml(reservation.getEventTitle()),
+            escapeHtml(reservation.getConfirmationNumber()),
+            escapeHtml(staffEmail),
+            escapeHtml(barName)
         );
     }
 
@@ -297,12 +311,12 @@ public class EmailTemplates {
             </body>
             </html>
             """,
-            reservation.getConfirmationNumber(),
-            reservation.getContactName(),
-            reservation.getEmail(),
-            reservation.getPhoneNumber() != null ? reservation.getPhoneNumber() : "Not provided",
-            reservation.getOrganizationName() != null ? reservation.getOrganizationName() : "Not provided",
-            reservation.getEventTitle(),
+            escapeHtml(reservation.getConfirmationNumber()),
+            escapeHtml(reservation.getContactName()),
+            escapeHtml(reservation.getEmail()),
+            reservation.getPhoneNumber() != null ? escapeHtml(reservation.getPhoneNumber()) : "Not provided",
+            reservation.getOrganizationName() != null ? escapeHtml(reservation.getOrganizationName()) : "Not provided",
+            escapeHtml(reservation.getEventTitle()),
             reservation.getEventType().getDisplayName(),
             reservation.getOrganizerType().getDisplayName(),
             reservation.getEventDate().format(DATE_FORMATTER),
@@ -313,13 +327,13 @@ public class EmailTemplates {
             reservation.getPaymentOption().getDisplayName(),
             reservation.getFoodRequired() != null && reservation.getFoodRequired()
                 ? "<p><strong>Food Required:</strong> Yes (Dietary: " +
-                  (reservation.getDietaryPreference() != null ? reservation.getDietaryPreference().getDisplayName() : "None") + ")</p>"
+                  (reservation.getDietaryPreference() != null ? escapeHtml(reservation.getDietaryPreference().getDisplayName()) : "None") + ")</p>"
                 : "",
             reservation.getDescription() != null && !reservation.getDescription().isEmpty()
-                ? "<p><strong>Description:</strong> " + reservation.getDescription() + "</p>"
+                ? "<p><strong>Description:</strong> " + escapeHtml(reservation.getDescription()) + "</p>"
                 : "",
             reservation.getComments() != null && !reservation.getComments().isEmpty()
-                ? "<p><strong>Comments:</strong> " + reservation.getComments() + "</p>"
+                ? "<p><strong>Comments:</strong> " + escapeHtml(reservation.getComments()) + "</p>"
                 : ""
         );
     }
@@ -339,8 +353,8 @@ public class EmailTemplates {
     }
 
     public static String buildCustomEmailBody(Reservation reservation, String messageContent, String barName, String staffEmail) {
-        // Convert line breaks in the message to HTML
-        String htmlMessage = messageContent.replace("\n", "<br>");
+        // HTML-encode the message content, then convert line breaks to <br>
+        String htmlMessage = escapeHtml(messageContent).replace("\n", "<br>");
 
         return String.format("""
             <!DOCTYPE html>
@@ -385,15 +399,15 @@ public class EmailTemplates {
             </body>
             </html>
             """,
-            barName,
-            reservation.getContactName(),
+            escapeHtml(barName),
+            escapeHtml(reservation.getContactName()),
             htmlMessage,
-            reservation.getEventTitle(),
+            escapeHtml(reservation.getEventTitle()),
             reservation.getEventDate().format(DATE_FORMATTER),
             reservation.getLocation().getDisplayName(),
-            reservation.getConfirmationNumber(),
-            staffEmail,
-            barName
+            escapeHtml(reservation.getConfirmationNumber()),
+            escapeHtml(staffEmail),
+            escapeHtml(barName)
         );
     }
 }

@@ -5,12 +5,13 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Random;
+import java.security.SecureRandom;
 
 /**
  * Reservation entity representing a bar/event reservation.
@@ -34,20 +35,24 @@ public class Reservation {
 
     /** Full name of the person making the reservation */
     @NotBlank(message = "Name is required")
+    @Size(max = 255, message = "Name must not exceed 255 characters")
     @Column(name = "contact_name", nullable = false)
     private String contactName;
 
     /** Email address for communication */
     @NotBlank(message = "Email is required")
     @Email(message = "Must be a valid email address")
+    @Size(max = 255, message = "Email must not exceed 255 characters")
     @Column(name = "email", nullable = false)
     private String email;
 
     /** Phone number for contact */
+    @Size(max = 50, message = "Phone number must not exceed 50 characters")
     @Column(name = "phone_number")
     private String phoneNumber;
 
     /** Organization/Association name (if applicable) */
+    @Size(max = 255, message = "Organization name must not exceed 255 characters")
     @Column(name = "organization_name")
     private String organizationName;
 
@@ -55,10 +60,12 @@ public class Reservation {
 
     /** Title/name of the event */
     @NotBlank(message = "Event title is required")
+    @Size(max = 255, message = "Event title must not exceed 255 characters")
     @Column(name = "event_title", nullable = false)
     private String eventTitle;
 
     /** Description of the event */
+    @Size(max = 5000, message = "Description must not exceed 5000 characters")
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
@@ -114,6 +121,7 @@ public class Reservation {
     private SeatingArea seatingArea;
 
     /** Specific area within the bar (if applicable) */
+    @Size(max = 500, message = "Specific area must not exceed 500 characters")
     @Column(name = "specific_area")
     private String specificArea;
 
@@ -126,18 +134,22 @@ public class Reservation {
     private PaymentOption paymentOption;
 
     /** TU/e Cost center number (if paying via cost center) */
+    @Size(max = 100, message = "Cost center must not exceed 100 characters")
     @Column(name = "cost_center")
     private String costCenter;
 
     /** Name for the invoice (if paying via invoice) */
+    @Size(max = 255, message = "Invoice name must not exceed 255 characters")
     @Column(name = "invoice_name")
     private String invoiceName;
 
     /** Address for the invoice */
+    @Size(max = 500, message = "Invoice address must not exceed 500 characters")
     @Column(name = "invoice_address")
     private String invoiceAddress;
 
     /** VAT number for invoice (if applicable) */
+    @Size(max = 50, message = "VAT number must not exceed 50 characters")
     @Column(name = "vat_number")
     private String vatNumber;
 
@@ -153,6 +165,7 @@ public class Reservation {
     private DietaryPreference dietaryPreference;
 
     /** Additional dietary requirements or allergies */
+    @Size(max = 1000, message = "Dietary notes must not exceed 1000 characters")
     @Column(name = "dietary_notes", columnDefinition = "TEXT")
     private String dietaryNotes;
 
@@ -167,6 +180,7 @@ public class Reservation {
     // ===== Additional Information =====
 
     /** Any additional comments or requests */
+    @Size(max = 5000, message = "Comments must not exceed 5000 characters")
     @Column(name = "comments", columnDefinition = "TEXT")
     private String comments;
 
@@ -175,6 +189,7 @@ public class Reservation {
     private Boolean termsAccepted;
 
     /** How did they hear about us */
+    @Size(max = 255, message = "Referral source must not exceed 255 characters")
     @Column(name = "referral_source")
     private String referralSource;
 
@@ -186,6 +201,7 @@ public class Reservation {
     private ReservationStatus status = ReservationStatus.PENDING;
 
     /** Internal notes (only visible to staff) */
+    @Size(max = 5000, message = "Internal notes must not exceed 5000 characters")
     @Column(name = "internal_notes", columnDefinition = "TEXT")
     private String internalNotes;
 
@@ -218,16 +234,17 @@ public class Reservation {
         updatedAt = LocalDateTime.now();
     }
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     /**
      * Generate a random 6-character alphanumeric confirmation number.
      * Format: XXXXXX (e.g., "A3X7K9")
      */
     private String generateConfirmationNumber() {
         String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Exclude similar looking chars (I, O, 0, 1)
-        Random random = new Random();
         StringBuilder sb = new StringBuilder(6);
         for (int i = 0; i < 6; i++) {
-            sb.append(chars.charAt(random.nextInt(chars.length())));
+            sb.append(chars.charAt(SECURE_RANDOM.nextInt(chars.length())));
         }
         return sb.toString();
     }

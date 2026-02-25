@@ -10,6 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.List;
 
@@ -50,9 +52,9 @@ public class CalendarFeedController {
             @RequestParam(required = false) String location,
             @RequestParam(required = false, defaultValue = "false") boolean upcomingOnly) {
 
-        // Validate token if configured
+        // Validate token if configured (constant-time comparison to prevent timing attacks)
         if (feedToken != null && !feedToken.isEmpty()) {
-            if (token == null || !token.equals(feedToken)) {
+            if (token == null || !constantTimeEquals(token, feedToken)) {
                 return ResponseEntity.status(401).body("Invalid or missing token");
             }
         }
@@ -77,7 +79,7 @@ public class CalendarFeedController {
         if (staffFeedToken == null || staffFeedToken.isEmpty()) {
             return ResponseEntity.status(503).body("Staff feed not configured");
         }
-        if (token == null || !token.equals(staffFeedToken)) {
+        if (token == null || !constantTimeEquals(token, staffFeedToken)) {
             return ResponseEntity.status(401).body("Invalid or missing staff token");
         }
 
@@ -181,6 +183,15 @@ public class CalendarFeedController {
             public String outlook;
             public String appleCalendar;
         }
+    }
+
+    /**
+     * Constant-time string comparison to prevent timing attacks on token validation.
+     */
+    private static boolean constantTimeEquals(String a, String b) {
+        byte[] aBytes = a.getBytes(StandardCharsets.UTF_8);
+        byte[] bBytes = b.getBytes(StandardCharsets.UTF_8);
+        return MessageDigest.isEqual(aBytes, bBytes);
     }
 }
 
