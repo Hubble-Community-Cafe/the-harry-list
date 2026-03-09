@@ -52,6 +52,11 @@ services:
       # CORS - Allowed origins (comma-separated, must match your frontend URLs)
       - CORS_ALLOWED_ORIGINS=https://harry.hubble.cafe,https://harry-admin.hubble.cafe,https://harry.meteorcommunity.cafe,https://harry-admin.meteorcommunity.cafe
 
+      # Google reCAPTCHA v3 Configuration (for bot protection on public form)
+      # Get keys from: https://www.google.com/recaptcha/admin
+      - RECAPTCHA_ENABLED=true
+      - RECAPTCHA_SECRET_KEY=__RECAPTCHA_SECRET_KEY__
+
       # Logging
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG
@@ -69,6 +74,8 @@ services:
       - harry-list
     environment:
       - API_URL=https://api.hubble.cafe
+      # Google reCAPTCHA v3 Site Key (public key)
+      - RECAPTCHA_SITE_KEY=__RECAPTCHA_SITE_KEY__
 
   # Admin Portal Frontend
   the-harry-list-admin:
