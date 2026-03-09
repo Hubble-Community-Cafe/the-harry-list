@@ -7,28 +7,21 @@ import { getRecaptchaSiteKey } from './lib/api.ts'
 
 const recaptchaSiteKey = getRecaptchaSiteKey();
 
-const AppWithRecaptcha = () => {
-  // If no reCAPTCHA key is configured, render without provider
-  if (!recaptchaSiteKey) {
-    return <App />;
-  }
-
-  return (
-    <GoogleReCaptchaProvider
-      reCaptchaKey={recaptchaSiteKey}
-      scriptProps={{
-        async: true,
-        defer: true,
-        appendTo: 'head',
-      }}
-    >
-      <App />
-    </GoogleReCaptchaProvider>
-  );
-};
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AppWithRecaptcha />
+    {recaptchaSiteKey ? (
+      <GoogleReCaptchaProvider
+        reCaptchaKey={recaptchaSiteKey}
+        scriptProps={{
+          async: true,
+          defer: true,
+          appendTo: 'head',
+        }}
+      >
+        <App />
+      </GoogleReCaptchaProvider>
+    ) : (
+      <App />
+    )}
   </StrictMode>,
 )
