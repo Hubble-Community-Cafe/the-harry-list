@@ -63,8 +63,43 @@ Bar reservation system for Stichting Bar Potential.
    | `ALLOWED_GROUP_ID` | Azure AD group ID for admin access |
    | `CALENDAR_FEED_TOKEN` | Token for public calendar feed |
    | `CALENDAR_FEED_STAFF_TOKEN` | Token for staff calendar feed (with contact details) |
+   | `RECAPTCHA_ENABLED` | Set to `true` to enable reCAPTCHA (recommended for production) |
+   | `RECAPTCHA_SECRET_KEY` | Google reCAPTCHA v3 secret key (backend) |
+   | `RECAPTCHA_SITE_KEY` | Google reCAPTCHA v3 site key (public frontend) |
 
 4. **Deploy** the stack in Portainer using the modified compose file
+
+## Google reCAPTCHA v3 Setup
+
+The public reservation form is protected by Google reCAPTCHA v3 to prevent bot submissions.
+
+### Setup
+
+1. **Register your site** at [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin)
+   - Choose **reCAPTCHA v3**
+   - Add your domains (e.g., `yourdomain.com`, `localhost` for development)
+
+2. **Get your keys**:
+   - **Site Key** (public) — Used in the frontend
+   - **Secret Key** (private) — Used in the backend
+
+3. **Set environment variables**:
+
+   **Backend (`the-harry-list-backend`)**:
+   ```env
+   RECAPTCHA_ENABLED=true
+   RECAPTCHA_SECRET_KEY=your-secret-key
+   ```
+
+   **Public Frontend (`the-harry-list-public`)**:
+   ```env
+   RECAPTCHA_SITE_KEY=your-site-key
+   ```
+
+### Development
+
+reCAPTCHA is disabled by default in local development (`RECAPTCHA_ENABLED=false`).
+To test reCAPTCHA locally, register `localhost` in the reCAPTCHA admin console and set the environment variables.
 
 ## Azure AD App Registration
 

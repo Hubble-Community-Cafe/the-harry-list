@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import {
   User, Mail, Phone, Building2, Calendar, MapPin,
   CreditCard, UtensilsCrossed, MessageSquare, Send, Loader2,
   ChevronRight, ChevronLeft, Sparkles, Plus, Minus, CalendarDays
 } from 'lucide-react';
-import { submitReservation, fetchFormOptions } from '../lib/api';
+import { submitReservation, fetchFormOptions, getRecaptchaSiteKey } from '../lib/api';
 import type { ReservationFormData } from '../types/reservation';
 
 // Form option type from API
@@ -111,6 +112,10 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
   const [optionsLoading, setOptionsLoading] = useState(true);
   const [optionsError, setOptionsError] = useState<string | null>(null);
 
+  // reCAPTCHA v3 hook - only available when site key is configured
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  const recaptchaEnabled = Boolean(getRecaptchaSiteKey());
+
   // Fetch form options from API on mount
   useEffect(() => {
     async function loadOptions() {
@@ -181,19 +186,33 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
     }
   };
 
-  const onSubmit = async (data: ReservationFormData) => {
+  const onSubmit = useCallback(async (data: ReservationFormData) => {
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
-      const result = await submitReservation(data);
+      let recaptchaToken: string | undefined;
+
+      // Execute reCAPTCHA if enabled and available
+      if (recaptchaEnabled && executeRecaptcha) {
+        try {
+          recaptchaToken = await executeRecaptcha('submit_reservation');
+        } catch (recaptchaError) {
+          console.error('reCAPTCHA execution failed:', recaptchaError);
+          setSubmitError('Security verification failed. Please refresh the page and try again.');
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      const result = await submitReservation(data, recaptchaToken);
       onSuccess(result);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Failed to submit reservation');
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [executeRecaptcha, recaptchaEnabled, onSuccess]);
 
   return (
     <div className="max-w-4xl mx-auto">
