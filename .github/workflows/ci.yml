@@ -146,7 +146,7 @@ jobs:
       # ========== BACKEND ==========
       - name: Extract metadata for Backend
         id: meta-backend
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository_owner }}/the-harry-list-backend
           tags: |
@@ -168,7 +168,7 @@ jobs:
       # ========== PUBLIC FRONTEND ==========
       - name: Extract metadata for Public Frontend
         id: meta-public
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository_owner }}/the-harry-list-public
           tags: |
@@ -190,7 +190,7 @@ jobs:
       # ========== ADMIN FRONTEND ==========
       - name: Extract metadata for Admin Frontend
         id: meta-admin
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository_owner }}/the-harry-list-admin
           tags: |
