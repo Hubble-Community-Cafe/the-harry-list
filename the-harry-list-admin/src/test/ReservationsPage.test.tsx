@@ -1,7 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { ReservationsPage } from '../pages/ReservationsPage';
+
+function dateOffset(monthOffset: number, dayOffset = 0): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() + monthOffset);
+  d.setDate(d.getDate() + dayOffset);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 // Mock the API
 vi.mock('../lib/api', () => ({
@@ -12,7 +19,7 @@ vi.mock('../lib/api', () => ({
       contactName: 'John Doe',
       email: 'john@example.com',
       status: 'PENDING',
-      eventDate: '2026-02-20',
+      eventDate: dateOffset(1, 0),
       startTime: '14:00:00',
       endTime: '17:00:00',
       location: 'HUBBLE',
@@ -25,7 +32,7 @@ vi.mock('../lib/api', () => ({
       contactName: 'Jane Smith',
       email: 'jane@example.com',
       status: 'CONFIRMED',
-      eventDate: '2026-02-21',
+      eventDate: dateOffset(1, 1),
       startTime: '10:00:00',
       endTime: '12:00:00',
       location: 'METEOR',
@@ -38,11 +45,23 @@ vi.mock('../lib/api', () => ({
       contactName: 'Bob Wilson',
       email: 'bob@example.com',
       status: 'COMPLETED',
-      eventDate: '2026-02-15',
+      eventDate: dateOffset(1, 2),
       startTime: '09:00:00',
       endTime: '11:00:00',
       location: 'HUBBLE',
       expectedGuests: 30,
+    },
+    {
+      id: 4,
+      eventTitle: 'Old Event',
+      contactName: 'Past Person',
+      email: 'past@example.com',
+      status: 'COMPLETED',
+      eventDate: dateOffset(-1, 0),
+      startTime: '10:00:00',
+      endTime: '12:00:00',
+      location: 'HUBBLE',
+      expectedGuests: 5,
     },
   ]),
 }));
@@ -91,6 +110,31 @@ describe('ReservationsPage', () => {
     await waitFor(() => {
       const filterElements = document.querySelectorAll('select, input, button');
       expect(filterElements.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('hides past reservations by default', async () => {
+    renderWithRouter(<ReservationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Birthday Party/i)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/Old Event/i)).not.toBeInTheDocument();
+  });
+
+  it('shows past reservations when Show past is checked', async () => {
+    renderWithRouter(<ReservationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Birthday Party/i)).toBeInTheDocument();
+    });
+
+    const checkbox = screen.getByRole('checkbox', { name: /show past/i });
+    fireEvent.click(checkbox);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Old Event/i)).toBeInTheDocument();
     });
   });
 });
