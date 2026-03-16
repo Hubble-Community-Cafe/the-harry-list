@@ -3,10 +3,21 @@ import { createRoot } from 'react-dom/client';
 import { PublicClientApplication, EventType, type AccountInfo } from '@azure/msal-browser';
 import { MsalProvider } from '@azure/msal-react';
 import { BrowserRouter } from 'react-router-dom';
+import * as Sentry from '@sentry/react';
 import { msalConfig } from './lib/authConfig';
 import { setMsalInstance } from './lib/api';
 import App from './App';
 import './index.css';
+
+const sentryDsn = window.__RUNTIME_CONFIG__?.SENTRY_DSN || import.meta.env.VITE_SENTRY_DSN;
+if (sentryDsn && !sentryDsn.startsWith('__')) {
+  Sentry.init({
+    dsn: sentryDsn,
+    environment: import.meta.env.MODE,
+    integrations: [Sentry.browserTracingIntegration()],
+    tracesSampleRate: 0.1,
+  });
+}
 
 const msalInstance = new PublicClientApplication(msalConfig);
 

@@ -38,7 +38,9 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
      */
     public ResponseEntity<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> executeWithEmail(
             com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input, boolean sendEmail) {
-        log.info("Creating new reservation for: {} at {}", input.getContactName(), input.getLocation());
+        log.info("LOGGING reservation.submitted contact='{}' email='{}' event='{}' date={} location={} guests={}",
+                input.getContactName(), input.getEmail(), input.getEventTitle(),
+                input.getEventDate(), input.getLocation(), input.getExpectedGuests());
 
         // Convert DTO to entity
         Reservation entity = reservationMapper.toEntity(input);
@@ -49,7 +51,9 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
         // Save to database
         Reservation savedEntity = reservationRepository.save(entity);
 
-        log.info("Created reservation with ID: {}", savedEntity.getId());
+        log.info("LOGGING reservation.created id={} confirmation='{}' event='{}' date={} location={}",
+                savedEntity.getId(), savedEntity.getConfirmationNumber(),
+                savedEntity.getEventTitle(), savedEntity.getEventDate(), savedEntity.getLocation());
 
         // Send email notification if enabled
         if (sendEmail && emailService != null) {

@@ -73,6 +73,8 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
             String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.SUBMITTED, vars);
             String body = emailTemplateService.getRenderedBody(EmailTemplateType.SUBMITTED, vars);
             sendEmail(reservation.getEmail(), subject, body);
+            log.info("LOGGING email.submitted_sent confirmation='{}' to='{}'",
+                    reservation.getConfirmationNumber(), reservation.getEmail());
             notifyStaffNewReservation(reservation);
         } catch (Exception e) {
             log.error("Failed to send reservation submitted email to: {}", reservation.getEmail(), e);
@@ -86,6 +88,8 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
             String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.STATUS_CHANGED, vars);
             String body = emailTemplateService.getRenderedBody(EmailTemplateType.STATUS_CHANGED, vars);
             sendEmail(reservation.getEmail(), subject, body);
+            log.info("LOGGING email.status_change_sent confirmation='{}' to='{}' status={}",
+                    reservation.getConfirmationNumber(), reservation.getEmail(), reservation.getStatus());
         } catch (Exception e) {
             log.error("Failed to send status change email to: {}", reservation.getEmail(), e);
         }
@@ -99,6 +103,8 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
             String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.UPDATED, vars);
             String body = emailTemplateService.getRenderedBody(EmailTemplateType.UPDATED, vars);
             sendEmail(reservation.getEmail(), subject, body);
+            log.info("LOGGING email.updated_sent confirmation='{}' to='{}'",
+                    reservation.getConfirmationNumber(), reservation.getEmail());
         } catch (Exception e) {
             log.error("Failed to send reservation updated email to: {}", reservation.getEmail(), e);
         }
@@ -112,6 +118,8 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
             String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.CANCELLED, vars);
             String body = emailTemplateService.getRenderedBody(EmailTemplateType.CANCELLED, vars);
             sendEmail(reservation.getEmail(), subject, body);
+            log.info("LOGGING email.cancelled_sent confirmation='{}' to='{}'",
+                    reservation.getConfirmationNumber(), reservation.getEmail());
         } catch (Exception e) {
             log.error("Failed to send reservation cancelled email to: {}", reservation.getEmail(), e);
         }

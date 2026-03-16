@@ -51,6 +51,9 @@ services:
       - RECAPTCHA_ENABLED=${RECAPTCHA_ENABLED:-false}
       - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY:-}
 
+      # Sentry error monitoring (leave empty to disable)
+      - SENTRY_DSN=${SENTRY_DSN:-}
+
       # Logging
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG
@@ -71,6 +74,8 @@ services:
       - API_URL=http://localhost:8080
       # Google reCAPTCHA v3 site key (public)
       - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY:-}
+      # Sentry error monitoring (leave empty to disable)
+      - SENTRY_DSN=${SENTRY_DSN_PUBLIC:-}
 
   # Admin Portal Frontend
   the-harry-list-admin:
@@ -92,6 +97,8 @@ services:
       - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
       - REDIRECT_URI=http://localhost:5174
       - ALLOWED_GROUP_ID=${ALLOWED_GROUP_ID:-}
+      # Sentry error monitoring (leave empty to disable)
+      - SENTRY_DSN=${SENTRY_DSN_ADMIN:-}
 
   # Local MariaDB for development
   mariadb:
