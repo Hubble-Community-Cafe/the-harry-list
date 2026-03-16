@@ -4,6 +4,10 @@ target/
 *.log
 *.class
 .env
+.claude/
+.claude-flow/
+.mcp.json
+CLAUDE.md
 
 # Docker Compose files with secrets (DO NOT COMMIT)
 docker-compose.portainer.yml

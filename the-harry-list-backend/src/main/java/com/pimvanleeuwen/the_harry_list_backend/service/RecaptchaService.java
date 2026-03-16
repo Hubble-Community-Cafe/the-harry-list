@@ -41,8 +41,8 @@ public class RecaptchaService {
      * @return true if verification passes, false otherwise
      */
     public boolean verifyToken(String token, String expectedAction) {
-        // If reCAPTCHA is disabled (e.g., in development), allow all requests
-        if (!enabled) {
+        // If reCAPTCHA is disabled (e.g., in development without a secret key), allow all requests
+        if (!isEnabled()) {
             logger.debug("reCAPTCHA is disabled, skipping verification");
             return true;
         }
@@ -104,9 +104,11 @@ public class RecaptchaService {
 
     /**
      * Check if reCAPTCHA verification is enabled.
+     * Auto-enables when a secret key is configured, even if the enabled flag is not explicitly set.
+     * This prevents misconfiguration from accidentally disabling reCAPTCHA in production.
      */
     public boolean isEnabled() {
-        return enabled;
+        return enabled || (secretKey != null && !secretKey.isEmpty());
     }
 }
 

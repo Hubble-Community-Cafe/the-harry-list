@@ -86,5 +86,15 @@ class RecaptchaServiceTest {
         // When & Then
         assertTrue(recaptchaService.isEnabled());
     }
+
+    @Test
+    void isEnabled_shouldReturnTrueWhenSecretKeyConfiguredEvenIfNotExplicitlyEnabled() {
+        // Given - enabled flag is false but secret key is present (e.g. env var set but RECAPTCHA_ENABLED forgotten)
+        ReflectionTestUtils.setField(recaptchaService, "enabled", false);
+        ReflectionTestUtils.setField(recaptchaService, "secretKey", "configured-secret-key");
+
+        // When & Then
+        assertTrue(recaptchaService.isEnabled(), "Should auto-enable when secret key is configured");
+    }
 }
 
