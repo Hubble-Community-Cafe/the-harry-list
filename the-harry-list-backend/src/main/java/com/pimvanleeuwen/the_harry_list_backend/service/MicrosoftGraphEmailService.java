@@ -8,6 +8,7 @@ import com.microsoft.graph.models.ItemBody;
 import com.microsoft.graph.models.Message;
 import com.microsoft.graph.models.Recipient;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import org.slf4j.Logger;
@@ -16,19 +17,25 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 /**
  * Microsoft Graph API email service for sending emails via Microsoft 365.
- * This is the only email service implementation.
+ * Uses EmailTemplateService to render templates, falling back to hardcoded defaults.
  */
 @Service
 @ConditionalOnProperty(name = "app.mail.enabled", havingValue = "true", matchIfMissing = false)
 public class MicrosoftGraphEmailService implements EmailNotificationService {
 
     private static final Logger log = LoggerFactory.getLogger(MicrosoftGraphEmailService.class);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final GraphServiceClient graphClient;
+    private final EmailTemplateService emailTemplateService;
     private final String fromEmail;
     private final String staffEmail;
     private final String barName;
@@ -39,20 +46,20 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
             @Value("${app.mail.graph.client-secret}") String clientSecret,
             @Value("${app.mail.from}") String fromEmail,
             @Value("${app.mail.staff}") String staffEmail,
-            @Value("${app.bar.name:Hubble and Meteor Community Cafes}") String barName) {
+            @Value("${app.bar.name:Hubble and Meteor Community Cafes}") String barName,
+            EmailTemplateService emailTemplateService) {
 
         this.fromEmail = fromEmail;
         this.staffEmail = staffEmail;
         this.barName = barName;
+        this.emailTemplateService = emailTemplateService;
 
-        // Create credential using Azure AD app registration
         ClientSecretCredential credential = new ClientSecretCredentialBuilder()
                 .clientId(clientId)
                 .clientSecret(clientSecret)
                 .tenantId(tenantId)
                 .build();
 
-        // Create Graph client - use direct constructor for this SDK version
         this.graphClient = new GraphServiceClient(credential);
 
         log.info("Microsoft Graph Email service initialized. Sending from: {}, Staff notifications to: {}",
@@ -62,16 +69,11 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
     @Override
     public void sendReservationSubmittedEmail(Reservation reservation) {
         try {
-            log.info("Sending reservation submitted email to: {} via Microsoft Graph", reservation.getEmail());
-
-            String subject = "Reservation Request Received - " + reservation.getEventTitle();
-            String body = EmailTemplates.buildSubmittedEmailBody(reservation, barName);
-
+            Map<String, String> vars = buildBaseVars(reservation);
+            String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.SUBMITTED, vars);
+            String body = emailTemplateService.getRenderedBody(EmailTemplateType.SUBMITTED, vars);
             sendEmail(reservation.getEmail(), subject, body);
-
-            // Also notify staff
             notifyStaffNewReservation(reservation);
-
         } catch (Exception e) {
             log.error("Failed to send reservation submitted email to: {}", reservation.getEmail(), e);
         }
@@ -80,14 +82,10 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
     @Override
     public void sendStatusChangeEmail(Reservation reservation, ReservationStatus oldStatus, String confirmedBy) {
         try {
-            log.info("Sending status change email to: {} via Microsoft Graph (status: {} -> {})",
-                    reservation.getEmail(), oldStatus, reservation.getStatus());
-
-            String subject = EmailTemplates.getStatusChangeSubject(reservation);
-            String body = EmailTemplates.buildStatusChangeEmailBody(reservation, oldStatus, confirmedBy, barName, staffEmail);
-
+            Map<String, String> vars = buildStatusChangeVars(reservation);
+            String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.STATUS_CHANGED, vars);
+            String body = emailTemplateService.getRenderedBody(EmailTemplateType.STATUS_CHANGED, vars);
             sendEmail(reservation.getEmail(), subject, body);
-
         } catch (Exception e) {
             log.error("Failed to send status change email to: {}", reservation.getEmail(), e);
         }
@@ -96,13 +94,11 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
     @Override
     public void sendReservationUpdatedEmail(Reservation reservation) {
         try {
-            log.info("Sending reservation updated email to: {} via Microsoft Graph", reservation.getEmail());
-
-            String subject = "Reservation Updated - " + reservation.getEventTitle();
-            String body = EmailTemplates.buildUpdatedEmailBody(reservation, barName);
-
+            Map<String, String> vars = buildBaseVars(reservation);
+            vars.put("status", reservation.getStatus().getDisplayName());
+            String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.UPDATED, vars);
+            String body = emailTemplateService.getRenderedBody(EmailTemplateType.UPDATED, vars);
             sendEmail(reservation.getEmail(), subject, body);
-
         } catch (Exception e) {
             log.error("Failed to send reservation updated email to: {}", reservation.getEmail(), e);
         }
@@ -111,27 +107,31 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
     @Override
     public void sendReservationCancelledEmail(Reservation reservation) {
         try {
-            log.info("Sending reservation cancelled email to: {} via Microsoft Graph", reservation.getEmail());
-
-            String subject = "Reservation Cancelled - " + reservation.getEventTitle();
-            String body = EmailTemplates.buildCancelledEmailBody(reservation, staffEmail, barName);
-
+            Map<String, String> vars = buildBaseVars(reservation);
+            vars.put("staffEmail", staffEmail);
+            String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.CANCELLED, vars);
+            String body = emailTemplateService.getRenderedBody(EmailTemplateType.CANCELLED, vars);
             sendEmail(reservation.getEmail(), subject, body);
-
         } catch (Exception e) {
             log.error("Failed to send reservation cancelled email to: {}", reservation.getEmail(), e);
         }
     }
 
     @Override
+    public void sendRawEmail(String to, String subject, String htmlBody) {
+        try {
+            sendEmail(to, subject, htmlBody);
+        } catch (Exception e) {
+            log.error("Failed to send raw email to: {}", to, e);
+            throw new RuntimeException("Failed to send email", e);
+        }
+    }
+
+    @Override
     public void sendCustomEmail(Reservation reservation, String subject, String messageContent) {
         try {
-            log.info("Sending custom email to: {} via Microsoft Graph with subject: {}", reservation.getEmail(), subject);
-
             String htmlBody = EmailTemplates.buildCustomEmailBody(reservation, messageContent, barName, staffEmail);
-
             sendEmail(reservation.getEmail(), subject, htmlBody);
-
         } catch (Exception e) {
             log.error("Failed to send custom email to: {}", reservation.getEmail(), e);
             throw new RuntimeException("Failed to send custom email", e);
@@ -140,54 +140,129 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
 
     private void notifyStaffNewReservation(Reservation reservation) {
         try {
-            String subject = "[New Reservation] " + reservation.getEventTitle() + " - " + reservation.getContactName();
-            String body = EmailTemplates.buildStaffNotificationBody(reservation);
-
+            Map<String, String> vars = buildStaffNotificationVars(reservation);
+            String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.STAFF_NOTIFICATION, vars);
+            String body = emailTemplateService.getRenderedBody(EmailTemplateType.STAFF_NOTIFICATION, vars);
             sendEmail(staffEmail, subject, body);
         } catch (Exception e) {
             log.error("Failed to send staff notification", e);
         }
     }
 
+    private Map<String, String> buildBaseVars(Reservation reservation) {
+        Map<String, String> vars = new HashMap<>();
+        vars.put("contactName", reservation.getContactName());
+        vars.put("confirmationNumber", reservation.getConfirmationNumber());
+        vars.put("eventTitle", reservation.getEventTitle());
+        vars.put("eventDate", reservation.getEventDate().format(DATE_FORMATTER));
+        vars.put("startTime", reservation.getStartTime().format(TIME_FORMATTER));
+        vars.put("endTime", reservation.getEndTime().format(TIME_FORMATTER));
+        vars.put("location", reservation.getLocation().getDisplayName());
+        vars.put("expectedGuests", String.valueOf(reservation.getExpectedGuests()));
+        vars.put("barName", barName);
+        return vars;
+    }
+
+    private Map<String, String> buildStatusChangeVars(Reservation reservation) {
+        Map<String, String> vars = buildBaseVars(reservation);
+        vars.put("staffEmail", staffEmail);
+        vars.put("status", reservation.getStatus().getDisplayName());
+        vars.put("statusMessage", resolveStatusMessage(reservation.getStatus()));
+        vars.put("statusColor", resolveStatusColor(reservation.getStatus()));
+        vars.put("statusSubject", resolveStatusSubject(reservation.getStatus()));
+        return vars;
+    }
+
+    private Map<String, String> buildStaffNotificationVars(Reservation reservation) {
+        Map<String, String> vars = new HashMap<>();
+        vars.put("confirmationNumber", reservation.getConfirmationNumber());
+        vars.put("contactName", reservation.getContactName());
+        vars.put("email", reservation.getEmail());
+        vars.put("phone", reservation.getPhoneNumber() != null ? reservation.getPhoneNumber() : "Not provided");
+        vars.put("organization", reservation.getOrganizationName() != null ? reservation.getOrganizationName() : "Not provided");
+        vars.put("eventTitle", reservation.getEventTitle());
+        vars.put("eventType", reservation.getEventType().getDisplayName());
+        vars.put("organizerType", reservation.getOrganizerType().getDisplayName());
+        vars.put("eventDate", reservation.getEventDate().format(DATE_FORMATTER));
+        vars.put("startTime", reservation.getStartTime().format(TIME_FORMATTER));
+        vars.put("endTime", reservation.getEndTime().format(TIME_FORMATTER));
+        vars.put("location", reservation.getLocation().getDisplayName());
+        vars.put("expectedGuests", String.valueOf(reservation.getExpectedGuests()));
+        vars.put("payment", reservation.getPaymentOption().getDisplayName());
+        vars.put("dietaryInfo", resolveDietaryInfo(reservation));
+        vars.put("description", reservation.getDescription() != null ? reservation.getDescription() : "");
+        vars.put("comments", reservation.getComments() != null ? reservation.getComments() : "");
+        return vars;
+    }
+
+    private String resolveStatusMessage(ReservationStatus status) {
+        return switch (status) {
+            case CONFIRMED -> "We're pleased to confirm your reservation!";
+            case REJECTED -> "Unfortunately, we're unable to accommodate your reservation request at this time.";
+            case CANCELLED -> "Your reservation has been cancelled as requested.";
+            case COMPLETED -> "Thank you for choosing us! We hope you had a great event.";
+            default -> "Your reservation status has been updated.";
+        };
+    }
+
+    private String resolveStatusColor(ReservationStatus status) {
+        return switch (status) {
+            case CONFIRMED -> "#4CAF50";
+            case REJECTED, CANCELLED -> "#f44336";
+            case COMPLETED -> "#2196F3";
+            default -> "#FF9800";
+        };
+    }
+
+    private String resolveStatusSubject(ReservationStatus status) {
+        return switch (status) {
+            case CONFIRMED -> "Reservation Confirmed";
+            case REJECTED -> "Reservation Request Update";
+            case CANCELLED -> "Reservation Cancelled";
+            case COMPLETED -> "Thank You";
+            default -> "Reservation Update";
+        };
+    }
+
+    private String resolveDietaryInfo(Reservation reservation) {
+        if (Boolean.TRUE.equals(reservation.getFoodRequired())) {
+            String dietary = reservation.getDietaryPreference() != null
+                    ? reservation.getDietaryPreference().getDisplayName()
+                    : "None";
+            return "Yes (Dietary: " + dietary + ")";
+        }
+        return "No";
+    }
+
     private void sendEmail(String to, String subject, String htmlBody) {
+        Message message = new Message();
+        message.setSubject(subject);
+
+        ItemBody body = new ItemBody();
+        body.setContentType(BodyType.Html);
+        body.setContent(htmlBody);
+        message.setBody(body);
+
+        Recipient toRecipient = new Recipient();
+        EmailAddress toAddress = new EmailAddress();
+        toAddress.setAddress(to);
+        toRecipient.setEmailAddress(toAddress);
+
+        LinkedList<Recipient> toRecipients = new LinkedList<>();
+        toRecipients.add(toRecipient);
+        message.setToRecipients(toRecipients);
+
+        com.microsoft.graph.users.item.sendmail.SendMailPostRequestBody requestBody =
+                new com.microsoft.graph.users.item.sendmail.SendMailPostRequestBody();
+        requestBody.setMessage(message);
+        requestBody.setSaveToSentItems(true);
+
         try {
-            // Create the message
-            Message message = new Message();
-            message.setSubject(subject);
-
-            // Set body
-            ItemBody body = new ItemBody();
-            body.setContentType(BodyType.Html);
-            body.setContent(htmlBody);
-            message.setBody(body);
-
-            // Set recipient
-            Recipient toRecipient = new Recipient();
-            EmailAddress toAddress = new EmailAddress();
-            toAddress.setAddress(to);
-            toRecipient.setEmailAddress(toAddress);
-
-            LinkedList<Recipient> toRecipients = new LinkedList<>();
-            toRecipients.add(toRecipient);
-            message.setToRecipients(toRecipients);
-
-            // Create SendMail request body and set the message
-            com.microsoft.graph.users.item.sendmail.SendMailPostRequestBody requestBody =
-                    new com.microsoft.graph.users.item.sendmail.SendMailPostRequestBody();
-            requestBody.setMessage(message);
-            requestBody.setSaveToSentItems(true);
-
-            // Send the email using the configured mailbox
-            graphClient.users().byUserId(fromEmail)
-                    .sendMail()
-                    .post(requestBody);
-
+            graphClient.users().byUserId(fromEmail).sendMail().post(requestBody);
             log.info("Email sent successfully to: {} via Microsoft Graph", to);
-
         } catch (Exception e) {
             log.error("Failed to send email to: {} via Microsoft Graph", to, e);
             throw new RuntimeException("Failed to send email", e);
         }
     }
 }
-

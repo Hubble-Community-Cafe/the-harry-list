@@ -33,5 +33,10 @@ public interface EmailNotificationService {
      * Send a custom email to the reservation contact.
      */
     void sendCustomEmail(Reservation reservation, String subject, String message);
+
+    /**
+     * Send a raw HTML email to any address. Used for template test emails.
+     */
+    void sendRawEmail(String to, String subject, String htmlBody);
 }
 

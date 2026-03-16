@@ -6,6 +6,7 @@ import { ReservationsPage } from './pages/ReservationsPage';
 import { ReservationDetailPage } from './pages/ReservationDetailPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { ExportPage } from './pages/ExportPage';
+import { EmailTemplatesPage } from './pages/EmailTemplatesPage';
 import { Layout } from './components/Layout';
 import { useGroupAuthorization } from './lib/useGroupAuthorization';
 import { ThemeProvider } from './lib/ThemeContext';
@@ -81,6 +82,7 @@ function App() {
           <Route path="reservations/:id" element={<ReservationDetailPage />} />
           <Route path="export" element={<ExportPage />} />
           <Route path="calendar" element={<CalendarPage />} />
+          <Route path="email-templates" element={<EmailTemplatesPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

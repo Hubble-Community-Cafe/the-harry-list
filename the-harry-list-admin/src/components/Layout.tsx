@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
   LayoutDashboard, Calendar, LogOut,
-  User, Menu, CalendarSync, FileDown
+  User, Menu, CalendarSync, FileDown, Mail
 } from 'lucide-react';
 import { useState } from 'react';
 import { clearAuth} from '../lib/api';
@@ -30,6 +30,7 @@ export function Layout() {
     { to: '/reservations', icon: Calendar, label: 'Reservations' },
     { to: '/export', icon: FileDown, label: 'Export' },
     { to: '/calendar', icon: CalendarSync, label: 'Calendar Feeds' },
+    { to: '/email-templates', icon: Mail, label: 'Email Templates' },
   ];
 
   return (
