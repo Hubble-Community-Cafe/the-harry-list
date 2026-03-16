@@ -44,7 +44,7 @@ public class UpdateReservationService implements Command<com.pimvanleeuwen.the_h
             return ResponseEntity.badRequest().build();
         }
 
-        log.info("Updating reservation with ID: {}", input.getId());
+        log.info("LOGGING reservation.update.started id={}", input.getId());
 
         Optional<Reservation> existingReservation = reservationRepository.findById(input.getId());
 
@@ -68,7 +68,10 @@ public class UpdateReservationService implements Command<com.pimvanleeuwen.the_h
         // Save updated entity
         Reservation savedEntity = reservationRepository.save(entity);
 
-        log.info("Updated reservation with ID: {}", savedEntity.getId());
+        log.info("LOGGING reservation.updated id={} confirmation='{}' event='{}' date={} location={} guests={}",
+                savedEntity.getId(), savedEntity.getConfirmationNumber(),
+                savedEntity.getEventTitle(), savedEntity.getEventDate(),
+                savedEntity.getLocation(), savedEntity.getExpectedGuests());
 
         // Send email notification if enabled
         if (sendEmail && emailService != null) {

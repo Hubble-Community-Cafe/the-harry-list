@@ -47,8 +47,6 @@ public class AdminReservationController {
             @RequestParam(required = false) String confirmedBy,
             @RequestParam(required = false, defaultValue = "true") boolean sendEmail) {
 
-        log.info("Updating reservation {} status to {} (sendEmail: {})", id, status, sendEmail);
-
         return reservationRepository.findById(id)
                 .map(reservation -> {
                     ReservationStatus oldStatus = reservation.getStatus();
@@ -57,6 +55,11 @@ public class AdminReservationController {
                         reservation.setConfirmedBy(confirmedBy);
                     }
                     com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
+
+                    log.info("LOGGING reservation.status_changed id={} confirmation='{}' event='{}' date={} status={}->{}{}",
+                            id, saved.getConfirmationNumber(), saved.getEventTitle(), saved.getEventDate(),
+                            oldStatus, status,
+                            confirmedBy != null ? " by='" + confirmedBy + "'" : "");
 
                     // Send email notification if enabled
                     if (sendEmail && emailService != null) {

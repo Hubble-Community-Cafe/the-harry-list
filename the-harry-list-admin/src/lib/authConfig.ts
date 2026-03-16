@@ -10,6 +10,7 @@ declare global {
       AZURE_TENANT_ID?: string;
       REDIRECT_URI?: string;
       ALLOWED_GROUP_ID?: string;
+      SENTRY_DSN?: string;
     };
   }
 }

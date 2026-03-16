@@ -4,6 +4,7 @@ declare global {
     __RUNTIME_CONFIG__?: {
       API_URL?: string;
       RECAPTCHA_SITE_KEY?: string;
+      SENTRY_DSN?: string;
     };
   }
 }

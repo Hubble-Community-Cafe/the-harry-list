@@ -33,6 +33,7 @@ RUN echo '#!/bin/sh' > /docker-entrypoint.d/40-inject-config.sh && \
     echo '  AZURE_TENANT_ID: "${AZURE_TENANT_ID:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '  REDIRECT_URI: "${REDIRECT_URI:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '  ALLOWED_GROUP_ID: "${ALLOWED_GROUP_ID:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
+    echo '  SENTRY_DSN: "${SENTRY_DSN:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '};' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo 'EOF' >> /docker-entrypoint.d/40-inject-config.sh && \
     chmod +x /docker-entrypoint.d/40-inject-config.sh

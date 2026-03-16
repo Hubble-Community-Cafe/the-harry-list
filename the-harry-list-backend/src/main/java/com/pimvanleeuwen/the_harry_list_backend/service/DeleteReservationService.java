@@ -36,7 +36,7 @@ public class DeleteReservationService implements Command<Long, Void> {
      * @param sendEmail Whether to send email notification
      */
     public ResponseEntity<Void> executeWithEmail(Long id, boolean sendEmail) {
-        log.info("Deleting reservation with ID: {}", id);
+        log.info("LOGGING reservation.cancel.started id={}", id);
 
         Optional<Reservation> reservation = reservationRepository.findById(id);
 
@@ -54,9 +54,12 @@ public class DeleteReservationService implements Command<Long, Void> {
             }
         }
 
-        reservationRepository.deleteById(id);
+        com.pimvanleeuwen.the_harry_list_backend.model.Reservation r = reservation.get();
+        log.info("LOGGING reservation.cancelled id={} confirmation='{}' event='{}' date={} contact='{}' email='{}'",
+                id, r.getConfirmationNumber(), r.getEventTitle(),
+                r.getEventDate(), r.getContactName(), r.getEmail());
 
-        log.info("Deleted reservation with ID: {}", id);
+        reservationRepository.deleteById(id);
 
         return ResponseEntity.noContent().build();
     }
