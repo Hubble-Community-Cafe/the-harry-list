@@ -11,6 +11,10 @@ import type { Reservation } from '../types/reservation';
 const statusOptions = ['ALL', 'PENDING', 'CONFIRMED', 'REJECTED', 'CANCELLED', 'COMPLETED'];
 const locationOptions = ['ALL', 'HUBBLE', 'METEOR'];
 
+function toLocalDateString(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 export function ReservationsPage() {
   const [searchParams] = useSearchParams();
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -20,6 +24,9 @@ export function ReservationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'ALL');
   const [locationFilter, setLocationFilter] = useState('ALL');
+  const [showPast, setShowPast] = useState(false);
+
+  const todayStr = toLocalDateString(new Date());
 
   useEffect(() => {
     loadReservations();
@@ -46,13 +53,27 @@ export function ReservationsPage() {
 
     const matchesStatus = statusFilter === 'ALL' || r.status === statusFilter;
     const matchesLocation = locationFilter === 'ALL' || r.location === locationFilter;
+    const matchesDateRange = showPast || r.eventDate >= todayStr;
 
-    return matchesSearch && matchesStatus && matchesLocation;
+    return matchesSearch && matchesStatus && matchesLocation && matchesDateRange;
   });
 
-  const sortedReservations = [...filteredReservations].sort((a, b) =>
-    new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
-  );
+  const sortedReservations = [...filteredReservations].sort((a, b) => {
+    const dateDiff = new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
+    if (dateDiff !== 0) return dateDiff;
+    return a.startTime.localeCompare(b.startTime);
+  });
+
+  // Group by eventDate
+  const groupedByDay = sortedReservations.reduce<{ date: string; items: Reservation[] }[]>((acc, r) => {
+    const last = acc[acc.length - 1];
+    if (last && last.date === r.eventDate) {
+      last.items.push(r);
+    } else {
+      acc.push({ date: r.eventDate, items: [r] });
+    }
+    return acc;
+  }, []);
 
   if (isLoading) {
     return (
@@ -125,6 +146,17 @@ export function ReservationsPage() {
               ))}
             </select>
           </div>
+
+          {/* Show past toggle */}
+          <label className="flex items-center gap-2 text-sm text-dark-400 cursor-pointer whitespace-nowrap">
+            <input
+              type="checkbox"
+              checked={showPast}
+              onChange={(e) => setShowPast(e.target.checked)}
+              className="w-4 h-4 rounded border-dark-600 bg-dark-800 text-hubble-500 focus:ring-hubble-500"
+            />
+            Show past
+          </label>
         </div>
       </div>
 
@@ -134,63 +166,83 @@ export function ReservationsPage() {
       </div>
 
       {/* Reservations List */}
-      <div className="space-y-3">
-        {sortedReservations.length === 0 ? (
+      <div className="space-y-6">
+        {groupedByDay.length === 0 ? (
           <div className="card text-center py-12">
             <Calendar className="w-12 h-12 text-dark-600 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-white mb-1">No reservations found</h3>
             <p className="text-dark-400">Try adjusting your filters</p>
           </div>
         ) : (
-          sortedReservations.map((reservation) => (
-            <Link
-              key={reservation.id}
-              to={`/reservations/${reservation.id}`}
-              className="card block hover:border-hubble-500/50 transition-all"
-            >
-              <div className="flex flex-col md:flex-row md:items-center gap-4">
-                {/* Main info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-3">
-                    <div className={`
-                      w-10 h-10 rounded-lg flex items-center justify-center shrink-0
-                      ${reservation.location === 'HUBBLE' ? 'bg-hubble-500/20' : 'bg-meteor-500/20'}
-                    `}>
-                      <MapPin className={`w-5 h-5 ${reservation.location === 'HUBBLE' ? 'text-hubble-400' : 'text-meteor-400'}`} />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="font-medium text-white truncate">{reservation.eventTitle}</h3>
-                      <p className="text-sm text-dark-400 truncate">
-                        {reservation.confirmationNumber && (
-                          <span className="font-mono text-hubble-400">{reservation.confirmationNumber}</span>
-                        )}
-                        {reservation.confirmationNumber && ' • '}
-                        {reservation.contactName} • {reservation.email}
-                      </p>
-                    </div>
-                  </div>
+          groupedByDay.map(({ date, items }) => (
+            <div key={date}>
+              {/* Day header */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-hubble-400" />
+                  <span className="text-sm font-semibold text-hubble-400">
+                    {new Date(date + 'T00:00:00').toLocaleDateString(undefined, {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </span>
                 </div>
-
-                {/* Meta info */}
-                <div className="flex items-center gap-4 text-sm flex-wrap">
-                  <LocationBadge location={reservation.location} />
-                  <div className="flex items-center gap-2 text-dark-400">
-                    <Calendar className="w-4 h-4" />
-                    <span>{new Date(reservation.eventDate).toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-dark-400">
-                    <Clock className="w-4 h-4" />
-                    <span>{reservation.startTime.slice(0, 5)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-dark-400">
-                    <Users className="w-4 h-4" />
-                    <span>{reservation.expectedGuests}</span>
-                  </div>
-                  <StatusBadge status={reservation.status} />
-                  <ChevronRight className="w-5 h-5 text-dark-600" />
-                </div>
+                <div className="flex-1 h-px bg-dark-800" />
+                <span className="text-xs text-dark-500">{items.length} reservation{items.length !== 1 ? 's' : ''}</span>
               </div>
-            </Link>
+
+              {/* Reservations for this day */}
+              <div className="space-y-3">
+                {items.map((reservation) => (
+                  <Link
+                    key={reservation.id}
+                    to={`/reservations/${reservation.id}`}
+                    className="card block hover:border-hubble-500/50 transition-all"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                      {/* Main info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start gap-3">
+                          <div className={`
+                            w-10 h-10 rounded-lg flex items-center justify-center shrink-0
+                            ${reservation.location === 'HUBBLE' ? 'bg-hubble-500/20' : 'bg-meteor-500/20'}
+                          `}>
+                            <MapPin className={`w-5 h-5 ${reservation.location === 'HUBBLE' ? 'text-hubble-400' : 'text-meteor-400'}`} />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-medium text-white truncate">{reservation.eventTitle}</h3>
+                            <p className="text-sm text-dark-400 truncate">
+                              {reservation.confirmationNumber && (
+                                <span className="font-mono text-hubble-400">{reservation.confirmationNumber}</span>
+                              )}
+                              {reservation.confirmationNumber && ' • '}
+                              {reservation.contactName} • {reservation.email}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Meta info */}
+                      <div className="flex items-center gap-4 text-sm flex-wrap">
+                        <LocationBadge location={reservation.location} />
+                        <div className="flex items-center gap-2 text-dark-400">
+                          <Clock className="w-4 h-4" />
+                          <span>{reservation.startTime.slice(0, 5)}–{reservation.endTime.slice(0, 5)}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-dark-400">
+                          <Users className="w-4 h-4" />
+                          <span>{reservation.expectedGuests}</span>
+                        </div>
+                        <StatusBadge status={reservation.status} />
+                        <ChevronRight className="w-5 h-5 text-dark-600" />
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
           ))
         )}
       </div>
