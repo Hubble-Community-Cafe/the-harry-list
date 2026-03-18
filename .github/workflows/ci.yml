@@ -134,6 +134,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Compute lowercase owner
+        id: vars
+        run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -149,13 +153,14 @@ jobs:
         id: meta-backend
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository_owner }}/the-harry-list-backend
+          images: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-backend
           tags: |
             type=raw,value=latest
             type=sha,prefix={{branch}}-
             type=ref,event=branch
 
       - name: Build and push Backend Docker image
+        id: push-backend
         uses: docker/build-push-action@v7
         with:
           context: ./the-harry-list-backend
@@ -169,7 +174,7 @@ jobs:
       - name: Scan Backend image (Trivy)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/the-harry-list-backend:latest
+          image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-backend@${{ steps.push-backend.outputs.digest }}
           format: sarif
           output: trivy-backend.sarif
           severity: HIGH,CRITICAL
@@ -187,13 +192,14 @@ jobs:
         id: meta-public
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository_owner }}/the-harry-list-public
+          images: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-public
           tags: |
             type=raw,value=latest
             type=sha,prefix={{branch}}-
             type=ref,event=branch
 
       - name: Build and push Public Frontend Docker image
+        id: push-public
         uses: docker/build-push-action@v7
         with:
           context: ./the-harry-list-public
@@ -207,7 +213,7 @@ jobs:
       - name: Scan Public Frontend image (Trivy)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/the-harry-list-public:latest
+          image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-public@${{ steps.push-public.outputs.digest }}
           format: sarif
           output: trivy-public.sarif
           severity: HIGH,CRITICAL
@@ -225,13 +231,14 @@ jobs:
         id: meta-admin
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository_owner }}/the-harry-list-admin
+          images: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-admin
           tags: |
             type=raw,value=latest
             type=sha,prefix={{branch}}-
             type=ref,event=branch
 
       - name: Build and push Admin Frontend Docker image
+        id: push-admin
         uses: docker/build-push-action@v7
         with:
           context: ./the-harry-list-admin
@@ -245,7 +252,7 @@ jobs:
       - name: Scan Admin Frontend image (Trivy)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/the-harry-list-admin:latest
+          image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-admin@${{ steps.push-admin.outputs.digest }}
           format: sarif
           output: trivy-admin.sarif
           severity: HIGH,CRITICAL
