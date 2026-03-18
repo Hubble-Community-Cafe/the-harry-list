@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+  <!--
+    OWASP Dependency-Check False Positive Suppressions
+
+    Instructions:
+    - Add suppressions here for confirmed false positives only
+    - Include a comment explaining WHY it is a false positive
+    - Reference the CVE and the affected dependency
+
+    Example:
+    <suppress>
+      <notes>CVE-2023-XXXXX affects library-foo &lt; 1.2.3 but we use 2.0.0 which is patched</notes>
+      <cve>CVE-2023-XXXXX</cve>
+    </suppress>
+  -->
+
+</suppressions>

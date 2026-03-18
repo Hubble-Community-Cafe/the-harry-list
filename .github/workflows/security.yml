@@ -1,0 +1,185 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 6 * * 1' # Every Monday at 06:00 UTC
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # ==================== SECRETS DETECTION ====================
+  gitleaks:
+    name: Secrets Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Full history so Gitleaks can scan all commits
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ==================== SAST ====================
+  semgrep:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    # Skip for Dependabot PRs — it only touches dependency files
+    if: github.actor != 'dependabot[bot]'
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run Semgrep
+        # auto picks up Java, Spring, TypeScript, React rules automatically
+        run: semgrep scan --config auto --sarif --output semgrep.sarif || true
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  # ==================== DEPENDENCY SCANNING ====================
+  dependency-scan-public:
+    name: Dependency Scan (public frontend)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: the-harry-list-public
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: the-harry-list-public/package-lock.json
+
+      - run: npm ci
+
+      - name: Audit npm dependencies
+        # continue-on-error: Dependabot handles the fixes; we report but don't block here
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  dependency-scan-admin:
+    name: Dependency Scan (admin frontend)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: the-harry-list-admin
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: the-harry-list-admin/package-lock.json
+
+      - run: npm ci
+
+      - name: Audit npm dependencies
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  dependency-scan-backend:
+    name: Dependency Scan (backend)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: the-harry-list-backend
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Run OWASP Dependency-Check
+        run: |
+          mvn org.owasp:dependency-check-maven:check \
+            -DfailBuildOnCVSS=9 \
+            -DsuppressionFile=.owasp-suppressions.xml \
+            -Dformats=SARIF \
+            -DnvdApiKey=${{ secrets.NVD_API_KEY }} \
+            -B
+        continue-on-error: true
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: the-harry-list-backend/target/dependency-check-report.sarif
+          category: owasp-dependency-check
+
+  # ==================== CONTAINER / REPO MISCONFIG SCANNING ====================
+  trivy-repo:
+    name: Repository Scan (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run Trivy (filesystem + IaC)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-repo.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-repo.sarif
+          category: trivy-repo
+
+  # ==================== CONTAINER IMAGE SCANNING ====================
+  # Only run after images have been pushed to ghcr.io
+  trivy-images:
+    name: Container Image Scan — ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'schedule'
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - the-harry-list-backend
+          - the-harry-list-public
+          - the-harry-list-admin
+    steps:
+      - name: Scan ${{ matrix.image }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:latest
+          format: sarif
+          output: trivy-${{ matrix.image }}.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-${{ matrix.image }}.sarif
+          category: trivy-${{ matrix.image }}
