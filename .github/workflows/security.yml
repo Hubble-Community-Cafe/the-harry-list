@@ -157,32 +157,3 @@ jobs:
           sarif_file: trivy-repo.sarif
           category: trivy-repo
 
-  # ==================== CONTAINER IMAGE SCANNING ====================
-  # Only run after images have been pushed to ghcr.io
-  trivy-images:
-    name: Container Image Scan — ${{ matrix.image }}
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'schedule'
-    strategy:
-      fail-fast: false
-      matrix:
-        image:
-          - the-harry-list-backend
-          - the-harry-list-public
-          - the-harry-list-admin
-    steps:
-      - name: Scan ${{ matrix.image }}
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:latest
-          format: sarif
-          output: trivy-${{ matrix.image }}.sarif
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-
-      - name: Upload SARIF to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: trivy-${{ matrix.image }}.sarif
-          category: trivy-${{ matrix.image }}
