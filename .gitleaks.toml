@@ -1,0 +1,35 @@
+# Gitleaks configuration for the-harry-list
+# https://github.com/gitleaks/gitleaks
+
+title = "the-harry-list gitleaks config"
+
+[extend]
+# Extend the default ruleset
+useDefault = true
+
+[allowlist]
+description = "Project-level allowlist"
+
+# Ignore test fixtures and example files
+paths = [
+  '''tests/''',
+  '''test/''',
+  '''__tests__/''',
+  '''\.test\.(ts|tsx|js|jsx)$''',
+  '''\.spec\.(ts|tsx|js|jsx)$''',
+  '''.*\.example$''',
+  '''.*\.sample$''',
+]
+
+# Ignore known safe placeholder values used in config templates
+regexes = [
+  # Docker Compose template placeholders
+  '''__[A-Z_]+__''',
+  # Spring Boot property placeholders
+  '''\$\{[A-Z_]+:[^}]*\}''',
+  # Example/placeholder credentials in application.properties (dev only)
+  '''harrypass''',
+  '''harryuser''',
+]
+
+commits = []
