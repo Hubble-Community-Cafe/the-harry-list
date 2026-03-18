@@ -120,8 +120,10 @@ jobs:
             -DfailBuildOnCVSS=9 \
             -DsuppressionFile=.owasp-suppressions.xml \
             -Dformats=SARIF \
-            -DnvdApiKey=${{ secrets.NVD_API_KEY }} \
+            -DnvdApiKey="${NVD_API_KEY}" \
             -B
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         continue-on-error: true
 
       - name: Upload SARIF to GitHub Security tab
