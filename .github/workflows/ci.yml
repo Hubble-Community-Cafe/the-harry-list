@@ -15,6 +15,109 @@ permissions:
   contents: read
 
 jobs:
+  # ==================== FRONTEND SYNC CHECK ====================
+  frontend-sync:
+    name: Frontend Sync Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check shared files are in sync
+        run: |
+          # Files that must stay identical between both frontends
+          FILES=(
+            "vite.config.ts"
+            "tsconfig.json"
+            "tsconfig.app.json"
+            "tsconfig.node.json"
+            "eslint.config.js"
+            "nginx.conf"
+            "src/lib/ThemeContext.tsx"
+            "src/components/ThemeToggle.tsx"
+            "src/lib/utils.ts"
+            "src/test/setup.ts"
+          )
+
+          DRIFTED=0
+          for f in "${FILES[@]}"; do
+            if ! diff -q "the-harry-list-public/$f" "the-harry-list-admin/$f" > /dev/null 2>&1; then
+              echo "::error::DRIFT DETECTED: $f differs between public and admin frontends"
+              diff --color "the-harry-list-public/$f" "the-harry-list-admin/$f" || true
+              DRIFTED=1
+            fi
+          done
+
+          if [ $DRIFTED -eq 1 ]; then
+            echo ""
+            echo "Shared files have drifted. Copy the canonical version to both projects."
+            exit 1
+          fi
+
+          echo "All shared files are in sync."
+
+      - name: Check shared dependency versions
+        run: |
+          # Extract shared deps from both package.json and compare versions
+          DRIFTED=0
+          SHARED_DEPS=(
+            "@hookform/resolvers"
+            "@sentry/react"
+            "@tailwindcss/vite"
+            "clsx"
+            "lucide-react"
+            "react"
+            "react-dom"
+            "react-hook-form"
+            "tailwind-merge"
+            "zod"
+          )
+          SHARED_DEV_DEPS=(
+            "@eslint/js"
+            "@testing-library/jest-dom"
+            "@testing-library/react"
+            "@testing-library/user-event"
+            "@types/node"
+            "@types/react"
+            "@types/react-dom"
+            "@vitejs/plugin-react"
+            "@vitest/coverage-v8"
+            "autoprefixer"
+            "eslint"
+            "eslint-plugin-react-hooks"
+            "eslint-plugin-react-refresh"
+            "globals"
+            "jsdom"
+            "postcss"
+            "tailwindcss"
+            "typescript"
+            "typescript-eslint"
+            "vite"
+            "vitest"
+          )
+
+          check_dep() {
+            local dep=$1
+            local pub_ver admin_ver
+            pub_ver=$(node -e "const p=require('./the-harry-list-public/package.json'); console.log((p.dependencies||{})[\"$dep\"] || (p.devDependencies||{})[\"$dep\"] || '')")
+            admin_ver=$(node -e "const p=require('./the-harry-list-admin/package.json'); console.log((p.dependencies||{})[\"$dep\"] || (p.devDependencies||{})[\"$dep\"] || '')")
+            if [ -n "$pub_ver" ] && [ -n "$admin_ver" ] && [ "$pub_ver" != "$admin_ver" ]; then
+              echo "::error::VERSION DRIFT: $dep — public=$pub_ver admin=$admin_ver"
+              DRIFTED=1
+            fi
+          }
+
+          for dep in "${SHARED_DEPS[@]}" "${SHARED_DEV_DEPS[@]}"; do
+            check_dep "$dep"
+          done
+
+          if [ $DRIFTED -eq 1 ]; then
+            echo ""
+            echo "Shared dependency versions have drifted. Align them in both package.json files."
+            exit 1
+          fi
+
+          echo "All shared dependency versions are aligned."
+
   # ==================== BACKEND ====================
   backend-test:
     name: Backend Tests

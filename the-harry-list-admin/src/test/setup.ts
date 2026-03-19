@@ -22,29 +22,26 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// Mock localStorage
+const localStorageMock = {
+  getItem: vi.fn(() => 'dark'),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+};
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock,
+});
+
 // Mock window.config for runtime config
 interface TestRuntimeConfig {
   API_BASE_URL: string;
-  AZURE_CLIENT_ID: string;
-  AZURE_TENANT_ID: string;
 }
 
 (window as unknown as { config: TestRuntimeConfig }).config = {
   API_BASE_URL: 'http://localhost:8080',
-  AZURE_CLIENT_ID: 'test-client-id',
-  AZURE_TENANT_ID: 'test-tenant-id',
 };
 
-// Mock MSAL
-vi.mock('@azure/msal-react', () => ({
-  useMsal: () => ({
-    instance: {
-      acquireTokenSilent: vi.fn().mockResolvedValue({ accessToken: 'test-token' }),
-    },
-    accounts: [{ name: 'Test User', username: 'test@example.com' }],
-    inProgress: 'none',
-  }),
-  useIsAuthenticated: () => true,
-  MsalProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
+// Mock fetch
+globalThis.fetch = vi.fn() as typeof fetch;
 
