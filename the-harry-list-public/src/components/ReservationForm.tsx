@@ -84,7 +84,7 @@ const formSchema = z.object({
   if (data.startTime && data.endTime) {
     const [sh, sm] = data.startTime.split(':').map(Number);
     const [eh, em] = data.endTime.split(':').map(Number);
-    let startMins = sh * 60 + sm;
+    const startMins = sh * 60 + sm;
     let endMins = eh * 60 + em;
     if (endMins <= startMins) endMins += 24 * 60; // next day
     if (endMins - startMins > 180 && (!data.longReservationReason || data.longReservationReason.trim() === '')) {
@@ -179,7 +179,8 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
   const watchLocation = watch('location');
   const watchPaymentOption = watch('paymentOption');
   const watchInvoiceType = watch('invoiceType');
-  const watchSpecialActivities = watch('specialActivities') || [];
+  const watchSpecialActivitiesRaw = watch('specialActivities');
+  const watchSpecialActivities = useMemo(() => watchSpecialActivitiesRaw || [], [watchSpecialActivitiesRaw]);
   const watchStartTime = watch('startTime');
   const watchEndTime = watch('endTime');
   const watchExpectedGuests = watch('expectedGuests');
@@ -213,7 +214,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
     if (!watchStartTime || !watchEndTime) return 0;
     const [sh, sm] = watchStartTime.split(':').map(Number);
     const [eh, em] = watchEndTime.split(':').map(Number);
-    let startMins = sh * 60 + sm;
+    const startMins = sh * 60 + sm;
     let endMins = eh * 60 + em;
     if (endMins <= startMins) endMins += 24 * 60;
     return endMins - startMins;
