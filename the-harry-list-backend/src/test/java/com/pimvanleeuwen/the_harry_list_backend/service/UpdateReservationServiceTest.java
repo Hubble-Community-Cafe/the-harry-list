@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -126,12 +127,13 @@ class UpdateReservationServiceTest {
                 .contactName("John Doe")
                 .email("john@example.com")
                 .eventTitle("Test Event")
-                .eventType(EventType.BORREL)
-                .organizerType(OrganizerType.ASSOCIATION)
+                .description("Test description")
+                .specialActivities(Set.of(SpecialActivity.GRADUATION))
                 .eventDate(LocalDate.of(2026, 3, 15))
                 .startTime(LocalTime.of(16, 0))
                 .endTime(LocalTime.of(22, 0))
                 .location(BarLocation.HUBBLE)
+                .seatingArea(SeatingArea.INSIDE)
                 .paymentOption(PaymentOption.INDIVIDUAL)
                 .build();
     }
@@ -143,8 +145,8 @@ class UpdateReservationServiceTest {
         entity.setContactName("Original Name");
         entity.setEmail("original@example.com");
         entity.setEventTitle("Original Event");
-        entity.setEventType(EventType.DINNER);
-        entity.setOrganizerType(OrganizerType.COMPANY);
+        entity.setDescription("Original description");
+        entity.setSeatingArea(SeatingArea.OUTSIDE);
         entity.setLocation(BarLocation.METEOR);
         entity.setPaymentOption(PaymentOption.INVOICE);
         entity.setStatus(ReservationStatus.PENDING);
@@ -152,4 +154,3 @@ class UpdateReservationServiceTest {
         return entity;
     }
 }
-

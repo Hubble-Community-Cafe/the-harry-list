@@ -50,9 +50,9 @@ public class EmailTemplateService {
 
         AVAILABLE_VARIABLES.put(EmailTemplateType.STAFF_NOTIFICATION, List.of(
                 "confirmationNumber", "contactName", "email", "phone", "organization",
-                "eventTitle", "eventType", "organizerType", "eventDate", "startTime",
+                "eventTitle", "eventDate", "startTime",
                 "endTime", "location", "expectedGuests", "payment",
-                "dietaryInfo", "description", "comments"));
+                "specialActivities", "description", "comments"));
 
         DEFAULT_SUBJECTS.put(EmailTemplateType.SUBMITTED,
                 "Reservation Request Received - {{eventTitle}}");
@@ -224,13 +224,12 @@ public class EmailTemplateService {
                                 <p><strong>Organization:</strong> {{organization}}</p>
                                 <hr>
                                 <p><strong>Event:</strong> {{eventTitle}}</p>
-                                <p><strong>Type:</strong> {{eventType}} ({{organizerType}})</p>
                                 <p><strong>Date:</strong> {{eventDate}}</p>
                                 <p><strong>Time:</strong> {{startTime}} - {{endTime}}</p>
                                 <p><strong>Location:</strong> {{location}}</p>
                                 <p><strong>Guests:</strong> {{expectedGuests}}</p>
                                 <p><strong>Payment:</strong> {{payment}}</p>
-                                <p><strong>Food:</strong> {{dietaryInfo}}</p>
+                                <p><strong>Special Activities:</strong> {{specialActivities}}</p>
                                 <p><strong>Description:</strong> {{description}}</p>
                                 <p><strong>Comments:</strong> {{comments}}</p>
                             </div>
@@ -322,10 +321,8 @@ public class EmailTemplateService {
             vars.put("email", "jane.doe@example.com");
             vars.put("phone", "+31 6 12345678");
             vars.put("organization", "Example Association");
-            vars.put("eventType", "Borrel");
-            vars.put("organizerType", "Association");
             vars.put("payment", "Individual");
-            vars.put("dietaryInfo", "Yes (Dietary: Vegetarian)");
+            vars.put("specialActivities", "Graduation");
             vars.put("description", "Our annual drinks event for members and guests.");
             vars.put("comments", "Please ensure outdoor seating is available.");
         }

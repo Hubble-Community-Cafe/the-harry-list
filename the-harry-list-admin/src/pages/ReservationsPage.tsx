@@ -3,9 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom';
 import {
   Search, Filter, Calendar, Users, MapPin,
   CheckCircle, XCircle, Clock, Loader2, AlertCircle,
-  ChevronRight
+  ChevronRight, UtensilsCrossed
 } from 'lucide-react';
-import { fetchReservations } from '../lib/api';
+import { fetchReservations, updateCateringArranged } from '../lib/api';
 import type { Reservation } from '../types/reservation';
 
 const statusOptions = ['ALL', 'PENDING', 'CONFIRMED', 'REJECTED', 'CANCELLED', 'COMPLETED'];
@@ -205,14 +205,35 @@ export function ReservationsPage() {
                       {/* Main info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start gap-3">
-                          <div className={`
-                            w-10 h-10 rounded-lg flex items-center justify-center shrink-0
-                            ${reservation.location === 'HUBBLE' ? 'bg-hubble-500/20' : 'bg-meteor-500/20'}
-                          `}>
-                            <MapPin className={`w-5 h-5 ${reservation.location === 'HUBBLE' ? 'text-hubble-400' : 'text-meteor-400'}`} />
-                          </div>
                           <div className="min-w-0">
-                            <h3 className="font-medium text-white truncate">{reservation.eventTitle}</h3>
+                            <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                              <h3 className="font-medium text-white truncate">{reservation.eventTitle}</h3>
+                              {hasCatering(reservation.specialActivities) && (
+                                <button
+                                  type="button"
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const newValue = !reservation.cateringArranged;
+                                    try {
+                                      const updated = await updateCateringArranged(reservation.id, newValue);
+                                      setReservations(prev => prev.map(r => r.id === reservation.id ? { ...r, cateringArranged: updated.cateringArranged } : r));
+                                    } catch {
+                                      // ignore
+                                    }
+                                  }}
+                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+                                    reservation.cateringArranged
+                                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                                  }`}
+                                  title={reservation.cateringArranged ? 'Catering arranged ✓ (click to undo)' : 'Catering requested (click to mark as arranged)'}
+                                >
+                                  <UtensilsCrossed className="w-3 h-3" />
+                                  {reservation.cateringArranged ? 'Catering arranged' : 'Catering'}
+                                </button>
+                              )}
+                            </div>
                             <p className="text-sm text-dark-400 truncate">
                               {reservation.confirmationNumber && (
                                 <span className="font-mono text-hubble-400">{reservation.confirmationNumber}</span>
@@ -248,6 +269,12 @@ export function ReservationsPage() {
       </div>
     </div>
   );
+}
+
+const CATERING_ACTIVITIES = ['EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM'];
+
+function hasCatering(activities?: string[]): boolean {
+  return !!activities?.some(a => CATERING_ACTIVITIES.includes(a));
 }
 
 function StatusBadge({ status }: { status: string }) {

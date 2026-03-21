@@ -7,7 +7,7 @@ import {
   CheckCircle, XCircle, Loader2, AlertCircle, Trash2,
   Send, Edit, X
 } from 'lucide-react';
-import { fetchReservation, updateReservationStatus, deleteReservation, updateReservation } from '../lib/api';
+import { fetchReservation, updateReservationStatus, deleteReservation, updateReservation, updateCateringArranged } from '../lib/api';
 import type { Reservation } from '../types/reservation';
 
 export function ReservationDetailPage() {
@@ -88,26 +88,27 @@ export function ReservationDetailPage() {
       // Event details
       eventTitle: reservation.eventTitle,
       description: reservation.description || '',
-      eventType: reservation.eventType,
-      organizerType: reservation.organizerType,
       expectedGuests: reservation.expectedGuests,
       eventDate: reservation.eventDate,
       startTime: reservation.startTime,
       endTime: reservation.endTime,
+      specialActivities: reservation.specialActivities || [],
+      longReservationReason: reservation.longReservationReason || '',
       // Location
       location: reservation.location,
-      specificArea: reservation.specificArea || '',
+      seatingArea: reservation.seatingArea || 'INSIDE',
       // Payment
       paymentOption: reservation.paymentOption,
       costCenter: reservation.costCenter || '',
       invoiceName: reservation.invoiceName || '',
       invoiceAddress: reservation.invoiceAddress || '',
-      // Food
-      foodRequired: reservation.foodRequired || false,
-      dietaryPreference: reservation.dietaryPreference || '',
-      dietaryNotes: reservation.dietaryNotes || '',
+      invoiceType: reservation.invoiceType || '',
+      invoiceRemarks: reservation.invoiceRemarks || '',
+      // Catering
+      cateringDietaryNotes: reservation.cateringDietaryNotes || '',
       // Additional
       comments: reservation.comments || '',
+      internalNotes: reservation.internalNotes || '',
     });
     setIsEditing(true);
   };
@@ -414,8 +415,24 @@ export function ReservationDetailPage() {
             <InfoRow icon={Clock} label="Time" value={`${reservation.startTime.slice(0, 5)} - ${reservation.endTime.slice(0, 5)}`} />
             <InfoRow icon={MapPin} label="Location" value={reservation.location} />
             <InfoRow icon={Users} label="Expected Guests" value={reservation.expectedGuests.toString()} />
-            <InfoRow label="Event Type" value={reservation.eventType} />
-            <InfoRow label="Organizer Type" value={reservation.organizerType} />
+            <div className="flex items-start gap-3">
+              <div className="pl-7">
+                <div className="text-xs text-dark-500">Special Activities</div>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {reservation.specialActivities && reservation.specialActivities.length > 0
+                    ? reservation.specialActivities.map((activity) => (
+                        <span key={activity} className="px-2 py-0.5 rounded-full bg-hubble-500/20 text-hubble-400 text-xs">
+                          {activity.replace(/_/g, ' ')}
+                        </span>
+                      ))
+                    : <span className="text-dark-400 text-sm">None</span>
+                  }
+                </div>
+              </div>
+            </div>
+            {reservation.longReservationReason && (
+              <InfoRow label="Long Reservation Reason" value={reservation.longReservationReason} />
+            )}
           </div>
         </div>
 
@@ -430,29 +447,50 @@ export function ReservationDetailPage() {
             <InfoRow label="Cost Center" value={reservation.costCenter} />
             <InfoRow label="Invoice Name" value={reservation.invoiceName} />
             <InfoRow label="Invoice Address" value={reservation.invoiceAddress} />
+            <InfoRow label="Invoice Type" value={reservation.invoiceType} />
+            <InfoRow label="Invoice Remarks" value={reservation.invoiceRemarks} />
           </div>
         </div>
 
-        {/* Food & Additional */}
+        {/* Additional Information */}
         <div className="card">
           <h2 className="text-lg font-title font-semibold text-white mb-4 flex items-center gap-2">
             <UtensilsCrossed className="w-5 h-5 text-meteor-400" />
             Additional Information
           </h2>
           <div className="space-y-4">
-            <InfoRow label="Food Required" value={reservation.foodRequired ? 'Yes' : 'No'} />
-            {reservation.foodRequired && (
-              <>
-                <InfoRow label="Dietary Preference" value={reservation.dietaryPreference} />
-                <InfoRow label="Dietary Notes" value={reservation.dietaryNotes} />
-              </>
+            {reservation.cateringDietaryNotes && (
+              <InfoRow label="Catering Dietary Notes" value={reservation.cateringDietaryNotes} />
+            )}
+            {reservation.specialActivities?.some(a => ['EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM'].includes(a)) && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-dark-400">Catering Arranged</span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const newValue = !reservation.cateringArranged;
+                    try {
+                      const updated = await updateCateringArranged(reservation.id, newValue);
+                      setReservation({ ...reservation, cateringArranged: updated.cateringArranged });
+                    } catch { /* ignore */ }
+                  }}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    reservation.cateringArranged
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
+                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/30 hover:bg-orange-500/30'
+                  }`}
+                >
+                  <UtensilsCrossed className="w-3 h-3" />
+                  {reservation.cateringArranged ? 'Arranged ✓ (click to undo)' : 'Not arranged yet (click to mark done)'}
+                </button>
+              </div>
             )}
           </div>
         </div>
       </div>
 
       {/* Description & Comments */}
-      {(reservation.description || reservation.comments) && (
+      {(reservation.description || reservation.comments || reservation.internalNotes) && (
         <div className="card">
           <h2 className="text-lg font-title font-semibold text-white mb-4 flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-hubble-400" />
@@ -465,9 +503,15 @@ export function ReservationDetailPage() {
             </div>
           )}
           {reservation.comments && (
-            <div>
+            <div className="mb-4">
               <div className="text-sm text-dark-400 mb-1">Additional Comments</div>
               <p className="text-white">{reservation.comments}</p>
+            </div>
+          )}
+          {reservation.internalNotes && (
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+              <div className="text-xs font-semibold text-yellow-400 mb-1">Internal Notes (staff only)</div>
+              <p className="text-sm text-white whitespace-pre-wrap">{reservation.internalNotes}</p>
             </div>
           )}
         </div>
@@ -561,37 +605,42 @@ export function ReservationDetailPage() {
                       className="input-field"
                     />
                   </div>
-                  <div className="form-group">
-                    <label className="label">Event Type</label>
-                    <select
-                      value={editData.eventType || ''}
-                      onChange={(e) => setEditData({ ...editData, eventType: e.target.value })}
-                      className="select-field"
-                    >
-                      <option value="BORREL">Borrel / Drinks</option>
-                      <option value="LUNCH">Lunch</option>
-                      <option value="ACTIVITY">Activity</option>
-                      <option value="GRADUATION">Graduation / PhD Defense</option>
-                      <option value="DINNER">Dinner</option>
-                      <option value="PARTY">Party</option>
-                      <option value="MEETING">Meeting</option>
-                      <option value="OTHER">Other</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label className="label">Organizer Type</label>
-                    <select
-                      value={editData.organizerType || ''}
-                      onChange={(e) => setEditData({ ...editData, organizerType: e.target.value })}
-                      className="select-field"
-                    >
-                      <option value="ASSOCIATION">Association</option>
-                      <option value="COMMITTEE">Committee</option>
-                      <option value="COMPANY">Company</option>
-                      <option value="PRIVATE">Private</option>
-                      <option value="UNIVERSITY">University</option>
-                      <option value="OTHER">Other</option>
-                    </select>
+                  <div className="form-group md:col-span-2">
+                    <label className="label">Special Activities</label>
+                    <div className="flex flex-wrap gap-2">
+                      {['GRADUATION', 'EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM', 'PRIVATE_EVENT'].map((activity) => {
+                        const labels: Record<string, string> = {
+                          GRADUATION: 'Graduation / PhD Defense',
+                          EAT_A_LA_CARTE: 'Eat a la Carte',
+                          EAT_CATERING: 'Eat Catering',
+                          CATERING_CORONA_ROOM: 'Catering Corona Room',
+                          PRIVATE_EVENT: 'Private Event',
+                        };
+                        const selected = (editData.specialActivities || []).includes(activity);
+                        return (
+                          <button
+                            key={activity}
+                            type="button"
+                            onClick={() => {
+                              const current = editData.specialActivities || [];
+                              setEditData({
+                                ...editData,
+                                specialActivities: selected
+                                  ? current.filter((a: string) => a !== activity)
+                                  : [...current, activity],
+                              });
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                              selected
+                                ? 'bg-hubble-500/20 text-hubble-400 border border-hubble-500/50'
+                                : 'bg-dark-800 text-dark-400 border border-dark-700 hover:border-dark-600'
+                            }`}
+                          >
+                            {labels[activity]}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                   <div className="form-group">
                     <label className="label">Expected Guests</label>
@@ -651,19 +700,21 @@ export function ReservationDetailPage() {
                       onChange={(e) => setEditData({ ...editData, location: e.target.value })}
                       className="select-field"
                     >
+                      <option value="">No Preference</option>
                       <option value="HUBBLE">Hubble</option>
                       <option value="METEOR">Meteor</option>
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="label">Specific Area</label>
-                    <input
-                      type="text"
-                      value={editData.specificArea || ''}
-                      onChange={(e) => setEditData({ ...editData, specificArea: e.target.value })}
-                      className="input-field"
-                      placeholder="e.g., Terrace, Main hall..."
-                    />
+                    <label className="label">Seating Area</label>
+                    <select
+                      value={editData.seatingArea || ''}
+                      onChange={(e) => setEditData({ ...editData, seatingArea: e.target.value })}
+                      className="select-field"
+                    >
+                      <option value="INSIDE">Inside</option>
+                      <option value="OUTSIDE">Outside</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -682,78 +733,89 @@ export function ReservationDetailPage() {
                       <option value="INDIVIDUAL">People pay individually</option>
                       <option value="ONE_PERSON">One person pays at the end</option>
                       <option value="INVOICE">Invoice (&gt;50 euros only)</option>
-                      <option value="COST_CENTER">Kostenplaats</option>
-                      <option value="VOUCHERS">Vouchers/Coins</option>
                     </select>
                   </div>
-                  <div className="form-group">
-                    <label className="label">Cost Center</label>
-                    <input
-                      type="text"
-                      value={editData.costCenter || ''}
-                      onChange={(e) => setEditData({ ...editData, costCenter: e.target.value })}
-                      className="input-field"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="label">Invoice Name</label>
-                    <input
-                      type="text"
-                      value={editData.invoiceName || ''}
-                      onChange={(e) => setEditData({ ...editData, invoiceName: e.target.value })}
-                      className="input-field"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="label">Invoice Address</label>
-                    <input
-                      type="text"
-                      value={editData.invoiceAddress || ''}
-                      onChange={(e) => setEditData({ ...editData, invoiceAddress: e.target.value })}
-                      className="input-field"
-                    />
-                  </div>
+                  {editData.paymentOption === 'INVOICE' && (
+                    <>
+                      <div className="form-group">
+                        <label className="label">Invoice Type</label>
+                        <select
+                          value={editData.invoiceType || ''}
+                          onChange={(e) => setEditData({ ...editData, invoiceType: e.target.value })}
+                          className="select-field"
+                        >
+                          <option value="">Select type...</option>
+                          <option value="TUE">TU/e</option>
+                          <option value="FONTYS">Fontys</option>
+                          <option value="EXTERNAL">External</option>
+                        </select>
+                      </div>
+                      {(editData.invoiceType === 'TUE' || editData.invoiceType === 'FONTYS') && (
+                        <div className="form-group">
+                          <label className="label">Kostenplaats</label>
+                          <input
+                            type="text"
+                            value={editData.costCenter || ''}
+                            onChange={(e) => setEditData({ ...editData, costCenter: e.target.value })}
+                            className="input-field"
+                          />
+                        </div>
+                      )}
+                      {editData.invoiceType === 'EXTERNAL' && (
+                        <>
+                          <div className="form-group">
+                            <label className="label">Invoice Name</label>
+                            <input
+                              type="text"
+                              value={editData.invoiceName || ''}
+                              onChange={(e) => setEditData({ ...editData, invoiceName: e.target.value })}
+                              className="input-field"
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label className="label">Invoice Address</label>
+                            <input
+                              type="text"
+                              value={editData.invoiceAddress || ''}
+                              onChange={(e) => setEditData({ ...editData, invoiceAddress: e.target.value })}
+                              className="input-field"
+                            />
+                          </div>
+                          <div className="form-group md:col-span-2">
+                            <label className="label">Invoice Remarks</label>
+                            <textarea
+                              value={editData.invoiceRemarks || ''}
+                              onChange={(e) => setEditData({ ...editData, invoiceRemarks: e.target.value })}
+                              className="input-field min-h-[60px]"
+                            />
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
 
-              {/* Food & Drinks */}
+              {/* Catering & Other */}
               <div>
-                <h3 className="text-sm font-semibold text-hubble-400 mb-3">Food & Drinks</h3>
+                <h3 className="text-sm font-semibold text-hubble-400 mb-3">Catering & Other</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="form-group">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={editData.foodRequired || false}
-                        onChange={(e) => setEditData({ ...editData, foodRequired: e.target.checked })}
-                        className="w-4 h-4 rounded border-dark-600 bg-dark-700 text-hubble-500"
-                      />
-                      <span className="text-sm text-white">Food Required</span>
-                    </label>
-                  </div>
-                  <div className="form-group">
-                    <label className="label">Dietary Preference</label>
-                    <select
-                      value={editData.dietaryPreference || ''}
-                      onChange={(e) => setEditData({ ...editData, dietaryPreference: e.target.value })}
-                      className="select-field"
-                    >
-                      <option value="">None</option>
-                      <option value="VEGETARIAN">Vegetarian</option>
-                      <option value="VEGAN">Vegan</option>
-                      <option value="HALAL">Halal</option>
-                      <option value="KOSHER">Kosher</option>
-                      <option value="MIXED">Mixed Options</option>
-                    </select>
+                  <div className="form-group md:col-span-2">
+                    <label className="label">Catering Dietary Notes</label>
+                    <textarea
+                      value={editData.cateringDietaryNotes || ''}
+                      onChange={(e) => setEditData({ ...editData, cateringDietaryNotes: e.target.value })}
+                      className="input-field min-h-[60px]"
+                      placeholder="Allergies, dietary requirements for catering..."
+                    />
                   </div>
                   <div className="form-group md:col-span-2">
-                    <label className="label">Dietary Notes</label>
-                    <input
-                      type="text"
-                      value={editData.dietaryNotes || ''}
-                      onChange={(e) => setEditData({ ...editData, dietaryNotes: e.target.value })}
-                      className="input-field"
-                      placeholder="Allergies, restrictions, etc."
+                    <label className="label">Long Reservation Reason</label>
+                    <textarea
+                      value={editData.longReservationReason || ''}
+                      onChange={(e) => setEditData({ ...editData, longReservationReason: e.target.value })}
+                      className="input-field min-h-[60px]"
+                      placeholder="Reason for reservation longer than 3 hours..."
                     />
                   </div>
                 </div>
@@ -762,14 +824,25 @@ export function ReservationDetailPage() {
               {/* Additional Comments */}
               <div>
                 <h3 className="text-sm font-semibold text-meteor-400 mb-3">Additional</h3>
-                <div className="form-group">
-                  <label className="label">Comments</label>
-                  <textarea
-                    value={editData.comments || ''}
-                    onChange={(e) => setEditData({ ...editData, comments: e.target.value })}
-                    className="input-field min-h-[80px]"
-                    placeholder="Any additional notes..."
-                  />
+                <div className="space-y-4">
+                  <div className="form-group">
+                    <label className="label">Comments</label>
+                    <textarea
+                      value={editData.comments || ''}
+                      onChange={(e) => setEditData({ ...editData, comments: e.target.value })}
+                      className="input-field min-h-[80px]"
+                      placeholder="Any additional notes..."
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="label">Internal Notes <span className="text-yellow-400 text-xs">(staff only, not sent to customer)</span></label>
+                    <textarea
+                      value={editData.internalNotes || ''}
+                      onChange={(e) => setEditData({ ...editData, internalNotes: e.target.value })}
+                      className="input-field min-h-[80px]"
+                      placeholder="Internal notes, e.g. catering arrangements, special requests handled..."
+                    />
+                  </div>
                 </div>
               </div>
             </div>

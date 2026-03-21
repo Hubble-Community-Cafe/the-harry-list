@@ -17,6 +17,7 @@ import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -113,9 +114,10 @@ class GetReservationServiceTest {
                 .contactName("John Doe")
                 .email("john@example.com")
                 .eventTitle("Test Event")
-                .eventType(EventType.BORREL)
-                .organizerType(OrganizerType.ASSOCIATION)
+                .description("Test description")
+                .specialActivities(Set.of(SpecialActivity.GRADUATION))
                 .location(BarLocation.HUBBLE)
+                .seatingArea(SeatingArea.INSIDE)
                 .paymentOption(PaymentOption.INDIVIDUAL)
                 .status(ReservationStatus.PENDING)
                 .build();
@@ -128,8 +130,8 @@ class GetReservationServiceTest {
         entity.setContactName("John Doe");
         entity.setEmail("john@example.com");
         entity.setEventTitle("Test Event");
-        entity.setEventType(EventType.BORREL);
-        entity.setOrganizerType(OrganizerType.ASSOCIATION);
+        entity.setDescription("Test description");
+        entity.setSeatingArea(SeatingArea.INSIDE);
         entity.setLocation(BarLocation.HUBBLE);
         entity.setPaymentOption(PaymentOption.INDIVIDUAL);
         entity.setStatus(ReservationStatus.PENDING);
@@ -143,12 +145,11 @@ class GetReservationServiceTest {
         entity.setContactName("Jane Doe");
         entity.setEmail("jane@example.com");
         entity.setEventTitle("Another Event");
-        entity.setEventType(EventType.DINNER);
-        entity.setOrganizerType(OrganizerType.COMPANY);
+        entity.setDescription("Another description");
+        entity.setSeatingArea(SeatingArea.OUTSIDE);
         entity.setLocation(BarLocation.METEOR);
         entity.setPaymentOption(PaymentOption.INVOICE);
         entity.setStatus(ReservationStatus.CONFIRMED);
         return entity;
     }
 }
-

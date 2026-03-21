@@ -63,7 +63,8 @@ public class UpdateReservationService implements Command<com.pimvanleeuwen.the_h
         entity.setCreatedAt(existing.getCreatedAt());
         entity.setConfirmationNumber(existing.getConfirmationNumber());
         entity.setConfirmedBy(existing.getConfirmedBy());
-        entity.setInternalNotes(existing.getInternalNotes());
+        // Internal notes can be updated by staff; fall back to existing if not provided
+        entity.setInternalNotes(input.getInternalNotes() != null ? input.getInternalNotes() : existing.getInternalNotes());
 
         // Save updated entity
         Reservation savedEntity = reservationRepository.save(entity);

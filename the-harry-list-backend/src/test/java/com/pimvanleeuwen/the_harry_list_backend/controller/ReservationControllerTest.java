@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -168,19 +169,16 @@ class ReservationControllerTest {
                 .organizationName("Test Association")
                 .eventTitle("Annual Borrel")
                 .description("Our yearly drinks event")
-                .eventType(EventType.BORREL)
-                .organizerType(OrganizerType.ASSOCIATION)
+                .specialActivities(Set.of(SpecialActivity.GRADUATION))
                 .expectedGuests(50)
                 .eventDate(LocalDate.of(2026, 3, 15))
                 .startTime(LocalTime.of(16, 0))
                 .endTime(LocalTime.of(22, 0))
                 .location(BarLocation.HUBBLE)
+                .seatingArea(SeatingArea.INSIDE)
                 .paymentOption(PaymentOption.INDIVIDUAL)
-                .foodRequired(true)
-                .dietaryPreference(DietaryPreference.VEGETARIAN)
                 .termsAccepted(true)
                 .status(ReservationStatus.PENDING)
                 .build();
     }
 }
-

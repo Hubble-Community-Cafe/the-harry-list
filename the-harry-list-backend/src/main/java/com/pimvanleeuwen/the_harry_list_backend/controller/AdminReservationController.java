@@ -1,6 +1,7 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
 import com.pimvanleeuwen.the_harry_list_backend.dto.Reservation;
+import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
@@ -41,7 +42,7 @@ public class AdminReservationController {
 
     @PatchMapping("/{id}/status")
     @Operation(summary = "Update reservation status", description = "Update the status of a reservation (confirm, reject, cancel)")
-    public ResponseEntity<Reservation> updateStatus(
+    public ResponseEntity<?> updateStatus(
             @PathVariable Long id,
             @RequestParam ReservationStatus status,
             @RequestParam(required = false) String confirmedBy,
@@ -49,6 +50,13 @@ public class AdminReservationController {
 
         return reservationRepository.findById(id)
                 .map(reservation -> {
+                    // Block confirm when location is NO_PREFERENCE
+                    if (status == ReservationStatus.CONFIRMED
+                            && (reservation.getLocation() == null || reservation.getLocation() == BarLocation.NO_PREFERENCE)) {
+                        return ResponseEntity.badRequest()
+                                .body(Map.of("message", "Location must be set before confirming"));
+                    }
+
                     ReservationStatus oldStatus = reservation.getStatus();
                     reservation.setStatus(status);
                     if (confirmedBy != null && status == ReservationStatus.CONFIRMED) {
@@ -70,6 +78,23 @@ public class AdminReservationController {
                         }
                     }
 
+                    return ResponseEntity.ok(reservationMapper.toDto(saved));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PatchMapping("/{id}/catering-arranged")
+    @Operation(summary = "Toggle catering arranged", description = "Mark catering as arranged (or undo) for a reservation")
+    public ResponseEntity<Reservation> updateCateringArranged(
+            @PathVariable Long id,
+            @RequestParam boolean arranged) {
+
+        log.info("Setting catering arranged={} for reservation {}", arranged, id);
+
+        return reservationRepository.findById(id)
+                .map(reservation -> {
+                    reservation.setCateringArranged(arranged);
+                    com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
                     return ResponseEntity.ok(reservationMapper.toDto(saved));
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -121,4 +146,3 @@ public class AdminReservationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 }
-

@@ -54,10 +54,12 @@ export async function checkRecaptchaStatus(): Promise<boolean> {
 import type { ReservationFormData } from '../types/reservation';
 
 export async function submitReservation(data: ReservationFormData, recaptchaToken?: string) {
-  // Transform empty strings to null for optional enum fields
+  // Transform empty strings to null for optional fields
   const cleanedData = {
     ...data,
-    dietaryPreference: data.dietaryPreference || null,
+    specialActivities: data.specialActivities?.length > 0 ? data.specialActivities : null,
+    location: data.location || null,
+    invoiceType: data.invoiceType || null,
     seatingArea: data.seatingArea || null,
     recaptchaToken: recaptchaToken || null,
   };
@@ -77,4 +79,3 @@ export async function submitReservation(data: ReservationFormData, recaptchaToke
 
   return response.json();
 }
-

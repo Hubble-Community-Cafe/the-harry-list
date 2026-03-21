@@ -10,30 +10,25 @@ export interface Reservation {
   startTime: string;
   endTime: string;
   location: string;
-  specificArea?: string;
   seatingArea?: string;
   status: string;
   expectedGuests: number;
-  organizerType: string;
-  eventType: string;
   description?: string;
   paymentOption?: string;
   costCenter?: string;
   invoiceName?: string;
   invoiceAddress?: string;
-  vatNumber?: string;
-  foodRequired?: boolean;
-  dietaryPreference?: string;
-  dietaryNotes?: string;
-  budgetPerPerson?: number;
-  drinksIncluded?: boolean;
-  setupTimeMinutes?: number;
   comments?: string;
   internalNotes?: string;
-  referralSource?: string;
   termsAccepted?: boolean;
   confirmedBy?: string;
   createdAt?: string;
   updatedAt?: string;
+  specialActivities?: string[];
+  invoiceType?: string;
+  invoiceRemarks?: string;
+  longReservationReason?: string;
+  cateringDietaryNotes?: string;
+  cateringArranged?: boolean;
 }
 

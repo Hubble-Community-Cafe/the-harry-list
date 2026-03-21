@@ -3,6 +3,8 @@ package com.pimvanleeuwen.the_harry_list_backend.service;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+
 /**
  * Mapper service for converting between Reservation entity and DTO.
  */
@@ -33,38 +35,42 @@ public class ReservationMapper {
         // Event Details
         entity.setEventTitle(dto.getEventTitle());
         entity.setDescription(dto.getDescription());
-        entity.setEventType(dto.getEventType());
-        entity.setOrganizerType(dto.getOrganizerType());
+        entity.setSpecialActivities(dto.getSpecialActivities() != null ? new HashSet<>(dto.getSpecialActivities()) : new HashSet<>());
         entity.setExpectedGuests(dto.getExpectedGuests());
 
         // Date and Time
         entity.setEventDate(dto.getEventDate());
         entity.setStartTime(dto.getStartTime());
         entity.setEndTime(dto.getEndTime());
-        entity.setSetupTimeMinutes(dto.getSetupTimeMinutes());
+        entity.setLongReservationReason(dto.getLongReservationReason());
 
         // Location
         entity.setLocation(dto.getLocation());
-        entity.setSpecificArea(dto.getSpecificArea());
+        entity.setSeatingArea(dto.getSeatingArea());
 
         // Payment
         entity.setPaymentOption(dto.getPaymentOption());
+        entity.setInvoiceType(dto.getInvoiceType());
         entity.setCostCenter(dto.getCostCenter());
         entity.setInvoiceName(dto.getInvoiceName());
         entity.setInvoiceAddress(dto.getInvoiceAddress());
-        entity.setVatNumber(dto.getVatNumber());
+        entity.setInvoiceRemarks(dto.getInvoiceRemarks());
 
-        // Food & Drinks
-        entity.setFoodRequired(dto.getFoodRequired());
-        entity.setDietaryPreference(dto.getDietaryPreference());
-        entity.setDietaryNotes(dto.getDietaryNotes());
-        entity.setDrinksIncluded(dto.getDrinksIncluded());
-        entity.setBudgetPerPerson(dto.getBudgetPerPerson());
+        // Catering
+        entity.setCateringDietaryNotes(dto.getCateringDietaryNotes());
+        if (dto.getCateringArranged() != null) {
+            entity.setCateringArranged(dto.getCateringArranged());
+        }
 
         // Additional
         entity.setComments(dto.getComments());
         entity.setTermsAccepted(dto.getTermsAccepted());
-        entity.setReferralSource(dto.getReferralSource());
+        if (dto.getInternalNotes() != null) {
+            entity.setInternalNotes(dto.getInternalNotes());
+        }
+        if (dto.getInternalNotes() != null) {
+            entity.setInternalNotes(dto.getInternalNotes());
+        }
 
         return entity;
     }
@@ -88,33 +94,30 @@ public class ReservationMapper {
                 // Event
                 .eventTitle(entity.getEventTitle())
                 .description(entity.getDescription())
-                .eventType(entity.getEventType())
-                .organizerType(entity.getOrganizerType())
+                .specialActivities(entity.getSpecialActivities() != null ? new HashSet<>(entity.getSpecialActivities()) : new HashSet<>())
                 .expectedGuests(entity.getExpectedGuests())
                 // Date/Time
                 .eventDate(entity.getEventDate())
                 .startTime(entity.getStartTime())
                 .endTime(entity.getEndTime())
-                .setupTimeMinutes(entity.getSetupTimeMinutes())
+                .longReservationReason(entity.getLongReservationReason())
                 // Location
                 .location(entity.getLocation())
-                .specificArea(entity.getSpecificArea())
+                .seatingArea(entity.getSeatingArea())
                 // Payment
                 .paymentOption(entity.getPaymentOption())
+                .invoiceType(entity.getInvoiceType())
                 .costCenter(entity.getCostCenter())
                 .invoiceName(entity.getInvoiceName())
                 .invoiceAddress(entity.getInvoiceAddress())
-                .vatNumber(entity.getVatNumber())
-                // Food
-                .foodRequired(entity.getFoodRequired())
-                .dietaryPreference(entity.getDietaryPreference())
-                .dietaryNotes(entity.getDietaryNotes())
-                .drinksIncluded(entity.getDrinksIncluded())
-                .budgetPerPerson(entity.getBudgetPerPerson())
+                .invoiceRemarks(entity.getInvoiceRemarks())
+                // Catering
+                .cateringDietaryNotes(entity.getCateringDietaryNotes())
+                .cateringArranged(entity.isCateringArranged())
                 // Additional
                 .comments(entity.getComments())
                 .termsAccepted(entity.getTermsAccepted())
-                .referralSource(entity.getReferralSource())
+                .internalNotes(entity.getInternalNotes())
                 // Status
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
@@ -122,4 +125,3 @@ public class ReservationMapper {
                 .build();
     }
 }
-

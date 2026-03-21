@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,14 +39,17 @@ class ReservationMapperTest {
         assertEquals(dto.getOrganizationName(), entity.getOrganizationName());
         assertEquals(dto.getEventTitle(), entity.getEventTitle());
         assertEquals(dto.getDescription(), entity.getDescription());
-        assertEquals(dto.getEventType(), entity.getEventType());
-        assertEquals(dto.getOrganizerType(), entity.getOrganizerType());
+        assertEquals(dto.getSpecialActivities(), entity.getSpecialActivities());
         assertEquals(dto.getExpectedGuests(), entity.getExpectedGuests());
         assertEquals(dto.getEventDate(), entity.getEventDate());
         assertEquals(dto.getStartTime(), entity.getStartTime());
         assertEquals(dto.getEndTime(), entity.getEndTime());
         assertEquals(dto.getLocation(), entity.getLocation());
+        assertEquals(dto.getSeatingArea(), entity.getSeatingArea());
         assertEquals(dto.getPaymentOption(), entity.getPaymentOption());
+        assertEquals(dto.getInvoiceType(), entity.getInvoiceType());
+        assertEquals(dto.getInvoiceRemarks(), entity.getInvoiceRemarks());
+        assertEquals(dto.getCateringDietaryNotes(), entity.getCateringDietaryNotes());
     }
 
     @Test
@@ -87,14 +91,15 @@ class ReservationMapperTest {
         assertEquals(entity.getOrganizationName(), dto.getOrganizationName());
         assertEquals(entity.getEventTitle(), dto.getEventTitle());
         assertEquals(entity.getDescription(), dto.getDescription());
-        assertEquals(entity.getEventType(), dto.getEventType());
-        assertEquals(entity.getOrganizerType(), dto.getOrganizerType());
+        assertEquals(entity.getSpecialActivities(), dto.getSpecialActivities());
         assertEquals(entity.getExpectedGuests(), dto.getExpectedGuests());
         assertEquals(entity.getEventDate(), dto.getEventDate());
         assertEquals(entity.getStartTime(), dto.getStartTime());
         assertEquals(entity.getEndTime(), dto.getEndTime());
         assertEquals(entity.getLocation(), dto.getLocation());
+        assertEquals(entity.getSeatingArea(), dto.getSeatingArea());
         assertEquals(entity.getPaymentOption(), dto.getPaymentOption());
+        assertEquals(entity.getInvoiceType(), dto.getInvoiceType());
         assertEquals(entity.getStatus(), dto.getStatus());
     }
 
@@ -128,16 +133,14 @@ class ReservationMapperTest {
                 .organizationName("Test Association")
                 .eventTitle("Annual Borrel")
                 .description("Our yearly drinks event")
-                .eventType(EventType.BORREL)
-                .organizerType(OrganizerType.ASSOCIATION)
+                .specialActivities(Set.of(SpecialActivity.GRADUATION, SpecialActivity.EAT_A_LA_CARTE))
                 .expectedGuests(50)
                 .eventDate(LocalDate.of(2026, 3, 15))
                 .startTime(LocalTime.of(16, 0))
                 .endTime(LocalTime.of(22, 0))
                 .location(BarLocation.HUBBLE)
+                .seatingArea(SeatingArea.INSIDE)
                 .paymentOption(PaymentOption.INDIVIDUAL)
-                .foodRequired(true)
-                .dietaryPreference(DietaryPreference.VEGETARIAN)
                 .termsAccepted(true)
                 .build();
     }
@@ -152,16 +155,16 @@ class ReservationMapperTest {
         entity.setOrganizationName("Test Company");
         entity.setEventTitle("Company Dinner");
         entity.setDescription("End of year dinner");
-        entity.setEventType(EventType.DINNER);
-        entity.setOrganizerType(OrganizerType.COMPANY);
+        entity.setSpecialActivities(Set.of(SpecialActivity.EAT_CATERING));
         entity.setExpectedGuests(30);
         entity.setEventDate(LocalDate.of(2026, 12, 20));
         entity.setStartTime(LocalTime.of(18, 0));
         entity.setEndTime(LocalTime.of(23, 0));
         entity.setLocation(BarLocation.METEOR);
+        entity.setSeatingArea(SeatingArea.INSIDE);
         entity.setPaymentOption(PaymentOption.INVOICE);
+        entity.setInvoiceType(InvoiceType.EXTERNAL);
         entity.setStatus(ReservationStatus.PENDING);
         return entity;
     }
 }
-

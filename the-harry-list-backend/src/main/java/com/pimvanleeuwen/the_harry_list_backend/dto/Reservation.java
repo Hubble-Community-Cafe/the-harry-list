@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Set;
 
 /**
  * DTO for creating and updating reservations.
@@ -44,13 +45,10 @@ public class Reservation {
     @NotBlank(message = "Event title is required")
     private String eventTitle;
 
+    @NotBlank(message = "Description is required")
     private String description;
 
-    @NotNull(message = "Event type is required")
-    private EventType eventType;
-
-    @NotNull(message = "Organizer type is required")
-    private OrganizerType organizerType;
+    private Set<SpecialActivity> specialActivities;
 
     @Positive(message = "Number of guests must be positive")
     private Integer expectedGuests;
@@ -65,19 +63,19 @@ public class Reservation {
     @NotNull(message = "End time is required")
     private LocalTime endTime;
 
-    private Integer setupTimeMinutes;
+    private String longReservationReason;
 
     // ===== Location =====
-    @NotNull(message = "Location is required")
     private BarLocation location;
 
+    @NotNull(message = "Seating area is required")
     private SeatingArea seatingArea;
-
-    private String specificArea;
 
     // ===== Payment Information =====
     @NotNull(message = "Payment option is required")
     private PaymentOption paymentOption;
+
+    private InvoiceType invoiceType;
 
     private String costCenter;
 
@@ -85,25 +83,20 @@ public class Reservation {
 
     private String invoiceAddress;
 
-    private String vatNumber;
+    private String invoiceRemarks;
 
-    // ===== Food & Drinks =====
-    private Boolean foodRequired;
+    // ===== Catering =====
+    private String cateringDietaryNotes;
 
-    private DietaryPreference dietaryPreference;
-
-    private String dietaryNotes;
-
-    private Boolean drinksIncluded;
-
-    private Double budgetPerPerson;
+    private Boolean cateringArranged;
 
     // ===== Additional Information =====
     private String comments;
 
     private Boolean termsAccepted;
 
-    private String referralSource;
+    // ===== Internal (staff-only) =====
+    private String internalNotes;
 
     // ===== Read-only fields (returned in responses) =====
     private ReservationStatus status;
