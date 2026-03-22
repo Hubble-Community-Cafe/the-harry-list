@@ -4,6 +4,7 @@ import com.pimvanleeuwen.the_harry_list_backend.model.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,6 +50,7 @@ public class PublicReservationRequest {
     private Set<SpecialActivity> specialActivities;
 
     @Positive(message = "Number of guests must be positive")
+    @Max(value = 500, message = "Please contact us directly for groups over 500 people")
     private Integer expectedGuests;
 
     // ===== Date and Time =====
