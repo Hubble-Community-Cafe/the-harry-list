@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
 
     /** Missing static resource (404) — expected for bots/health checks hitting unknown paths, not sent to Sentry */
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<Map<String, String>> handleNoResource(NoResourceFoundException ex) {
+    public ResponseEntity<Map<String, String>> handleNoResource() {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Not found"));
     }
 
