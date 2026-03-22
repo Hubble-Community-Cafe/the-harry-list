@@ -18,7 +18,7 @@ export interface ReservationFormData {
   longReservationReason?: string;
 
   // Location
-  location?: string;
+  location?: string | null;
   seatingArea: string;
 
   // Payment
