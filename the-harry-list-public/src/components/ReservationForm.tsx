@@ -25,7 +25,7 @@ const formSchema = z.object({
   eventTitle: z.string().min(2, 'Event title is required'),
   description: z.string().min(1, 'Please describe your event'),
   specialActivities: z.array(z.string()),
-  expectedGuests: z.number().min(8, 'Minimum reservation size is 8 people'),
+  expectedGuests: z.number().min(8, 'Minimum reservation size is 8 people').max(500, 'Please contact us directly for groups over 500 people'),
   eventDate: z.string().min(1, 'Please select a date'),
   startTime: z.string().min(1, 'Please select a start time'),
   endTime: z.string().min(1, 'Please select an end time'),
