@@ -30,7 +30,7 @@ const formSchema = z.object({
   startTime: z.string().min(1, 'Please select a start time'),
   endTime: z.string().min(1, 'Please select an end time'),
   longReservationReason: z.string().optional(),
-  location: z.string().optional(),
+  location: z.string().nullable().optional(),
   seatingArea: z.string().min(1, 'Please select a seating area'),
   paymentOption: z.string().min(1, 'Please select a payment option'),
   invoiceType: z.string().optional(),
@@ -325,12 +325,14 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
   const nextStep = async () => {
     const isValid = await validateStep(currentStep);
     if (isValid && currentStep < steps.length) {
+      setSubmitError(null);
       setCurrentStep(currentStep + 1);
     }
   };
 
   const prevStep = () => {
     if (currentStep > 1) {
+      setSubmitError(null);
       setCurrentStep(currentStep - 1);
     }
   };
@@ -456,7 +458,24 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
       </div>
 
       {/* Form Card */}
-      <form onSubmit={handleSubmit(onSubmit)} className="card animate-fade-in">
+      <form onSubmit={handleSubmit(onSubmit, (fieldErrors) => {
+        console.error('Form validation failed on submit:', fieldErrors);
+        const stepFields: (keyof ReservationFormData)[][] = [
+          ['contactName', 'email', 'phoneNumber'],
+          ['eventTitle', 'description', 'expectedGuests', 'eventDate', 'startTime', 'endTime', 'longReservationReason'],
+          ['location', 'seatingArea'],
+          ['paymentOption', 'invoiceType', 'costCenter', 'invoiceName', 'invoiceAddress'],
+          ['termsAccepted'],
+        ];
+        const failingStep = stepFields.findIndex(fields => fields.some(f => f in fieldErrors));
+        const failingFields = Object.keys(fieldErrors).join(', ');
+        if (failingStep >= 0) {
+          setCurrentStep(failingStep + 1);
+          setSubmitError(null); // let inline field errors do the talking
+        } else {
+          setSubmitError(`Some required fields are invalid (${failingFields}). Please review all steps.`);
+        }
+      })} className="card animate-fade-in">
         {/* Step 1: Contact Information */}
         {currentStep === 1 && (
           <div className="space-y-6">

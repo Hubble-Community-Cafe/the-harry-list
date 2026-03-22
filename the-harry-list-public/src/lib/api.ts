@@ -58,7 +58,7 @@ export async function submitReservation(data: ReservationFormData, recaptchaToke
   const cleanedData = {
     ...data,
     specialActivities: data.specialActivities?.length > 0 ? data.specialActivities : null,
-    location: data.location || null,
+    location: data.location || 'NO_PREFERENCE',
     invoiceType: data.invoiceType || null,
     seatingArea: data.seatingArea || null,
     recaptchaToken: recaptchaToken || null,
