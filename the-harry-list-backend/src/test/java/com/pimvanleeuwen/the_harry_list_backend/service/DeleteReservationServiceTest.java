@@ -74,16 +74,15 @@ class DeleteReservationServiceTest {
         reservation.setEmail("john@example.com");
         reservation.setPhoneNumber("+31612345678");
         reservation.setEventTitle("Test Event");
-        reservation.setEventType(EventType.BORREL);
-        reservation.setOrganizerType(OrganizerType.ASSOCIATION);
+        reservation.setDescription("Test description");
         reservation.setExpectedGuests(50);
         reservation.setEventDate(LocalDate.of(2026, 3, 15));
         reservation.setStartTime(LocalTime.of(16, 0));
         reservation.setEndTime(LocalTime.of(22, 0));
         reservation.setLocation(BarLocation.HUBBLE);
+        reservation.setSeatingArea(SeatingArea.INSIDE);
         reservation.setPaymentOption(PaymentOption.INDIVIDUAL);
         reservation.setStatus(ReservationStatus.PENDING);
         return reservation;
     }
 }
-

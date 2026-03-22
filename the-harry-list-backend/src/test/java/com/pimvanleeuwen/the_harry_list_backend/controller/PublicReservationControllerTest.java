@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -152,18 +153,15 @@ class PublicReservationControllerTest {
                 .organizationName("Test Association")
                 .eventTitle("Annual Borrel")
                 .description("Our yearly drinks event")
-                .eventType(EventType.BORREL)
-                .organizerType(OrganizerType.ASSOCIATION)
+                .specialActivities(Set.of(SpecialActivity.GRADUATION))
                 .expectedGuests(50)
                 .eventDate(LocalDate.of(2026, 3, 15))
                 .startTime(LocalTime.of(16, 0))
                 .endTime(LocalTime.of(22, 0))
                 .location(BarLocation.HUBBLE)
+                .seatingArea(SeatingArea.INSIDE)
                 .paymentOption(PaymentOption.INDIVIDUAL)
-                .foodRequired(true)
-                .dietaryPreference(DietaryPreference.VEGETARIAN)
                 .termsAccepted(true)
                 .build();
     }
 }
-

@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -86,13 +87,14 @@ class CreateReservationServiceTest {
                 .email("john@example.com")
                 .phoneNumber("+31612345678")
                 .eventTitle("Test Event")
-                .eventType(EventType.BORREL)
-                .organizerType(OrganizerType.ASSOCIATION)
+                .description("Test description")
+                .specialActivities(Set.of(SpecialActivity.GRADUATION))
                 .expectedGuests(50)
                 .eventDate(LocalDate.of(2026, 3, 15))
                 .startTime(LocalTime.of(16, 0))
                 .endTime(LocalTime.of(22, 0))
                 .location(BarLocation.HUBBLE)
+                .seatingArea(SeatingArea.INSIDE)
                 .paymentOption(PaymentOption.INDIVIDUAL)
                 .build();
     }
@@ -104,12 +106,12 @@ class CreateReservationServiceTest {
         entity.setContactName("John Doe");
         entity.setEmail("john@example.com");
         entity.setEventTitle("Test Event");
-        entity.setEventType(EventType.BORREL);
-        entity.setOrganizerType(OrganizerType.ASSOCIATION);
+        entity.setDescription("Test description");
+        entity.setSpecialActivities(Set.of(SpecialActivity.GRADUATION));
+        entity.setSeatingArea(SeatingArea.INSIDE);
         entity.setLocation(BarLocation.HUBBLE);
         entity.setPaymentOption(PaymentOption.INDIVIDUAL);
         entity.setStatus(ReservationStatus.PENDING);
         return entity;
     }
 }
-

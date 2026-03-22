@@ -5,6 +5,7 @@ import org.openpdf.text.pdf.*;
 import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
+import com.pimvanleeuwen.the_harry_list_backend.model.SpecialActivity;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class PdfExportService {
@@ -177,11 +180,13 @@ public class PdfExportService {
         if (res.getPhoneNumber() != null && !res.getPhoneNumber().isEmpty()) {
             addField(leftContent, "Phone", res.getPhoneNumber(), labelFont, valueFont);
         }
-        if (res.getOrganizerType() != null) {
-            addField(leftContent, "Type", res.getOrganizerType().getDisplayName(), labelFont, valueFont);
-        }
-        if (res.getEventType() != null) {
-            addField(leftContent, "Event Type", res.getEventType().getDisplayName(), labelFont, valueFont);
+        // Special activities
+        Set<SpecialActivity> activities = res.getSpecialActivities();
+        if (activities != null && !activities.isEmpty()) {
+            String activitiesStr = activities.stream()
+                    .map(SpecialActivity::getDisplayName)
+                    .collect(Collectors.joining(", "));
+            addField(leftContent, "Activities", activitiesStr, labelFont, valueFont);
         }
         leftCol.addElement(leftContent);
         content.addCell(leftCol);
@@ -196,11 +201,11 @@ public class PdfExportService {
         if (res.getSeatingArea() != null) {
             addField(rightContent, "Seating", res.getSeatingArea().getDisplayName(), labelFont, valueFont);
         }
-        if (res.getSpecificArea() != null && !res.getSpecificArea().isEmpty()) {
-            addField(rightContent, "Area Notes", res.getSpecificArea(), labelFont, valueFont);
-        }
         if (res.getPaymentOption() != null) {
             addField(rightContent, "Payment", res.getPaymentOption().getDisplayName(), labelFont, valueFont);
+        }
+        if (res.getInvoiceType() != null) {
+            addField(rightContent, "Invoice Type", res.getInvoiceType().getDisplayName(), labelFont, valueFont);
         }
         if (res.getCostCenter() != null && !res.getCostCenter().isEmpty()) {
             addField(rightContent, "Cost Center", res.getCostCenter(), labelFont, valueFont);
@@ -213,20 +218,32 @@ public class PdfExportService {
 
         contentCell.addElement(content);
 
-        // Add food info if required
-        if (Boolean.TRUE.equals(res.getFoodRequired())) {
-            Paragraph foodPara = new Paragraph();
-            foodPara.setSpacingBefore(10);
-            foodPara.add(new Chunk("Food Required: ", labelFont));
-            String foodDetails = "Yes";
-            if (res.getDietaryPreference() != null) {
-                foodDetails += " - " + res.getDietaryPreference().getDisplayName();
-            }
-            if (res.getDietaryNotes() != null && !res.getDietaryNotes().isEmpty()) {
-                foodDetails += " (" + res.getDietaryNotes() + ")";
-            }
-            foodPara.add(new Chunk(foodDetails, valueFont));
-            contentCell.addElement(foodPara);
+        // Add catering info if present
+        boolean hasCateringActivity = res.getSpecialActivities() != null && res.getSpecialActivities().stream()
+                .anyMatch(a -> a == SpecialActivity.EAT_A_LA_CARTE || a == SpecialActivity.EAT_CATERING || a == SpecialActivity.CATERING_CORONA_ROOM);
+        if (hasCateringActivity) {
+            Paragraph cateringStatusPara = new Paragraph();
+            cateringStatusPara.setSpacingBefore(10);
+            cateringStatusPara.add(new Chunk("Catering Arranged: ", labelFont));
+            Font arrangedFont = new Font(Font.HELVETICA, 10, Font.BOLD, res.isCateringArranged() ? new Color(34, 197, 94) : new Color(249, 115, 22));
+            cateringStatusPara.add(new Chunk(res.isCateringArranged() ? "Yes ✓" : "Not yet", arrangedFont));
+            contentCell.addElement(cateringStatusPara);
+        }
+        if (res.getCateringDietaryNotes() != null && !res.getCateringDietaryNotes().isEmpty()) {
+            Paragraph cateringPara = new Paragraph();
+            cateringPara.setSpacingBefore(5);
+            cateringPara.add(new Chunk("Catering Dietary Notes: ", labelFont));
+            cateringPara.add(new Chunk(res.getCateringDietaryNotes(), valueFont));
+            contentCell.addElement(cateringPara);
+        }
+
+        // Add long reservation reason if present
+        if (res.getLongReservationReason() != null && !res.getLongReservationReason().isEmpty()) {
+            Paragraph reasonPara = new Paragraph();
+            reasonPara.setSpacingBefore(5);
+            reasonPara.add(new Chunk("Long Reservation Reason: ", labelFont));
+            reasonPara.add(new Chunk(res.getLongReservationReason(), valueFont));
+            contentCell.addElement(reasonPara);
         }
 
         // Add description if present
@@ -275,4 +292,3 @@ public class PdfExportService {
         para.add(new Chunk(value + "\n", valueFont));
     }
 }
-

@@ -1,15 +1,17 @@
 package com.pimvanleeuwen.the_harry_list_backend.model;
 
 /**
- * The seating area preference for the reservation.
+ * Sub-type for invoice payments.
+ * Only applicable when paymentOption is INVOICE.
  */
-public enum SeatingArea {
-    INSIDE("Inside"),
-    OUTSIDE("Outside (Terrace)");
+public enum InvoiceType {
+    TUE("TU/e"),
+    FONTYS("Fontys"),
+    EXTERNAL("External");
 
     private final String displayName;
 
-    SeatingArea(String displayName) {
+    InvoiceType(String displayName) {
         this.displayName = displayName;
     }
 

@@ -12,6 +12,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.security.SecureRandom;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Reservation entity representing a bar/event reservation.
@@ -65,21 +67,17 @@ public class Reservation {
     private String eventTitle;
 
     /** Description of the event */
+    @NotBlank(message = "Description is required")
     @Size(max = 5000, message = "Description must not exceed 5000 characters")
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    /** Type of event (Borrel, Lunch, Dinner, etc.) */
-    @NotNull(message = "Event type is required")
-    @Column(name = "event_type", nullable = false)
+    /** Special activities selected for this reservation */
+    @ElementCollection(targetClass = SpecialActivity.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "reservation_special_activities", joinColumns = @JoinColumn(name = "reservation_id"))
+    @Column(name = "special_activity")
     @Enumerated(EnumType.STRING)
-    private EventType eventType;
-
-    /** Who is organizing the event */
-    @NotNull(message = "Organizer type is required")
-    @Column(name = "organizer_type", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private OrganizerType organizerType;
+    private Set<SpecialActivity> specialActivities = new HashSet<>();
 
     /** Expected number of guests */
     @Positive(message = "Number of guests must be positive")
@@ -103,27 +101,23 @@ public class Reservation {
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
 
-    /** Setup time needed before the event (in minutes) */
-    @Column(name = "setup_time_minutes")
-    private Integer setupTimeMinutes;
+    /** Reason for long reservation (required when duration > 3 hours) */
+    @Size(max = 1000, message = "Long reservation reason must not exceed 1000 characters")
+    @Column(name = "long_reservation_reason", columnDefinition = "TEXT")
+    private String longReservationReason;
 
     // ===== Location =====
 
-    /** Which bar location (Hubble or Meteor) */
-    @NotNull(message = "Location is required")
-    @Column(name = "location", nullable = false)
+    /** Which bar location (Hubble, Meteor, or NO_PREFERENCE) */
+    @Column(name = "location")
     @Enumerated(EnumType.STRING)
     private BarLocation location;
 
-    /** Seating area preference (inside/outside) */
-    @Column(name = "seating_area")
+    /** Seating area (inside/outside) */
+    @NotNull(message = "Seating area is required")
+    @Column(name = "seating_area", nullable = false)
     @Enumerated(EnumType.STRING)
     private SeatingArea seatingArea;
-
-    /** Specific area within the bar (if applicable) */
-    @Size(max = 500, message = "Specific area must not exceed 500 characters")
-    @Column(name = "specific_area")
-    private String specificArea;
 
     // ===== Payment Information =====
 
@@ -133,53 +127,45 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     private PaymentOption paymentOption;
 
-    /** TU/e Cost center number (if paying via cost center) */
+    /** Invoice sub-type (only when paymentOption=INVOICE) */
+    @Column(name = "invoice_type")
+    @Enumerated(EnumType.STRING)
+    private InvoiceType invoiceType;
+
+    /** TU/e or Fontys cost center number (kostenplaats) */
     @Size(max = 100, message = "Cost center must not exceed 100 characters")
     @Column(name = "cost_center")
     private String costCenter;
 
-    /** Name for the invoice (if paying via invoice) */
+    /** Company name for external invoices */
     @Size(max = 255, message = "Invoice name must not exceed 255 characters")
     @Column(name = "invoice_name")
     private String invoiceName;
 
-    /** Address for the invoice */
+    /** Address for external invoices */
     @Size(max = 500, message = "Invoice address must not exceed 500 characters")
     @Column(name = "invoice_address")
     private String invoiceAddress;
 
-    /** VAT number for invoice (if applicable) */
-    @Size(max = 50, message = "VAT number must not exceed 50 characters")
-    @Column(name = "vat_number")
-    private String vatNumber;
+    /** Remarks for external invoices */
+    @Size(max = 1000, message = "Invoice remarks must not exceed 1000 characters")
+    @Column(name = "invoice_remarks", columnDefinition = "TEXT")
+    private String invoiceRemarks;
 
-    // ===== Food & Drinks =====
+    // ===== Catering =====
 
-    /** Whether food is needed for the event */
-    @Column(name = "food_required")
-    private Boolean foodRequired;
+    /** Dietary notes for catering (allergies, preferences - free text) */
+    @Size(max = 1000, message = "Catering dietary notes must not exceed 1000 characters")
+    @Column(name = "catering_dietary_notes", columnDefinition = "TEXT")
+    private String cateringDietaryNotes;
 
-    /** Primary dietary preference */
-    @Column(name = "dietary_preference")
-    @Enumerated(EnumType.STRING)
-    private DietaryPreference dietaryPreference;
-
-    /** Additional dietary requirements or allergies */
-    @Size(max = 1000, message = "Dietary notes must not exceed 1000 characters")
-    @Column(name = "dietary_notes", columnDefinition = "TEXT")
-    private String dietaryNotes;
-
-    /** Whether drinks are to be served */
-    @Column(name = "drinks_included")
-    private Boolean drinksIncluded;
-
-    /** Budget per person for drinks/food (optional) */
-    @Column(name = "budget_per_person")
-    private Double budgetPerPerson;
+    /** Whether catering has been internally arranged by staff */
+    @Column(name = "catering_arranged", nullable = false)
+    private boolean cateringArranged = false;
 
     // ===== Additional Information =====
 
-    /** Any additional comments or requests */
+    /** Location/seating remarks */
     @Size(max = 5000, message = "Comments must not exceed 5000 characters")
     @Column(name = "comments", columnDefinition = "TEXT")
     private String comments;
@@ -187,11 +173,6 @@ public class Reservation {
     /** Whether the organizer has agreed to terms and conditions */
     @Column(name = "terms_accepted")
     private Boolean termsAccepted;
-
-    /** How did they hear about us */
-    @Size(max = 255, message = "Referral source must not exceed 255 characters")
-    @Column(name = "referral_source")
-    private String referralSource;
 
     // ===== Internal Fields =====
 

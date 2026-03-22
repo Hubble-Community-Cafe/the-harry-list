@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -83,16 +84,14 @@ class ReservationTest {
         reservation.setOrganizationName("Test Org");
         reservation.setEventTitle("Test Event");
         reservation.setDescription("Test Description");
-        reservation.setEventType(EventType.BORREL);
-        reservation.setOrganizerType(OrganizerType.ASSOCIATION);
+        reservation.setSpecialActivities(Set.of(SpecialActivity.GRADUATION));
         reservation.setExpectedGuests(50);
         reservation.setEventDate(LocalDate.of(2026, 3, 15));
         reservation.setStartTime(LocalTime.of(16, 0));
         reservation.setEndTime(LocalTime.of(22, 0));
         reservation.setLocation(BarLocation.HUBBLE);
+        reservation.setSeatingArea(SeatingArea.INSIDE);
         reservation.setPaymentOption(PaymentOption.INDIVIDUAL);
-        reservation.setFoodRequired(true);
-        reservation.setDietaryPreference(DietaryPreference.VEGETARIAN);
         reservation.setTermsAccepted(true);
         reservation.setStatus(ReservationStatus.PENDING);
 
@@ -104,16 +103,14 @@ class ReservationTest {
         assertEquals("Test Org", reservation.getOrganizationName());
         assertEquals("Test Event", reservation.getEventTitle());
         assertEquals("Test Description", reservation.getDescription());
-        assertEquals(EventType.BORREL, reservation.getEventType());
-        assertEquals(OrganizerType.ASSOCIATION, reservation.getOrganizerType());
+        assertTrue(reservation.getSpecialActivities().contains(SpecialActivity.GRADUATION));
         assertEquals(50, reservation.getExpectedGuests());
         assertEquals(LocalDate.of(2026, 3, 15), reservation.getEventDate());
         assertEquals(LocalTime.of(16, 0), reservation.getStartTime());
         assertEquals(LocalTime.of(22, 0), reservation.getEndTime());
         assertEquals(BarLocation.HUBBLE, reservation.getLocation());
+        assertEquals(SeatingArea.INSIDE, reservation.getSeatingArea());
         assertEquals(PaymentOption.INDIVIDUAL, reservation.getPaymentOption());
-        assertTrue(reservation.getFoodRequired());
-        assertEquals(DietaryPreference.VEGETARIAN, reservation.getDietaryPreference());
         assertTrue(reservation.getTermsAccepted());
         assertEquals(ReservationStatus.PENDING, reservation.getStatus());
     }
@@ -124,13 +121,15 @@ class ReservationTest {
         reservation.setCostCenter("12345");
         reservation.setInvoiceName("Invoice Inc.");
         reservation.setInvoiceAddress("123 Main St");
-        reservation.setVatNumber("NL123456789B01");
+        reservation.setInvoiceType(InvoiceType.EXTERNAL);
+        reservation.setInvoiceRemarks("Some remarks");
 
         // Then
         assertEquals("12345", reservation.getCostCenter());
         assertEquals("Invoice Inc.", reservation.getInvoiceName());
         assertEquals("123 Main St", reservation.getInvoiceAddress());
-        assertEquals("NL123456789B01", reservation.getVatNumber());
+        assertEquals(InvoiceType.EXTERNAL, reservation.getInvoiceType());
+        assertEquals("Some remarks", reservation.getInvoiceRemarks());
     }
 
     @Test
@@ -143,5 +142,22 @@ class ReservationTest {
         assertEquals("Staff note", reservation.getInternalNotes());
         assertEquals("admin", reservation.getConfirmedBy());
     }
-}
 
+    @Test
+    void cateringFields_shouldWorkCorrectly() {
+        // Given
+        reservation.setCateringDietaryNotes("No nuts, vegetarian for 5 guests");
+
+        // Then
+        assertEquals("No nuts, vegetarian for 5 guests", reservation.getCateringDietaryNotes());
+    }
+
+    @Test
+    void longReservationReason_shouldWorkCorrectly() {
+        // Given
+        reservation.setLongReservationReason("Large graduation ceremony with dinner");
+
+        // Then
+        assertEquals("Large graduation ceremony with dinner", reservation.getLongReservationReason());
+    }
+}

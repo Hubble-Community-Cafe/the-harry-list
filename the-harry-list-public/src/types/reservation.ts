@@ -7,31 +7,30 @@ export interface ReservationFormData {
 
   // Event Details
   eventTitle: string;
-  description?: string;
-  eventType: string;
-  organizerType: string;
+  description: string;
+  specialActivities: string[];
   expectedGuests: number;
 
   // Date and Time
   eventDate: string;
   startTime: string;
   endTime: string;
+  longReservationReason?: string;
 
   // Location
-  location: string;
-  seatingArea?: string;
-  specificArea?: string;
+  location?: string;
+  seatingArea: string;
 
   // Payment
   paymentOption: string;
+  invoiceType?: string;
   costCenter?: string;
   invoiceName?: string;
   invoiceAddress?: string;
+  invoiceRemarks?: string;
 
-  // Food & Drinks
-  foodRequired?: boolean;
-  dietaryPreference?: string;
-  dietaryNotes?: string;
+  // Catering
+  cateringDietaryNotes?: string;
 
   // Additional
   comments?: string;
@@ -47,11 +46,11 @@ export interface SubmissionResult {
 }
 
 export interface FormOptions {
-  eventTypes: SelectOption[];
-  organizerTypes: SelectOption[];
+  specialActivities: SelectOption[];
+  invoiceTypes: SelectOption[];
   locations: SelectOption[];
   paymentOptions: SelectOption[];
-  dietaryPreferences: SelectOption[];
+  seatingAreas: SelectOption[];
 }
 
 export interface SelectOption {
@@ -59,4 +58,3 @@ export interface SelectOption {
   displayName: string;
   description?: string;
 }
-

@@ -70,7 +70,7 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
         </div>
 
         {/* Action buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
           <button
             onClick={onNewReservation}
             className="btn-primary"
@@ -84,6 +84,14 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
             className="inline-flex items-center justify-center rounded-xl border border-dark-700 bg-dark-800/50 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-dark-700 hover:border-dark-600"
           >
             Visit Hubble Café
+          </a>
+          <a
+            href="https://meteorcommunity.cafe"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-xl border border-dark-700 bg-dark-800/50 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-dark-700 hover:border-dark-600"
+          >
+            Visit Meteor Café
           </a>
         </div>
       </div>

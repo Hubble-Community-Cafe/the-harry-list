@@ -2,6 +2,7 @@ package com.pimvanleeuwen.the_harry_list_backend.service;
 
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
+import com.pimvanleeuwen.the_harry_list_backend.model.SpecialActivity;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 
@@ -10,15 +11,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Service for generating iCal/ICS calendar feeds.
- * This allows subscribing to reservations from any calendar app
- * (Google Calendar, Outlook, Apple Calendar, etc.)
- *
- * Supports two modes:
- * - Public: Without confidential contact details (email, phone)
- * - Staff: With all details including contact info
  */
 @Service
 public class ICalendarService {
@@ -32,12 +29,6 @@ public class ICalendarService {
         this.reservationRepository = reservationRepository;
     }
 
-    /**
-     * Generate an ICS calendar feed for all reservations
-     * @param includeStatuses Filter by status
-     * @param location Filter by location
-     * @param includeConfidentialDetails If true, includes email/phone (staff only)
-     */
     public String generateCalendarFeed(List<ReservationStatus> includeStatuses, String location, boolean includeConfidentialDetails) {
         List<Reservation> reservations = reservationRepository.findAll();
 
@@ -56,9 +47,6 @@ public class ICalendarService {
         return buildIcsCalendar(reservations, includeConfidentialDetails);
     }
 
-    /**
-     * Generate an ICS calendar feed for upcoming reservations only
-     */
     public String generateUpcomingCalendarFeed(List<ReservationStatus> includeStatuses, String location, boolean includeConfidentialDetails) {
         LocalDate today = LocalDate.now();
         List<Reservation> reservations = reservationRepository.findAll().stream()
@@ -94,7 +82,6 @@ public class ICalendarService {
         ics.append("METHOD:PUBLISH\r\n");
         ics.append("X-WR-CALNAME:").append(calendarName).append("\r\n");
         ics.append("X-WR-TIMEZONE:").append(TIMEZONE).append("\r\n");
-        // Hint to calendar apps to refresh every 15 minutes (PT15M)
         ics.append("REFRESH-INTERVAL;VALUE=DURATION:PT15M\r\n");
         ics.append("X-PUBLISHED-TTL:PT15M\r\n");
         ics.append(getTimezoneDefinition());
@@ -155,7 +142,6 @@ public class ICalendarService {
             event.append("LOCATION:").append(escapeIcsText(location)).append("\r\n");
         }
 
-        // Description with or without confidential details
         String description = includeConfidentialDetails
                 ? buildStaffDescription(reservation)
                 : buildPublicDescription(reservation);
@@ -188,16 +174,9 @@ public class ICalendarService {
             sb.append(" ").append(reservation.getSeatingArea().getDisplayName());
         }
 
-        if (reservation.getSpecificArea() != null && !reservation.getSpecificArea().isEmpty()) {
-            sb.append(" - ").append(reservation.getSpecificArea());
-        }
-
         return sb.toString().trim();
     }
 
-    /**
-     * Build description WITH confidential data (email, phone) - for staff only
-     */
     private String buildStaffDescription(Reservation reservation) {
         StringBuilder sb = new StringBuilder();
 
@@ -205,14 +184,12 @@ public class ICalendarService {
             sb.append(reservation.getDescription()).append("\n\n");
         }
 
-        // Personal Details
         sb.append("Personal Details:\n");
         sb.append("Name: ").append(reservation.getContactName()).append("\n");
         if (reservation.getOrganizationName() != null && !reservation.getOrganizationName().isEmpty()) {
             sb.append("Organization: ").append(reservation.getOrganizationName()).append("\n");
         }
 
-        // Event Details
         sb.append("\nEvent Details:\n");
         if (reservation.getEventDate() != null) {
             sb.append("Date: ").append(reservation.getEventDate()).append("\n");
@@ -224,17 +201,20 @@ public class ICalendarService {
         sb.append("Pax: ").append(reservation.getExpectedGuests()).append("\n");
         sb.append("Location: ").append(formatLocation(reservation)).append("\n");
 
-        if (reservation.getOrganizerType() != null) {
-            sb.append("For: ").append(reservation.getOrganizerType().getDisplayName()).append("\n");
+        // Special activities
+        Set<SpecialActivity> activities = reservation.getSpecialActivities();
+        if (activities != null && !activities.isEmpty()) {
+            String activitiesStr = activities.stream()
+                    .map(SpecialActivity::getDisplayName)
+                    .collect(Collectors.joining(", "));
+            sb.append("Activities: ").append(activitiesStr).append("\n");
         }
 
-        if (reservation.getEventType() != null) {
-            sb.append("Event Type: ").append(reservation.getEventType().getDisplayName()).append("\n");
-        }
-
-        // Payment
         if (reservation.getPaymentOption() != null) {
             sb.append("\nPayment: ").append(reservation.getPaymentOption().getDisplayName()).append("\n");
+        }
+        if (reservation.getInvoiceType() != null) {
+            sb.append("Invoice Type: ").append(reservation.getInvoiceType().getDisplayName()).append("\n");
         }
         if (reservation.getCostCenter() != null && !reservation.getCostCenter().isEmpty()) {
             sb.append("Kostenplaats: ").append(reservation.getCostCenter()).append("\n");
@@ -246,23 +226,28 @@ public class ICalendarService {
             sb.append("Invoice Address: ").append(reservation.getInvoiceAddress()).append("\n");
         }
 
-        // Food options
-        if (Boolean.TRUE.equals(reservation.getFoodRequired())) {
-            sb.append("\nFood Required: Yes\n");
-            if (reservation.getDietaryPreference() != null) {
-                sb.append("Dietary: ").append(reservation.getDietaryPreference().getDisplayName()).append("\n");
-            }
-            if (reservation.getDietaryNotes() != null && !reservation.getDietaryNotes().isEmpty()) {
-                sb.append("Dietary Notes: ").append(reservation.getDietaryNotes()).append("\n");
-            }
+        // Catering
+        boolean hasCateringActivity = activities != null && activities.stream()
+                .anyMatch(a -> a == SpecialActivity.EAT_A_LA_CARTE || a == SpecialActivity.EAT_CATERING || a == SpecialActivity.CATERING_CORONA_ROOM);
+        if (hasCateringActivity) {
+            sb.append("\nCatering Arranged: ").append(reservation.isCateringArranged() ? "Yes ✓" : "Not yet").append("\n");
+        }
+        if (reservation.getCateringDietaryNotes() != null && !reservation.getCateringDietaryNotes().isEmpty()) {
+            sb.append("Catering Dietary Notes: ").append(reservation.getCateringDietaryNotes()).append("\n");
         }
 
-        // Comments
+        if (reservation.getLongReservationReason() != null && !reservation.getLongReservationReason().isEmpty()) {
+            sb.append("\nLong Reservation Reason: ").append(reservation.getLongReservationReason()).append("\n");
+        }
+
         if (reservation.getComments() != null && !reservation.getComments().isEmpty()) {
             sb.append("\nComments: ").append(reservation.getComments()).append("\n");
         }
 
-        // Confidential Contact Details
+        if (reservation.getInternalNotes() != null && !reservation.getInternalNotes().isEmpty()) {
+            sb.append("\n⚠ Internal Notes: ").append(reservation.getInternalNotes()).append("\n");
+        }
+
         sb.append("\n─────────────────────────────\n");
         sb.append("Confidential Details:\n");
         sb.append("Email: ").append(reservation.getEmail()).append("\n");
@@ -270,7 +255,6 @@ public class ICalendarService {
             sb.append("Phone: ").append(reservation.getPhoneNumber()).append("\n");
         }
 
-        // Status info
         sb.append("\n─────────────────────────────\n");
         sb.append("Status: ").append(reservation.getStatus()).append("\n");
         if (reservation.getConfirmationNumber() != null) {
@@ -283,9 +267,6 @@ public class ICalendarService {
         return sb.toString();
     }
 
-    /**
-     * Build description WITHOUT confidential data (email, phone) - for public/external use
-     */
     private String buildPublicDescription(Reservation reservation) {
         StringBuilder sb = new StringBuilder();
 
@@ -293,13 +274,11 @@ public class ICalendarService {
             sb.append(reservation.getDescription()).append("\n\n");
         }
 
-        // Contact name and organization (public info)
         sb.append("Contact: ").append(reservation.getContactName()).append("\n");
         if (reservation.getOrganizationName() != null && !reservation.getOrganizationName().isEmpty()) {
             sb.append("Organization: ").append(reservation.getOrganizationName()).append("\n");
         }
 
-        // Event Details
         sb.append("\nEvent Details:\n");
         if (reservation.getEventDate() != null) {
             sb.append("Date: ").append(reservation.getEventDate()).append("\n");
@@ -310,40 +289,28 @@ public class ICalendarService {
         sb.append("Pax: ").append(reservation.getExpectedGuests()).append("\n");
         sb.append("Location: ").append(formatLocation(reservation)).append("\n");
 
-        if (reservation.getOrganizerType() != null) {
-            sb.append("For: ").append(reservation.getOrganizerType().getDisplayName()).append("\n");
+        Set<SpecialActivity> activities = reservation.getSpecialActivities();
+        if (activities != null && !activities.isEmpty()) {
+            String activitiesStr = activities.stream()
+                    .map(SpecialActivity::getDisplayName)
+                    .collect(Collectors.joining(", "));
+            sb.append("Activities: ").append(activitiesStr).append("\n");
         }
 
-        if (reservation.getEventType() != null) {
-            sb.append("Event Type: ").append(reservation.getEventType().getDisplayName()).append("\n");
-        }
-
-        // Payment info (not confidential)
         if (reservation.getPaymentOption() != null) {
             sb.append("\nPayment: ").append(reservation.getPaymentOption().getDisplayName()).append("\n");
         }
 
-        // Food options
-        if (Boolean.TRUE.equals(reservation.getFoodRequired())) {
-            sb.append("\nFood Required: Yes\n");
-            if (reservation.getDietaryPreference() != null) {
-                sb.append("Dietary: ").append(reservation.getDietaryPreference().getDisplayName()).append("\n");
-            }
-        }
-
-        // Comments (general comments, not confidential)
         if (reservation.getComments() != null && !reservation.getComments().isEmpty()) {
             sb.append("\nComments: ").append(reservation.getComments()).append("\n");
         }
 
-        // Status info
         sb.append("\n---\n");
         sb.append("Status: ").append(reservation.getStatus()).append("\n");
         if (reservation.getConfirmationNumber() != null) {
             sb.append("Ref: ").append(reservation.getConfirmationNumber()).append("\n");
         }
 
-        // Note about confidential data
         sb.append("\n(Contact details available in admin portal)");
 
         return sb.toString();
@@ -381,4 +348,3 @@ public class ICalendarService {
                 "END:VTIMEZONE\r\n";
     }
 }
-

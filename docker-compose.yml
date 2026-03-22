@@ -14,7 +14,8 @@ services:
       - harry-list
       - mariadb_mariadb-network
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
     environment:
       # Spring Boot Configuration
       - SPRING_PROFILES_ACTIVE=dev
@@ -115,6 +116,12 @@ services:
       - mariadb_data:/var/lib/mysql
     networks:
       - mariadb_mariadb-network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
 volumes:
   mariadb_data:

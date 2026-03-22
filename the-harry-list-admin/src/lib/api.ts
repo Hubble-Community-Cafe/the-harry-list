@@ -134,7 +134,7 @@ export async function fetchReservation(id: number): Promise<Reservation | null> 
 export async function updateReservation(id: number, data: Record<string, unknown>, sendEmail: boolean = true): Promise<Reservation> {
   // Clean up empty strings to null for enum fields that the backend expects
   const cleanedData: Record<string, unknown> = { ...data };
-  const enumFields = ['dietaryPreference', 'seatingArea', 'eventType', 'organizerType', 'location', 'paymentOption'];
+  const enumFields = ['seatingArea', 'location', 'paymentOption', 'invoiceType'];
   enumFields.forEach(field => {
     if (cleanedData[field] === '') {
       cleanedData[field] = null;
@@ -164,6 +164,12 @@ export async function updateReservationStatus(
     url += `&confirmedBy=${encodeURIComponent(confirmedBy)}`;
   }
   return fetchJsonWithAuth(url, { method: 'PATCH' }) as Promise<Reservation>;
+}
+
+export async function updateCateringArranged(id: number, arranged: boolean): Promise<Reservation> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/reservations/${id}/catering-arranged?arranged=${arranged}`, {
+    method: 'PATCH',
+  }) as Promise<Reservation>;
 }
 
 // Test if authentication is working

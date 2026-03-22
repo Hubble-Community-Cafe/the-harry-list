@@ -11,6 +11,7 @@ import com.microsoft.graph.serviceclient.GraphServiceClient;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
+import com.pimvanleeuwen.the_harry_list_backend.model.SpecialActivity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +22,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Microsoft Graph API email service for sending emails via Microsoft 365.
@@ -165,7 +168,7 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
         vars.put("eventDate", reservation.getEventDate().format(DATE_FORMATTER));
         vars.put("startTime", reservation.getStartTime().format(TIME_FORMATTER));
         vars.put("endTime", reservation.getEndTime().format(TIME_FORMATTER));
-        vars.put("location", reservation.getLocation().getDisplayName());
+        vars.put("location", reservation.getLocation() != null ? reservation.getLocation().getDisplayName() : "No Preference");
         vars.put("expectedGuests", String.valueOf(reservation.getExpectedGuests()));
         vars.put("barName", barName);
         return vars;
@@ -189,15 +192,23 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
         vars.put("phone", reservation.getPhoneNumber() != null ? reservation.getPhoneNumber() : "Not provided");
         vars.put("organization", reservation.getOrganizationName() != null ? reservation.getOrganizationName() : "Not provided");
         vars.put("eventTitle", reservation.getEventTitle());
-        vars.put("eventType", reservation.getEventType().getDisplayName());
-        vars.put("organizerType", reservation.getOrganizerType().getDisplayName());
         vars.put("eventDate", reservation.getEventDate().format(DATE_FORMATTER));
         vars.put("startTime", reservation.getStartTime().format(TIME_FORMATTER));
         vars.put("endTime", reservation.getEndTime().format(TIME_FORMATTER));
-        vars.put("location", reservation.getLocation().getDisplayName());
+        vars.put("location", reservation.getLocation() != null ? reservation.getLocation().getDisplayName() : "No Preference");
         vars.put("expectedGuests", String.valueOf(reservation.getExpectedGuests()));
         vars.put("payment", reservation.getPaymentOption().getDisplayName());
-        vars.put("dietaryInfo", resolveDietaryInfo(reservation));
+
+        // Special activities
+        Set<SpecialActivity> activities = reservation.getSpecialActivities();
+        if (activities != null && !activities.isEmpty()) {
+            vars.put("specialActivities", activities.stream()
+                    .map(SpecialActivity::getDisplayName)
+                    .collect(Collectors.joining(", ")));
+        } else {
+            vars.put("specialActivities", "None");
+        }
+
         vars.put("description", reservation.getDescription() != null ? reservation.getDescription() : "");
         vars.put("comments", reservation.getComments() != null ? reservation.getComments() : "");
         return vars;
@@ -230,16 +241,6 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
             case COMPLETED -> "Thank You";
             default -> "Reservation Update";
         };
-    }
-
-    private String resolveDietaryInfo(Reservation reservation) {
-        if (Boolean.TRUE.equals(reservation.getFoodRequired())) {
-            String dietary = reservation.getDietaryPreference() != null
-                    ? reservation.getDietaryPreference().getDisplayName()
-                    : "None";
-            return "Yes (Dietary: " + dietary + ")";
-        }
-        return "No";
     }
 
     private void sendEmail(String to, String subject, String htmlBody) {

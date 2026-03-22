@@ -7,9 +7,7 @@ package com.pimvanleeuwen.the_harry_list_backend.model;
 public enum PaymentOption {
     INDIVIDUAL("People pay individually"),
     ONE_PERSON("One person pays at the end"),
-    INVOICE("Invoice (>50 euros only)"),
-    COST_CENTER("Kostenplaats"),
-    VOUCHERS("Vouchers/Coins");
+    INVOICE("Invoice");
 
     private final String displayName;
 
