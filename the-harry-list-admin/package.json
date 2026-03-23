@@ -13,8 +13,8 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@azure/msal-browser": "^5.5.0",
-    "@azure/msal-react": "^5.0.7",
+    "@azure/msal-browser": "^5.6.1",
+    "@azure/msal-react": "^5.1.0",
     "@hookform/resolvers": "^5.2.2",
     "@sentry/react": "^10.43.0",
     "@tailwindcss/vite": "^4.2.1",
