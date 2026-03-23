@@ -33,3 +33,15 @@ regexes = [
 ]
 
 commits = []
+
+# Allowlist specific findings by fingerprint
+# These are example/placeholder credentials in documentation files (curl -u admin:admin)
+[[allowlists]]
+description = "Example curl credentials in documentation"
+fingerprints = [
+  "41c90c80527bc0f223c05cb3b3ea7c1fe413ecb9:POSTMAN_TESTING_GUIDE.md:curl-auth-user:461",
+  "41c90c80527bc0f223c05cb3b3ea7c1fe413ecb9:POSTMAN_TESTING_GUIDE.md:curl-auth-user:471",
+  "41c90c80527bc0f223c05cb3b3ea7c1fe413ecb9:POSTMAN_TESTING_GUIDE.md:curl-auth-user:493",
+  "41c90c80527bc0f223c05cb3b3ea7c1fe413ecb9:POSTMAN_TESTING_GUIDE.md:curl-auth-user:499",
+  "c2ee063057b077c8aea3ecaae5f8390eacba39f6:QUICKSTART.md:curl-auth-user:112",
+]
