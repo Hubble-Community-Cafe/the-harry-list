@@ -1,6 +1,9 @@
 # Build stage
 FROM node:20-alpine AS build
 
+# Update Alpine packages for security patches (including libexpat)
+RUN apk upgrade --no-cache
+
 WORKDIR /app
 
 # Copy package files
@@ -17,6 +20,9 @@ RUN npm run build
 
 # Production stage
 FROM nginx:alpine
+
+# Update Alpine packages for security patches (including libexpat)
+RUN apk upgrade --no-cache
 
 # Copy custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
