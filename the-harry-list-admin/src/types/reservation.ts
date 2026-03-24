@@ -32,3 +32,28 @@ export interface Reservation {
   cateringArranged?: boolean;
 }
 
+export interface FormConstraint {
+  id?: number;
+  constraintType: string;
+  triggerActivity: string;
+  targetValue?: string;
+  numericValue?: number;
+  secondaryValue?: string;
+  message: string;
+  enabled: boolean;
+  updatedAt?: string;
+}
+
+export interface BlockedPeriod {
+  id?: number;
+  location?: string;
+  startDate: string;
+  endDate: string;
+  startTime?: string;
+  endTime?: string;
+  reason: string;
+  publicMessage?: string;
+  enabled: boolean;
+  updatedAt?: string;
+}
+

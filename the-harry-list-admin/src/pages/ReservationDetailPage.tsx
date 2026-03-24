@@ -199,15 +199,6 @@ export function ReservationDetailPage() {
             Edit Details
           </button>
 
-          {/* Direct Email Link - opens in user's email client */}
-          <a
-            href={`mailto:${reservation.email}?subject=${encodeURIComponent(`Re: Your reservation "${reservation.eventTitle}" at ${reservation.location}`)}`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
-          >
-            <Mail className="w-4 h-4" />
-            Email Customer
-          </a>
-
           {reservation.status === 'PENDING' && (
             <>
               <button
@@ -240,25 +231,27 @@ export function ReservationDetailPage() {
             </button>
           )}
 
-          {(reservation.status === 'PENDING' || reservation.status === 'CONFIRMED') && (
+          {reservation.status === 'CONFIRMED' && (
             <button
               onClick={() => setShowCancelDialog(true)}
               disabled={isUpdating}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors ml-auto"
             >
               <XCircle className="w-4 h-4" />
               Cancel
             </button>
           )}
 
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            disabled={isUpdating}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/50 text-red-400 hover:bg-red-500/10 transition-colors ml-auto"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete
-          </button>
+          {(reservation.status === 'CANCELLED' || reservation.status === 'REJECTED') && (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={isUpdating}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/50 text-red-400 hover:bg-red-500/10 transition-colors ml-auto"
+            >
+              <Trash2 className="w-4 h-4" />
+              Remove
+            </button>
+          )}
         </div>
 
         {/* Delete Confirmation */}
@@ -398,7 +391,18 @@ export function ReservationDetailPage() {
           </h2>
           <div className="space-y-4">
             <InfoRow icon={Users} label="Name" value={reservation.contactName} />
-            <InfoRow icon={Mail} label="Email" value={reservation.email} />
+            <div className="flex items-start gap-3">
+              <Mail className="w-4 h-4 text-dark-500 mt-1 shrink-0" />
+              <div>
+                <div className="text-xs text-dark-500">Email</div>
+                <a
+                  href={`mailto:${reservation.email}?subject=${encodeURIComponent(`Re: Your reservation "${reservation.eventTitle}"`)}`}
+                  className="text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  {reservation.email}
+                </a>
+              </div>
+            </div>
             <InfoRow icon={Phone} label="Phone" value={reservation.phoneNumber} />
             <InfoRow icon={Building2} label="Organization" value={reservation.organizationName} />
           </div>

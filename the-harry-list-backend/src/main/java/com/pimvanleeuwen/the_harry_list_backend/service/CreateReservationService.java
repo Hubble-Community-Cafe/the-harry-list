@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class CreateReservationService implements Command<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation, com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> {
 
@@ -17,13 +19,17 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
 
     private final ReservationRepository reservationRepository;
     private final ReservationMapper reservationMapper;
+    private final ConstraintValidationService constraintValidationService;
 
     @Autowired(required = false)
     private EmailNotificationService emailService;
 
-    public CreateReservationService(ReservationRepository reservationRepository, ReservationMapper reservationMapper) {
+    public CreateReservationService(ReservationRepository reservationRepository,
+                                     ReservationMapper reservationMapper,
+                                     ConstraintValidationService constraintValidationService) {
         this.reservationRepository = reservationRepository;
         this.reservationMapper = reservationMapper;
+        this.constraintValidationService = constraintValidationService;
     }
 
     @Override
@@ -41,6 +47,20 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
         log.info("LOGGING reservation.submitted contact='{}' email='{}' event='{}' date={} location={} guests={}",
                 input.getContactName(), input.getEmail(), input.getEventTitle(),
                 input.getEventDate(), input.getLocation(), input.getExpectedGuests());
+
+        // Validate against dynamic constraints
+        List<String> violations = constraintValidationService.validate(
+                input.getSpecialActivities(),
+                input.getLocation(),
+                input.getSeatingArea(),
+                input.getEventDate(),
+                input.getStartTime(),
+                input.getExpectedGuests());
+
+        if (!violations.isEmpty()) {
+            log.warn("Reservation rejected due to constraint violations: {}", violations);
+            throw new IllegalArgumentException(String.join("; ", violations));
+        }
 
         // Convert DTO to entity
         Reservation entity = reservationMapper.toEntity(input);

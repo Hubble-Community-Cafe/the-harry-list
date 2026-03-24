@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ import java.util.Set;
 
 @Component
 @Profile("dev")
+@Order(2)
 public class DataSeeder implements CommandLineRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(DataSeeder.class);
@@ -213,7 +215,7 @@ public class DataSeeder implements CommandLineRunner {
         r9.setTermsAccepted(true);
         reservationRepository.save(r9);
 
-        // 10. CONFIRMED reservation at Hubble, 45 guests
+        // 10. CONFIRMED private event at Meteor, 45 guests
         Reservation r10 = new Reservation();
         r10.setContactName("Anna Willemsen");
         r10.setEmail("anna.willemsen@test.example.com");
@@ -226,7 +228,7 @@ public class DataSeeder implements CommandLineRunner {
         r10.setEventDate(today.plusDays(12));
         r10.setStartTime(LocalTime.of(19, 0));
         r10.setEndTime(LocalTime.of(23, 0));
-        r10.setLocation(BarLocation.HUBBLE);
+        r10.setLocation(BarLocation.METEOR);
         r10.setSeatingArea(SeatingArea.INSIDE);
         r10.setPaymentOption(PaymentOption.ONE_PERSON);
         r10.setTermsAccepted(true);

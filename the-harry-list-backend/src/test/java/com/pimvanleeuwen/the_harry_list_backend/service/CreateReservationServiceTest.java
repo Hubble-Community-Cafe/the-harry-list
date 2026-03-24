@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,6 +33,9 @@ class CreateReservationServiceTest {
     @Mock
     private ReservationMapper reservationMapper;
 
+    @Mock
+    private ConstraintValidationService constraintValidationService;
+
     @InjectMocks
     private CreateReservationService createReservationService;
 
@@ -47,6 +51,8 @@ class CreateReservationServiceTest {
     @Test
     void execute_shouldCreateReservationSuccessfully() {
         // Given
+        when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
+                .thenReturn(List.of());
         when(reservationMapper.toEntity(any(Reservation.class))).thenReturn(sampleEntity);
         when(reservationRepository.save(any())).thenReturn(sampleEntity);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
@@ -63,6 +69,9 @@ class CreateReservationServiceTest {
     @Test
     void execute_shouldSetStatusToPending() {
         // Given
+        when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
+                .thenReturn(List.of());
+
         com.pimvanleeuwen.the_harry_list_backend.model.Reservation capturedEntity =
                 new com.pimvanleeuwen.the_harry_list_backend.model.Reservation();
 
@@ -79,6 +88,17 @@ class CreateReservationServiceTest {
 
         // Then
         verify(reservationRepository, times(1)).save(any());
+    }
+
+    @Test
+    void execute_shouldRejectWhenConstraintViolation() {
+        // Given
+        when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
+                .thenReturn(List.of("Catering and à la carte dining cannot be combined"));
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> createReservationService.execute(sampleDto));
+        verify(reservationRepository, never()).save(any());
     }
 
     private Reservation createSampleDto() {

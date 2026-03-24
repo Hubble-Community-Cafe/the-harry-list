@@ -119,8 +119,8 @@ async function fetchJsonWithAuth(url: string, options: RequestInit = {}): Promis
   return JSON.parse(text);
 }
 
-// Import Reservation type for proper typing
-import type { Reservation } from '../types/reservation';
+// Import types for proper typing
+import type { Reservation, FormConstraint, BlockedPeriod } from '../types/reservation';
 
 // API Functions
 export async function fetchReservations(): Promise<Reservation[]> {
@@ -170,6 +170,68 @@ export async function updateCateringArranged(id: number, arranged: boolean): Pro
   return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/reservations/${id}/catering-arranged?arranged=${arranged}`, {
     method: 'PATCH',
   }) as Promise<Reservation>;
+}
+
+// ===== Form Constraints =====
+export async function fetchFormConstraints(): Promise<FormConstraint[]> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/form-constraints`) as Promise<FormConstraint[]>;
+}
+
+export async function createFormConstraint(constraint: FormConstraint): Promise<FormConstraint> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/form-constraints`, {
+    method: 'POST',
+    body: JSON.stringify(constraint),
+  }) as Promise<FormConstraint>;
+}
+
+export async function updateFormConstraint(id: number, constraint: FormConstraint): Promise<FormConstraint> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/form-constraints/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(constraint),
+  }) as Promise<FormConstraint>;
+}
+
+export async function toggleFormConstraint(id: number): Promise<FormConstraint> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/form-constraints/${id}/toggle`, {
+    method: 'PATCH',
+  }) as Promise<FormConstraint>;
+}
+
+export async function deleteFormConstraint(id: number): Promise<void> {
+  await fetchJsonWithAuth(`${API_BASE_URL}/api/admin/form-constraints/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+// ===== Blocked Periods =====
+export async function fetchBlockedPeriods(): Promise<BlockedPeriod[]> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/blocked-periods`) as Promise<BlockedPeriod[]>;
+}
+
+export async function createBlockedPeriod(period: BlockedPeriod): Promise<BlockedPeriod> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/blocked-periods`, {
+    method: 'POST',
+    body: JSON.stringify(period),
+  }) as Promise<BlockedPeriod>;
+}
+
+export async function updateBlockedPeriod(id: number, period: BlockedPeriod): Promise<BlockedPeriod> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/blocked-periods/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(period),
+  }) as Promise<BlockedPeriod>;
+}
+
+export async function toggleBlockedPeriod(id: number): Promise<BlockedPeriod> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/blocked-periods/${id}/toggle`, {
+    method: 'PATCH',
+  }) as Promise<BlockedPeriod>;
+}
+
+export async function deleteBlockedPeriod(id: number): Promise<void> {
+  await fetchJsonWithAuth(`${API_BASE_URL}/api/admin/blocked-periods/${id}`, {
+    method: 'DELETE',
+  });
 }
 
 // Test if authentication is working
