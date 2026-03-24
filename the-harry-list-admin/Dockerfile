@@ -1,6 +1,9 @@
 # Build stage
 FROM node:20-alpine AS build
 
+# Update Alpine packages for security patches (including libexpat)
+RUN apk upgrade --no-cache
+
 WORKDIR /app
 
 # Copy package files
@@ -17,6 +20,9 @@ RUN npm run build
 
 # Production stage
 FROM nginx:alpine
+
+# Update Alpine packages for security patches (including libexpat)
+RUN apk upgrade --no-cache
 
 # Copy custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
@@ -38,8 +44,19 @@ RUN echo '#!/bin/sh' > /docker-entrypoint.d/40-inject-config.sh && \
     echo 'EOF' >> /docker-entrypoint.d/40-inject-config.sh && \
     chmod +x /docker-entrypoint.d/40-inject-config.sh
 
+# Create non-root user for nginx
+RUN addgroup -g 101 -S nginx && \
+    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx 2>/dev/null || true && \
+    chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    touch /var/run/nginx.pid && \
+    chown -R nginx:nginx /var/run/nginx.pid
+
 # Expose port 80
 EXPOSE 80
+
+# Switch to non-root user
+USER nginx
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
