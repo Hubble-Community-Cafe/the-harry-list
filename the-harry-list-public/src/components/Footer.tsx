@@ -22,7 +22,7 @@ export function Footer() {
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-dark-400 hover:text-meteor-400 transition-colors"
             >
-              Meteor Community Café
+              Meteor Café
               <ExternalLink className="w-3 h-3" />
             </a>
           </div>
