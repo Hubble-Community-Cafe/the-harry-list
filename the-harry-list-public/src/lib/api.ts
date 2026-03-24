@@ -51,7 +51,27 @@ export async function checkRecaptchaStatus(): Promise<boolean> {
   }
 }
 
-import type { ReservationFormData } from '../types/reservation';
+import type { ReservationFormData, FormConstraint, BlockedPeriod } from '../types/reservation';
+
+export async function fetchFormConstraints(): Promise<FormConstraint[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/options/constraints`);
+    if (!response.ok) return [];
+    return response.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchBlockedPeriods(): Promise<BlockedPeriod[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/options/blocked-periods`);
+    if (!response.ok) return [];
+    return response.json();
+  } catch {
+    return [];
+  }
+}
 
 export async function submitReservation(data: ReservationFormData, recaptchaToken?: string) {
   // Transform empty strings to null for optional fields

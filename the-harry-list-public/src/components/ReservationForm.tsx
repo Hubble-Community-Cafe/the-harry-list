@@ -9,8 +9,8 @@ import {
   ChevronRight, ChevronLeft, Sparkles, Plus, Minus, CalendarDays,
   ClipboardCheck, AlertTriangle
 } from 'lucide-react';
-import { submitReservation, fetchFormOptions, getRecaptchaSiteKey } from '../lib/api';
-import type { ReservationFormData, FormOptions } from '../types/reservation';
+import { submitReservation, fetchFormOptions, fetchFormConstraints, fetchBlockedPeriods, getRecaptchaSiteKey } from '../lib/api';
+import type { ReservationFormData, FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
 
 // Phone number validation - allows international formats
 const phoneRegex = /^(\+?[0-9]{1,4}[\s.-]?)?(\(?[0-9]{1,4}\)?[\s.-]?)?[0-9]{1,4}[\s.-]?[0-9]{1,4}[\s.-]?[0-9]{1,9}$/;
@@ -80,6 +80,9 @@ const formSchema = z.object({
     }
   }
 
+  // Note: advance booking validation is enforced dynamically in the form
+  // and server-side via ConstraintValidationService. This is a static fallback.
+
   // Long reservation reason required when duration > 3 hours
   if (data.startTime && data.endTime) {
     const [sh, sm] = data.startTime.split(':').map(Number);
@@ -119,8 +122,8 @@ const steps = [
 const SPECIAL_ACTIVITY_LABELS: Record<string, string> = {
   GRADUATION: 'Graduation / PhD Defense',
   EAT_A_LA_CARTE: 'Eat a la Carte',
-  EAT_CATERING: 'Eat Catering',
-  CATERING_CORONA_ROOM: 'Catering Corona Room',
+  EAT_CATERING: 'Catering',
+  CATERING_CORONA_ROOM: 'Catering for Corona Room Event',
   PRIVATE_EVENT: 'Private Event',
 };
 
@@ -128,7 +131,7 @@ const SPECIAL_ACTIVITY_DESCRIPTIONS: Record<string, string> = {
   GRADUATION: 'Celebrating a graduation or PhD defense',
   EAT_A_LA_CARTE: 'Order from the menu (max 15 guests)',
   EAT_CATERING: 'Catered food for your event',
-  CATERING_CORONA_ROOM: 'Catering in the Corona Room (Hubble only)',
+  CATERING_CORONA_ROOM: 'Catering for a Corona Room event (Hubble only)',
   PRIVATE_EVENT: 'Private/closed event (Meteor only)',
 };
 
@@ -137,6 +140,8 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [formOptions, setFormOptions] = useState<FormOptions | null>(null);
+  const [constraints, setConstraints] = useState<FormConstraint[]>([]);
+  const [blockedPeriods, setBlockedPeriods] = useState<BlockedPeriod[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(true);
   const [optionsError, setOptionsError] = useState<string | null>(null);
 
@@ -147,8 +152,14 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
   useEffect(() => {
     async function loadOptions() {
       try {
-        const options = await fetchFormOptions();
+        const [options, fetchedConstraints, fetchedBlockedPeriods] = await Promise.all([
+          fetchFormOptions(),
+          fetchFormConstraints(),
+          fetchBlockedPeriods(),
+        ]);
         setFormOptions(options);
+        setConstraints(fetchedConstraints);
+        setBlockedPeriods(fetchedBlockedPeriods);
       } catch (error) {
         setOptionsError('Failed to load form options. Please refresh the page.');
         console.error('Failed to fetch form options:', error);
@@ -185,12 +196,15 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
   const watchEndTime = watch('endTime');
   const watchExpectedGuests = watch('expectedGuests');
 
-  // Constraint: CATERING_CORONA_ROOM locks to Hubble
+  // Constraint: location lock derived from dynamic constraints
   const locationLocked = useMemo(() => {
-    if (watchSpecialActivities.includes('CATERING_CORONA_ROOM')) return 'HUBBLE';
-    if (watchSpecialActivities.includes('PRIVATE_EVENT')) return 'METEOR';
+    for (const c of constraints) {
+      if (c.constraintType === 'LOCATION_LOCK' && watchSpecialActivities.includes(c.triggerActivity)) {
+        return c.targetValue || null;
+      }
+    }
     return null;
-  }, [watchSpecialActivities]);
+  }, [watchSpecialActivities, constraints]);
 
   // Auto-set location when locked
   useEffect(() => {
@@ -199,13 +213,20 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
     }
   }, [locationLocked, setValue]);
 
-  // Constraint: CATERING_CORONA_ROOM locks seating to INSIDE
-  const seatingLocked = watchSpecialActivities.includes('CATERING_CORONA_ROOM');
+  // Constraint: seating lock derived from dynamic constraints
+  const seatingLocked = useMemo(() => {
+    for (const c of constraints) {
+      if (c.constraintType === 'SEATING_LOCK' && watchSpecialActivities.includes(c.triggerActivity)) {
+        return c.targetValue || null;
+      }
+    }
+    return null;
+  }, [watchSpecialActivities, constraints]);
 
   // Auto-set seating area when locked
   useEffect(() => {
     if (seatingLocked) {
-      setValue('seatingArea', 'INSIDE');
+      setValue('seatingArea', seatingLocked);
     }
   }, [seatingLocked, setValue]);
 
@@ -224,9 +245,68 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
   const hasCateringActivity = watchSpecialActivities.includes('EAT_CATERING') ||
     watchSpecialActivities.includes('CATERING_CORONA_ROOM');
 
-  // Check a la carte guest warning
-  const alaCarteGuestWarning = watchSpecialActivities.includes('EAT_A_LA_CARTE') &&
-    watchExpectedGuests > 15;
+  // Guest limit warnings from dynamic constraints
+  const guestLimitWarning = useMemo(() => {
+    for (const c of constraints) {
+      if (c.constraintType === 'GUEST_LIMIT'
+          && watchSpecialActivities.includes(c.triggerActivity)
+          && c.numericValue
+          && watchExpectedGuests > c.numericValue) {
+        return c.message;
+      }
+    }
+    return null;
+  }, [constraints, watchSpecialActivities, watchExpectedGuests]);
+
+  // Advance booking from dynamic constraints
+  const advanceBookingDays = useMemo(() => {
+    let maxDays = 0;
+    for (const c of constraints) {
+      if (c.constraintType === 'ADVANCE_BOOKING'
+          && watchSpecialActivities.includes(c.triggerActivity)
+          && c.numericValue
+          && c.numericValue > maxDays) {
+        maxDays = c.numericValue;
+      }
+    }
+    return maxDays;
+  }, [constraints, watchSpecialActivities]);
+
+  // Blocked period check for selected date
+  const watchEventDate = watch('eventDate');
+  const blockedDateWarning = useMemo(() => {
+    if (!watchEventDate || blockedPeriods.length === 0) return null;
+    const selectedDate = watchEventDate;
+    const selectedLocation = watchLocation;
+    const selectedTime = watchStartTime;
+    for (const bp of blockedPeriods) {
+      if (selectedDate >= bp.startDate && selectedDate <= bp.endDate) {
+        if (bp.location) {
+          // Location-specific block: only warn if user selected that exact location
+          if (!selectedLocation || selectedLocation === 'NO_PREFERENCE' || selectedLocation === '' || bp.location !== selectedLocation) {
+            continue;
+          }
+        }
+        // Time-specific block: only warn if user's start time falls within the blocked window
+        if (bp.startTime && bp.endTime) {
+          if (!selectedTime || selectedTime < bp.startTime || selectedTime >= bp.endTime) {
+            continue;
+          }
+        }
+        // Global block (no location) or matching location
+        return bp.publicMessage || 'This date is not available for reservations.';
+      }
+    }
+    return null;
+  }, [watchEventDate, blockedPeriods, watchLocation, watchStartTime]);
+
+  const requiresAdvanceBooking = advanceBookingDays > 0;
+  const minDateForBooking = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    if (advanceBookingDays > 0) d.setDate(d.getDate() + advanceBookingDays);
+    return d.toISOString().split('T')[0];
+  }, [advanceBookingDays]);
 
   // Generate 15-min interval time slots
   const generateTimeSlots = useCallback((startHour: number, endHour: number, crossesMidnight: boolean) => {
@@ -254,12 +334,20 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
     return times;
   }, []);
 
-  // Start times: 9:00 to 02:00 (Corona Room allows 9:00-10:45, others start at 11:00)
+  // Start times: derived from TIME_RESTRICTION constraints
   const startTimes = useMemo(() => {
-    const hasCoronaRoom = watchSpecialActivities.includes('CATERING_CORONA_ROOM');
-    const startHour = hasCoronaRoom ? 9 : 11;
+    let hasEarlyAccess = false;
+    for (const c of constraints) {
+      if (c.constraintType === 'TIME_RESTRICTION'
+          && c.targetValue === 'EARLY_ACCESS'
+          && watchSpecialActivities.includes(c.triggerActivity)) {
+        hasEarlyAccess = true;
+        break;
+      }
+    }
+    const startHour = hasEarlyAccess ? 9 : 11;
     return generateTimeSlots(startHour, 2, true);
-  }, [watchSpecialActivities, generateTimeSlots]);
+  }, [watchSpecialActivities, constraints, generateTimeSlots]);
 
   // End times: only show slots strictly after the selected start time
   const endTimes = useMemo(() => {
@@ -279,14 +367,16 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
     if (!watchStartTime) return null;
     const [h, m] = watchStartTime.split(':').map(Number);
     const mins = h * 60 + m;
-    if (mins >= 11 * 60 && mins < 12 * 60) {
+    const isMeteorOnly = watchSpecialActivities.includes('PRIVATE_EVENT');
+    // Kitchen warnings only apply to Hubble
+    if (!isMeteorOnly && mins >= 11 * 60 && mins < 12 * 60) {
       return 'Kitchen opens at 12:00 - food may not be available at this time.';
     }
     if (mins >= 19 * 60 + 30 || (h < 3 && mins >= 0)) {
       return 'Kitchen is only open for snacks after 19:30.';
     }
     return null;
-  }, [watchStartTime]);
+  }, [watchStartTime, watchSpecialActivities]);
 
   const validateStep = async (step: number) => {
     const step4Fields: (keyof ReservationFormData)[] = ['paymentOption'];
@@ -307,8 +397,13 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
       ['termsAccepted'], // Step 5
     ];
 
-    // Block step 2 advance if a la carte + >15 guests
-    if (step === 2 && alaCarteGuestWarning) {
+    // Block step 2 advance if guest limit constraint violated
+    if (step === 2 && guestLimitWarning) {
+      return false;
+    }
+
+    // Block advance if date is in a blocked period (step 2 for global blocks, step 3 for location-specific)
+    if ((step === 2 || step === 3) && blockedDateWarning) {
       return false;
     }
 
@@ -337,11 +432,26 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
     }
   };
 
+  // Activity conflicts derived from dynamic constraints
+  const activityConflicts = useMemo(() => {
+    const conflicts: Record<string, string[]> = {};
+    for (const c of constraints) {
+      if (c.constraintType === 'ACTIVITY_CONFLICT' && c.targetValue) {
+        if (!conflicts[c.triggerActivity]) conflicts[c.triggerActivity] = [];
+        conflicts[c.triggerActivity].push(c.targetValue);
+      }
+    }
+    return conflicts;
+  }, [constraints]);
+
+  const isActivityBlocked = (activity: string, current: string[]): boolean =>
+    (activityConflicts[activity] || []).some(conflict => current.includes(conflict));
+
   const toggleActivity = (activity: string) => {
     const current = getValues('specialActivities') || [];
     if (current.includes(activity)) {
       setValue('specialActivities', current.filter(a => a !== activity));
-    } else {
+    } else if (!isActivityBlocked(activity, current)) {
       setValue('specialActivities', [...current, activity]);
     }
   };
@@ -581,16 +691,21 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {(formOptions?.specialActivities ?? Object.entries(SPECIAL_ACTIVITY_LABELS).map(([value, displayName]) => ({ value, displayName, description: undefined }))).map((option) => {
                     const selected = watchSpecialActivities.includes(option.value);
+                    const blocked = !selected && isActivityBlocked(option.value, watchSpecialActivities);
                     return (
                       <button
                         key={option.value}
                         type="button"
                         onClick={() => toggleActivity(option.value)}
+                        disabled={blocked}
+                        title={blocked ? 'Not compatible with another selected activity' : undefined}
                         className={`
                           relative flex items-start gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left w-full
                           ${selected
                             ? 'border-hubble-500 bg-hubble-500/10'
-                            : 'border-dark-700 bg-dark-800/50 hover:border-dark-600'
+                            : blocked
+                              ? 'border-dark-800 bg-dark-900/50 opacity-40 cursor-not-allowed'
+                              : 'border-dark-700 bg-dark-800/50 hover:border-dark-600'
                           }
                         `}
                       >
@@ -653,10 +768,10 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                   </button>
                 </div>
                 {errors.expectedGuests && <p className="error-text">{errors.expectedGuests.message}</p>}
-                {alaCarteGuestWarning && (
+                {guestLimitWarning && (
                   <div className="mt-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                    <span>A la carte dining is limited to 15 guests. Please reduce your guest count or remove "Eat a la Carte" from special activities.</span>
+                    <span>{guestLimitWarning}</span>
                   </div>
                 )}
                 <div className="mt-2 text-xs text-dark-400">
@@ -667,16 +782,27 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               {/* Event Date */}
               <div className="form-group">
                 <label className="label">Event Date *</label>
+                {requiresAdvanceBooking && (
+                  <div className="mb-2 text-xs text-blue-400/80 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
+                    ℹ️ Selected activities require at least <strong>{advanceBookingDays} days</strong> advance booking.
+                  </div>
+                )}
                 <div className="relative">
                   <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 pointer-events-none" />
                   <input
                     type="date"
                     {...register('eventDate')}
                     className="input-field pl-10 pr-4 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                    min={new Date().toISOString().split('T')[0]}
+                    min={minDateForBooking}
                   />
                 </div>
                 {errors.eventDate && <p className="error-text">{errors.eventDate.message}</p>}
+                {blockedDateWarning && (
+                  <div className="mt-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>{blockedDateWarning}</span>
+                  </div>
+                )}
               </div>
 
               {/* Start Time */}
@@ -764,13 +890,15 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
             </div>
 
             {/* Location constraint message */}
-            {locationLocked && (
-              <div className="text-xs text-blue-400/80 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
-                {locationLocked === 'HUBBLE'
-                  ? 'Location is set to Hubble because "Catering Corona Room" is selected.'
-                  : 'Location is set to Meteor because "Private Event" is selected.'}
-              </div>
-            )}
+            {locationLocked && (() => {
+              const lockConstraint = constraints.find(c =>
+                c.constraintType === 'LOCATION_LOCK' && watchSpecialActivities.includes(c.triggerActivity));
+              return (
+                <div className="text-xs text-blue-400/80 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
+                  {lockConstraint?.message || `Location is set to ${locationLocked}.`}
+                </div>
+              );
+            })()}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Hubble */}
@@ -885,12 +1013,20 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               </label>
             </div>
 
+            {/* Blocked period warning (shows when location triggers a location-specific block) */}
+            {blockedDateWarning && (
+              <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>{blockedDateWarning}</span>
+              </div>
+            )}
+
             {/* Seating Area Selection */}
             <div className="form-group">
               <label className="label">Seating Area *</label>
               {seatingLocked && (
                 <div className="mb-3 text-xs text-blue-400/80 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
-                  Seating is set to Inside because "Catering Corona Room" is selected.
+                  Seating is fixed to {seatingLocked === 'INSIDE' ? 'Inside' : 'Outside'} based on selected activities.
                 </div>
               )}
               <div className="grid grid-cols-2 gap-3">
@@ -899,7 +1035,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                     key={area}
                     className={`
                       relative flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200
-                      ${seatingLocked && area === 'OUTSIDE' ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
+                      ${seatingLocked && area !== seatingLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
                       ${watch('seatingArea') === area
                         ? 'border-hubble-500 bg-hubble-500/10'
                         : 'border-dark-700 bg-dark-800/50 hover:border-dark-600'
@@ -911,7 +1047,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                       {...register('seatingArea')}
                       value={area}
                       className="sr-only"
-                      disabled={seatingLocked && area === 'OUTSIDE'}
+                      disabled={!!seatingLocked && area !== seatingLocked}
                     />
                     <span className="text-2xl mb-2">
                       {area === 'INSIDE' ? '🏠' : '☀️'}

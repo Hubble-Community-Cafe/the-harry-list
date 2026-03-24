@@ -34,6 +34,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(Map.of("error", "Invalid value: " + ex.getValue()));
     }
 
+    /** Business rule / constraint violations (400) — expected, not sent to Sentry */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+    }
+
     /** Missing static resource (404) — expected for bots/health checks hitting unknown paths, not sent to Sentry */
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Map<String, String>> handleNoResource() {

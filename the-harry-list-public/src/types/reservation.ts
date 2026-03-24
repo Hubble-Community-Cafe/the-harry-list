@@ -58,3 +58,26 @@ export interface SelectOption {
   displayName: string;
   description?: string;
 }
+
+export interface FormConstraint {
+  id: number;
+  constraintType: 'ACTIVITY_CONFLICT' | 'LOCATION_LOCK' | 'SEATING_LOCK' | 'TIME_RESTRICTION' | 'ADVANCE_BOOKING' | 'GUEST_LIMIT';
+  triggerActivity: string;
+  targetValue?: string;
+  numericValue?: number;
+  secondaryValue?: string;
+  message: string;
+  enabled: boolean;
+}
+
+export interface BlockedPeriod {
+  id: number;
+  location?: string;
+  startDate: string;
+  endDate: string;
+  startTime?: string;
+  endTime?: string;
+  reason: string;
+  publicMessage?: string;
+  enabled: boolean;
+}

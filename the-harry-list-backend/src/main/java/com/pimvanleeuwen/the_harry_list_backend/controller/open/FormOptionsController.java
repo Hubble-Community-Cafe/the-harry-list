@@ -1,6 +1,8 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller.open;
 
 import com.pimvanleeuwen.the_harry_list_backend.model.*;
+import com.pimvanleeuwen.the_harry_list_backend.repository.BlockedPeriodRepository;
+import com.pimvanleeuwen.the_harry_list_backend.repository.FormConstraintRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,15 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/options")
 @Tag(name = "Form Options", description = "Get available options for reservation forms")
 public class FormOptionsController {
+
+    private final FormConstraintRepository formConstraintRepository;
+    private final BlockedPeriodRepository blockedPeriodRepository;
+
+    public FormOptionsController(FormConstraintRepository formConstraintRepository,
+                                  BlockedPeriodRepository blockedPeriodRepository) {
+        this.formConstraintRepository = formConstraintRepository;
+        this.blockedPeriodRepository = blockedPeriodRepository;
+    }
 
     @GetMapping("/special-activities")
     @Operation(summary = "Get special activities", description = "Get all available special activities for the reservation form")
@@ -88,5 +99,17 @@ public class FormOptionsController {
                         .collect(Collectors.toList())
         );
         return ResponseEntity.ok(allOptions);
+    }
+
+    @GetMapping("/constraints")
+    @Operation(summary = "Get active form constraints", description = "Returns all enabled form constraints for the reservation form to enforce dynamically")
+    public ResponseEntity<List<FormConstraint>> getActiveConstraints() {
+        return ResponseEntity.ok(formConstraintRepository.findByEnabledTrue());
+    }
+
+    @GetMapping("/blocked-periods")
+    @Operation(summary = "Get active blocked periods", description = "Returns all enabled blocked periods so the form can disable unavailable dates")
+    public ResponseEntity<List<BlockedPeriod>> getActiveBlockedPeriods() {
+        return ResponseEntity.ok(blockedPeriodRepository.findByEnabledTrue());
     }
 }
