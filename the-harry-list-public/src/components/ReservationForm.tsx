@@ -603,7 +603,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               <div className="form-group">
                 <label className="label">Full Name *</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
                     type="text"
                     {...register('contactName')}
@@ -617,7 +617,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               <div className="form-group">
                 <label className="label">Email Address *</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
                     type="email"
                     {...register('email')}
@@ -631,7 +631,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               <div className="form-group">
                 <label className="label">Phone Number</label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500" />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
                     type="tel"
                     {...register('phoneNumber')}
@@ -645,7 +645,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               <div className="form-group">
                 <label className="label">Organization / Association</label>
                 <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500" />
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
                     type="text"
                     {...register('organizationName')}
@@ -687,7 +687,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               {/* Special Activities */}
               <div className="form-group md:col-span-2">
                 <label className="label">Special Activities</label>
-                <p className="text-xs text-dark-400 mb-3">Select any special activities for your event (optional)</p>
+                <p className="text-xs text-dark-400 mb-3">Select any special activities for your event (optional, if you want a regular drink/borrel you can leave this empty)</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {(formOptions?.specialActivities ?? Object.entries(SPECIAL_ACTIVITY_LABELS).map(([value, displayName]) => ({ value, displayName, description: undefined }))).map((option) => {
                     const selected = watchSpecialActivities.includes(option.value);
@@ -788,7 +788,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                   </div>
                 )}
                 <div className="relative">
-                  <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 pointer-events-none" />
+                  <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
                     type="date"
                     {...register('eventDate')}

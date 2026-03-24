@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Mail, ChevronDown, ChevronUp, RotateCcw, Save, Loader2, AlertCircle, CheckCircle, Pencil, Send } from 'lucide-react';
+import { ChevronDown, ChevronUp, RotateCcw, Save, Loader2, AlertCircle, CheckCircle, Pencil, Send } from 'lucide-react';
 import { fetchWithAuth } from '../lib/api';
 
 interface EmailTemplateDto {
@@ -141,14 +141,9 @@ export function EmailTemplatesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-hubble-500/20 flex items-center justify-center">
-          <Mail className="w-5 h-5 text-hubble-400" />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold text-white">Email Templates</h1>
-          <p className="text-sm text-dark-400">Customise the emails sent to customers and staff</p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-title font-bold text-white">Email Templates</h1>
+        <p className="text-dark-400 font-light">Customise the emails sent to customers and staff</p>
       </div>
 
       {/* Info card */}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  Settings, Plus, Trash2, Loader2, AlertCircle,
+  Plus, Trash2, Loader2, AlertCircle,
   ToggleLeft, ToggleRight, Calendar, Shield, Pencil, X
 } from 'lucide-react';
 import {
@@ -181,11 +181,9 @@ export function FormSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Settings className="w-6 h-6 text-hubble-400" />
-          <h1 className="text-2xl font-bold text-white">Form Settings</h1>
-        </div>
+      <div>
+        <h1 className="text-2xl font-title font-bold text-white">Form Settings</h1>
+        <p className="text-dark-400 font-light">Manage form constraints and blocked periods</p>
       </div>
 
       {error && (
