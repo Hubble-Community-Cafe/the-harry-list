@@ -112,7 +112,7 @@ public class PdfExportService {
                 // Add "Op rekening" invoice form for INVOICE payment reservations
                 if (res.getPaymentOption() == PaymentOption.INVOICE) {
                     document.newPage();
-                    addInvoiceForm(document, writer, res, locationName, date, primaryColor, titleFont, subtitleFont, headerFont, labelFont, valueFont, smallFont);
+                    addInvoiceForm(document, writer, res, locationName);
                 }
             }
         }
@@ -294,9 +294,7 @@ public class PdfExportService {
         document.add(card);
     }
 
-    private void addInvoiceForm(Document document, PdfWriter writer, Reservation res, String locationName, LocalDate date,
-                                 Color primaryColor, Font titleFont, Font subtitleFont,
-                                 Font headerFont, Font labelFont, Font valueFont, Font smallFont)
+    private void addInvoiceForm(Document document, PdfWriter writer, Reservation res, String locationName)
             throws DocumentException {
 
         boolean isHubble = locationName.contains("Hubble");
