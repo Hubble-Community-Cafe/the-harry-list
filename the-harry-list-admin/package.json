@@ -30,6 +30,9 @@
   "overrides": {
     "eslint-plugin-react-hooks": {
       "eslint": "$eslint"
+    },
+    "typescript-eslint": {
+      "typescript": "$typescript"
     }
   },
   "devDependencies": {
