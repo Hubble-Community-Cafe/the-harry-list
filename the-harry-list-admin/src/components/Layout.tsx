@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
-  LayoutDashboard, Calendar, LogOut,
+  LayoutDashboard, Calendar, CalendarDays, LogOut,
   User, Menu, CalendarSync, FileDown, Mail, Settings
 } from 'lucide-react';
 import { useState } from 'react';
@@ -28,6 +28,7 @@ export function Layout() {
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/reservations', icon: Calendar, label: 'Reservations' },
+    { to: '/week-overview', icon: CalendarDays, label: 'Week Overview' },
     { to: '/export', icon: FileDown, label: 'Export' },
     { to: '/calendar', icon: CalendarSync, label: 'Calendar Feeds' },
     { to: '/email-templates', icon: Mail, label: 'Email Templates' },
