@@ -8,6 +8,7 @@ import { CalendarPage } from './pages/CalendarPage';
 import { ExportPage } from './pages/ExportPage';
 import { EmailTemplatesPage } from './pages/EmailTemplatesPage';
 import { FormSettingsPage } from './pages/FormSettingsPage';
+import { WeekOverviewPage } from './pages/WeekOverviewPage';
 import { Layout } from './components/Layout';
 import { useGroupAuthorization } from './lib/useGroupAuthorization';
 import { ThemeProvider } from './lib/ThemeContext';
@@ -80,6 +81,7 @@ function App() {
         >
           <Route index element={<DashboardPage />} />
           <Route path="reservations" element={<ReservationsPage />} />
+          <Route path="week-overview" element={<WeekOverviewPage />} />
           <Route path="reservations/:id" element={<ReservationDetailPage />} />
           <Route path="export" element={<ExportPage />} />
           <Route path="calendar" element={<CalendarPage />} />
