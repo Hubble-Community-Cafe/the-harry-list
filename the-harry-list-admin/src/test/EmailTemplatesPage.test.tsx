@@ -118,13 +118,7 @@ describe('EmailTemplatesPage', () => {
       expect(screen.getByText('Catering Menu')).toBeDefined();
     });
 
-    // Find delete buttons (trash icons)
-    const deleteButtons = document.querySelectorAll('button');
-    const deleteBtn = Array.from(deleteButtons).find(btn =>
-      btn.closest('[class*="red"]') || btn.querySelector('svg')
-    );
-
-    // Just verify the attachments loaded and delete function is available
+    // Verify the attachments loaded and delete function is available
     expect(mockFetchEmailAttachments).toHaveBeenCalled();
   });
 
