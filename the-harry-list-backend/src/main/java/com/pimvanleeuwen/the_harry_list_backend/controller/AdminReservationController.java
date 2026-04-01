@@ -1,10 +1,15 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
+import com.pimvanleeuwen.the_harry_list_backend.dto.CateringEmailRequest;
 import com.pimvanleeuwen.the_harry_list_backend.dto.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
+import com.pimvanleeuwen.the_harry_list_backend.model.EmailAttachment;
+import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
+import com.pimvanleeuwen.the_harry_list_backend.repository.EmailAttachmentRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
+import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
 import com.pimvanleeuwen.the_harry_list_backend.service.ReservationMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -12,9 +17,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,16 +37,31 @@ import java.util.Map;
 public class AdminReservationController {
 
     private static final Logger log = LoggerFactory.getLogger(AdminReservationController.class);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final ReservationRepository reservationRepository;
     private final ReservationMapper reservationMapper;
+    private final EmailTemplateService emailTemplateService;
+    private final EmailAttachmentRepository emailAttachmentRepository;
+    private final String barName;
+    private final String staffEmail;
 
     @Autowired(required = false)
     private EmailNotificationService emailService;
 
-    public AdminReservationController(ReservationRepository reservationRepository, ReservationMapper reservationMapper) {
+    public AdminReservationController(ReservationRepository reservationRepository,
+                                      ReservationMapper reservationMapper,
+                                      EmailTemplateService emailTemplateService,
+                                      EmailAttachmentRepository emailAttachmentRepository,
+                                      @Value("${app.bar.name:Hubble and Meteor Community Cafes}") String barName,
+                                      @Value("${app.mail.staff:events@hubble.cafe}") String staffEmail) {
         this.reservationRepository = reservationRepository;
         this.reservationMapper = reservationMapper;
+        this.emailTemplateService = emailTemplateService;
+        this.emailAttachmentRepository = emailAttachmentRepository;
+        this.barName = barName;
+        this.staffEmail = staffEmail;
     }
 
     @PatchMapping("/{id}/status")
@@ -144,5 +168,79 @@ public class AdminReservationController {
                     }
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/catering-email/preview")
+    @Operation(summary = "Preview catering email", description = "Get rendered catering email template for a reservation")
+    public ResponseEntity<?> previewCateringEmail(@PathVariable Long id) {
+        return reservationRepository.findById(id)
+                .map(reservation -> {
+                    Map<String, String> vars = buildCateringVars(reservation);
+                    String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.CATERING_OPTIONS, vars);
+                    String body = emailTemplateService.getRenderedBody(EmailTemplateType.CATERING_OPTIONS, vars);
+                    return ResponseEntity.ok(Map.of("subject", subject, "body", body));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{id}/catering-email")
+    @Operation(summary = "Send catering options email", description = "Send catering email with PDF attachments to reservation contact")
+    public ResponseEntity<Map<String, String>> sendCateringEmail(
+            @PathVariable Long id,
+            @RequestBody CateringEmailRequest request) {
+
+        log.info("Sending catering options email for reservation {}", id);
+
+        return reservationRepository.findById(id)
+                .map(reservation -> {
+                    if (emailService == null) {
+                        return ResponseEntity.ok(Map.of("status", "disabled", "message", "Email service is disabled"));
+                    }
+
+                    try {
+                        // Render subject/body from template or use overrides
+                        Map<String, String> vars = buildCateringVars(reservation);
+                        String subject = (request.getSubject() != null && !request.getSubject().isBlank())
+                                ? request.getSubject()
+                                : emailTemplateService.getRenderedSubject(EmailTemplateType.CATERING_OPTIONS, vars);
+                        String body = (request.getBody() != null && !request.getBody().isBlank())
+                                ? request.getBody()
+                                : emailTemplateService.getRenderedBody(EmailTemplateType.CATERING_OPTIONS, vars);
+
+                        // Load attachments
+                        List<EmailAttachment> attachments = List.of();
+                        if (request.getAttachmentIds() != null && !request.getAttachmentIds().isEmpty()) {
+                            attachments = emailAttachmentRepository.findAllById(request.getAttachmentIds());
+                        }
+
+                        emailService.sendEmailWithAttachments(
+                                reservation.getEmail(), subject, body, attachments, request.getReplyTo());
+
+                        log.info("LOGGING email.catering_sent confirmation='{}' to='{}' attachments={}",
+                                reservation.getConfirmationNumber(), reservation.getEmail(), attachments.size());
+
+                        return ResponseEntity.ok(Map.of("status", "sent", "message", "Catering email sent successfully"));
+                    } catch (Exception e) {
+                        log.error("Failed to send catering email", e);
+                        return ResponseEntity.internalServerError()
+                                .body(Map.of("status", "error", "message", "Failed to send email: " + e.getMessage()));
+                    }
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    private Map<String, String> buildCateringVars(com.pimvanleeuwen.the_harry_list_backend.model.Reservation reservation) {
+        Map<String, String> vars = new HashMap<>();
+        vars.put("contactName", reservation.getContactName());
+        vars.put("confirmationNumber", reservation.getConfirmationNumber());
+        vars.put("eventTitle", reservation.getEventTitle());
+        vars.put("eventDate", reservation.getEventDate().format(DATE_FORMATTER));
+        vars.put("startTime", reservation.getStartTime().format(TIME_FORMATTER));
+        vars.put("endTime", reservation.getEndTime().format(TIME_FORMATTER));
+        vars.put("location", reservation.getLocation() != null ? reservation.getLocation().getDisplayName() : "No Preference");
+        vars.put("expectedGuests", String.valueOf(reservation.getExpectedGuests()));
+        vars.put("barName", barName);
+        vars.put("staffEmail", staffEmail);
+        return vars;
     }
 }

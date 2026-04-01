@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, RotateCcw, Save, Loader2, AlertCircle, CheckCircle, Pencil, Send } from 'lucide-react';
-import { fetchWithAuth } from '../lib/api';
+import { useState, useEffect, useRef } from 'react';
+import { ChevronDown, ChevronUp, RotateCcw, Save, Loader2, AlertCircle, CheckCircle, Pencil, Send, Upload, Trash2, FileText } from 'lucide-react';
+import { fetchWithAuth, fetchEmailAttachments, uploadEmailAttachment, deleteEmailAttachment, toggleEmailAttachmentActive } from '../lib/api';
+import type { EmailAttachment } from '../types/reservation';
 
 interface EmailTemplateDto {
   templateType: string;
@@ -27,8 +28,17 @@ export function EmailTemplatesPage() {
   const [sendingTest, setSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<{ status: string; message: string } | null>(null);
 
+  // Attachment management state
+  const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
+  const [loadingAttachments, setLoadingAttachments] = useState(true);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const [newAttachmentName, setNewAttachmentName] = useState('');
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     loadTemplates();
+    loadAttachments();
   }, []);
 
   async function loadTemplates() {
@@ -115,6 +125,55 @@ export function EmailTemplatesPage() {
       setError(err instanceof Error ? err.message : 'Failed to reset template');
     } finally {
       setResetting(false);
+    }
+  }
+
+  async function loadAttachments() {
+    try {
+      setLoadingAttachments(true);
+      const data = await fetchEmailAttachments();
+      setAttachments(data);
+    } catch {
+      // Non-blocking — attachments section will show empty
+    } finally {
+      setLoadingAttachments(false);
+    }
+  }
+
+  async function handleUploadAttachment() {
+    const file = fileInputRef.current?.files?.[0];
+    if (!file || !newAttachmentName.trim()) return;
+
+    setUploadingAttachment(true);
+    setAttachmentError(null);
+    try {
+      const uploaded = await uploadEmailAttachment(file, newAttachmentName.trim());
+      setAttachments(prev => [...prev, uploaded]);
+      setNewAttachmentName('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (err) {
+      setAttachmentError(err instanceof Error ? err.message : 'Failed to upload');
+    } finally {
+      setUploadingAttachment(false);
+    }
+  }
+
+  async function handleDeleteAttachment(id: number) {
+    if (!confirm('Delete this attachment? This cannot be undone.')) return;
+    try {
+      await deleteEmailAttachment(id);
+      setAttachments(prev => prev.filter(a => a.id !== id));
+    } catch (err) {
+      setAttachmentError(err instanceof Error ? err.message : 'Failed to delete');
+    }
+  }
+
+  async function handleToggleAttachmentActive(id: number, active: boolean) {
+    try {
+      const updated = await toggleEmailAttachmentActive(id, active);
+      setAttachments(prev => prev.map(a => a.id === id ? updated : a));
+    } catch {
+      // ignore
     }
   }
 
@@ -309,6 +368,92 @@ export function EmailTemplatesPage() {
             </div>
           );
         })}
+      </div>
+
+      {/* PDF Attachments section */}
+      <div>
+        <h2 className="text-xl font-title font-bold text-white mb-1">PDF Attachments</h2>
+        <p className="text-dark-400 font-light text-sm mb-4">Manage PDF files that can be attached to catering option emails</p>
+
+        {/* Upload form */}
+        <div className="bg-dark-900 border border-dark-800 rounded-2xl p-5 mb-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              value={newAttachmentName}
+              onChange={(e) => setNewAttachmentName(e.target.value)}
+              placeholder="Display name (e.g. Catering Menu 2026)"
+              className="input-field flex-1 text-sm"
+            />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,application/pdf"
+              className="text-sm text-dark-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-dark-800 file:text-white hover:file:bg-dark-700 file:cursor-pointer file:transition-colors"
+            />
+            <button
+              onClick={handleUploadAttachment}
+              disabled={uploadingAttachment || !newAttachmentName.trim()}
+              className="btn-primary flex items-center gap-2 text-sm px-4 py-2 shrink-0"
+            >
+              {uploadingAttachment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              Upload
+            </button>
+          </div>
+          {attachmentError && (
+            <div className="flex items-center gap-2 text-sm text-red-400 mt-3">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {attachmentError}
+            </div>
+          )}
+        </div>
+
+        {/* Attachment list */}
+        {loadingAttachments ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 text-hubble-400 animate-spin" />
+          </div>
+        ) : attachments.length === 0 ? (
+          <div className="bg-dark-900 border border-dark-800 rounded-2xl p-8 text-center">
+            <FileText className="w-10 h-10 text-dark-600 mx-auto mb-3" />
+            <p className="text-dark-400 text-sm">No PDF attachments uploaded yet</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {attachments.map((attachment) => (
+              <div
+                key={attachment.id}
+                className="bg-dark-900 border border-dark-800 rounded-xl px-5 py-3 flex items-center gap-4"
+              >
+                <FileText className="w-5 h-5 text-orange-400 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-white truncate">{attachment.name}</div>
+                  <div className="text-xs text-dark-500 truncate">
+                    {attachment.filename}
+                    {attachment.createdAt && ` \u00b7 ${new Date(attachment.createdAt).toLocaleDateString()}`}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleToggleAttachmentActive(attachment.id, !attachment.active)}
+                  className={`text-xs font-medium px-3 py-1 rounded-lg transition-colors ${
+                    attachment.active
+                      ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                      : 'bg-dark-700 text-dark-400 hover:bg-dark-600'
+                  }`}
+                >
+                  {attachment.active ? 'Active' : 'Inactive'}
+                </button>
+                <button
+                  onClick={() => handleDeleteAttachment(attachment.id)}
+                  className="p-1.5 rounded-lg text-dark-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                  title="Delete attachment"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

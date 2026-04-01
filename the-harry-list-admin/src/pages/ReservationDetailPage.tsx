@@ -5,10 +5,13 @@ import {
   ArrowLeft, Calendar, Clock, MapPin, Users, Mail, Phone,
   Building2, CreditCard, UtensilsCrossed, MessageSquare,
   CheckCircle, XCircle, Loader2, AlertCircle, Trash2,
-  Send, Edit, X
+  Send, Edit, X, FileText, Paperclip
 } from 'lucide-react';
-import { fetchReservation, updateReservationStatus, deleteReservation, updateReservation, updateCateringArranged } from '../lib/api';
-import type { Reservation } from '../types/reservation';
+import {
+  fetchReservation, updateReservationStatus, deleteReservation, updateReservation,
+  updateCateringArranged, fetchEmailAttachments, fetchCateringEmailPreview, sendCateringEmail
+} from '../lib/api';
+import type { Reservation, EmailAttachment } from '../types/reservation';
 
 export function ReservationDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +33,17 @@ export function ReservationDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<Reservation>>({});
   const [sendEditEmail, setSendEditEmail] = useState(true);
+
+  // Catering email state
+  const [showCateringEmail, setShowCateringEmail] = useState(false);
+  const [cateringAttachments, setCateringAttachments] = useState<EmailAttachment[]>([]);
+  const [selectedAttachmentIds, setSelectedAttachmentIds] = useState<number[]>([]);
+  const [cateringSubject, setCateringSubject] = useState('');
+  const [cateringBody, setCateringBody] = useState('');
+  const [cateringReplyTo, setCateringReplyTo] = useState('');
+  const [loadingCateringPreview, setLoadingCateringPreview] = useState(false);
+  const [sendingCateringEmail, setSendingCateringEmail] = useState(false);
+  const [cateringEmailStatus, setCateringEmailStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const userName = accounts[0]?.name || 'Staff';
 
@@ -129,6 +143,55 @@ export function ReservationDetailPage() {
     }
   };
 
+  const hasCateringActivity = reservation?.specialActivities?.some(a =>
+    ['EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM'].includes(a)
+  );
+
+  const openCateringEmailDialog = async () => {
+    if (!reservation) return;
+    setShowCateringEmail(true);
+    setLoadingCateringPreview(true);
+    setCateringEmailStatus(null);
+    setSelectedAttachmentIds([]);
+    setCateringReplyTo('');
+
+    try {
+      const [preview, attachments] = await Promise.all([
+        fetchCateringEmailPreview(reservation.id),
+        fetchEmailAttachments(),
+      ]);
+      setCateringSubject(preview.subject);
+      setCateringBody(preview.body);
+      const activeAttachments = attachments.filter(a => a.active);
+      setCateringAttachments(activeAttachments);
+      setSelectedAttachmentIds(activeAttachments.map(a => a.id));
+    } catch (err) {
+      setCateringEmailStatus({ type: 'error', message: err instanceof Error ? err.message : 'Failed to load preview' });
+    } finally {
+      setLoadingCateringPreview(false);
+    }
+  };
+
+  const handleSendCateringEmail = async () => {
+    if (!reservation) return;
+    setSendingCateringEmail(true);
+    setCateringEmailStatus(null);
+
+    try {
+      await sendCateringEmail(reservation.id, {
+        attachmentIds: selectedAttachmentIds,
+        subject: cateringSubject,
+        body: cateringBody,
+        replyTo: cateringReplyTo || undefined,
+      });
+      setCateringEmailStatus({ type: 'success', message: 'Catering email sent successfully!' });
+    } catch (err) {
+      setCateringEmailStatus({ type: 'error', message: err instanceof Error ? err.message : 'Failed to send email' });
+    } finally {
+      setSendingCateringEmail(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -198,6 +261,17 @@ export function ReservationDetailPage() {
             <Edit className="w-4 h-4" />
             Edit Details
           </button>
+
+          {hasCateringActivity && (
+            <button
+              onClick={openCateringEmailDialog}
+              disabled={isUpdating}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 transition-colors"
+            >
+              <UtensilsCrossed className="w-4 h-4" />
+              Send Catering Options
+            </button>
+          )}
 
           {reservation.status === 'PENDING' && (
             <>
@@ -527,6 +601,130 @@ export function ReservationDetailPage() {
         {reservation.updatedAt && <span>Updated: {new Date(reservation.updatedAt).toLocaleString()}</span>}
         {reservation.confirmedBy && <span>Confirmed by: {reservation.confirmedBy}</span>}
       </div>
+
+      {/* Catering Email Modal */}
+      {showCateringEmail && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-dark-700">
+              <h2 className="text-xl font-title font-semibold text-white flex items-center gap-2">
+                <UtensilsCrossed className="w-5 h-5 text-orange-400" />
+                Send Catering Options
+              </h2>
+              <button onClick={() => setShowCateringEmail(false)} className="text-dark-400 hover:text-white">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {loadingCateringPreview ? (
+              <div className="flex items-center justify-center p-12">
+                <Loader2 className="w-8 h-8 text-hubble-400 animate-spin" />
+              </div>
+            ) : (
+              <div className="p-6 space-y-5">
+                {/* Status message */}
+                {cateringEmailStatus && (
+                  <div className={`p-3 rounded-lg border ${
+                    cateringEmailStatus.type === 'success'
+                      ? 'bg-green-500/10 border-green-500/50 text-green-400'
+                      : 'bg-red-500/10 border-red-500/50 text-red-400'
+                  }`}>
+                    {cateringEmailStatus.message}
+                  </div>
+                )}
+
+                {/* Recipient info */}
+                <div className="text-sm text-dark-400">
+                  Sending to: <span className="text-white">{reservation.email}</span>
+                </div>
+
+                {/* Reply-to */}
+                <div className="form-group">
+                  <label className="label">Reply-To Email (optional)</label>
+                  <input
+                    type="email"
+                    value={cateringReplyTo}
+                    onChange={(e) => setCateringReplyTo(e.target.value)}
+                    placeholder="e.g. events@hubble.cafe"
+                    className="input-field"
+                  />
+                </div>
+
+                {/* Attachments */}
+                <div>
+                  <label className="label flex items-center gap-2 mb-2">
+                    <Paperclip className="w-4 h-4" />
+                    PDF Attachments
+                  </label>
+                  {cateringAttachments.length === 0 ? (
+                    <p className="text-sm text-dark-500">No active attachments available. Upload PDFs in Email Templates &gt; PDF Attachments.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {cateringAttachments.map((att) => (
+                        <label key={att.id} className="flex items-center gap-3 p-2 rounded-lg bg-dark-800 hover:bg-dark-750 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedAttachmentIds.includes(att.id)}
+                            onChange={(e) => {
+                              setSelectedAttachmentIds(
+                                e.target.checked
+                                  ? [...selectedAttachmentIds, att.id]
+                                  : selectedAttachmentIds.filter(id => id !== att.id)
+                              );
+                            }}
+                            className="w-4 h-4 rounded border-dark-600 bg-dark-700 text-hubble-500"
+                          />
+                          <FileText className="w-4 h-4 text-red-400" />
+                          <span className="text-sm text-white">{att.name}</span>
+                          <span className="text-xs text-dark-500">({att.filename})</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Subject */}
+                <div className="form-group">
+                  <label className="label">Subject</label>
+                  <input
+                    type="text"
+                    value={cateringSubject}
+                    onChange={(e) => setCateringSubject(e.target.value)}
+                    className="input-field"
+                  />
+                </div>
+
+                {/* Body */}
+                <div className="form-group">
+                  <label className="label">Email Body (HTML)</label>
+                  <textarea
+                    value={cateringBody}
+                    onChange={(e) => setCateringBody(e.target.value)}
+                    className="input-field min-h-[200px] font-mono text-xs"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 p-6 border-t border-dark-700">
+              <button
+                onClick={() => setShowCateringEmail(false)}
+                className="px-4 py-2 rounded-xl border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendCateringEmail}
+                disabled={sendingCateringEmail || loadingCateringPreview}
+                className="btn-primary flex items-center gap-2"
+              >
+                {sendingCateringEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                Send Email
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {isEditing && (

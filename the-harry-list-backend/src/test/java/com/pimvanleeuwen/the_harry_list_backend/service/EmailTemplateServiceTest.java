@@ -163,6 +163,29 @@ class EmailTemplateServiceTest {
         assertTrue(body.contains("Your reservation is confirmed!"));
     }
 
+    @Test
+    void cateringOptionsTemplate_shouldContainReservationDetails() {
+        Map<String, String> vars = new java.util.HashMap<>();
+        vars.put("contactName", "Alice");
+        vars.put("confirmationNumber", "CAT123");
+        vars.put("eventTitle", "Team Lunch");
+        vars.put("eventDate", "Friday, April 10, 2026");
+        vars.put("startTime", "12:00");
+        vars.put("endTime", "14:00");
+        vars.put("location", "Hubble");
+        vars.put("expectedGuests", "15");
+        vars.put("barName", "Hubble Cafe");
+        vars.put("staffEmail", "events@hubble.cafe");
+
+        String body = service.getRenderedBody(EmailTemplateType.CATERING_OPTIONS, vars);
+        String subject = service.getRenderedSubject(EmailTemplateType.CATERING_OPTIONS, vars);
+
+        assertTrue(body.contains("Alice"));
+        assertTrue(body.contains("Team Lunch"));
+        assertTrue(body.contains("15"));
+        assertTrue(subject.contains("Team Lunch"));
+    }
+
     // --- Default content ---
 
     @Test

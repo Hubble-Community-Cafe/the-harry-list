@@ -68,13 +68,19 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
   // Ensure URL is absolute
   const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
 
+  // Skip Content-Type for FormData (browser sets it with boundary automatically)
+  const isFormData = options.body instanceof FormData;
+  const headers: Record<string, string> = {
+    ...options.headers as Record<string, string>,
+    'Authorization': `Bearer ${token}`,
+  };
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   const response = await fetch(fullUrl, {
     ...options,
-    headers: {
-      ...options.headers,
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers,
   });
 
   if (response.status === 401) {
@@ -120,7 +126,7 @@ async function fetchJsonWithAuth(url: string, options: RequestInit = {}): Promis
 }
 
 // Import types for proper typing
-import type { Reservation, FormConstraint, BlockedPeriod } from '../types/reservation';
+import type { Reservation, FormConstraint, BlockedPeriod, EmailAttachment, CateringEmailRequest } from '../types/reservation';
 
 // API Functions
 export async function fetchReservations(): Promise<Reservation[]> {
@@ -232,6 +238,46 @@ export async function deleteBlockedPeriod(id: number): Promise<void> {
   await fetchJsonWithAuth(`${API_BASE_URL}/api/admin/blocked-periods/${id}`, {
     method: 'DELETE',
   });
+}
+
+// ===== Email Attachments =====
+export async function fetchEmailAttachments(): Promise<EmailAttachment[]> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/email-attachments`) as Promise<EmailAttachment[]>;
+}
+
+export async function uploadEmailAttachment(file: File, name: string): Promise<EmailAttachment> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('name', name);
+
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/email-attachments`, {
+    method: 'POST',
+    body: formData,
+  }) as Promise<EmailAttachment>;
+}
+
+export async function deleteEmailAttachment(id: number): Promise<void> {
+  await fetchJsonWithAuth(`${API_BASE_URL}/api/admin/email-attachments/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function toggleEmailAttachmentActive(id: number, active: boolean): Promise<EmailAttachment> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/email-attachments/${id}/active?active=${active}`, {
+    method: 'PATCH',
+  }) as Promise<EmailAttachment>;
+}
+
+// ===== Catering Email =====
+export async function fetchCateringEmailPreview(reservationId: number): Promise<{ subject: string; body: string }> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/reservations/${reservationId}/catering-email/preview`) as Promise<{ subject: string; body: string }>;
+}
+
+export async function sendCateringEmail(reservationId: number, request: CateringEmailRequest): Promise<{ status: string; message: string }> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/reservations/${reservationId}/catering-email`, {
+    method: 'POST',
+    body: JSON.stringify(request),
+  }) as Promise<{ status: string; message: string }>;
 }
 
 // Test if authentication is working
