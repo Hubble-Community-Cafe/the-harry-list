@@ -2,9 +2,12 @@ package com.pimvanleeuwen.the_harry_list_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.pimvanleeuwen.the_harry_list_backend.dto.CateringEmailRequest;
 import com.pimvanleeuwen.the_harry_list_backend.model.*;
+import com.pimvanleeuwen.the_harry_list_backend.repository.EmailAttachmentRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
+import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
 import com.pimvanleeuwen.the_harry_list_backend.service.ReservationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -42,6 +46,12 @@ class AdminReservationControllerTest {
 
     @MockitoBean
     private EmailNotificationService emailNotificationService;
+
+    @MockitoBean
+    private EmailTemplateService emailTemplateService;
+
+    @MockitoBean
+    private EmailAttachmentRepository emailAttachmentRepository;
 
     private ObjectMapper objectMapper;
     private Reservation sampleReservation;
@@ -225,6 +235,97 @@ class AdminReservationControllerTest {
                 .with(csrf())
                 .param("status", "CONFIRMED"))
             .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser
+    void previewCateringEmail_shouldReturnRenderedTemplate() throws Exception {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(emailTemplateService.getRenderedSubject(eq(EmailTemplateType.CATERING_OPTIONS), any()))
+                .thenReturn("Catering Options for Test Event");
+        when(emailTemplateService.getRenderedBody(eq(EmailTemplateType.CATERING_OPTIONS), any()))
+                .thenReturn("<p>Hello John</p>");
+
+        mockMvc.perform(get("/api/admin/reservations/1/catering-email/preview"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.subject").value("Catering Options for Test Event"))
+            .andExpect(jsonPath("$.body").value("<p>Hello John</p>"));
+    }
+
+    @Test
+    @WithMockUser
+    void previewCateringEmail_shouldReturn404WhenNotFound() throws Exception {
+        when(reservationRepository.findById(999L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/admin/reservations/999/catering-email/preview"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser
+    void sendCateringEmail_shouldSendWithAttachments() throws Exception {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(emailTemplateService.getRenderedSubject(eq(EmailTemplateType.CATERING_OPTIONS), any()))
+                .thenReturn("Catering Subject");
+        when(emailTemplateService.getRenderedBody(eq(EmailTemplateType.CATERING_OPTIONS), any()))
+                .thenReturn("<p>Body</p>");
+
+        EmailAttachment attachment = EmailAttachment.builder()
+                .id(1L).name("Menu").filename("menu.pdf")
+                .contentType("application/pdf").data(new byte[]{1, 2, 3}).active(true).build();
+        when(emailAttachmentRepository.findAllById(List.of(1L))).thenReturn(List.of(attachment));
+
+        String requestBody = objectMapper.writeValueAsString(
+                new CateringEmailRequest() {{ setAttachmentIds(List.of(1L)); }});
+
+        mockMvc.perform(post("/api/admin/reservations/1/catering-email")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("sent"));
+
+        verify(emailNotificationService).sendEmailWithAttachments(
+                eq("john@example.com"), anyString(), anyString(), eq(List.of(attachment)), any());
+    }
+
+    @Test
+    @WithMockUser
+    void sendCateringEmail_shouldUseCustomSubjectAndBody() throws Exception {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(emailAttachmentRepository.findAllById(any())).thenReturn(List.of());
+
+        CateringEmailRequest request = new CateringEmailRequest();
+        request.setAttachmentIds(List.of());
+        request.setSubject("Custom Subject");
+        request.setBody("<p>Custom body</p>");
+        request.setReplyTo("custom@example.com");
+
+        mockMvc.perform(post("/api/admin/reservations/1/catering-email")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("sent"));
+
+        verify(emailNotificationService).sendEmailWithAttachments(
+                eq("john@example.com"), eq("Custom Subject"), eq("<p>Custom body</p>"),
+                eq(List.of()), eq("custom@example.com"));
+    }
+
+    @Test
+    @WithMockUser
+    void sendCateringEmail_shouldReturn404WhenNotFound() throws Exception {
+        when(reservationRepository.findById(999L)).thenReturn(Optional.empty());
+
+        CateringEmailRequest request = new CateringEmailRequest();
+        request.setAttachmentIds(List.of());
+
+        mockMvc.perform(post("/api/admin/reservations/999/catering-email")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isNotFound());
     }
 
     private Reservation createSampleReservation() {
