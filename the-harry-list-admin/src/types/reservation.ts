@@ -44,6 +44,22 @@ export interface FormConstraint {
   updatedAt?: string;
 }
 
+export interface EmailAttachment {
+  id: number;
+  name: string;
+  filename: string;
+  contentType: string;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface CateringEmailRequest {
+  attachmentIds: number[];
+  subject?: string;
+  body?: string;
+  replyTo?: string;
+}
+
 export interface BlockedPeriod {
   id?: number;
   location?: string;

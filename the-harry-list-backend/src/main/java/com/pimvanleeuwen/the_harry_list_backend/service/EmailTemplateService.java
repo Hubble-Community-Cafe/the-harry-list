@@ -54,6 +54,10 @@ public class EmailTemplateService {
                 "endTime", "location", "expectedGuests", "payment",
                 "specialActivities", "description", "comments"));
 
+        AVAILABLE_VARIABLES.put(EmailTemplateType.CATERING_OPTIONS, List.of(
+                "contactName", "confirmationNumber", "eventTitle", "eventDate",
+                "startTime", "endTime", "location", "expectedGuests", "barName", "staffEmail"));
+
         DEFAULT_SUBJECTS.put(EmailTemplateType.SUBMITTED,
                 "Reservation Request Received - {{eventTitle}}");
         DEFAULT_SUBJECTS.put(EmailTemplateType.STATUS_CHANGED,
@@ -64,6 +68,8 @@ public class EmailTemplateService {
                 "Reservation Cancelled - {{eventTitle}}");
         DEFAULT_SUBJECTS.put(EmailTemplateType.STAFF_NOTIFICATION,
                 "[New Reservation] {{eventTitle}} - {{contactName}}");
+        DEFAULT_SUBJECTS.put(EmailTemplateType.CATERING_OPTIONS,
+                "Catering Options for {{eventTitle}} on {{eventDate}}");
 
         DEFAULT_BODIES.put(EmailTemplateType.SUBMITTED, """
                 <!DOCTYPE html>
@@ -239,6 +245,40 @@ public class EmailTemplateService {
                 </body>
                 </html>
                 """);
+
+        DEFAULT_BODIES.put(EmailTemplateType.CATERING_OPTIONS, """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background-color: #FF9800; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background-color: #f9f9f9; }
+                        .details { background-color: white; padding: 15px; margin: 15px 0; border-left: 4px solid #FF9800; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header"><h1>Catering Options</h1></div>
+                        <div class="content">
+                            <p>Dear {{contactName}},</p>
+                            <p>Thank you for your reservation. Please find attached the catering options for your upcoming event. Have a look at the attached menu(s) and let us know your preferences.</p>
+                            <div class="details">
+                                <p><strong>Confirmation Number:</strong> {{confirmationNumber}}</p>
+                                <p><strong>Event:</strong> {{eventTitle}}</p>
+                                <p><strong>Date:</strong> {{eventDate}}</p>
+                                <p><strong>Time:</strong> {{startTime}} - {{endTime}}</p>
+                                <p><strong>Location:</strong> {{location}}</p>
+                                <p><strong>Guests:</strong> {{expectedGuests}}</p>
+                            </div>
+                            <p>Please reply to this email with your catering choices, or contact us if you have any questions.</p>
+                            <p>Best regards,<br>{{barName}}</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """);
     }
 
     public EmailTemplateService(EmailTemplateRepository repository) {
@@ -316,6 +356,9 @@ public class EmailTemplateService {
             vars.put("statusColor", "#4CAF50");
             vars.put("statusMessage", "We're pleased to confirm your reservation!");
             vars.put("statusSubject", "Reservation Confirmed");
+        }
+        if (type == EmailTemplateType.CATERING_OPTIONS) {
+            vars.put("staffEmail", "events@hubble.cafe");
         }
         if (type == EmailTemplateType.STAFF_NOTIFICATION) {
             vars.put("email", "jane.doe@example.com");

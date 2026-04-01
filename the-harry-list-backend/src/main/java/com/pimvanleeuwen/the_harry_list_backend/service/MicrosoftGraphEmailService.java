@@ -2,12 +2,15 @@ package com.pimvanleeuwen.the_harry_list_backend.service;
 
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
+import com.microsoft.graph.models.Attachment;
 import com.microsoft.graph.models.BodyType;
 import com.microsoft.graph.models.EmailAddress;
+import com.microsoft.graph.models.FileAttachment;
 import com.microsoft.graph.models.ItemBody;
 import com.microsoft.graph.models.Message;
 import com.microsoft.graph.models.Recipient;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.pimvanleeuwen.the_harry_list_backend.model.EmailAttachment;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
@@ -19,8 +22,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -241,6 +246,61 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
             case COMPLETED -> "Thank You";
             default -> "Reservation Update";
         };
+    }
+
+    @Override
+    public void sendEmailWithAttachments(String to, String subject, String htmlBody,
+                                         List<EmailAttachment> attachments, String replyTo) {
+        try {
+            Message message = new Message();
+            message.setSubject(subject);
+
+            ItemBody body = new ItemBody();
+            body.setContentType(BodyType.Html);
+            body.setContent(htmlBody);
+            message.setBody(body);
+
+            Recipient toRecipient = new Recipient();
+            EmailAddress toAddress = new EmailAddress();
+            toAddress.setAddress(to);
+            toRecipient.setEmailAddress(toAddress);
+            message.setToRecipients(new LinkedList<>(List.of(toRecipient)));
+
+            // Set reply-to if provided
+            if (replyTo != null && !replyTo.isBlank()) {
+                Recipient replyToRecipient = new Recipient();
+                EmailAddress replyToAddress = new EmailAddress();
+                replyToAddress.setAddress(replyTo);
+                replyToRecipient.setEmailAddress(replyToAddress);
+                message.setReplyTo(new LinkedList<>(List.of(replyToRecipient)));
+            }
+
+            // Add file attachments
+            if (attachments != null && !attachments.isEmpty()) {
+                List<Attachment> attachmentList = new ArrayList<>();
+                for (EmailAttachment ea : attachments) {
+                    FileAttachment fa = new FileAttachment();
+                    fa.setOdataType("#microsoft.graph.fileAttachment");
+                    fa.setName(ea.getFilename());
+                    fa.setContentType(ea.getContentType());
+                    fa.setContentBytes(ea.getData());
+                    attachmentList.add(fa);
+                }
+                message.setAttachments(attachmentList);
+            }
+
+            com.microsoft.graph.users.item.sendmail.SendMailPostRequestBody requestBody =
+                    new com.microsoft.graph.users.item.sendmail.SendMailPostRequestBody();
+            requestBody.setMessage(message);
+            requestBody.setSaveToSentItems(true);
+
+            graphClient.users().byUserId(fromEmail).sendMail().post(requestBody);
+            log.info("Email with {} attachment(s) sent to: {} via Microsoft Graph",
+                    attachments != null ? attachments.size() : 0, to);
+        } catch (Exception e) {
+            log.error("Failed to send email with attachments to: {}", to, e);
+            throw new RuntimeException("Failed to send email with attachments", e);
+        }
     }
 
     private void sendEmail(String to, String subject, String htmlBody) {

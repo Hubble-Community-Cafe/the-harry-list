@@ -1,7 +1,10 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.model.EmailAttachment;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
+
+import java.util.List;
 
 /**
  * Interface for email notification services.
@@ -38,5 +41,11 @@ public interface EmailNotificationService {
      * Send a raw HTML email to any address. Used for template test emails.
      */
     void sendRawEmail(String to, String subject, String htmlBody);
+
+    /**
+     * Send an email with PDF attachments and a custom reply-to address.
+     */
+    void sendEmailWithAttachments(String to, String subject, String htmlBody,
+                                  List<EmailAttachment> attachments, String replyTo);
 }
 
