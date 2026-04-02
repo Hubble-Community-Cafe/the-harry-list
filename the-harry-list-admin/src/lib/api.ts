@@ -280,6 +280,19 @@ export async function sendCateringEmail(reservationId: number, request: Catering
   }) as Promise<{ status: string; message: string }>;
 }
 
+// ===== Settings =====
+export interface RetentionSettings {
+  retentionDays: number;
+  enabled: boolean;
+  eligibleForDeletion: number;
+  nextRunAt: string;
+  cutoffDate: string | null;
+}
+
+export async function fetchRetentionSettings(): Promise<RetentionSettings> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/settings/retention`) as Promise<RetentionSettings>;
+}
+
 // Test if authentication is working
 export async function testAuth(): Promise<boolean> {
   try {

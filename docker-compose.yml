@@ -55,6 +55,9 @@ services:
       # Sentry error monitoring (leave empty to disable)
       - SENTRY_DSN=${SENTRY_DSN:-}
 
+      # Data Retention - days to keep reservations (0 = disabled, default = 365)
+      - DATA_RETENTION_DAYS=${DATA_RETENTION_DAYS:-365}
+
       # Logging
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG
