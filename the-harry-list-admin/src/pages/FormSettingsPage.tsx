@@ -18,6 +18,7 @@ const CONSTRAINT_TYPES = [
   { value: 'TIME_RESTRICTION', label: 'Time Restriction' },
   { value: 'ADVANCE_BOOKING', label: 'Advance Booking' },
   { value: 'GUEST_LIMIT', label: 'Guest Limit' },
+  { value: 'GUEST_MINIMUM', label: 'Guest Minimum' },
 ];
 
 const ACTIVITIES = [
@@ -393,7 +394,11 @@ export function FormSettingsPage() {
                   <label className="block text-sm text-dark-400 mb-1">Constraint Type</label>
                   <select
                     value={editingConstraint.constraintType}
-                    onChange={e => setEditingConstraint({ ...editingConstraint, constraintType: e.target.value })}
+                    onChange={e => setEditingConstraint({
+                      ...editingConstraint,
+                      constraintType: e.target.value,
+                      triggerActivity: e.target.value === 'GUEST_MINIMUM' ? 'ANY' : editingConstraint.triggerActivity,
+                    })}
                     className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
                   >
                     {CONSTRAINT_TYPES.map(t => (
@@ -402,18 +407,20 @@ export function FormSettingsPage() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm text-dark-400 mb-1">Trigger Activity</label>
-                  <select
-                    value={editingConstraint.triggerActivity}
-                    onChange={e => setEditingConstraint({ ...editingConstraint, triggerActivity: e.target.value })}
-                    className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
-                  >
-                    {ACTIVITIES.map(a => (
-                      <option key={a} value={a}>{a}</option>
-                    ))}
-                  </select>
-                </div>
+                {editingConstraint.constraintType !== 'GUEST_MINIMUM' && (
+                  <div>
+                    <label className="block text-sm text-dark-400 mb-1">Trigger Activity</label>
+                    <select
+                      value={editingConstraint.triggerActivity}
+                      onChange={e => setEditingConstraint({ ...editingConstraint, triggerActivity: e.target.value })}
+                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                    >
+                      {ACTIVITIES.map(a => (
+                        <option key={a} value={a}>{a}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm text-dark-400 mb-1">Target Value</label>
@@ -431,14 +438,18 @@ export function FormSettingsPage() {
                     {editingConstraint.constraintType === 'TIME_RESTRICTION' && 'e.g. EARLY_ACCESS'}
                     {editingConstraint.constraintType === 'ADVANCE_BOOKING' && 'Leave empty (use numeric value)'}
                     {editingConstraint.constraintType === 'GUEST_LIMIT' && 'Leave empty (use numeric value)'}
+                    {editingConstraint.constraintType === 'GUEST_MINIMUM' && 'The location this minimum applies to (HUBBLE or METEOR), or leave empty for all locations'}
                   </p>
                 </div>
 
                 {(editingConstraint.constraintType === 'ADVANCE_BOOKING' ||
-                  editingConstraint.constraintType === 'GUEST_LIMIT') && (
+                  editingConstraint.constraintType === 'GUEST_LIMIT' ||
+                  editingConstraint.constraintType === 'GUEST_MINIMUM') && (
                   <div>
                     <label className="block text-sm text-dark-400 mb-1">
-                      {editingConstraint.constraintType === 'ADVANCE_BOOKING' ? 'Days in advance' : 'Max guests'}
+                      {editingConstraint.constraintType === 'ADVANCE_BOOKING' && 'Days in advance'}
+                      {editingConstraint.constraintType === 'GUEST_LIMIT' && 'Max guests'}
+                      {editingConstraint.constraintType === 'GUEST_MINIMUM' && 'Min guests'}
                     </label>
                     <input
                       type="number"

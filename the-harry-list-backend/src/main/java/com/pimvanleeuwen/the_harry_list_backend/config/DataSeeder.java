@@ -100,7 +100,7 @@ public class DataSeeder implements CommandLineRunner {
         r4.setPhoneNumber("+31623456789");
         r4.setOrganizationName("Fontys ICT");
         r4.setEventTitle("Faculty Meeting with Lunch");
-        r4.setDescription("Quarterly faculty meeting with catering in the Corona Room.");
+        r4.setDescription("Quarterly faculty meeting with catering Corona Room.");
         r4.setSpecialActivities(Set.of(SpecialActivity.CATERING_CORONA_ROOM));
         r4.setExpectedGuests(40);
         r4.setEventDate(today.plusDays(7));

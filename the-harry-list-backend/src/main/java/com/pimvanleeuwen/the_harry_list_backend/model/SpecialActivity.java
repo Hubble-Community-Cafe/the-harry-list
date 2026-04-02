@@ -8,7 +8,7 @@ public enum SpecialActivity {
     GRADUATION("Graduation / PhD Defense"),
     EAT_A_LA_CARTE("Eat a la carte"),
     EAT_CATERING("Eat catering"),
-    CATERING_CORONA_ROOM("Catering in the Corona Room"),
+    CATERING_CORONA_ROOM("Catering Corona Room"),
     PRIVATE_EVENT("Private event");
 
     private final String displayName;

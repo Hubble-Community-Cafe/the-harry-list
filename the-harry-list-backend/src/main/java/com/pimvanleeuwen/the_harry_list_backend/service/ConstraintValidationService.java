@@ -48,6 +48,11 @@ public class ConstraintValidationService {
         List<FormConstraint> constraints = constraintRepository.findByEnabledTrue();
 
         for (FormConstraint constraint : constraints) {
+            if (constraint.getConstraintType() == FormConstraintType.GUEST_MINIMUM) {
+                validateGuestMinimum(expectedGuests, location, constraint, violations);
+                continue;
+            }
+
             String trigger = constraint.getTriggerActivity();
             boolean hasTrigger = activities.stream()
                     .anyMatch(a -> a.name().equals(trigger));
@@ -74,6 +79,8 @@ public class ConstraintValidationService {
                     // Time restrictions are informational for the frontend;
                     // no server-side enforcement needed (early slots are allowed
                     // when the triggering activity is selected)
+                    break;
+                default:
                     break;
             }
         }
@@ -123,6 +130,21 @@ public class ConstraintValidationService {
         if (eventDate == null || constraint.getNumericValue() == null) return;
         LocalDate minDate = LocalDate.now().plusDays(constraint.getNumericValue());
         if (eventDate.isBefore(minDate)) {
+            violations.add(constraint.getMessage());
+        }
+    }
+
+    private void validateGuestMinimum(Integer expectedGuests,
+                                       BarLocation location,
+                                       FormConstraint constraint,
+                                       List<String> violations) {
+        if (expectedGuests == null || constraint.getNumericValue() == null) return;
+        // targetValue is the location this minimum applies to (null means all locations)
+        String targetLocation = constraint.getTargetValue();
+        if (targetLocation != null && (location == null || !location.name().equals(targetLocation))) {
+            return; // Constraint applies to a different location
+        }
+        if (expectedGuests < constraint.getNumericValue()) {
             violations.add(constraint.getMessage());
         }
     }
