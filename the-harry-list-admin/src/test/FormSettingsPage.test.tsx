@@ -57,6 +57,13 @@ vi.mock('../lib/api', () => ({
   deleteBlockedPeriod: vi.fn(),
   createBlockedPeriod: vi.fn(),
   updateBlockedPeriod: vi.fn(),
+  fetchRetentionSettings: vi.fn().mockResolvedValue({
+    retentionDays: 365,
+    enabled: true,
+    eligibleForDeletion: 0,
+    nextRunAt: '2026-04-03T02:00:00',
+    cutoffDate: '2025-04-02',
+  }),
 }));
 
 const renderWithRouter = (component: React.ReactNode) => {
