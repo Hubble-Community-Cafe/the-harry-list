@@ -61,6 +61,10 @@ services:
       # Get DSN from sentry.io > Projects > the-harry-list-backend > Settings > Client Keys
       - SENTRY_DSN=__SENTRY_DSN_BACKEND__
 
+      # Data Retention - days to keep reservations after event date (0 = disabled)
+      # Examples: 365 = 1 year, 180 = 6 months. Default: 365
+      - DATA_RETENTION_DAYS=365
+
       # Logging
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG

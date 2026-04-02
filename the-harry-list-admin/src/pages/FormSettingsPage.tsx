@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import {
   Plus, Trash2, Loader2, AlertCircle,
-  ToggleLeft, ToggleRight, Calendar, Shield, Pencil, X
+  ToggleLeft, ToggleRight, Calendar, Shield, Pencil, X, Database, Clock
 } from 'lucide-react';
 import {
   fetchFormConstraints, createFormConstraint, updateFormConstraint,
   toggleFormConstraint, deleteFormConstraint,
   fetchBlockedPeriods, createBlockedPeriod, updateBlockedPeriod,
   toggleBlockedPeriod, deleteBlockedPeriod,
+  fetchRetentionSettings,
 } from '../lib/api';
 import type { FormConstraint, BlockedPeriod } from '../types/reservation';
+import type { RetentionSettings } from '../lib/api';
 
 const CONSTRAINT_TYPES = [
   { value: 'ACTIVITY_CONFLICT', label: 'Activity Conflict' },
@@ -55,6 +57,8 @@ export function FormSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [retention, setRetention] = useState<RetentionSettings | null>(null);
+
   // Constraint form state
   const [editingConstraint, setEditingConstraint] = useState<FormConstraint | null>(null);
   const [savingConstraint, setSavingConstraint] = useState(false);
@@ -71,9 +75,12 @@ export function FormSettingsPage() {
     try {
       setLoading(true);
       setError(null);
-      const [c, bp] = await Promise.all([fetchFormConstraints(), fetchBlockedPeriods()]);
+      const [c, bp, ret] = await Promise.all([
+        fetchFormConstraints(), fetchBlockedPeriods(), fetchRetentionSettings(),
+      ]);
       setConstraints(c);
       setBlockedPeriods(bp);
+      setRetention(ret);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load settings');
     } finally {
@@ -617,6 +624,51 @@ export function FormSettingsPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Data Retention */}
+      {retention && (
+        <div className="card">
+          <h2 className="text-lg font-title font-semibold text-white mb-1 flex items-center gap-2">
+            <Database className="w-5 h-5 text-hubble-400" />
+            Data Retention
+          </h2>
+          <p className="text-xs text-dark-500 mb-4">
+            Read-only — configure via <code className="bg-dark-800 text-hubble-400 px-1 rounded font-mono">DATA_RETENTION_DAYS</code> in your Docker Compose settings
+          </p>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="bg-dark-800 rounded-xl p-4">
+              <div className="text-xs text-dark-500 mb-1">Status</div>
+              <div className={`text-sm font-semibold ${retention.enabled ? 'text-green-400' : 'text-dark-400'}`}>
+                {retention.enabled ? 'Enabled' : 'Disabled'}
+              </div>
+            </div>
+            <div className="bg-dark-800 rounded-xl p-4">
+              <div className="text-xs text-dark-500 mb-1">Retention Period</div>
+              <div className="text-sm font-semibold text-white">
+                {retention.enabled ? `${retention.retentionDays} days` : '—'}
+              </div>
+            </div>
+            <div className="bg-dark-800 rounded-xl p-4">
+              <div className="text-xs text-dark-500 mb-1">Cutoff Date</div>
+              <div className="text-sm font-semibold text-white">
+                {retention.cutoffDate ?? '—'}
+              </div>
+            </div>
+            <div className="bg-dark-800 rounded-xl p-4">
+              <div className="text-xs text-dark-500 mb-1">Eligible for Removal</div>
+              <div className={`text-sm font-semibold ${retention.eligibleForDeletion > 0 ? 'text-amber-400' : 'text-white'}`}>
+                {retention.eligibleForDeletion} reservations
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-dark-500">
+            <Clock className="w-3.5 h-3.5" />
+            Next automatic cleanup: <span className="text-dark-400">{new Date(retention.nextRunAt).toLocaleString()}</span>
           </div>
         </div>
       )}
