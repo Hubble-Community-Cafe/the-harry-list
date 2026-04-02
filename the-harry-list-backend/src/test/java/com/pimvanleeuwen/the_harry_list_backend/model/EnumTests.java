@@ -14,7 +14,7 @@ class EnumTests {
         assertEquals("Graduation / PhD Defense", SpecialActivity.GRADUATION.getDisplayName());
         assertEquals("Eat a la carte", SpecialActivity.EAT_A_LA_CARTE.getDisplayName());
         assertEquals("Eat catering", SpecialActivity.EAT_CATERING.getDisplayName());
-        assertEquals("Catering in the Corona Room", SpecialActivity.CATERING_CORONA_ROOM.getDisplayName());
+        assertEquals("Catering Corona Room", SpecialActivity.CATERING_CORONA_ROOM.getDisplayName());
         assertEquals("Private event", SpecialActivity.PRIVATE_EVENT.getDisplayName());
     }
 
