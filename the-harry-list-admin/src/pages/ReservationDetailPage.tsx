@@ -12,6 +12,8 @@ import {
   updateCateringArranged, fetchEmailAttachments, fetchCateringEmailPreview, sendCateringEmail
 } from '../lib/api';
 import type { Reservation, EmailAttachment } from '../types/reservation';
+import { HelpGuide } from '../components/HelpGuide';
+import { reservationDetailGuide } from '../lib/guideContent';
 
 export function ReservationDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -229,7 +231,10 @@ export function ReservationDetailPage() {
             Confirmation: <span className="text-white font-mono">{reservation.confirmationNumber || `#${reservation.id}`}</span>
           </p>
         </div>
-        <StatusBadge status={reservation.status} large />
+        <div className="flex items-center gap-2">
+          <HelpGuide title="Reservation Detail Guide" sections={reservationDetailGuide} />
+          <StatusBadge status={reservation.status} large />
+        </div>
       </div>
 
       {/* Actions */}

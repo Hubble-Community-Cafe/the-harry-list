@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { fetchReservations, updateCateringArranged } from '../lib/api';
 import type { Reservation } from '../types/reservation';
+import { HelpGuide } from '../components/HelpGuide';
+import { reservationsGuide } from '../lib/guideContent';
 
 const statusOptions = ['ALL', 'PENDING', 'CONFIRMED', 'REJECTED', 'CANCELLED', 'COMPLETED'];
 const locationOptions = ['ALL', 'HUBBLE', 'METEOR'];
@@ -95,9 +97,12 @@ export function ReservationsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-title font-bold text-white">Reservations</h1>
-        <p className="text-dark-400 font-light">Manage all reservation requests</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-title font-bold text-white">Reservations</h1>
+          <p className="text-dark-400 font-light">Manage all reservation requests</p>
+        </div>
+        <HelpGuide title="Reservations Guide" sections={reservationsGuide} />
       </div>
 
       {/* Filters */}
