@@ -116,6 +116,7 @@ function renderInline(text: string): React.ReactNode {
 export function HelpGuide({ title, sections }: HelpGuideProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState(0);
+  const [failedScreenshots, setFailedScreenshots] = useState<Set<string>>(new Set());
 
   const open = useCallback(() => {
     setCurrentSection(0);
@@ -201,28 +202,27 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
               <h3 className="text-base font-semibold text-white">{section.title}</h3>
 
-              {/* Screenshot placeholder or actual image */}
+              {/* Screenshot or placeholder */}
               {section.screenshot && (
                 <div className="rounded-xl border border-dark-700 overflow-hidden bg-dark-800/50">
-                  <img
-                    src={section.screenshot}
-                    alt={section.screenshotAlt || section.title}
-                    className="w-full h-auto"
-                    onError={(e) => {
-                      // Show placeholder when image not found
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      target.parentElement!.innerHTML = `
-                        <div class="flex flex-col items-center justify-center py-8 px-4 text-center">
-                          <svg class="w-10 h-10 text-dark-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <p class="text-xs text-dark-500">Screenshot: ${section.screenshotAlt || section.title}</p>
-                          <p class="text-xs text-dark-600 mt-1">Add image at: ${section.screenshot}</p>
-                        </div>
-                      `;
-                    }}
-                  />
+                  {failedScreenshots.has(section.screenshot) ? (
+                    <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                      <svg className="w-10 h-10 text-dark-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-xs text-dark-500">Screenshot: {section.screenshotAlt || section.title}</p>
+                      <p className="text-xs text-dark-600 mt-1">Add image at: {section.screenshot}</p>
+                    </div>
+                  ) : (
+                    <img
+                      src={section.screenshot}
+                      alt={section.screenshotAlt || section.title}
+                      className="w-full h-auto"
+                      onError={() => {
+                        setFailedScreenshots(prev => new Set(prev).add(section.screenshot!));
+                      }}
+                    />
+                  )}
                 </div>
               )}
 
