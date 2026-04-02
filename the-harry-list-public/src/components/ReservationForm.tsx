@@ -25,7 +25,7 @@ const formSchema = z.object({
   eventTitle: z.string().min(2, 'Event title is required'),
   description: z.string().min(1, 'Please describe your event'),
   specialActivities: z.array(z.string()),
-  expectedGuests: z.number().min(8, 'Minimum reservation size is 8 people').max(500, 'Please contact us directly for groups over 500 people'),
+  expectedGuests: z.number().min(1, 'Minimum reservation size is 1 person').max(500, 'Please contact us directly for groups over 500 people'),
   eventDate: z.string().min(1, 'Please select a date'),
   startTime: z.string().min(1, 'Please select a start time'),
   endTime: z.string().min(1, 'Please select an end time'),
@@ -196,15 +196,32 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
   const watchEndTime = watch('endTime');
   const watchExpectedGuests = watch('expectedGuests');
 
-  // Constraint: location lock derived from dynamic constraints
+  // Constraint: location lock derived from dynamic constraints or guest count
   const locationLocked = useMemo(() => {
     for (const c of constraints) {
       if (c.constraintType === 'LOCATION_LOCK' && watchSpecialActivities.includes(c.triggerActivity)) {
         return c.targetValue || null;
       }
     }
+    // Fewer than 8 guests requires Meteor (location-specific minimum)
+    if (watchExpectedGuests !== undefined && watchExpectedGuests >= 1 && watchExpectedGuests < 8) {
+      return 'METEOR';
+    }
     return null;
-  }, [watchSpecialActivities, constraints]);
+  }, [watchSpecialActivities, constraints, watchExpectedGuests]);
+
+  // Conflict: guests require Meteor, but an activity locks to a different location
+  const locationConflict = useMemo(() => {
+    if (!watchExpectedGuests || watchExpectedGuests >= 8) return null;
+    for (const c of constraints) {
+      if (c.constraintType === 'LOCATION_LOCK' && watchSpecialActivities.includes(c.triggerActivity)) {
+        if (c.targetValue && c.targetValue !== 'METEOR') {
+          return `Reservations under 8 guests are only available at Meteor, but the selected activity requires ${c.targetValue}. Please increase the number of guests or remove the incompatible activity.`;
+        }
+      }
+    }
+    return null;
+  }, [watchExpectedGuests, constraints, watchSpecialActivities]);
 
   // Auto-set location when locked
   useEffect(() => {
@@ -257,6 +274,20 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
     }
     return null;
   }, [constraints, watchSpecialActivities, watchExpectedGuests]);
+
+  // Minimum guests from dynamic constraints (location-specific)
+  const minGuests = useMemo(() => {
+    let min = 1; // default minimum
+    for (const c of constraints) {
+      if (c.constraintType === 'GUEST_MINIMUM' && c.numericValue !== undefined) {
+        const appliesToLocation = !c.targetValue || c.targetValue === watchLocation;
+        if (appliesToLocation && c.numericValue < min) {
+          min = c.numericValue;
+        }
+      }
+    }
+    return min;
+  }, [constraints, watchLocation]);
 
   // Advance booking from dynamic constraints
   const advanceBookingDays = useMemo(() => {
@@ -399,6 +430,11 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
 
     // Block step 2 advance if guest limit constraint violated
     if (step === 2 && guestLimitWarning) {
+      return false;
+    }
+
+    // Block step 2 advance if guest count conflicts with activity location lock
+    if (step === 2 && locationConflict) {
       return false;
     }
 
@@ -739,11 +775,11 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      const current = watch('expectedGuests') || 8;
-                      if (current > 8) setValue('expectedGuests', current - 1);
+                      const current = watch('expectedGuests') || minGuests;
+                      if (current > minGuests) setValue('expectedGuests', current - 1);
                     }}
                     className="w-12 h-12 rounded-xl bg-dark-800 border border-dark-700 flex items-center justify-center text-dark-400 hover:text-white hover:bg-dark-700 hover:border-hubble-500 transition-all disabled:opacity-50"
-                    disabled={watch('expectedGuests') <= 8}
+                    disabled={watch('expectedGuests') <= minGuests}
                   >
                     <Minus className="w-5 h-5" />
                   </button>
@@ -752,14 +788,14 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                       type="number"
                       {...register('expectedGuests', { valueAsNumber: true })}
                       className="input-field text-center text-xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      min="8"
+                      min={minGuests}
                       placeholder="50"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => {
-                      const current = watch('expectedGuests') || 8;
+                      const current = watch('expectedGuests') || minGuests;
                       setValue('expectedGuests', current + 1);
                     }}
                     className="w-12 h-12 rounded-xl bg-dark-800 border border-dark-700 flex items-center justify-center text-dark-400 hover:text-white hover:bg-dark-700 hover:border-hubble-500 transition-all"
@@ -774,8 +810,18 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                     <span>{guestLimitWarning}</span>
                   </div>
                 )}
+                {locationConflict ? (
+                  <div className="mt-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>{locationConflict}</span>
+                  </div>
+                ) : (watchExpectedGuests < 8 && watchExpectedGuests >= 1) ? (
+                  <div className="mt-2 text-xs text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
+                    Reservations under 8 guests are only available at Meteor. Location will be set automatically.
+                  </div>
+                ) : null}
                 <div className="mt-2 text-xs text-dark-400">
-                  <p>Minimum reservation size: <span className="text-white">8 people</span></p>
+                  <p>Minimum reservation size: <span className="text-white">{minGuests} {minGuests === 1 ? 'person' : 'people'}</span></p>
                 </div>
               </div>
 
@@ -893,9 +939,11 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
             {locationLocked && (() => {
               const lockConstraint = constraints.find(c =>
                 c.constraintType === 'LOCATION_LOCK' && watchSpecialActivities.includes(c.triggerActivity));
+              const guestBased = !lockConstraint && watchExpectedGuests < 8;
               return (
                 <div className="text-xs text-blue-400/80 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
-                  {lockConstraint?.message || `Location is set to ${locationLocked}.`}
+                  {lockConstraint?.message
+                    || (guestBased ? `Reservations under 8 guests are only available at Meteor.` : `Location is set to ${locationLocked}.`)}
                 </div>
               );
             })()}

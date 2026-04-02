@@ -61,7 +61,7 @@ export interface SelectOption {
 
 export interface FormConstraint {
   id: number;
-  constraintType: 'ACTIVITY_CONFLICT' | 'LOCATION_LOCK' | 'SEATING_LOCK' | 'TIME_RESTRICTION' | 'ADVANCE_BOOKING' | 'GUEST_LIMIT';
+  constraintType: 'ACTIVITY_CONFLICT' | 'LOCATION_LOCK' | 'SEATING_LOCK' | 'TIME_RESTRICTION' | 'ADVANCE_BOOKING' | 'GUEST_LIMIT' | 'GUEST_MINIMUM';
   triggerActivity: string;
   targetValue?: string;
   numericValue?: number;

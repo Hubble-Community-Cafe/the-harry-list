@@ -9,7 +9,8 @@ public enum FormConstraintType {
     SEATING_LOCK("Seating Lock"),
     TIME_RESTRICTION("Time Restriction"),
     ADVANCE_BOOKING("Advance Booking"),
-    GUEST_LIMIT("Guest Limit");
+    GUEST_LIMIT("Guest Limit"),
+    GUEST_MINIMUM("Guest Minimum");
 
     private final String displayName;
 

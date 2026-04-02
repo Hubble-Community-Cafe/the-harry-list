@@ -124,6 +124,15 @@ public class DefaultConstraintSeeder implements CommandLineRunner {
                 .message("À la carte dining is limited to 15 guests. For larger groups, please choose catering.")
                 .build());
 
-        logger.info("Seeded 12 default form constraints");
+        // Guest minimums per location
+        formConstraintRepository.save(FormConstraint.builder()
+                .constraintType(FormConstraintType.GUEST_MINIMUM)
+                .triggerActivity("ANY")
+                .targetValue("METEOR")
+                .numericValue(1)
+                .message("Meteor reservations require at least 1 person")
+                .build());
+
+        logger.info("Seeded 13 default form constraints");
     }
 }
