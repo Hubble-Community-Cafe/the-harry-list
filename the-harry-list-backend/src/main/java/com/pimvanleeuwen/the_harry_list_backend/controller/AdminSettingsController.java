@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -35,14 +36,15 @@ public class AdminSettingsController {
     public ResponseEntity<Map<String, Object>> getRetentionSettings() {
         LocalDateTime nextRun = LocalDate.now().plusDays(1).atTime(LocalTime.of(2, 0));
 
-        return ResponseEntity.ok(Map.of(
-                "retentionDays", dataRetentionService.getRetentionDays(),
-                "enabled", dataRetentionService.isEnabled(),
-                "eligibleForDeletion", dataRetentionService.countEligibleForDeletion(),
-                "nextRunAt", nextRun.toString(),
-                "cutoffDate", dataRetentionService.isEnabled()
-                        ? LocalDate.now().minusDays(dataRetentionService.getRetentionDays()).toString()
-                        : null
-        ));
+        Map<String, Object> response = new HashMap<>();
+        response.put("retentionDays", dataRetentionService.getRetentionDays());
+        response.put("enabled", dataRetentionService.isEnabled());
+        response.put("eligibleForDeletion", dataRetentionService.countEligibleForDeletion());
+        response.put("nextRunAt", nextRun.toString());
+        response.put("cutoffDate", dataRetentionService.isEnabled()
+                ? LocalDate.now().minusDays(dataRetentionService.getRetentionDays()).toString()
+                : null);
+
+        return ResponseEntity.ok(response);
     }
 }
