@@ -12,6 +12,8 @@ import {
 } from '../lib/api';
 import type { FormConstraint, BlockedPeriod } from '../types/reservation';
 import type { RetentionSettings } from '../lib/api';
+import { HelpGuide } from '../components/HelpGuide';
+import { formSettingsGuide } from '../lib/guideContent';
 
 const CONSTRAINT_TYPES = [
   { value: 'ACTIVITY_CONFLICT', label: 'Activity Conflict' },
@@ -189,9 +191,12 @@ export function FormSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-title font-bold text-white">Form Settings</h1>
-        <p className="text-dark-400 font-light">Manage form constraints and blocked periods</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-title font-bold text-white">Form Settings</h1>
+          <p className="text-dark-400 font-light">Manage form constraints and blocked periods</p>
+        </div>
+        <HelpGuide title="Form Settings Guide" sections={formSettingsGuide} />
       </div>
 
       {error && (

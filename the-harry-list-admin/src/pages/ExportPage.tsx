@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { FileDown, Calendar, MapPin, Loader2, AlertCircle, Filter } from 'lucide-react';
 import { fetchWithAuth } from '../lib/api';
+import { HelpGuide } from '../components/HelpGuide';
+import { exportGuide } from '../lib/guideContent';
 
 export function ExportPage() {
   const [selectedDate, setSelectedDate] = useState<string>(
@@ -47,9 +49,12 @@ export function ExportPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-title font-bold text-white">Export Reservations</h1>
-        <p className="text-dark-400 mt-1">Generate PDF reports for daily reservation overviews</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-title font-bold text-white">Export Reservations</h1>
+          <p className="text-dark-400 mt-1">Generate PDF reports for daily reservation overviews</p>
+        </div>
+        <HelpGuide title="Export Guide" sections={exportGuide} />
       </div>
 
       {/* Export Card */}

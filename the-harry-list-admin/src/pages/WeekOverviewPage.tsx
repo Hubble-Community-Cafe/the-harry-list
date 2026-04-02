@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { fetchReservations, updateCateringArranged } from '../lib/api';
 import type { Reservation } from '../types/reservation';
+import { HelpGuide } from '../components/HelpGuide';
+import { weekOverviewGuide } from '../lib/guideContent';
 
 const CATERING_ACTIVITIES = ['EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM'];
 
@@ -145,9 +147,12 @@ export function WeekOverviewPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-title font-bold text-white">Week Overview</h1>
-          <p className="text-dark-400 font-light">Quick overview of the week's reservations</p>
+        <div className="flex items-start gap-3">
+          <div>
+            <h1 className="text-2xl font-title font-bold text-white">Week Overview</h1>
+            <p className="text-dark-400 font-light">Quick overview of the week's reservations</p>
+          </div>
+          <HelpGuide title="Week Overview Guide" sections={weekOverviewGuide} />
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">

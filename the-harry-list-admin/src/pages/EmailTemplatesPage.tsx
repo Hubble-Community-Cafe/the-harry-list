@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp, RotateCcw, Save, Loader2, AlertCircle, CheckCircle, Pencil, Send, Upload, Trash2, FileText } from 'lucide-react';
 import { fetchWithAuth, fetchEmailAttachments, uploadEmailAttachment, deleteEmailAttachment, toggleEmailAttachmentActive } from '../lib/api';
 import type { EmailAttachment } from '../types/reservation';
+import { HelpGuide } from '../components/HelpGuide';
+import { emailTemplatesGuide } from '../lib/guideContent';
 
 interface EmailTemplateDto {
   templateType: string;
@@ -200,9 +202,12 @@ export function EmailTemplatesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-title font-bold text-white">Email Templates</h1>
-        <p className="text-dark-400 font-light">Customise the emails sent to customers and staff</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-title font-bold text-white">Email Templates</h1>
+          <p className="text-dark-400 font-light">Customise the emails sent to customers and staff</p>
+        </div>
+        <HelpGuide title="Email Templates Guide" sections={emailTemplatesGuide} />
       </div>
 
       {/* Info card */}

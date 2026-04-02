@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Copy, Check, ExternalLink, RefreshCw, Loader2, AlertCircle, Lock, Unlock } from 'lucide-react';
 import { fetchWithAuth } from '../lib/api';
+import { HelpGuide } from '../components/HelpGuide';
+import { calendarGuide } from '../lib/guideContent';
 
 interface CalendarFeedInfo {
   id: string;
@@ -183,6 +185,7 @@ export function CalendarPage() {
           <h1 className="text-2xl font-title font-bold text-white">Calendar Feeds</h1>
           <p className="text-dark-400 mt-1">Subscribe to reservation calendars from any calendar app</p>
         </div>
+        <HelpGuide title="Calendar Feeds Guide" sections={calendarGuide} />
       </div>
 
       {/* Info Box */}

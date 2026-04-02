@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { fetchReservations } from '../lib/api';
 import type { Reservation } from '../types/reservation';
+import { HelpGuide } from '../components/HelpGuide';
+import { dashboardGuide } from '../lib/guideContent';
 
 interface Stats {
   total: number;
@@ -73,9 +75,12 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-title font-bold text-white">Dashboard</h1>
-        <p className="text-dark-400 font-light">Overview of reservation activity</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-title font-bold text-white">Dashboard</h1>
+          <p className="text-dark-400 font-light">Overview of reservation activity</p>
+        </div>
+        <HelpGuide title="Dashboard Guide" sections={dashboardGuide} />
       </div>
 
       {/* Stats Grid */}
