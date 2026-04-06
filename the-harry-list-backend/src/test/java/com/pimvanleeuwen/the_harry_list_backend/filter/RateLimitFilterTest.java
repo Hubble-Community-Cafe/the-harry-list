@@ -106,13 +106,13 @@ class RateLimitFilterTest {
     }
 
     @Test
-    void shouldUseXForwardedForHeader() throws Exception {
+    void shouldUseXRealIpHeader() throws Exception {
         request.setMethod("POST");
         request.setRequestURI("/api/public/reservations");
         request.setRemoteAddr("10.0.0.1"); // internal proxy IP
-        request.addHeader("X-Forwarded-For", "203.0.113.5");
+        request.addHeader("X-Real-IP", "203.0.113.5");
 
-        // Exhaust limit for the forwarded IP
+        // Exhaust limit for the real IP
         for (int i = 0; i < 10; i++) {
             filter.doFilter(request, new MockHttpServletResponse(), filterChain);
         }
@@ -122,25 +122,30 @@ class RateLimitFilterTest {
     }
 
     @Test
-    void shouldUseFirstIpFromXForwardedForWhenMultiple() throws Exception {
+    void shouldIgnoreXForwardedForHeader() throws Exception {
         request.setMethod("POST");
         request.setRequestURI("/api/public/reservations");
-        request.addHeader("X-Forwarded-For", "203.0.113.5, 10.0.0.1, 192.168.1.1");
+        request.setRemoteAddr("10.0.0.1");
+        request.addHeader("X-Forwarded-For", "203.0.113.5");
 
-        // Make a different request with the same first IP to confirm tracking
-        MockHttpServletRequest request2 = new MockHttpServletRequest();
-        request2.setMethod("POST");
-        request2.setRequestURI("/api/public/reservations");
-        request2.addHeader("X-Forwarded-For", "203.0.113.5, 172.16.0.1");
-
-        // Exhaust limit across both requests sharing the same client IP
-        for (int i = 0; i < 5; i++) {
+        // All requests should be tracked under remoteAddr (10.0.0.1), not the forwarded IP
+        for (int i = 0; i < 10; i++) {
             filter.doFilter(request, new MockHttpServletResponse(), filterChain);
-            filter.doFilter(request2, new MockHttpServletResponse(), filterChain);
         }
 
         filter.doFilter(request, response, filterChain);
         assertEquals(429, response.getStatus());
+
+        // A request from a different remoteAddr with the same X-Forwarded-For should still be allowed
+        MockHttpServletRequest request2 = new MockHttpServletRequest();
+        request2.setMethod("POST");
+        request2.setRequestURI("/api/public/reservations");
+        request2.setRemoteAddr("10.0.0.2");
+        request2.addHeader("X-Forwarded-For", "203.0.113.5");
+
+        MockHttpServletResponse response2 = new MockHttpServletResponse();
+        filter.doFilter(request2, response2, filterChain);
+        assertEquals(200, response2.getStatus());
     }
 
     @Test
