@@ -118,6 +118,52 @@ jobs:
 
           echo "All shared dependency versions are aligned."
 
+  # ==================== VERSION BUMP CHECK ====================
+  version-check:
+    name: Version Bump Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check version was bumped
+        run: |
+          PR_VERSION=$(node -p "require('./the-harry-list-public/package.json').version")
+          MAIN_VERSION=$(git show origin/main:the-harry-list-public/package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version")
+
+          echo "PR version:   $PR_VERSION"
+          echo "Main version: $MAIN_VERSION"
+
+          if [ "$PR_VERSION" = "$MAIN_VERSION" ]; then
+            echo "::error::Version has not been bumped. Update the version in package.json (both frontends) and pom.xml before merging."
+            exit 1
+          fi
+
+          # Verify all three packages have the same version
+          ADMIN_VERSION=$(node -p "require('./the-harry-list-admin/package.json').version")
+          BACKEND_VERSION=$(grep -m1 '<version>' the-harry-list-backend/pom.xml | grep -oP '[\d.]+')
+
+          echo "Admin version:   $ADMIN_VERSION"
+          echo "Backend version: $BACKEND_VERSION"
+
+          MISMATCH=false
+          if [ "$PR_VERSION" != "$ADMIN_VERSION" ]; then
+            echo "::error::Admin version ($ADMIN_VERSION) does not match public version ($PR_VERSION)"
+            MISMATCH=true
+          fi
+          if [ "$PR_VERSION" != "$BACKEND_VERSION" ]; then
+            echo "::error::Backend version ($BACKEND_VERSION) does not match public version ($PR_VERSION)"
+            MISMATCH=true
+          fi
+
+          if [ "$MISMATCH" = true ]; then
+            exit 1
+          fi
+
+          echo "Version bumped from $MAIN_VERSION to $PR_VERSION across all packages."
+
   # ==================== BACKEND ====================
   backend-test:
     name: Backend Tests
@@ -241,6 +287,10 @@ jobs:
         id: vars
         run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
+      - name: Extract project version
+        id: version
+        run: echo "version=$(node -p "require('./the-harry-list-public/package.json').version")" >> $GITHUB_OUTPUT
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -259,6 +309,7 @@ jobs:
           images: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-backend
           tags: |
             type=raw,value=latest
+            type=raw,value=${{ steps.version.outputs.version }}
             type=sha,prefix={{branch}}-
             type=ref,event=branch
 
@@ -298,6 +349,7 @@ jobs:
           images: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-public
           tags: |
             type=raw,value=latest
+            type=raw,value=${{ steps.version.outputs.version }}
             type=sha,prefix={{branch}}-
             type=ref,event=branch
 
@@ -337,6 +389,7 @@ jobs:
           images: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-admin
           tags: |
             type=raw,value=latest
+            type=raw,value=${{ steps.version.outputs.version }}
             type=sha,prefix={{branch}}-
             type=ref,event=branch
 

@@ -1,11 +1,12 @@
 # Template for Portainer deployment
 # Replace YOUR_GITHUB_USERNAME with your actual GitHub username (lowercase)
+# Replace __VERSION__ with the desired version (e.g., 0.9.0) or use "latest"
 # Replace all __FILL_IN__ values with actual configuration
 
 services:
   # Backend API
   the-harry-list-backend:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-backend:latest
+    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-backend:__VERSION__
     deploy:
       restart_policy:
         condition: on-failure
@@ -71,7 +72,7 @@ services:
 
   # Public Reservation Form Frontend
   the-harry-list-public:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-public:latest
+    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-public:__VERSION__
     deploy:
       restart_policy:
         condition: on-failure
@@ -90,7 +91,7 @@ services:
 
   # Admin Portal Frontend
   the-harry-list-admin:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-admin:latest
+    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-admin:__VERSION__
     deploy:
       restart_policy:
         condition: on-failure
