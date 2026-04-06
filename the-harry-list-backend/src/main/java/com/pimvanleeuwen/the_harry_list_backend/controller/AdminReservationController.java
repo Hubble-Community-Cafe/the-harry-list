@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+hgfhgfhgfimport java.security.Principal;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -70,7 +71,8 @@ public class AdminReservationController {
             @PathVariable Long id,
             @RequestParam ReservationStatus status,
             @RequestParam(required = false) String confirmedBy,
-            @RequestParam(required = false, defaultValue = "true") boolean sendEmail) {
+            @RequestParam(required = false, defaultValue = "true") boolean sendEmail,
+            Principal principal) {
 
         return reservationRepository.findById(id)
                 .map(reservation -> {
@@ -88,10 +90,10 @@ public class AdminReservationController {
                     }
                     com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
 
-                    log.info("LOGGING reservation.status_changed id={} confirmation='{}' event='{}' date={} status={}->{}{}",
+                    log.info("AUDIT reservation.status_changed id={} confirmation='{}' event='{}' date={} status={}->{} user='{}'{}",
                             id, saved.getConfirmationNumber(), saved.getEventTitle(), saved.getEventDate(),
-                            oldStatus, status,
-                            confirmedBy != null ? " by='" + confirmedBy + "'" : "");
+                            oldStatus, status, principal != null ? principal.getName() : "unknown",
+                            confirmedBy != null ? " confirmedBy='" + confirmedBy + "'" : "");
 
                     // Send email notification if enabled
                     if (sendEmail && emailService != null) {
@@ -111,9 +113,11 @@ public class AdminReservationController {
     @Operation(summary = "Toggle catering arranged", description = "Mark catering as arranged (or undo) for a reservation")
     public ResponseEntity<Reservation> updateCateringArranged(
             @PathVariable Long id,
-            @RequestParam boolean arranged) {
+            @RequestParam boolean arranged,
+            Principal principal) {
 
-        log.info("Setting catering arranged={} for reservation {}", arranged, id);
+        log.info("AUDIT reservation.catering_arranged id={} arranged={} user='{}'",
+                id, arranged, principal != null ? principal.getName() : "unknown");
 
         return reservationRepository.findById(id)
                 .map(reservation -> {
@@ -128,9 +132,11 @@ public class AdminReservationController {
     @Operation(summary = "Update internal notes", description = "Add or update internal notes for a reservation")
     public ResponseEntity<Reservation> updateInternalNotes(
             @PathVariable Long id,
-            @RequestBody String notes) {
+            @RequestBody String notes,
+            Principal principal) {
 
-        log.info("Updating internal notes for reservation {}", id);
+        log.info("AUDIT reservation.notes_updated id={} user='{}'",
+                id, principal != null ? principal.getName() : "unknown");
 
         return reservationRepository.findById(id)
                 .map(reservation -> {
@@ -145,12 +151,14 @@ public class AdminReservationController {
     @Operation(summary = "Send custom email", description = "Send a custom email to the reservation contact")
     public ResponseEntity<Map<String, String>> sendCustomEmail(
             @PathVariable Long id,
-            @RequestBody Map<String, String> emailRequest) {
+            @RequestBody Map<String, String> emailRequest,
+            Principal principal) {
 
         String subject = emailRequest.get("subject");
         String message = emailRequest.get("message");
 
-        log.info("Sending custom email for reservation {} with subject: {}", id, subject);
+        log.info("AUDIT email.custom_sent id={} subject='{}' user='{}'",
+                id, subject, principal != null ? principal.getName() : "unknown");
 
         return reservationRepository.findById(id)
                 .map(reservation -> {
@@ -187,9 +195,11 @@ public class AdminReservationController {
     @Operation(summary = "Send catering options email", description = "Send catering email with PDF attachments to reservation contact")
     public ResponseEntity<Map<String, String>> sendCateringEmail(
             @PathVariable Long id,
-            @RequestBody CateringEmailRequest request) {
+            @RequestBody CateringEmailRequest request,
+            Principal principal) {
 
-        log.info("Sending catering options email for reservation {}", id);
+        log.info("AUDIT email.catering_sent id={} user='{}'",
+                id, principal != null ? principal.getName() : "unknown");
 
         return reservationRepository.findById(id)
                 .map(reservation -> {
@@ -216,8 +226,9 @@ public class AdminReservationController {
                         emailService.sendEmailWithAttachments(
                                 reservation.getEmail(), subject, body, attachments, request.getReplyTo());
 
-                        log.info("LOGGING email.catering_sent confirmation='{}' to='{}' attachments={}",
-                                reservation.getConfirmationNumber(), reservation.getEmail(), attachments.size());
+                        log.info("AUDIT email.catering_delivered confirmation='{}' to='{}' attachments={} user='{}'",
+                                reservation.getConfirmationNumber(), reservation.getEmail(), attachments.size(),
+                                principal != null ? principal.getName() : "unknown");
 
                         return ResponseEntity.ok(Map.of("status", "sent", "message", "Catering email sent successfully"));
                     } catch (Exception e) {
