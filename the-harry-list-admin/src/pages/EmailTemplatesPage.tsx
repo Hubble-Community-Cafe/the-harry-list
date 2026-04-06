@@ -174,8 +174,8 @@ export function EmailTemplatesPage() {
     try {
       const updated = await toggleEmailAttachmentActive(id, active);
       setAttachments(prev => prev.map(a => a.id === id ? updated : a));
-    } catch {
-      // ignore
+    } catch (error) {
+      console.error('Failed to toggle email attachment:', error);
     }
   }
 
