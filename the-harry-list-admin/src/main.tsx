@@ -30,7 +30,7 @@ msalInstance.initialize().then(async () => {
   try {
     const response = await msalInstance.handleRedirectPromise();
     if (response) {
-      console.log('Login successful via redirect:', response.account?.username);
+      if (import.meta.env.DEV) console.log('Login successful via redirect:', response.account?.username);
       msalInstance.setActiveAccount(response.account);
       // Force context update by dispatching a custom event
       window.dispatchEvent(new Event('msal:accountChanged'));
@@ -39,7 +39,7 @@ msalInstance.initialize().then(async () => {
       const accounts = msalInstance.getAllAccounts();
       if (accounts.length > 0) {
         msalInstance.setActiveAccount(accounts[0]);
-        console.log('Active account restored:', accounts[0].username);
+        if (import.meta.env.DEV) console.log('Active account restored:', accounts[0].username);
         window.dispatchEvent(new Event('msal:accountChanged'));
       }
     }
@@ -52,12 +52,12 @@ msalInstance.initialize().then(async () => {
     if (event.eventType === EventType.LOGIN_SUCCESS && event.payload) {
       const payload = event.payload as { account: AccountInfo | null };
       msalInstance.setActiveAccount(payload.account);
-      console.log('Login event - account set:', payload.account?.username);
+      if (import.meta.env.DEV) console.log('Login event - account set:', payload.account?.username);
       window.dispatchEvent(new Event('msal:accountChanged'));
     }
     if (event.eventType === EventType.LOGOUT_SUCCESS) {
       msalInstance.setActiveAccount(null);
-      console.log('Logout successful');
+      if (import.meta.env.DEV) console.log('Logout successful');
     }
   });
 
