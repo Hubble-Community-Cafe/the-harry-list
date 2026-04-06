@@ -1398,7 +1398,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
           ) : (
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !!optionsError}
               className="btn-secondary flex items-center gap-2"
             >
               {isSubmitting ? (
