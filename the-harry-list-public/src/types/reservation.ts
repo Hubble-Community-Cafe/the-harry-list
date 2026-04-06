@@ -38,7 +38,7 @@ export interface ReservationFormData {
 }
 
 export interface SubmissionResult {
-  confirmationNumber: number;
+  confirmationNumber: string;
   eventTitle: string;
   contactName: string;
   email: string;

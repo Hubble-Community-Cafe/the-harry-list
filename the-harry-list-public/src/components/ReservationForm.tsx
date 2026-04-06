@@ -579,6 +579,8 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               <div key={step.id} className="flex items-center">
                 <button
                   type="button"
+                  aria-current={isActive ? 'step' : undefined}
+                  aria-label={`Step ${step.id}: ${step.title}`}
                   onClick={() => step.id < currentStep && setCurrentStep(step.id)}
                   disabled={step.id > currentStep}
                   className={`
@@ -637,7 +639,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-group">
-                <label className="label">Full Name *</label>
+                <label htmlFor="contactName" className="label">Full Name *</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
@@ -645,13 +647,14 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                     {...register('contactName')}
                     className="input-field pl-10"
                     placeholder="John Doe"
+                    aria-describedby={errors.contactName ? 'contactName-error' : undefined}
                   />
                 </div>
-                {errors.contactName && <p className="error-text">{errors.contactName.message}</p>}
+                {errors.contactName && <p id="contactName-error" className="error-text">{errors.contactName.message}</p>}
               </div>
 
               <div className="form-group">
-                <label className="label">Email Address *</label>
+                <label htmlFor="email" className="label">Email Address *</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
@@ -659,13 +662,14 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                     {...register('email')}
                     className="input-field pl-10"
                     placeholder="john@example.com"
+                    aria-describedby={errors.email ? 'email-error' : undefined}
                   />
                 </div>
-                {errors.email && <p className="error-text">{errors.email.message}</p>}
+                {errors.email && <p id="email-error" className="error-text">{errors.email.message}</p>}
               </div>
 
               <div className="form-group">
-                <label className="label">Phone Number</label>
+                <label htmlFor="phoneNumber" className="label">Phone Number</label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
@@ -673,13 +677,14 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                     {...register('phoneNumber')}
                     className="input-field pl-10"
                     placeholder="+31 6 12345678"
+                    aria-describedby={errors.phoneNumber ? 'phoneNumber-error' : undefined}
                   />
                 </div>
-                {errors.phoneNumber && <p className="error-text">{errors.phoneNumber.message}</p>}
+                {errors.phoneNumber && <p id="phoneNumber-error" className="error-text">{errors.phoneNumber.message}</p>}
               </div>
 
               <div className="form-group">
-                <label className="label">Organization / Association</label>
+                <label htmlFor="organizationName" className="label">Organization / Association</label>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
@@ -710,14 +715,15 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Event Title */}
               <div className="form-group md:col-span-2">
-                <label className="label">Event Title *</label>
+                <label htmlFor="eventTitle" className="label">Event Title *</label>
                 <input
                   type="text"
                   {...register('eventTitle')}
                   className="input-field"
                   placeholder="Annual Association Drinks"
+                  aria-describedby={errors.eventTitle ? 'eventTitle-error' : undefined}
                 />
-                {errors.eventTitle && <p className="error-text">{errors.eventTitle.message}</p>}
+                {errors.eventTitle && <p id="eventTitle-error" className="error-text">{errors.eventTitle.message}</p>}
               </div>
 
               {/* Special Activities */}
@@ -732,6 +738,9 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                       <button
                         key={option.value}
                         type="button"
+                        role="checkbox"
+                        aria-checked={selected}
+                        aria-label={option.displayName}
                         onClick={() => toggleActivity(option.value)}
                         disabled={blocked}
                         title={blocked ? 'Not compatible with another selected activity' : undefined}
@@ -774,6 +783,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
+                    aria-label="Decrease guest count"
                     onClick={() => {
                       const current = watch('expectedGuests') || minGuests;
                       if (current > minGuests) setValue('expectedGuests', current - 1);
@@ -794,6 +804,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                   </div>
                   <button
                     type="button"
+                    aria-label="Increase guest count"
                     onClick={() => {
                       const current = watch('expectedGuests') || minGuests;
                       setValue('expectedGuests', current + 1);
@@ -827,7 +838,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
 
               {/* Event Date */}
               <div className="form-group">
-                <label className="label">Event Date *</label>
+                <label htmlFor="eventDate" className="label">Event Date *</label>
                 {requiresAdvanceBooking && (
                   <div className="mb-2 text-xs text-blue-400/80 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
                     ℹ️ Selected activities require at least <strong>{advanceBookingDays} days</strong> advance booking.
@@ -842,7 +853,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                     min={minDateForBooking}
                   />
                 </div>
-                {errors.eventDate && <p className="error-text">{errors.eventDate.message}</p>}
+                {errors.eventDate && <p id="eventDate-error" className="error-text">{errors.eventDate.message}</p>}
                 {blockedDateWarning && (
                   <div className="mt-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -853,7 +864,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
 
               {/* Start Time */}
               <div className="form-group">
-                <label className="label">Start Time *</label>
+                <label htmlFor="startTime" className="label">Start Time *</label>
                 <select {...register('startTime')} className="select-field">
                   <option value="">Select start time...</option>
                   {startTimes.map(time => <option key={time} value={time}>{time}</option>)}
@@ -868,7 +879,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
 
               {/* End Time */}
               <div className="form-group">
-                <label className="label">End Time *</label>
+                <label htmlFor="endTime" className="label">End Time *</label>
                 <select {...register('endTime')} className="select-field">
                   <option value="">Select end time...</option>
                   {endTimes.map(time => <option key={time} value={time}>{time}</option>)}
@@ -899,7 +910,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               {/* Catering dietary notes */}
               {hasCateringActivity && (
                 <div className="form-group md:col-span-2">
-                  <label className="label">Catering Dietary Notes</label>
+                  <label htmlFor="cateringDietaryNotes" className="label">Catering Dietary Notes</label>
                   <textarea
                     {...register('cateringDietaryNotes')}
                     className="input-field min-h-[80px] resize-none"
@@ -910,13 +921,13 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
 
               {/* Event Description */}
               <div className="form-group md:col-span-2">
-                <label className="label">Event Description *</label>
+                <label htmlFor="description" className="label">Event Description *</label>
                 <textarea
                   {...register('description')}
                   className="input-field min-h-[100px] resize-none"
                   placeholder="Tell us more about your event..."
                 />
-                {errors.description && <p className="error-text">{errors.description.message}</p>}
+                {errors.description && <p id="description-error" className="error-text">{errors.description.message}</p>}
               </div>
             </div>
           </div>
@@ -1133,7 +1144,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
 
             {/* Additional remarks */}
             <div className="form-group">
-              <label className="label">Additional Location/Seating Remarks (optional)</label>
+              <label htmlFor="comments" className="label">Additional Location/Seating Remarks (optional)</label>
               <input
                 type="text"
                 {...register('comments')}
@@ -1203,7 +1214,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
             {watchPaymentOption === 'INVOICE' && (
               <div className="space-y-4 pl-4 border-l-2 border-meteor-500/30">
                 <div className="form-group">
-                  <label className="label">Invoice Type *</label>
+                  <label htmlFor="invoiceType" className="label">Invoice Type *</label>
                   <select {...register('invoiceType')} className="select-field" disabled={optionsLoading}>
                     <option value="">Select invoice type...</option>
                     {(formOptions?.invoiceTypes ?? [
@@ -1220,7 +1231,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                 {/* TUE/FONTYS: Kostenplaats */}
                 {(watchInvoiceType === 'TUE' || watchInvoiceType === 'FONTYS') && (
                   <div className="form-group">
-                    <label className="label">Kostenplaats *</label>
+                    <label htmlFor="costCenter" className="label">Kostenplaats *</label>
                     <input
                       type="text"
                       {...register('costCenter')}
@@ -1235,7 +1246,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                 {watchInvoiceType === 'EXTERNAL' && (
                   <div className="space-y-4">
                     <div className="form-group">
-                      <label className="label">Company Name *</label>
+                      <label htmlFor="invoiceName" className="label">Company Name *</label>
                       <input
                         type="text"
                         {...register('invoiceName')}
@@ -1246,7 +1257,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                     </div>
 
                     <div className="form-group">
-                      <label className="label">Invoice Address *</label>
+                      <label htmlFor="invoiceAddress" className="label">Invoice Address *</label>
                       <textarea
                         {...register('invoiceAddress')}
                         className="input-field min-h-[80px] resize-none"
@@ -1256,7 +1267,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                     </div>
 
                     <div className="form-group">
-                      <label className="label">Invoice Remarks</label>
+                      <label htmlFor="invoiceRemarks" className="label">Invoice Remarks</label>
                       <textarea
                         {...register('invoiceRemarks')}
                         className="input-field min-h-[60px] resize-none"
@@ -1372,6 +1383,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
         <div className="flex items-center justify-between mt-8 pt-6 border-t border-dark-800">
           <button
             type="button"
+            aria-label="Go to previous step"
             onClick={prevStep}
             disabled={currentStep === 1}
             className={`
@@ -1398,7 +1410,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
           ) : (
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !!optionsError}
               className="btn-secondary flex items-center gap-2"
             >
               {isSubmitting ? (

@@ -1,11 +1,12 @@
 # Template for Portainer deployment
 # Replace YOUR_GITHUB_USERNAME with your actual GitHub username (lowercase)
+# Replace __VERSION__ with the desired version (e.g., 0.9.0) or use "latest"
 # Replace all __FILL_IN__ values with actual configuration
 
 services:
   # Backend API
   the-harry-list-backend:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-backend:latest
+    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-backend:__VERSION__
     deploy:
       restart_policy:
         condition: on-failure
@@ -34,9 +35,9 @@ services:
       # Email Configuration (Microsoft Graph for Microsoft 365)
       # Set APP_MAIL_ENABLED=false to disable email notifications
       - APP_MAIL_ENABLED=true
-      - APP_MAIL_FROM=noreply@hubble.cafe
-      - APP_MAIL_STAFF=info@hubble.cafe
-      - APP_BAR_NAME=Hubble and Meteor Community Cafes
+      - APP_MAIL_FROM=__EMAIL_FROM__
+      - APP_MAIL_STAFF=__EMAIL_STAFF__
+      - APP_BAR_NAME=__EMAIL_BAR_NAME__
 
       # Azure AD Configuration (for JWT auth and Graph API email)
       # Get these from Azure Portal > App registrations > Your App
@@ -50,7 +51,7 @@ services:
       - CALENDAR_FEED_STAFF_TOKEN=__CALENDAR_FEED_STAFF_TOKEN__
 
       # CORS - Allowed origins (comma-separated, must match your frontend URLs)
-      - CORS_ALLOWED_ORIGINS=https://harry.hubble.cafe,https://harry-admin.hubble.cafe,https://harry.meteorcommunity.cafe,https://harry-admin.meteorcommunity.cafe
+      - CORS_ALLOWED_ORIGINS=__CORS_ALLOWED_ORIGINS__
 
       # Google reCAPTCHA v3 Configuration (for bot protection on public form)
       # Get keys from: https://www.google.com/recaptcha/admin
@@ -71,7 +72,7 @@ services:
 
   # Public Reservation Form Frontend
   the-harry-list-public:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-public:latest
+    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-public:__VERSION__
     deploy:
       restart_policy:
         condition: on-failure
@@ -81,7 +82,7 @@ services:
     networks:
       - harry-list
     environment:
-      - API_URL=https://api.hubble.cafe
+      - API_URL=__API_URL__
       # Google reCAPTCHA v3 Site Key (public key)
       - RECAPTCHA_SITE_KEY=__RECAPTCHA_SITE_KEY__
       # Sentry error monitoring
@@ -90,7 +91,7 @@ services:
 
   # Admin Portal Frontend
   the-harry-list-admin:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-admin:latest
+    image: ghcr.io/YOUR_GITHUB_USERNAME/the-harry-list-admin:__VERSION__
     deploy:
       restart_policy:
         condition: on-failure
@@ -101,7 +102,7 @@ services:
       - harry-list
     environment:
       # Backend API URL
-      - API_URL=https://api.hubble.cafe
+      - API_URL=__API_URL__
       # Azure AD Configuration for Microsoft Login
       - AZURE_CLIENT_ID=__AZURE_CLIENT_ID__
       - AZURE_TENANT_ID=__AZURE_TENANT_ID__

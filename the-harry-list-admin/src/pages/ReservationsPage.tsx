@@ -223,8 +223,8 @@ export function ReservationsPage() {
                                     try {
                                       const updated = await updateCateringArranged(reservation.id, newValue);
                                       setReservations(prev => prev.map(r => r.id === reservation.id ? { ...r, cateringArranged: updated.cateringArranged } : r));
-                                    } catch {
-                                      // ignore
+                                    } catch (error) {
+                                      console.error('Failed to update catering status:', error);
                                     }
                                   }}
                                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium transition-colors ${

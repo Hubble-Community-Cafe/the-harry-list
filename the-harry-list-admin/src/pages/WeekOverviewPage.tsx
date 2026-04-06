@@ -280,8 +280,8 @@ export function WeekOverviewPage() {
                         try {
                           const updated = await updateCateringArranged(id, newValue);
                           setReservations(prev => prev.map(r => r.id === id ? { ...r, cateringArranged: updated.cateringArranged } : r));
-                        } catch {
-                          // ignore
+                        } catch (error) {
+                          console.error('Failed to update catering status:', error);
                         }
                       }}
                     />

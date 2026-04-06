@@ -555,7 +555,7 @@ export function ReservationDetailPage() {
                     try {
                       const updated = await updateCateringArranged(reservation.id, newValue);
                       setReservation({ ...reservation, cateringArranged: updated.cateringArranged });
-                    } catch { /* ignore */ }
+                    } catch (error) { console.error('Failed to update catering status:', error); }
                   }}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     reservation.cateringArranged

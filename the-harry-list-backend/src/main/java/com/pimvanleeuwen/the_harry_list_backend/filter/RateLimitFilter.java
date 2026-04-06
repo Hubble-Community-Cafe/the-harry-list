@@ -86,10 +86,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private String getClientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
+        // Prefer X-Real-IP (set by reverse proxy, not spoofable by clients)
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp.trim();
         }
+        // Fall back to remoteAddr (direct connection IP)
         return request.getRemoteAddr();
     }
 }

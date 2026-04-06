@@ -40,6 +40,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // CSRF disabled: API uses JWT bearer tokens (not cookies), so CSRF attacks don't apply.
+            // Public endpoints are protected by reCAPTCHA + CORS instead.
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 // Always allow CORS preflight requests (OPTIONS) - must come before any auth checks

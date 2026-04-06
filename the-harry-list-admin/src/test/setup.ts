@@ -33,13 +33,9 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 });
 
-// Mock window.config for runtime config
-interface TestRuntimeConfig {
-  API_BASE_URL: string;
-}
-
-(window as unknown as { config: TestRuntimeConfig }).config = {
-  API_BASE_URL: 'http://localhost:8080',
+// Mock runtime config for API URL resolution
+window.__RUNTIME_CONFIG__ = {
+  API_URL: 'http://localhost:8080',
 };
 
 // Mock fetch

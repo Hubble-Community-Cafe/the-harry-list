@@ -6,9 +6,15 @@ Bar reservation system for Stichting Bar Potential.
 
 | Component | Stack |
 |-----------|-------|
-| Backend | Spring Boot 3.5 (Java 17), MariaDB |
+| Backend | Spring Boot 3.5 (Java 21), MariaDB |
 | Admin Portal | React + TypeScript, Microsoft Entra ID auth |
 | Public Form | React + TypeScript |
+
+## Requirements
+
+- **Java 21** (Temurin recommended) — required for the backend
+- **Node.js 20+** — required for the frontends
+- **Docker** — required for local development and production deployment
 
 ## Local Development
 
@@ -68,6 +74,40 @@ Bar reservation system for Stichting Bar Potential.
    | `RECAPTCHA_SITE_KEY` | Google reCAPTCHA v3 site key (public frontend) |
 
 4. **Deploy** the stack in Portainer using the modified compose file
+
+## Production Hardening
+
+Before going live, verify these are in place:
+
+### HTTPS
+All three services must be served over HTTPS. Terminate TLS at the reverse proxy (Traefik, nginx, Portainer proxy) — the containers themselves serve HTTP internally.
+
+### Versioning
+Use pinned version tags in your Portainer stack (e.g., `0.9.0`) rather than `latest`. This ensures rollbacks are reliable.
+
+### Database
+- Set `SPRING_JPA_HIBERNATE_DDL_AUTO=validate` (already set in the Portainer template) — never `update` in production
+- Take regular MariaDB backups before deploying new versions
+- Run schema migrations manually before updating the backend image
+
+### Rate Limiting
+The public reservation endpoint is rate-limited to 10 requests/minute per IP. If deploying behind a reverse proxy, ensure `X-Real-IP` is forwarded:
+```nginx
+proxy_set_header X-Real-IP $remote_addr;
+```
+
+### Logging
+Sensitive data (passwords, tokens) is never logged. Set these in production:
+```env
+LOGGING_LEVEL_ROOT=INFO
+LOGGING_LEVEL_COM_PIMVANLEEUWEN=INFO
+LOGGING_LEVEL_HIBERNATE_SQL=WARN  # Do NOT set to DEBUG in production
+```
+
+### Monitoring
+Set `SENTRY_DSN` on all three services for error tracking. The backend also exposes `/actuator/health` for uptime monitoring.
+
+---
 
 ## Google reCAPTCHA v3 Setup
 
