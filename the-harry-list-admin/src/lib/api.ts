@@ -7,7 +7,11 @@ const getApiUrl = (): string => {
   if (runtimeUrl && !runtimeUrl.startsWith('__')) {
     return runtimeUrl;
   }
-  return import.meta.env.VITE_API_URL || 'https://harry.hubble.cafe';
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (!envUrl) {
+    throw new Error('VITE_API_URL is not configured. Set it in .env or runtime config.');
+  }
+  return envUrl;
 };
 
 const API_BASE_URL = getApiUrl();
