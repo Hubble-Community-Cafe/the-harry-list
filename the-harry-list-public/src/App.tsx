@@ -4,6 +4,7 @@ import { SuccessMessage } from './components/SuccessMessage';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { ThemeProvider } from './lib/ThemeContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 interface SubmissionResult {
   confirmationNumber: string;
@@ -27,6 +28,7 @@ function App() {
   };
 
   return (
+    <ErrorBoundary>
     <ThemeProvider>
       <div className="min-h-screen bg-dark-950 flex flex-col">
         {/* Background decoration */}
@@ -70,6 +72,7 @@ function App() {
       <Footer />
     </div>
     </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

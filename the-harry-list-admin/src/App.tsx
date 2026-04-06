@@ -12,6 +12,7 @@ import { WeekOverviewPage } from './pages/WeekOverviewPage';
 import { Layout } from './components/Layout';
 import { useGroupAuthorization } from './lib/useGroupAuthorization';
 import { ThemeProvider } from './lib/ThemeContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Loader2, ShieldX } from 'lucide-react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -68,6 +69,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
+    <ErrorBoundary>
     <ThemeProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
@@ -91,6 +93,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 
