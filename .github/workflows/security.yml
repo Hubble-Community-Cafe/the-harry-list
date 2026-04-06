@@ -126,6 +126,26 @@ jobs:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         continue-on-error: true
 
+      - name: Truncate long SARIF rule IDs
+        if: always() && hashFiles('the-harry-list-backend/target/dependency-check-report.sarif') != ''
+        run: |
+          python3 -c "
+          import json, hashlib
+          with open('target/dependency-check-report.sarif') as f:
+              sarif = json.load(f)
+          for run in sarif.get('runs', []):
+              for rule in run.get('tool', {}).get('driver', {}).get('rules', []):
+                  rid = rule.get('id', '')
+                  if len(rid) > 255:
+                      rule['id'] = rid[:200] + '_' + hashlib.sha256(rid.encode()).hexdigest()[:54]
+              for result in run.get('results', []):
+                  rid = result.get('ruleId', '')
+                  if len(rid) > 255:
+                      result['ruleId'] = rid[:200] + '_' + hashlib.sha256(rid.encode()).hexdigest()[:54]
+          with open('target/dependency-check-report.sarif', 'w') as f:
+              json.dump(sarif, f)
+          "
+
       - name: Upload SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
         if: always() && hashFiles('the-harry-list-backend/target/dependency-check-report.sarif') != ''
