@@ -24,8 +24,9 @@ FROM nginx:alpine
 # Update Alpine packages for security patches (including libexpat)
 RUN apk upgrade --no-cache
 
-# Copy custom nginx config
+# Copy custom nginx config and security headers snippet
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY security-headers.conf /etc/nginx/security-headers.conf
 
 # Copy built assets from build stage
 COPY --from=build /app/dist /usr/share/nginx/html
