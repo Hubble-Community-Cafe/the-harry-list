@@ -1,7 +1,7 @@
 {
   "name": "the-harry-list-admin",
   "private": true,
-  "version": "0.9.4",
+  "version": "0.9.7",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -19,7 +19,7 @@
     "@sentry/react": "^10.47.0",
     "@tailwindcss/vite": "^4.2.2",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.7.0",
+    "lucide-react": "^1.8.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.72.1",
