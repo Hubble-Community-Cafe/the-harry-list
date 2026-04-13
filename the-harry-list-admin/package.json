@@ -1,7 +1,7 @@
 {
   "name": "the-harry-list-admin",
   "private": true,
-  "version": "0.9.9",
+  "version": "0.9.10",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -44,7 +44,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/coverage-v8": "^4.1.2",
+    "@vitest/coverage-v8": "^4.1.4",
     "autoprefixer": "^10.4.27",
     "eslint": "^10.2.0",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -55,7 +55,7 @@
     "tailwindcss": "^4.2.1",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.1",
-    "vite": "^8.0.5",
+    "vite": "^8.0.8",
     "vitest": "^4.0.18"
   }
 }
