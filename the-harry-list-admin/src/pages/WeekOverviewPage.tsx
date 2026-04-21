@@ -68,19 +68,11 @@ export function WeekOverviewPage() {
   const weekDateStrings = weekDates.map(toLocalDateString);
 
   useEffect(() => {
-    loadReservations();
+    fetchReservations()
+      .then(data => setReservations(data))
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load reservations'))
+      .finally(() => setIsLoading(false));
   }, []);
-
-  const loadReservations = async () => {
-    try {
-      const data = await fetchReservations();
-      setReservations(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load reservations');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const navigateWeek = (offset: number) => {
     const newMonday = addDays(monday, offset * 7);
