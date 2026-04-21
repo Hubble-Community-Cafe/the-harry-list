@@ -23,19 +23,11 @@ export function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadReservations();
+    fetchReservations()
+      .then(data => setReservations(data))
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load reservations'))
+      .finally(() => setIsLoading(false));
   }, []);
-
-  const loadReservations = async () => {
-    try {
-      const data = await fetchReservations();
-      setReservations(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load reservations');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const stats: Stats = {
     total: reservations.length,

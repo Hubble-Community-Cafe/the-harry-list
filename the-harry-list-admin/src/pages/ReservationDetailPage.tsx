@@ -50,21 +50,12 @@ export function ReservationDetailPage() {
   const userName = accounts[0]?.name || 'Staff';
 
   useEffect(() => {
-    if (id) {
-      loadReservation(parseInt(id));
-    }
+    if (!id) return;
+    fetchReservation(parseInt(id))
+      .then(data => setReservation(data))
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load reservation'))
+      .finally(() => setIsLoading(false));
   }, [id]);
-
-  const loadReservation = async (reservationId: number) => {
-    try {
-      const data = await fetchReservation(reservationId);
-      setReservation(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load reservation');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleStatusChange = async (newStatus: string) => {
     if (!reservation) return;
