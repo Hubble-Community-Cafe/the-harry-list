@@ -30,10 +30,6 @@ export function ReservationsPage() {
 
   const todayStr = toLocalDateString(new Date());
 
-  useEffect(() => {
-    loadReservations();
-  }, []);
-
   const loadReservations = async () => {
     try {
       const data = await fetchReservations();
@@ -44,6 +40,10 @@ export function ReservationsPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadReservations();
+  }, []);
 
   const filteredReservations = reservations.filter((r) => {
     const matchesSearch =

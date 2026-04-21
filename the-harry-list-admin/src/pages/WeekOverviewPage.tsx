@@ -67,10 +67,6 @@ export function WeekOverviewPage() {
   const weekDates = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
   const weekDateStrings = weekDates.map(toLocalDateString);
 
-  useEffect(() => {
-    loadReservations();
-  }, []);
-
   const loadReservations = async () => {
     try {
       const data = await fetchReservations();
@@ -81,6 +77,10 @@ export function WeekOverviewPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadReservations();
+  }, []);
 
   const navigateWeek = (offset: number) => {
     const newMonday = addDays(monday, offset * 7);

@@ -22,10 +22,6 @@ export function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadReservations();
-  }, []);
-
   const loadReservations = async () => {
     try {
       const data = await fetchReservations();
@@ -36,6 +32,10 @@ export function DashboardPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadReservations();
+  }, []);
 
   const stats: Stats = {
     total: reservations.length,

@@ -69,10 +69,6 @@ export function FormSettingsPage() {
   const [editingPeriod, setEditingPeriod] = useState<BlockedPeriod | null>(null);
   const [savingPeriod, setSavingPeriod] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   async function loadData() {
     try {
       setLoading(true);
@@ -89,6 +85,10 @@ export function FormSettingsPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // ===== Constraint handlers =====
   async function handleToggleConstraint(id: number) {

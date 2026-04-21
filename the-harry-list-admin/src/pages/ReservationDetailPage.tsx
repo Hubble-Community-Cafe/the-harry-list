@@ -49,12 +49,6 @@ export function ReservationDetailPage() {
 
   const userName = accounts[0]?.name || 'Staff';
 
-  useEffect(() => {
-    if (id) {
-      loadReservation(parseInt(id));
-    }
-  }, [id]);
-
   const loadReservation = async (reservationId: number) => {
     try {
       const data = await fetchReservation(reservationId);
@@ -65,6 +59,12 @@ export function ReservationDetailPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (id) {
+      loadReservation(parseInt(id));
+    }
+  }, [id]);
 
   const handleStatusChange = async (newStatus: string) => {
     if (!reservation) return;
