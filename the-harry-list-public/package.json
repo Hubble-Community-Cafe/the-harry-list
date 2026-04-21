@@ -1,7 +1,7 @@
 {
   "name": "the-harry-list-public",
   "private": true,
-  "version": "0.9.12",
+  "version": "0.9.13",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -51,7 +51,7 @@
     "globals": "^17.5.0",
     "jsdom": "^29.0.0",
     "postcss": "^8.5.9",
-    "tailwindcss": "^4.2.1",
+    "tailwindcss": "^4.2.3",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.58.1",
     "vite": "^8.0.9",
