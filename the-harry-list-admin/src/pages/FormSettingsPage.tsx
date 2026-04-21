@@ -70,8 +70,6 @@ export function FormSettingsPage() {
   const [savingPeriod, setSavingPeriod] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
     Promise.all([fetchFormConstraints(), fetchBlockedPeriods(), fetchRetentionSettings()])
       .then(([c, bp, ret]) => {
         setConstraints(c);
