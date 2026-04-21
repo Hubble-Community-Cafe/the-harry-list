@@ -30,19 +30,11 @@ export function ReservationsPage() {
 
   const todayStr = toLocalDateString(new Date());
 
-  const loadReservations = async () => {
-    try {
-      const data = await fetchReservations();
-      setReservations(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load reservations');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadReservations();
+    fetchReservations()
+      .then(data => setReservations(data))
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load reservations'))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const filteredReservations = reservations.filter((r) => {

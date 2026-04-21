@@ -69,25 +69,17 @@ export function FormSettingsPage() {
   const [editingPeriod, setEditingPeriod] = useState<BlockedPeriod | null>(null);
   const [savingPeriod, setSavingPeriod] = useState(false);
 
-  async function loadData() {
-    try {
-      setLoading(true);
-      setError(null);
-      const [c, bp, ret] = await Promise.all([
-        fetchFormConstraints(), fetchBlockedPeriods(), fetchRetentionSettings(),
-      ]);
-      setConstraints(c);
-      setBlockedPeriods(bp);
-      setRetention(ret);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load settings');
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    loadData();
+    setLoading(true);
+    setError(null);
+    Promise.all([fetchFormConstraints(), fetchBlockedPeriods(), fetchRetentionSettings()])
+      .then(([c, bp, ret]) => {
+        setConstraints(c);
+        setBlockedPeriods(bp);
+        setRetention(ret);
+      })
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load settings'))
+      .finally(() => setLoading(false));
   }, []);
 
   // ===== Constraint handlers =====
