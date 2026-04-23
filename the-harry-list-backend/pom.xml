@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.pimvanleeuwen</groupId>
 	<artifactId>the-harry-list-backend</artifactId>
-	<version>0.9.18</version>
+	<version>0.9.19</version>
 	<name>the-harry-list-backend</name>
 	<description>The Harry List, reservation system for Stichting Bar Potential</description>
 	<url/>
