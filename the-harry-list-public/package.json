@@ -1,7 +1,7 @@
 {
   "name": "the-harry-list-public",
   "private": true,
-  "version": "0.9.21",
+  "version": "0.9.22",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@sentry/react": "^10.49.0",
+    "@sentry/react": "^10.50.0",
     "@tailwindcss/vite": "^4.2.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -22,7 +22,7 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-google-recaptcha-v3": "^1.11.0",
-    "react-hook-form": "^7.73.1",
+    "react-hook-form": "^7.74.0",
     "tailwind-merge": "^3.5.0",
     "zod": "^4.3.6"
   },
@@ -43,18 +43,18 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/coverage-v8": "^4.1.4",
+    "@vitest/coverage-v8": "^4.1.5",
     "autoprefixer": "^10.5.0",
     "eslint": "^10.2.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
-    "jsdom": "^29.0.2",
-    "postcss": "^8.5.9",
-    "tailwindcss": "^4.2.3",
+    "jsdom": "^29.1.0",
+    "postcss": "^8.5.12",
+    "tailwindcss": "^4.2.4",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.58.2",
-    "vite": "^8.0.9",
-    "vitest": "^4.0.18"
+    "vite": "^8.0.10",
+    "vitest": "^4.1.5"
   }
 }
