@@ -1,7 +1,7 @@
 {
   "name": "the-harry-list-public",
   "private": true,
-  "version": "0.9.21",
+  "version": "0.9.22",
   "type": "module",
   "scripts": {
     "dev": "vite",
