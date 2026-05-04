@@ -120,7 +120,7 @@
 		<dependency>
 			<groupId>com.github.librepdf</groupId>
 			<artifactId>openpdf</artifactId>
-			<version>3.0.3</version>
+			<version>3.0.4</version>
 		</dependency>
 
 		<!-- Sentry error monitoring (core SDK - Spring Boot 4 compatible) -->
