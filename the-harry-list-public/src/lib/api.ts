@@ -33,8 +33,26 @@ export const getRecaptchaSiteKey = (): string | null => {
 
 const API_BASE_URL = getApiUrl();
 
+const RETRYABLE_STATUS_CODES = new Set([408, 429, 500, 502, 503, 504]);
+
+export async function fetchWithRetry(url: string, maxAttempts = 3): Promise<Response> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(url);
+      if (response.ok || attempt === maxAttempts || !RETRYABLE_STATUS_CODES.has(response.status)) {
+        return response;
+      }
+    } catch (error) {
+      if (attempt === maxAttempts) throw error;
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+  }
+  // Unreachable, but satisfies TypeScript
+  throw new Error(`Failed to fetch ${url} after ${maxAttempts} attempts`);
+}
+
 export async function fetchFormOptions() {
-  const response = await fetch(`${API_BASE_URL}/api/options/all`);
+  const response = await fetchWithRetry(`${API_BASE_URL}/api/options/all`);
   if (!response.ok) {
     throw new Error('Failed to fetch form options');
   }
@@ -58,23 +76,19 @@ export async function checkRecaptchaStatus(): Promise<boolean> {
 import type { ReservationFormData, FormConstraint, BlockedPeriod } from '../types/reservation';
 
 export async function fetchFormConstraints(): Promise<FormConstraint[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/options/constraints`);
-    if (!response.ok) return [];
-    return response.json();
-  } catch {
-    return [];
+  const response = await fetchWithRetry(`${API_BASE_URL}/api/options/constraints`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch form constraints');
   }
+  return response.json();
 }
 
 export async function fetchBlockedPeriods(): Promise<BlockedPeriod[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/options/blocked-periods`);
-    if (!response.ok) return [];
-    return response.json();
-  } catch {
-    return [];
+  const response = await fetchWithRetry(`${API_BASE_URL}/api/options/blocked-periods`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch blocked periods');
   }
+  return response.json();
 }
 
 export async function submitReservation(data: ReservationFormData, recaptchaToken?: string) {
