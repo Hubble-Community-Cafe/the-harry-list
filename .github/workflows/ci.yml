@@ -420,3 +420,78 @@ jobs:
         with:
           sarif_file: trivy-admin.sarif
           category: trivy-admin-ci
+
+  # ==================== GITHUB RELEASE ====================
+  github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [docker-build-push]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Extract version
+        id: version
+        run: echo "version=$(node -p "require('./the-harry-list-public/package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Check if tag already exists
+        id: check-tag
+        run: |
+          if git ls-remote --tags origin "v${{ steps.version.outputs.version }}" | grep -q .; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get merged PR info
+        id: pr-info
+        if: steps.check-tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find the PR that was just merged for this push
+          PR_JSON=$(gh pr list --state merged --base main --json number,title,body --limit 1 \
+            --jq '.[0] // empty')
+
+          if [ -n "$PR_JSON" ]; then
+            PR_TITLE=$(echo "$PR_JSON" | jq -r '.title')
+            PR_NUMBER=$(echo "$PR_JSON" | jq -r '.number')
+            PR_BODY=$(echo "$PR_JSON" | jq -r '.body // ""')
+
+            echo "title=$PR_TITLE (#$PR_NUMBER)" >> $GITHUB_OUTPUT
+            echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+            # Write body to file to handle multiline
+            echo "$PR_BODY" > /tmp/pr_body.md
+          else
+            echo "title=Release v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+            echo "" > /tmp/pr_body.md
+          fi
+
+      - name: Create release
+        if: steps.check-tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="v${{ steps.version.outputs.version }}"
+          TITLE="${{ steps.pr-info.outputs.title }}"
+          PR_NUM="${{ steps.pr-info.outputs.number }}"
+
+          # Build release body
+          {
+            if [ -s /tmp/pr_body.md ]; then
+              cat /tmp/pr_body.md
+              echo ""
+              echo "---"
+            fi
+            echo "**Version:** $VERSION"
+            if [ -n "$PR_NUM" ]; then
+              echo "**PR:** #$PR_NUM"
+            fi
+          } > /tmp/release_body.md
+
+          gh release create "$VERSION" \
+            --title "$TITLE" \
+            --notes-file /tmp/release_body.md
