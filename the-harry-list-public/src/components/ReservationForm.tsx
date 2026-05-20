@@ -507,7 +507,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
             recaptchaToken = await executeRecaptcha('submit_reservation');
             break;
           } catch (recaptchaError) {
-            if (import.meta.env.DEV) console.warn(`reCAPTCHA attempt ${attempt + 1} failed:`, recaptchaError);
+            if (import.meta.env.DEV) console.warn('reCAPTCHA attempt', attempt + 1, 'failed:', recaptchaError);
             if (attempt < 2) {
               await new Promise(resolve => setTimeout(resolve, 1000));
             }
