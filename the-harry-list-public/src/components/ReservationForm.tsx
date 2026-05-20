@@ -499,13 +499,23 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
     try {
       let recaptchaToken: string | undefined;
 
-      // Execute reCAPTCHA if enabled and available
+      // Execute reCAPTCHA if enabled and available, with retries
       if (recaptchaEnabled && executeRecaptcha) {
-        try {
-          recaptchaToken = await executeRecaptcha('submit_reservation');
-        } catch (recaptchaError) {
-          console.error('reCAPTCHA execution failed:', recaptchaError);
-          setSubmitError('Security verification failed. Please refresh the page and try again.');
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            recaptchaToken = await executeRecaptcha('submit_reservation');
+            break;
+          } catch (recaptchaError) {
+            console.warn(`reCAPTCHA attempt ${attempt + 1} failed:`, recaptchaError);
+            if (attempt < 2) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
+        }
+        // If all retries failed, block submission but let user try again
+        if (!recaptchaToken) {
+          console.warn('All reCAPTCHA attempts failed');
+          setSubmitError('Security verification failed. Please try submitting again.');
           setIsSubmitting(false);
           return;
         }
