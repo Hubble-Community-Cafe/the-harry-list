@@ -9,6 +9,7 @@ import {
   ChevronRight, ChevronLeft, Sparkles, Plus, Minus, CalendarDays,
   ClipboardCheck, AlertTriangle
 } from 'lucide-react';
+import * as Sentry from '@sentry/react';
 import { submitReservation, fetchFormOptions, fetchFormConstraints, fetchBlockedPeriods, getRecaptchaSiteKey } from '../lib/api';
 import type { ReservationFormData, FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
 
@@ -162,7 +163,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
         setBlockedPeriods(fetchedBlockedPeriods);
       } catch (error) {
         setOptionsError('Failed to load form options. Please refresh the page.');
-        console.error('Failed to fetch form options:', error);
+        Sentry.captureException(error);
       } finally {
         setOptionsLoading(false);
       }
@@ -506,7 +507,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
             recaptchaToken = await executeRecaptcha('submit_reservation');
             break;
           } catch (recaptchaError) {
-            console.warn(`reCAPTCHA attempt ${attempt + 1} failed:`, recaptchaError);
+            if (import.meta.env.DEV) console.warn(`reCAPTCHA attempt ${attempt + 1} failed:`, recaptchaError);
             if (attempt < 2) {
               await new Promise(resolve => setTimeout(resolve, 1000));
             }
@@ -514,7 +515,6 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
         }
         // If all retries failed, block submission but let user try again
         if (!recaptchaToken) {
-          console.warn('All reCAPTCHA attempts failed');
           setSubmitError('Security verification failed. Please try submitting again.');
           setIsSubmitting(false);
           return;
@@ -617,7 +617,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
 
       {/* Form Card */}
       <form onSubmit={handleSubmit(onSubmit, (fieldErrors) => {
-        console.error('Form validation failed on submit:', fieldErrors);
+        if (import.meta.env.DEV) console.error('Form validation failed on submit:', fieldErrors);
         const stepFields: (keyof ReservationFormData)[][] = [
           ['contactName', 'email', 'phoneNumber'],
           ['eventTitle', 'description', 'expectedGuests', 'eventDate', 'startTime', 'endTime', 'longReservationReason'],
