@@ -404,7 +404,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
       return 'Kitchen opens at 12:00 - food may not be available at this time.';
     }
     if (mins >= 19 * 60 + 30 || (h < 3 && mins >= 0)) {
-      return 'Kitchen is only open for snacks after 19:30.';
+      return 'Kitchen is closed from 19:30 to 20:30 and only open for snacks after that.';
     }
     return null;
   }, [watchStartTime, watchSpecialActivities]);
