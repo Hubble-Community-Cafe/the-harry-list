@@ -45,6 +45,7 @@ msalInstance.initialize().then(async () => {
     }
   } catch (error) {
     console.error('Error handling redirect:', error);
+    Sentry.captureException(error);
   }
 
   // Listen for login events
@@ -72,4 +73,5 @@ msalInstance.initialize().then(async () => {
   );
 }).catch((error) => {
   console.error('MSAL initialization error:', error);
+  Sentry.captureException(error);
 });

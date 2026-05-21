@@ -9,6 +9,7 @@ import {
   ChevronRight, ChevronLeft, Sparkles, Plus, Minus, CalendarDays,
   ClipboardCheck, AlertTriangle
 } from 'lucide-react';
+import * as Sentry from '@sentry/react';
 import { submitReservation, fetchFormOptions, fetchFormConstraints, fetchBlockedPeriods, getRecaptchaSiteKey } from '../lib/api';
 import type { ReservationFormData, FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
 
@@ -162,7 +163,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
         setBlockedPeriods(fetchedBlockedPeriods);
       } catch (error) {
         setOptionsError('Failed to load form options. Please refresh the page.');
-        console.error('Failed to fetch form options:', error);
+        Sentry.captureException(error);
       } finally {
         setOptionsLoading(false);
       }
@@ -404,7 +405,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
       return 'Kitchen opens at 12:00 - food may not be available at this time.';
     }
     if (mins >= 19 * 60 + 30 || (h < 3 && mins >= 0)) {
-      return 'Kitchen is only open for snacks after 19:30.';
+      return 'Kitchen is closed from 19:30 to 20:30 and only open for snacks after that.';
     }
     return null;
   }, [watchStartTime, watchSpecialActivities]);
@@ -499,13 +500,22 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
     try {
       let recaptchaToken: string | undefined;
 
-      // Execute reCAPTCHA if enabled and available
+      // Execute reCAPTCHA if enabled and available, with retries
       if (recaptchaEnabled && executeRecaptcha) {
-        try {
-          recaptchaToken = await executeRecaptcha('submit_reservation');
-        } catch (recaptchaError) {
-          console.error('reCAPTCHA execution failed:', recaptchaError);
-          setSubmitError('Security verification failed. Please refresh the page and try again.');
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            recaptchaToken = await executeRecaptcha('submit_reservation');
+            break;
+          } catch (recaptchaError) {
+            if (import.meta.env.DEV) console.warn('reCAPTCHA attempt', attempt + 1, 'failed:', recaptchaError);
+            if (attempt < 2) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
+        }
+        // If all retries failed, block submission but let user try again
+        if (!recaptchaToken) {
+          setSubmitError('Security verification failed. Please try submitting again.');
           setIsSubmitting(false);
           return;
         }
@@ -607,7 +617,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
 
       {/* Form Card */}
       <form onSubmit={handleSubmit(onSubmit, (fieldErrors) => {
-        console.error('Form validation failed on submit:', fieldErrors);
+        if (import.meta.env.DEV) console.error('Form validation failed on submit:', fieldErrors);
         const stepFields: (keyof ReservationFormData)[][] = [
           ['contactName', 'email', 'phoneNumber'],
           ['eventTitle', 'description', 'expectedGuests', 'eventDate', 'startTime', 'endTime', 'longReservationReason'],

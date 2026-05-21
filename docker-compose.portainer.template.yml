@@ -24,7 +24,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/harrylist
       - SPRING_DATASOURCE_USERNAME=__DB_USERNAME__
       - SPRING_DATASOURCE_PASSWORD=__DB_PASSWORD__
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate # update if needed
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MariaDBDialect
       - SPRING_JPA_SHOW_SQL=false
 
