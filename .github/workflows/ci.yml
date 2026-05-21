@@ -309,7 +309,7 @@ jobs:
           images: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-backend
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=v${{ steps.version.outputs.version }}
             type=sha,prefix={{branch}}-
             type=ref,event=branch
 
@@ -349,7 +349,7 @@ jobs:
           images: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-public
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=v${{ steps.version.outputs.version }}
             type=sha,prefix={{branch}}-
             type=ref,event=branch
 
@@ -389,7 +389,7 @@ jobs:
           images: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-admin
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=v${{ steps.version.outputs.version }}
             type=sha,prefix={{branch}}-
             type=ref,event=branch
 
