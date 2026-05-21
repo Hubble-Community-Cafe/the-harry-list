@@ -476,22 +476,23 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="v${{ steps.version.outputs.version }}"
-          TITLE="${{ steps.pr-info.outputs.title }}"
+          PR_TITLE="${{ steps.pr-info.outputs.title }}"
           PR_NUM="${{ steps.pr-info.outputs.number }}"
 
           # Build release body
           {
+            if [ -n "$PR_TITLE" ]; then
+              echo "**$PR_TITLE**"
+              if [ -n "$PR_NUM" ]; then
+                echo "(#$PR_NUM)"
+              fi
+              echo ""
+            fi
             if [ -s /tmp/pr_body.md ]; then
               cat /tmp/pr_body.md
-              echo ""
-              echo "---"
-            fi
-            echo "**Version:** $VERSION"
-            if [ -n "$PR_NUM" ]; then
-              echo "**PR:** #$PR_NUM"
             fi
           } > /tmp/release_body.md
 
           gh release create "$VERSION" \
-            --title "$TITLE" \
+            --title "$VERSION" \
             --notes-file /tmp/release_body.md
