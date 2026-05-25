@@ -186,7 +186,7 @@ public class AdminReservationController {
                     Map<String, String> vars = buildCateringVars(reservation);
                     String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.CATERING_OPTIONS, vars);
                     String body = emailTemplateService.getRenderedBody(EmailTemplateType.CATERING_OPTIONS, vars);
-                    return ResponseEntity.ok(Map.of("subject", subject, "body", body));
+                    return ResponseEntity.ok(Map.of("subject", subject, "body", body, "defaultReplyTo", staffEmail));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
