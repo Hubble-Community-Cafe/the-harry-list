@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.pimvanleeuwen</groupId>
 	<artifactId>the-harry-list-backend</artifactId>
-	<version>1.0.2</version>
+	<version>1.0.3</version>
 	<name>the-harry-list-backend</name>
 	<description>The Harry List, reservation system for Stichting Bar Potential</description>
 	<url/>
@@ -108,7 +108,7 @@
 		<dependency>
 			<groupId>com.microsoft.graph</groupId>
 			<artifactId>microsoft-graph</artifactId>
-			<version>6.64.0</version>
+			<version>6.65.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.azure</groupId>
@@ -120,14 +120,14 @@
 		<dependency>
 			<groupId>com.github.librepdf</groupId>
 			<artifactId>openpdf</artifactId>
-			<version>3.0.4</version>
+			<version>3.0.5</version>
 		</dependency>
 
 		<!-- Sentry error monitoring (core SDK - Spring Boot 4 compatible) -->
 		<dependency>
 			<groupId>io.sentry</groupId>
 			<artifactId>sentry</artifactId>
-			<version>8.41.0</version>
+			<version>8.42.0</version>
 		</dependency>
 	</dependencies>
 
