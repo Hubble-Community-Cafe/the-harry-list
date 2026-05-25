@@ -13,7 +13,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.2.2",
+    "@hookform/resolvers": "^5.4.0",
     "@sentry/react": "^10.53.1",
     "@tailwindcss/vite": "^4.3.0",
     "class-variance-authority": "^0.7.1",
