@@ -155,6 +155,7 @@ export function ReservationDetailPage() {
       ]);
       setCateringSubject(preview.subject);
       setCateringBody(preview.body);
+      if (preview.defaultReplyTo) setCateringReplyTo(preview.defaultReplyTo);
       const activeAttachments = attachments.filter(a => a.active);
       setCateringAttachments(activeAttachments);
       setSelectedAttachmentIds(activeAttachments.map(a => a.id));

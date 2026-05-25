@@ -273,8 +273,8 @@ export async function toggleEmailAttachmentActive(id: number, active: boolean): 
 }
 
 // ===== Catering Email =====
-export async function fetchCateringEmailPreview(reservationId: number): Promise<{ subject: string; body: string }> {
-  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/reservations/${reservationId}/catering-email/preview`) as Promise<{ subject: string; body: string }>;
+export async function fetchCateringEmailPreview(reservationId: number): Promise<{ subject: string; body: string; defaultReplyTo?: string }> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/reservations/${reservationId}/catering-email/preview`) as Promise<{ subject: string; body: string; defaultReplyTo?: string }>;
 }
 
 export async function sendCateringEmail(reservationId: number, request: CateringEmailRequest): Promise<{ status: string; message: string }> {
