@@ -321,6 +321,13 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
         toRecipients.add(toRecipient);
         message.setToRecipients(toRecipients);
 
+        // Set reply-to to staff email so recipients can reply
+        Recipient replyToRecipient = new Recipient();
+        EmailAddress replyToAddress = new EmailAddress();
+        replyToAddress.setAddress(staffEmail);
+        replyToRecipient.setEmailAddress(replyToAddress);
+        message.setReplyTo(new LinkedList<>(List.of(replyToRecipient)));
+
         com.microsoft.graph.users.item.sendmail.SendMailPostRequestBody requestBody =
                 new com.microsoft.graph.users.item.sendmail.SendMailPostRequestBody();
         requestBody.setMessage(message);
