@@ -1,8 +1,11 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.model.CalendarAppointment;
+import com.pimvanleeuwen.the_harry_list_backend.model.RecurrenceType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.model.SpecialActivity;
+import com.pimvanleeuwen.the_harry_list_backend.repository.CalendarAppointmentRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 
@@ -22,11 +25,15 @@ public class ICalendarService {
 
     private static final String TIMEZONE = "Europe/Amsterdam";
     private static final DateTimeFormatter ICS_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+    private static final DateTimeFormatter ICS_DATE_ONLY_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private final ReservationRepository reservationRepository;
+    private final CalendarAppointmentRepository calendarAppointmentRepository;
 
-    public ICalendarService(ReservationRepository reservationRepository) {
+    public ICalendarService(ReservationRepository reservationRepository,
+                            CalendarAppointmentRepository calendarAppointmentRepository) {
         this.reservationRepository = reservationRepository;
+        this.calendarAppointmentRepository = calendarAppointmentRepository;
     }
 
     public String generateCalendarFeed(List<ReservationStatus> includeStatuses, String location, boolean includeConfidentialDetails) {
@@ -44,7 +51,9 @@ public class ICalendarService {
                     .toList();
         }
 
-        return buildIcsCalendar(reservations, includeConfidentialDetails);
+        List<CalendarAppointment> appointments = getFilteredAppointments(location);
+
+        return buildIcsCalendar(reservations, appointments, includeConfidentialDetails);
     }
 
     public String generateUpcomingCalendarFeed(List<ReservationStatus> includeStatuses, String location, boolean includeConfidentialDetails) {
@@ -65,10 +74,34 @@ public class ICalendarService {
                     .toList();
         }
 
-        return buildIcsCalendar(reservations, includeConfidentialDetails);
+        List<CalendarAppointment> appointments = getFilteredAppointments(location).stream()
+                .filter(a -> {
+                    if (a.getRecurrenceType() != RecurrenceType.NONE) {
+                        // Recurring: include if no end date or end date is in the future
+                        return a.getRecurrenceEndDate() == null || !a.getRecurrenceEndDate().isBefore(today);
+                    }
+                    // Non-recurring: include if date is today or in the future
+                    return !a.getDate().isBefore(today);
+                })
+                .toList();
+
+        return buildIcsCalendar(reservations, appointments, includeConfidentialDetails);
     }
 
-    private String buildIcsCalendar(List<Reservation> reservations, boolean includeConfidentialDetails) {
+    private List<CalendarAppointment> getFilteredAppointments(String location) {
+        List<CalendarAppointment> appointments = calendarAppointmentRepository.findByEnabledTrue();
+
+        if (location != null && !location.isEmpty()) {
+            appointments = appointments.stream()
+                    .filter(a -> a.getLocation() != null && a.getLocation().name().equalsIgnoreCase(location))
+                    .toList();
+        }
+
+        return appointments;
+    }
+
+    private String buildIcsCalendar(List<Reservation> reservations, List<CalendarAppointment> appointments,
+                                    boolean includeConfidentialDetails) {
         StringBuilder ics = new StringBuilder();
 
         String calendarName = includeConfidentialDetails
@@ -88,6 +121,10 @@ public class ICalendarService {
 
         for (Reservation reservation : reservations) {
             ics.append(buildEvent(reservation, includeConfidentialDetails));
+        }
+
+        for (CalendarAppointment appointment : appointments) {
+            ics.append(buildAppointmentEvent(appointment));
         }
 
         ics.append("END:VCALENDAR\r\n");
@@ -314,6 +351,94 @@ public class ICalendarService {
         sb.append("\n(Contact details available in admin portal)");
 
         return sb.toString();
+    }
+
+    private String buildAppointmentEvent(CalendarAppointment appointment) {
+        StringBuilder event = new StringBuilder();
+
+        event.append("BEGIN:VEVENT\r\n");
+
+        String uid = "appointment-" + appointment.getId() + "@harrylist.hubble.cafe";
+        event.append("UID:").append(uid).append("\r\n");
+
+        LocalDateTime now = LocalDateTime.now();
+        event.append("DTSTAMP:").append(now.format(ICS_DATE_FORMAT)).append("\r\n");
+
+        if (appointment.getCreatedAt() != null) {
+            event.append("CREATED:").append(appointment.getCreatedAt().format(ICS_DATE_FORMAT)).append("\r\n");
+        }
+        if (appointment.getUpdatedAt() != null) {
+            event.append("LAST-MODIFIED:").append(appointment.getUpdatedAt().format(ICS_DATE_FORMAT)).append("\r\n");
+        }
+
+        if (Boolean.TRUE.equals(appointment.getAllDay())) {
+            // All-day event: DATE only (no time), DTEND is next day per ICS spec
+            event.append("DTSTART;VALUE=DATE:").append(appointment.getDate().format(ICS_DATE_ONLY_FORMAT)).append("\r\n");
+            event.append("DTEND;VALUE=DATE:").append(appointment.getDate().plusDays(1).format(ICS_DATE_ONLY_FORMAT)).append("\r\n");
+        } else {
+            // Timeboxed event
+            if (appointment.getStartTime() != null) {
+                LocalDateTime startDateTime = LocalDateTime.of(appointment.getDate(), appointment.getStartTime());
+                event.append("DTSTART;TZID=").append(TIMEZONE).append(":").append(startDateTime.format(ICS_DATE_FORMAT)).append("\r\n");
+
+                if (appointment.getEndTime() != null) {
+                    LocalDateTime endDateTime = LocalDateTime.of(appointment.getDate(), appointment.getEndTime());
+                    if (appointment.getEndTime().isBefore(appointment.getStartTime())) {
+                        endDateTime = endDateTime.plusDays(1);
+                    }
+                    event.append("DTEND;TZID=").append(TIMEZONE).append(":").append(endDateTime.format(ICS_DATE_FORMAT)).append("\r\n");
+                }
+            }
+        }
+
+        event.append("SUMMARY:").append(escapeIcsText(appointment.getTitle())).append("\r\n");
+
+        if (appointment.getLocation() != null) {
+            event.append("LOCATION:").append(escapeIcsText(appointment.getLocation().getDisplayName())).append("\r\n");
+        }
+
+        if (appointment.getDescription() != null && !appointment.getDescription().isEmpty()) {
+            event.append("DESCRIPTION:").append(escapeIcsText(appointment.getDescription())).append("\r\n");
+        }
+
+        event.append("STATUS:CONFIRMED\r\n");
+
+        if (appointment.getLocation() != null) {
+            event.append("CATEGORIES:").append(appointment.getLocation().getDisplayName()).append(",Appointment\r\n");
+        }
+
+        String rrule = buildRecurrenceRule(appointment);
+        if (!rrule.isEmpty()) {
+            event.append(rrule);
+        }
+
+        event.append("END:VEVENT\r\n");
+
+        return event.toString();
+    }
+
+    private String buildRecurrenceRule(CalendarAppointment appointment) {
+        if (appointment.getRecurrenceType() == null || appointment.getRecurrenceType() == RecurrenceType.NONE) {
+            return "";
+        }
+
+        StringBuilder rrule = new StringBuilder("RRULE:FREQ=");
+        switch (appointment.getRecurrenceType()) {
+            case DAILY -> rrule.append("DAILY");
+            case WEEKLY -> rrule.append("WEEKLY");
+            case BIWEEKLY -> rrule.append("WEEKLY;INTERVAL=2");
+            case MONTHLY -> rrule.append("MONTHLY");
+            case YEARLY -> rrule.append("YEARLY");
+            default -> { return ""; }
+        }
+
+        if (appointment.getRecurrenceEndDate() != null) {
+            rrule.append(";UNTIL=").append(
+                    appointment.getRecurrenceEndDate().atTime(23, 59, 59).format(ICS_DATE_FORMAT));
+        }
+
+        rrule.append("\r\n");
+        return rrule.toString();
     }
 
     private String escapeIcsText(String text) {
