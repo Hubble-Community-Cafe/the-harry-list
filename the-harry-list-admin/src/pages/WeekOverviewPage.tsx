@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, Loader2, AlertCircle,
-  Clock, Users, UtensilsCrossed, MapPin, Calendar, Filter
+  Clock, Users, UtensilsCrossed, MapPin, Calendar, Filter, Sun
 } from 'lucide-react';
-import { fetchReservations, updateCateringArranged } from '../lib/api';
-import type { Reservation } from '../types/reservation';
+import { fetchReservations, updateCateringArranged, fetchCalendarAppointments } from '../lib/api';
+import type { Reservation, CalendarAppointment } from '../types/reservation';
 import { HelpGuide } from '../components/HelpGuide';
 import { weekOverviewGuide } from '../lib/guideContent';
 
@@ -52,9 +52,72 @@ const STATUS_BADGE: Record<string, string> = {
   COMPLETED: 'bg-blue-500/20 text-blue-400',
 };
 
+/** Expand a recurring appointment into occurrence dates within a given week. */
+function expandAppointmentOccurrences(appointment: CalendarAppointment, weekDateStrings: string[]): string[] {
+  if (!appointment.enabled) return [];
+  const startDate = new Date(appointment.date + 'T00:00:00');
+  const weekStart = new Date(weekDateStrings[0] + 'T00:00:00');
+  const weekEnd = new Date(weekDateStrings[6] + 'T00:00:00');
+
+  if (appointment.recurrenceType === 'NONE') {
+    return weekDateStrings.includes(appointment.date) ? [appointment.date] : [];
+  }
+
+  const endDate = appointment.recurrenceEndDate
+    ? new Date(appointment.recurrenceEndDate + 'T00:00:00')
+    : new Date(weekEnd.getTime() + 365 * 86400000); // reasonable horizon
+
+  const dates: string[] = [];
+  const current = new Date(startDate);
+
+  const advanceDate = (d: Date) => {
+    switch (appointment.recurrenceType) {
+      case 'DAILY': d.setDate(d.getDate() + 1); break;
+      case 'WEEKLY': d.setDate(d.getDate() + 7); break;
+      case 'BIWEEKLY': d.setDate(d.getDate() + 14); break;
+      case 'MONTHLY': d.setMonth(d.getMonth() + 1); break;
+      case 'YEARLY': d.setFullYear(d.getFullYear() + 1); break;
+    }
+  };
+
+  // Fast-forward to near the week if far in the past
+  while (current < weekStart) {
+    advanceDate(current);
+  }
+  // Also check one step back in case we overshot
+  const stepBack = new Date(current);
+  switch (appointment.recurrenceType) {
+    case 'DAILY': stepBack.setDate(stepBack.getDate() - 1); break;
+    case 'WEEKLY': stepBack.setDate(stepBack.getDate() - 7); break;
+    case 'BIWEEKLY': stepBack.setDate(stepBack.getDate() - 14); break;
+    case 'MONTHLY': stepBack.setMonth(stepBack.getMonth() - 1); break;
+    case 'YEARLY': stepBack.setFullYear(stepBack.getFullYear() - 1); break;
+  }
+  if (stepBack >= weekStart && stepBack >= startDate) {
+    current.setTime(stepBack.getTime());
+  }
+
+  // Collect occurrences within the week
+  const maxIterations = 400;
+  let iterations = 0;
+  while (current <= weekEnd && current <= endDate && iterations < maxIterations) {
+    if (current >= startDate) {
+      const dateStr = toLocalDateString(current);
+      if (weekDateStrings.includes(dateStr)) {
+        dates.push(dateStr);
+      }
+    }
+    advanceDate(current);
+    iterations++;
+  }
+
+  return dates;
+}
+
 export function WeekOverviewPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [appointments, setAppointments] = useState<CalendarAppointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [locationFilter, setLocationFilter] = useState('ALL');
@@ -68,9 +131,12 @@ export function WeekOverviewPage() {
   const weekDateStrings = weekDates.map(toLocalDateString);
 
   useEffect(() => {
-    fetchReservations()
-      .then(data => setReservations(data))
-      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load reservations'))
+    Promise.all([fetchReservations(), fetchCalendarAppointments()])
+      .then(([reservationData, appointmentData]) => {
+        setReservations(reservationData);
+        setAppointments(appointmentData);
+      })
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load data'))
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -90,6 +156,20 @@ export function WeekOverviewPage() {
     const matchesStatus = statusFilter === 'ALL' || r.status === statusFilter;
     return inWeek && matchesLocation && matchesStatus;
   });
+
+  // Filter appointments for this week (expand recurring ones)
+  const weekAppointments: Record<string, CalendarAppointment[]> = {};
+  for (const dateStr of weekDateStrings) {
+    weekAppointments[dateStr] = [];
+  }
+  for (const appt of appointments) {
+    if (!appt.enabled) continue;
+    if (locationFilter !== 'ALL' && appt.location !== locationFilter) continue;
+    const occurrences = expandAppointmentOccurrences(appt, weekDateStrings);
+    for (const dateStr of occurrences) {
+      weekAppointments[dateStr]?.push(appt);
+    }
+  }
 
   // Group by date
   const byDate: Record<string, Reservation[]> = {};
@@ -250,8 +330,8 @@ export function WeekOverviewPage() {
                   <span className={`text-xs font-medium ${isToday ? 'text-hubble-400' : 'text-dark-500'}`}>
                     {DAY_LABELS[dayIndex]}
                   </span>
-                  {dayReservations.length > 0 && (
-                    <span className="text-xs text-dark-500">{dayReservations.length}</span>
+                  {(dayReservations.length + (weekAppointments[dateStr]?.length ?? 0)) > 0 && (
+                    <span className="text-xs text-dark-500">{dayReservations.length + (weekAppointments[dateStr]?.length ?? 0)}</span>
                   )}
                 </div>
                 <div className={`text-lg font-semibold ${isToday ? 'text-hubble-400' : 'text-white'}`}>
@@ -259,25 +339,30 @@ export function WeekOverviewPage() {
                 </div>
               </div>
 
-              {/* Reservations */}
+              {/* Reservations & Appointments */}
               <div className="flex-1 p-2 space-y-2 overflow-auto">
-                {dayReservations.length === 0 ? (
-                  <div className="text-xs text-dark-600 text-center py-4">No reservations</div>
+                {dayReservations.length === 0 && (weekAppointments[dateStr]?.length ?? 0) === 0 ? (
+                  <div className="text-xs text-dark-600 text-center py-4">No events</div>
                 ) : (
-                  dayReservations.map((reservation) => (
-                    <WeekReservationCard
-                      key={reservation.id}
-                      reservation={reservation}
-                      onCateringToggle={async (id, newValue) => {
-                        try {
-                          const updated = await updateCateringArranged(id, newValue);
-                          setReservations(prev => prev.map(r => r.id === id ? { ...r, cateringArranged: updated.cateringArranged } : r));
-                        } catch (error) {
-                          console.error('Failed to update catering status:', error);
-                        }
-                      }}
-                    />
-                  ))
+                  <>
+                    {dayReservations.map((reservation) => (
+                      <WeekReservationCard
+                        key={reservation.id}
+                        reservation={reservation}
+                        onCateringToggle={async (id, newValue) => {
+                          try {
+                            const updated = await updateCateringArranged(id, newValue);
+                            setReservations(prev => prev.map(r => r.id === id ? { ...r, cateringArranged: updated.cateringArranged } : r));
+                          } catch (error) {
+                            console.error('Failed to update catering status:', error);
+                          }
+                        }}
+                      />
+                    ))}
+                    {weekAppointments[dateStr]?.map((appt) => (
+                      <WeekAppointmentCard key={`appt-${appt.id}-${dateStr}`} appointment={appt} />
+                    ))}
+                  </>
                 )}
               </div>
             </div>
@@ -366,6 +451,55 @@ function WeekReservationCard({
             {reservation.cateringArranged ? 'OK' : '!'}
           </button>
         )}
+      </div>
+    </Link>
+  );
+}
+
+function WeekAppointmentCard({ appointment }: { appointment: CalendarAppointment }) {
+  const isHubble = appointment.location === 'HUBBLE';
+
+  return (
+    <Link
+      to="/calendar-appointments"
+      className="block rounded-lg bg-dark-800/80 hover:bg-dark-800 border-l-2 border-l-indigo-400 p-2 transition-colors"
+    >
+      {/* Appointment badge */}
+      <div className="mb-1">
+        <span className="inline-block text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400">
+          Appointment
+        </span>
+      </div>
+
+      {/* Title */}
+      <div className="mb-1">
+        <span className="text-xs font-medium text-white truncate leading-snug block">{appointment.title}</span>
+      </div>
+
+      {/* Time or All day */}
+      <div className="flex items-center gap-1 text-[11px] text-dark-400 mb-1">
+        {appointment.allDay ? (
+          <>
+            <Sun className="w-3 h-3" />
+            <span>All day</span>
+          </>
+        ) : appointment.startTime && appointment.endTime ? (
+          <>
+            <Clock className="w-3 h-3" />
+            <span>{appointment.startTime.slice(0, 5)}–{appointment.endTime.slice(0, 5)}</span>
+          </>
+        ) : null}
+      </div>
+
+      {/* Location */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+          isHubble
+            ? 'bg-hubble-500/20 text-hubble-400'
+            : 'bg-meteor-500/20 text-meteor-400'
+        }`}>
+          {appointment.location}
+        </span>
       </div>
     </Link>
   );
