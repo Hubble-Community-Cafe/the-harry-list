@@ -60,6 +60,24 @@ export interface CateringEmailRequest {
   replyTo?: string;
 }
 
+export type RecurrenceType = 'NONE' | 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'YEARLY';
+
+export interface CalendarAppointment {
+  id?: number;
+  title: string;
+  description?: string;
+  date: string;
+  allDay: boolean;
+  startTime?: string;
+  endTime?: string;
+  location: string;
+  recurrenceType: RecurrenceType;
+  recurrenceEndDate?: string;
+  enabled: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface BlockedPeriod {
   id?: number;
   location?: string;

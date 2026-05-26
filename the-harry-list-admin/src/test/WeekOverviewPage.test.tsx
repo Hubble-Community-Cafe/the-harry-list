@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { WeekOverviewPage } from '../pages/WeekOverviewPage';
 
 // Hoist mock data so vi.mock factory can access it
-const { mockFetchReservations, mockUpdateCateringArranged, testData } = vi.hoisted(() => {
+const { mockFetchReservations, mockUpdateCateringArranged, mockFetchCalendarAppointments, testData } = vi.hoisted(() => {
   // Compute dates inside hoisted scope
   function _getMonday(): Date {
     const d = new Date();
@@ -91,6 +91,7 @@ const { mockFetchReservations, mockUpdateCateringArranged, testData } = vi.hoist
   return {
     mockFetchReservations: vi.fn().mockResolvedValue(reservations),
     mockUpdateCateringArranged: vi.fn().mockResolvedValue({ cateringArranged: true }),
+    mockFetchCalendarAppointments: vi.fn().mockResolvedValue([]),
     testData: { reservations },
   };
 });
@@ -98,6 +99,7 @@ const { mockFetchReservations, mockUpdateCateringArranged, testData } = vi.hoist
 vi.mock('../lib/api', () => ({
   fetchReservations: mockFetchReservations,
   updateCateringArranged: mockUpdateCateringArranged,
+  fetchCalendarAppointments: mockFetchCalendarAppointments,
 }));
 
 const renderPage = () => {

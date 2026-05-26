@@ -27,7 +27,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=local_dev_password
 
       # JPA/Hibernate Configuration
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate # update possible for changes
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update # update possible for changes
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MariaDBDialect
       - SPRING_JPA_SHOW_SQL=true
 

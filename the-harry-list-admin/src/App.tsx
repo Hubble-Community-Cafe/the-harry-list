@@ -8,6 +8,7 @@ import { CalendarPage } from './pages/CalendarPage';
 import { ExportPage } from './pages/ExportPage';
 import { EmailTemplatesPage } from './pages/EmailTemplatesPage';
 import { FormSettingsPage } from './pages/FormSettingsPage';
+import { CalendarAppointmentsPage } from './pages/CalendarAppointmentsPage';
 import { WeekOverviewPage } from './pages/WeekOverviewPage';
 import { Layout } from './components/Layout';
 import { useGroupAuthorization } from './lib/useGroupAuthorization';
@@ -89,6 +90,7 @@ function App() {
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="email-templates" element={<EmailTemplatesPage />} />
           <Route path="form-settings" element={<FormSettingsPage />} />
+          <Route path="calendar-appointments" element={<CalendarAppointmentsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
