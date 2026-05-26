@@ -130,7 +130,7 @@ async function fetchJsonWithAuth(url: string, options: RequestInit = {}): Promis
 }
 
 // Import types for proper typing
-import type { Reservation, FormConstraint, BlockedPeriod, EmailAttachment, CateringEmailRequest } from '../types/reservation';
+import type { Reservation, FormConstraint, BlockedPeriod, EmailAttachment, CateringEmailRequest, CalendarAppointment } from '../types/reservation';
 
 // API Functions
 export async function fetchReservations(): Promise<Reservation[]> {
@@ -240,6 +240,37 @@ export async function toggleBlockedPeriod(id: number): Promise<BlockedPeriod> {
 
 export async function deleteBlockedPeriod(id: number): Promise<void> {
   await fetchJsonWithAuth(`${API_BASE_URL}/api/admin/blocked-periods/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+// ===== Calendar Appointments =====
+export async function fetchCalendarAppointments(): Promise<CalendarAppointment[]> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/calendar-appointments`) as Promise<CalendarAppointment[]>;
+}
+
+export async function createCalendarAppointment(appointment: CalendarAppointment): Promise<CalendarAppointment> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/calendar-appointments`, {
+    method: 'POST',
+    body: JSON.stringify(appointment),
+  }) as Promise<CalendarAppointment>;
+}
+
+export async function updateCalendarAppointment(id: number, appointment: CalendarAppointment): Promise<CalendarAppointment> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/calendar-appointments/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(appointment),
+  }) as Promise<CalendarAppointment>;
+}
+
+export async function toggleCalendarAppointment(id: number): Promise<CalendarAppointment> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/calendar-appointments/${id}/toggle`, {
+    method: 'PATCH',
+  }) as Promise<CalendarAppointment>;
+}
+
+export async function deleteCalendarAppointment(id: number): Promise<void> {
+  await fetchJsonWithAuth(`${API_BASE_URL}/api/admin/calendar-appointments/${id}`, {
     method: 'DELETE',
   });
 }
