@@ -1,12 +1,20 @@
 ---
 name: Feature request
 about: Suggest an idea for this project
-title: "[Feature]: Placeholder Title"
+title: "[Feature]: "
 labels: enhancement
 assignees: ''
 type: Feature
 
 ---
+
+**Component**
+Which part of the system does this relate to?
+- [ ] Backend (API / Spring Boot)
+- [ ] Admin portal
+- [ ] Public reservation form
+- [ ] Calendar feeds / ICS
+- [ ] Other: <!-- describe -->
 
 **Is your feature request related to a problem? Please describe.**
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
