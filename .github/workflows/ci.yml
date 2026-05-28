@@ -364,6 +364,8 @@ jobs:
           labels: ${{ steps.meta-public.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          secrets: |
+            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Scan Public Frontend image (Trivy)
         uses: aquasecurity/trivy-action@master
@@ -404,6 +406,8 @@ jobs:
           labels: ${{ steps.meta-admin.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          secrets: |
+            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Scan Admin Frontend image (Trivy)
         uses: aquasecurity/trivy-action@master
