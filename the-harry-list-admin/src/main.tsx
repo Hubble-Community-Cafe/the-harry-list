@@ -9,11 +9,14 @@ import { setMsalInstance } from './lib/api';
 import App from './App';
 import './index.css';
 
+declare const __APP_VERSION__: string;
+
 const sentryDsn = window.__RUNTIME_CONFIG__?.SENTRY_DSN || import.meta.env.VITE_SENTRY_DSN;
 if (sentryDsn && !sentryDsn.startsWith('__')) {
   Sentry.init({
     dsn: sentryDsn,
     environment: import.meta.env.MODE,
+    release: `the-harry-list-admin@${__APP_VERSION__}`,
     integrations: [Sentry.browserTracingIntegration()],
     tracesSampleRate: 0.1,
   });
