@@ -22,6 +22,9 @@ public class SentryConfig {
     @Value("${sentry.traces-sample-rate:0.1}")
     private double tracesSampleRate;
 
+    @Value("${sentry.release:}")
+    private String release;
+
     @EventListener(ContextRefreshedEvent.class)
     public void init() {
         if (dsn == null || dsn.isBlank()) {
@@ -32,6 +35,9 @@ public class SentryConfig {
             options.setDsn(dsn);
             options.setEnvironment(environment);
             options.setTracesSampleRate(tracesSampleRate);
+            if (release != null && !release.isBlank()) {
+                options.setRelease(release);
+            }
         });
         log.info("Sentry initialized for environment: {}", environment);
     }

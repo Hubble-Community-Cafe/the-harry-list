@@ -9,11 +9,14 @@ import { setMsalInstance } from './lib/api';
 import App from './App';
 import './index.css';
 
+declare const __APP_VERSION__: string;
+
 const sentryDsn = window.__RUNTIME_CONFIG__?.SENTRY_DSN || import.meta.env.VITE_SENTRY_DSN;
 if (sentryDsn && !sentryDsn.startsWith('__')) {
   Sentry.init({
     dsn: sentryDsn,
     environment: import.meta.env.MODE,
+    release: `the-harry-list-admin@${__APP_VERSION__}`,
     integrations: [Sentry.browserTracingIntegration()],
     tracesSampleRate: 0.1,
   });
@@ -32,6 +35,9 @@ msalInstance.initialize().then(async () => {
     if (response) {
       if (import.meta.env.DEV) console.log('Login successful via redirect:', response.account?.username);
       msalInstance.setActiveAccount(response.account);
+      if (response.account) {
+        Sentry.setUser({ email: response.account.username });
+      }
       // Force context update by dispatching a custom event
       window.dispatchEvent(new Event('msal:accountChanged'));
     } else {
@@ -39,6 +45,7 @@ msalInstance.initialize().then(async () => {
       const accounts = msalInstance.getAllAccounts();
       if (accounts.length > 0) {
         msalInstance.setActiveAccount(accounts[0]);
+        Sentry.setUser({ email: accounts[0].username });
         if (import.meta.env.DEV) console.log('Active account restored:', accounts[0].username);
         window.dispatchEvent(new Event('msal:accountChanged'));
       }
@@ -53,11 +60,15 @@ msalInstance.initialize().then(async () => {
     if (event.eventType === EventType.LOGIN_SUCCESS && event.payload) {
       const payload = event.payload as { account: AccountInfo | null };
       msalInstance.setActiveAccount(payload.account);
+      if (payload.account) {
+        Sentry.setUser({ email: payload.account.username });
+      }
       if (import.meta.env.DEV) console.log('Login event - account set:', payload.account?.username);
       window.dispatchEvent(new Event('msal:accountChanged'));
     }
     if (event.eventType === EventType.LOGOUT_SUCCESS) {
       msalInstance.setActiveAccount(null);
+      Sentry.setUser(null);
       if (import.meta.env.DEV) console.log('Logout successful');
     }
   });

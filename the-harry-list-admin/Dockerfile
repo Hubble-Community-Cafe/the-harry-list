@@ -15,8 +15,10 @@ RUN npm ci
 # Copy source files
 COPY . .
 
-# Build the application
-RUN npm run build
+# Build the application (SENTRY_AUTH_TOKEN enables source map upload to Sentry)
+RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN \
+    SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN 2>/dev/null) \
+    npm run build
 
 # Production stage
 FROM nginx:alpine
