@@ -3,6 +3,7 @@ package com.pimvanleeuwen.the_harry_list_backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pimvanleeuwen.the_harry_list_backend.config.SecurityConfig;
 import com.pimvanleeuwen.the_harry_list_backend.model.FormConstraint;
+import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import com.pimvanleeuwen.the_harry_list_backend.model.FormConstraintType;
 import com.pimvanleeuwen.the_harry_list_backend.repository.FormConstraintRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,9 @@ class AdminFormConstraintControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private AdminUserService adminUserService;
 
     @MockitoBean
     private FormConstraintRepository repository;

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.pimvanleeuwen.the_harry_list_backend.config.SecurityConfig;
 import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
+import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import com.pimvanleeuwen.the_harry_list_backend.model.BlockedPeriod;
 import com.pimvanleeuwen.the_harry_list_backend.repository.BlockedPeriodRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,9 @@ class AdminBlockedPeriodControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private AdminUserService adminUserService;
 
     @MockitoBean
     private BlockedPeriodRepository repository;

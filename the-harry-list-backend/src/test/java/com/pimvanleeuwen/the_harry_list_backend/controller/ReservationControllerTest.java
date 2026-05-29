@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.pimvanleeuwen.the_harry_list_backend.dto.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.*;
+import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import com.pimvanleeuwen.the_harry_list_backend.service.CreateReservationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.DeleteReservationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.GetReservationService;
@@ -39,6 +40,9 @@ class ReservationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private AdminUserService adminUserService;
 
     @MockitoBean
     private GetReservationService getReservationService;

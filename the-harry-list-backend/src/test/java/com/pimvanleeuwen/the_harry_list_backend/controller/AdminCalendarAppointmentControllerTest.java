@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.pimvanleeuwen.the_harry_list_backend.config.SecurityConfig;
 import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
+import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import com.pimvanleeuwen.the_harry_list_backend.model.CalendarAppointment;
 import com.pimvanleeuwen.the_harry_list_backend.model.RecurrenceType;
 import com.pimvanleeuwen.the_harry_list_backend.repository.CalendarAppointmentRepository;
@@ -34,6 +35,9 @@ class AdminCalendarAppointmentControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private AdminUserService adminUserService;
 
     @MockitoBean
     private CalendarAppointmentRepository repository;

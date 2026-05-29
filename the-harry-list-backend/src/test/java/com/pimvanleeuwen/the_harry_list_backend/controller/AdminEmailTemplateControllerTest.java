@@ -3,6 +3,7 @@ package com.pimvanleeuwen.the_harry_list_backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pimvanleeuwen.the_harry_list_backend.config.SecurityConfig;
 import com.pimvanleeuwen.the_harry_list_backend.dto.EmailTemplateDto;
+import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
@@ -33,6 +34,9 @@ class AdminEmailTemplateControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private AdminUserService adminUserService;
 
     @MockitoBean
     private EmailTemplateService emailTemplateService;

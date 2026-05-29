@@ -1,6 +1,7 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
 import com.pimvanleeuwen.the_harry_list_backend.config.SecurityConfig;
+import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import com.pimvanleeuwen.the_harry_list_backend.service.DataRetentionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ class AdminSettingsControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private AdminUserService adminUserService;
 
     @MockitoBean
     private DataRetentionService dataRetentionService;
