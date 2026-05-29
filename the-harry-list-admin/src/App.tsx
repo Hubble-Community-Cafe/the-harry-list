@@ -7,10 +7,9 @@ import { ReservationDetailPage } from './pages/ReservationDetailPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { ExportPage } from './pages/ExportPage';
 import { EmailTemplatesPage } from './pages/EmailTemplatesPage';
-import { FormSettingsPage } from './pages/FormSettingsPage';
+import { SettingsPage } from './pages/FormSettingsPage';
 import { CalendarAppointmentsPage } from './pages/CalendarAppointmentsPage';
 import { WeekOverviewPage } from './pages/WeekOverviewPage';
-import { UsersPage } from './pages/UsersPage';
 import { Layout } from './components/Layout';
 import { useGroupAuthorization } from './lib/useGroupAuthorization';
 import { ThemeProvider } from './lib/ThemeContext';
@@ -92,9 +91,9 @@ function App() {
           <Route path="export" element={<ExportPage />} />
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="email-templates" element={<EmailTemplatesPage />} />
-          <Route path="form-settings" element={<FormSettingsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="form-settings" element={<SettingsPage />} />
           <Route path="calendar-appointments" element={<CalendarAppointmentsPage />} />
-          <Route path="users" element={<UsersPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

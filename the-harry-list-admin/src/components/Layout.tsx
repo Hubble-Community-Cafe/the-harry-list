@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
   LayoutDashboard, Calendar, CalendarDays, LogOut,
-  User, Menu, CalendarSync, CalendarPlus, FileDown, Mail, Settings, Users
+  User, Menu, CalendarSync, CalendarPlus, FileDown, Mail, Settings
 } from 'lucide-react';
 import { useState } from 'react';
 import { clearAuth} from '../lib/api';
@@ -15,7 +15,7 @@ export function Layout() {
   const { instance, accounts } = useMsal();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { canEditEmailTemplates, canEditFormSettings, canManageUsers } = usePermissions();
+  const { canEditEmailTemplates, canEditFormSettings } = usePermissions();
   const { role } = useRole();
 
   const user = accounts[0];
@@ -38,8 +38,7 @@ export function Layout() {
     { to: '/calendar', icon: CalendarSync, label: 'Calendar Feeds' },
     { to: '/calendar-appointments', icon: CalendarPlus, label: 'Appointments' },
     ...(canEditEmailTemplates ? [{ to: '/email-templates', icon: Mail, label: 'Email Templates' }] : []),
-    ...(canEditFormSettings ? [{ to: '/form-settings', icon: Settings, label: 'Form Settings' }] : []),
-    ...(canManageUsers ? [{ to: '/users', icon: Users, label: 'Users' }] : []),
+    ...(canEditFormSettings ? [{ to: '/settings', icon: Settings, label: 'Settings' }] : []),
   ];
 
   return (

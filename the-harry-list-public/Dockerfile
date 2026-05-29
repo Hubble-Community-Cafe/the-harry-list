@@ -9,8 +9,9 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (--include=optional ensures platform-specific native binaries
+# like rolldown are installed for the container's architecture, not the host's)
+RUN npm ci --include=optional
 
 # Copy source files
 COPY . .

@@ -9,6 +9,7 @@ import {
 } from '../lib/api';
 import type { CalendarAppointment, RecurrenceType } from '../types/reservation';
 import { usePermissions } from '../lib/usePermissions';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 const RECURRENCE_OPTIONS: { value: RecurrenceType; label: string }[] = [
   { value: 'NONE', label: 'None' },
@@ -46,6 +47,8 @@ export function CalendarAppointmentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<CalendarAppointment | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { canManageAppointments } = usePermissions();
 
   useEffect(() => {
@@ -94,12 +97,17 @@ export function CalendarAppointmentsPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await deleteCalendarAppointment(id);
-      setAppointments(prev => prev.filter(a => a.id !== id));
+      await deleteCalendarAppointment(deleteTarget);
+      setAppointments(prev => prev.filter(a => a.id !== deleteTarget));
+      setDeleteTarget(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete appointment');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -217,7 +225,7 @@ export function CalendarAppointmentsPage() {
                   }
                 </button>
                 <button
-                  onClick={() => appointment.id && handleDelete(appointment.id)}
+                  onClick={() => appointment.id && setDeleteTarget(appointment.id)}
                   className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10"
                   title="Delete"
                 >
@@ -380,6 +388,17 @@ export function CalendarAppointmentsPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete appointment"
+        message="This appointment will be permanently deleted. This action cannot be undone."
+        confirmLabel="Delete"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
