@@ -208,7 +208,7 @@ describe('CalendarAppointmentsPage', () => {
     });
   });
 
-  it('calls delete when delete button clicked', async () => {
+  it('calls delete when delete button clicked and confirmed in dialog', async () => {
     mockDelete.mockResolvedValue(undefined);
     renderPage();
     await waitFor(() => {
@@ -216,6 +216,13 @@ describe('CalendarAppointmentsPage', () => {
     });
     const deleteButtons = screen.getAllByTitle('Delete');
     fireEvent.click(deleteButtons[0]);
+
+    // Confirmation dialog should appear
+    expect(screen.getByText('Delete appointment')).toBeInTheDocument();
+    expect(screen.getByText(/permanently deleted/)).toBeInTheDocument();
+
+    // Confirm the deletion
+    fireEvent.click(screen.getByText('Delete', { selector: 'button' }));
     await waitFor(() => {
       expect(mockDelete).toHaveBeenCalledWith(1);
     });

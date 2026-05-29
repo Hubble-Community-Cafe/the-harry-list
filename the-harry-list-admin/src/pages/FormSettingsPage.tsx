@@ -14,6 +14,7 @@ import type { FormConstraint, BlockedPeriod } from '../types/reservation';
 import type { RetentionSettings } from '../lib/api';
 import { HelpGuide } from '../components/HelpGuide';
 import { formSettingsGuide } from '../lib/guideContent';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 const CONSTRAINT_TYPES = [
   { value: 'ACTIVITY_CONFLICT', label: 'Activity Conflict' },
@@ -69,6 +70,10 @@ export function FormSettingsPage() {
   const [editingPeriod, setEditingPeriod] = useState<BlockedPeriod | null>(null);
   const [savingPeriod, setSavingPeriod] = useState(false);
 
+  // Delete confirmation state
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'constraint' | 'period'; id: number } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     Promise.all([fetchFormConstraints(), fetchBlockedPeriods(), fetchRetentionSettings()])
       .then(([c, bp, ret]) => {
@@ -90,13 +95,22 @@ export function FormSettingsPage() {
     }
   }
 
-  async function handleDeleteConstraint(id: number) {
-    if (!confirm('Delete this constraint?')) return;
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await deleteFormConstraint(id);
-      setConstraints(prev => prev.filter(c => c.id !== id));
+      if (deleteTarget.type === 'constraint') {
+        await deleteFormConstraint(deleteTarget.id);
+        setConstraints(prev => prev.filter(c => c.id !== deleteTarget.id));
+      } else {
+        await deleteBlockedPeriod(deleteTarget.id);
+        setBlockedPeriods(prev => prev.filter(bp => bp.id !== deleteTarget.id));
+      }
+      setDeleteTarget(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete constraint');
+      setError(err instanceof Error ? err.message : `Failed to delete ${deleteTarget.type === 'constraint' ? 'constraint' : 'blocked period'}`);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -141,15 +155,7 @@ export function FormSettingsPage() {
     }
   }
 
-  async function handleDeletePeriod(id: number) {
-    if (!confirm('Delete this blocked period?')) return;
-    try {
-      await deleteBlockedPeriod(id);
-      setBlockedPeriods(prev => prev.filter(bp => bp.id !== id));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete blocked period');
-    }
-  }
+  // handleDeletePeriod and handleDeleteConstraint now use the shared handleConfirmDelete via ConfirmDialog
 
   async function handleSavePeriod() {
     if (!editingPeriod) return;
@@ -283,7 +289,7 @@ export function FormSettingsPage() {
                       }
                     </button>
                     <button
-                      onClick={() => c.id && handleDeleteConstraint(c.id)}
+                      onClick={() => c.id && setDeleteTarget({ type: 'constraint', id: c.id })}
                       className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                       title="Delete"
                     >
@@ -363,7 +369,7 @@ export function FormSettingsPage() {
                       }
                     </button>
                     <button
-                      onClick={() => bp.id && handleDeletePeriod(bp.id)}
+                      onClick={() => bp.id && setDeleteTarget({ type: 'period', id: bp.id })}
                       className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                       title="Delete"
                     >
@@ -667,6 +673,17 @@ export function FormSettingsPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={deleteTarget?.type === 'constraint' ? 'Delete constraint' : 'Delete blocked period'}
+        message="This will be permanently deleted. This action cannot be undone."
+        confirmLabel="Delete"
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
