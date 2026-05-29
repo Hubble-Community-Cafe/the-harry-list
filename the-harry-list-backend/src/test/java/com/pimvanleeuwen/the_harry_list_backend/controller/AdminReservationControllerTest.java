@@ -70,7 +70,7 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldConfirmReservation() throws Exception {
         // Given
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
@@ -92,7 +92,7 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldRejectReservation() throws Exception {
         // Given
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
@@ -111,7 +111,7 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldCancelReservation() throws Exception {
         // Given
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
@@ -130,7 +130,7 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldCompleteReservation() throws Exception {
         // Given
         sampleReservation.setStatus(ReservationStatus.CONFIRMED);
@@ -150,7 +150,7 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldReturnNotFoundWhenReservationDoesNotExist() throws Exception {
         // Given
         when(reservationRepository.findById(999L)).thenReturn(Optional.empty());
@@ -163,7 +163,7 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldSendEmailWhenEnabled() throws Exception {
         // Given
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
@@ -182,7 +182,7 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldNotSendEmailWhenDisabled() throws Exception {
         // Given
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
@@ -201,7 +201,7 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void updateInternalNotes_shouldUpdateNotes() throws Exception {
         // Given
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
@@ -219,7 +219,7 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void updateInternalNotes_shouldReturnNotFoundWhenReservationDoesNotExist() throws Exception {
         // Given
         when(reservationRepository.findById(999L)).thenReturn(Optional.empty());
@@ -266,7 +266,7 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void sendCateringEmail_shouldSendWithAttachments() throws Exception {
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
         when(emailTemplateService.getRenderedSubject(eq(EmailTemplateType.CATERING_OPTIONS), any()))
@@ -294,7 +294,7 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void sendCateringEmail_shouldUseCustomSubjectAndBody() throws Exception {
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
         when(emailAttachmentRepository.findAllById(any())).thenReturn(List.of());
@@ -318,7 +318,7 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void sendCateringEmail_shouldReturn404WhenNotFound() throws Exception {
         when(reservationRepository.findById(999L)).thenReturn(Optional.empty());
 

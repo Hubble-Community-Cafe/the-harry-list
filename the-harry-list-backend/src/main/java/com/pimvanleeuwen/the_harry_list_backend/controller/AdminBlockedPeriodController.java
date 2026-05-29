@@ -5,6 +5,7 @@ import com.pimvanleeuwen.the_harry_list_backend.repository.BlockedPeriodReposito
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class AdminBlockedPeriodController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Create a new blocked period")
     public ResponseEntity<BlockedPeriod> create(@RequestBody BlockedPeriod period) {
         BlockedPeriod saved = repository.save(period);
@@ -43,6 +45,7 @@ public class AdminBlockedPeriodController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Update a blocked period")
     public ResponseEntity<BlockedPeriod> update(@PathVariable Long id, @RequestBody BlockedPeriod period) {
         return repository.findById(id)
@@ -61,6 +64,7 @@ public class AdminBlockedPeriodController {
     }
 
     @PatchMapping("/{id}/toggle")
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Toggle a blocked period's enabled state")
     public ResponseEntity<BlockedPeriod> toggle(@PathVariable Long id) {
         return repository.findById(id)
@@ -72,6 +76,7 @@ public class AdminBlockedPeriodController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Delete a blocked period")
     public ResponseEntity<Map<String, String>> delete(@PathVariable Long id) {
         if (!repository.existsById(id)) {

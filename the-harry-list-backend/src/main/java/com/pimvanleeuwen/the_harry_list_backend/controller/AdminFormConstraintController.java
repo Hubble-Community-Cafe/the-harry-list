@@ -5,6 +5,7 @@ import com.pimvanleeuwen.the_harry_list_backend.repository.FormConstraintReposit
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class AdminFormConstraintController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new form constraint")
     public ResponseEntity<FormConstraint> create(@RequestBody FormConstraint constraint) {
         FormConstraint saved = repository.save(constraint);
@@ -43,6 +45,7 @@ public class AdminFormConstraintController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update a form constraint")
     public ResponseEntity<FormConstraint> update(@PathVariable Long id, @RequestBody FormConstraint constraint) {
         return repository.findById(id)
@@ -60,6 +63,7 @@ public class AdminFormConstraintController {
     }
 
     @PatchMapping("/{id}/toggle")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Toggle a constraint's enabled state")
     public ResponseEntity<FormConstraint> toggle(@PathVariable Long id) {
         return repository.findById(id)
@@ -71,6 +75,7 @@ public class AdminFormConstraintController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a form constraint")
     public ResponseEntity<Map<String, String>> delete(@PathVariable Long id) {
         if (!repository.existsById(id)) {

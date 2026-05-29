@@ -70,7 +70,7 @@ class AdminEmailAttachmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void uploadAttachment_shouldAcceptPdf() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "menu.pdf", "application/pdf", new byte[]{1, 2, 3});
@@ -88,7 +88,7 @@ class AdminEmailAttachmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void uploadAttachment_shouldRejectNonPdf() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "doc.txt", "text/plain", new byte[]{1, 2, 3});
@@ -104,7 +104,7 @@ class AdminEmailAttachmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void uploadAttachment_shouldRejectEmptyFile() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "empty.pdf", "application/pdf", new byte[0]);
@@ -119,7 +119,7 @@ class AdminEmailAttachmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void uploadAttachment_shouldRejectOversizedFile() throws Exception {
         byte[] bigData = new byte[4 * 1024 * 1024]; // 4MB, exceeds 3MB limit
         MockMultipartFile file = new MockMultipartFile(
@@ -136,7 +136,7 @@ class AdminEmailAttachmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void deleteAttachment_shouldDeleteExisting() throws Exception {
         when(repository.existsById(1L)).thenReturn(true);
 
@@ -147,7 +147,7 @@ class AdminEmailAttachmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void deleteAttachment_shouldReturn404WhenNotFound() throws Exception {
         when(repository.existsById(999L)).thenReturn(false);
 
@@ -158,7 +158,7 @@ class AdminEmailAttachmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void toggleActive_shouldToggleToInactive() throws Exception {
         EmailAttachment attachment = sampleAttachment();
         when(repository.findById(1L)).thenReturn(Optional.of(attachment));
@@ -177,7 +177,7 @@ class AdminEmailAttachmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void toggleActive_shouldReturn404WhenNotFound() throws Exception {
         when(repository.findById(999L)).thenReturn(Optional.empty());
 

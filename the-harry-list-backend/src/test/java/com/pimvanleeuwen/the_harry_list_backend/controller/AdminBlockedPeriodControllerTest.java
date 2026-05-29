@@ -97,7 +97,7 @@ class AdminBlockedPeriodControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void create_shouldReturn201() throws Exception {
         BlockedPeriod period = samplePeriod();
         when(repository.save(any())).thenReturn(period);
@@ -111,7 +111,7 @@ class AdminBlockedPeriodControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void toggle_shouldFlipEnabledState() throws Exception {
         BlockedPeriod period = samplePeriod();
         period.setEnabled(true);
@@ -128,7 +128,7 @@ class AdminBlockedPeriodControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void delete_shouldReturn200() throws Exception {
         when(repository.existsById(1L)).thenReturn(true);
         doNothing().when(repository).deleteById(1L);
@@ -139,7 +139,7 @@ class AdminBlockedPeriodControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void delete_shouldReturn404ForMissing() throws Exception {
         when(repository.existsById(99L)).thenReturn(false);
 

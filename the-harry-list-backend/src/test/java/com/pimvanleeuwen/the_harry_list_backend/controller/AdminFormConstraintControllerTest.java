@@ -94,7 +94,7 @@ class AdminFormConstraintControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void create_shouldReturn201() throws Exception {
         FormConstraint constraint = sampleConstraint();
         when(repository.save(any())).thenReturn(constraint);
@@ -108,7 +108,7 @@ class AdminFormConstraintControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void update_shouldUpdateExisting() throws Exception {
         FormConstraint existing = sampleConstraint();
         FormConstraint updated = sampleConstraint();
@@ -126,7 +126,7 @@ class AdminFormConstraintControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void update_shouldReturn404ForMissing() throws Exception {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
@@ -138,7 +138,7 @@ class AdminFormConstraintControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void toggle_shouldFlipEnabledState() throws Exception {
         FormConstraint constraint = sampleConstraint();
         constraint.setEnabled(true);
@@ -155,7 +155,7 @@ class AdminFormConstraintControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void delete_shouldReturn200() throws Exception {
         when(repository.existsById(1L)).thenReturn(true);
         doNothing().when(repository).deleteById(1L);
@@ -166,7 +166,7 @@ class AdminFormConstraintControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void delete_shouldReturn404ForMissing() throws Exception {
         when(repository.existsById(99L)).thenReturn(false);
 

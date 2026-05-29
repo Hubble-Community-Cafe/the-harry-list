@@ -118,7 +118,7 @@ class AdminCalendarAppointmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void create_shouldReturn201() throws Exception {
         CalendarAppointment appointment = sampleAppointment();
         when(repository.save(any())).thenReturn(appointment);
@@ -132,7 +132,7 @@ class AdminCalendarAppointmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void create_allDay_shouldReturn201() throws Exception {
         CalendarAppointment appointment = sampleAllDayAppointment();
         when(repository.save(any())).thenReturn(appointment);
@@ -147,7 +147,7 @@ class AdminCalendarAppointmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void toggle_shouldFlipEnabledState() throws Exception {
         CalendarAppointment appointment = sampleAppointment();
         appointment.setEnabled(true);
@@ -164,7 +164,7 @@ class AdminCalendarAppointmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void delete_shouldReturn200() throws Exception {
         when(repository.existsById(1L)).thenReturn(true);
         doNothing().when(repository).deleteById(1L);
@@ -175,7 +175,7 @@ class AdminCalendarAppointmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void delete_shouldReturn404ForMissing() throws Exception {
         when(repository.existsById(99L)).thenReturn(false);
 
