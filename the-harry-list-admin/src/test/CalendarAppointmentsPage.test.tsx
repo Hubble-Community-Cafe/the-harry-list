@@ -35,7 +35,7 @@ const viewerPermissions = {
 };
 
 vi.mock('../lib/usePermissions', () => ({
-  usePermissions: (...args: any[]) => mockUsePermissions(...args),
+  usePermissions: () => mockUsePermissions(),
 }));
 
 vi.mock('../lib/api', () => ({

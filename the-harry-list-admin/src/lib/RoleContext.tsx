@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useIsAuthenticated } from '@azure/msal-react';
 import { fetchCurrentUser, type AdminUser } from './api';
 
@@ -20,13 +20,18 @@ const RoleContext = createContext<RoleContextValue>({
   refetch: () => {},
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
+export function useRole() {
+  return useContext(RoleContext);
+}
+
 export function RoleProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = useIsAuthenticated();
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRole = async () => {
+  const fetchRole = useCallback(async () => {
     if (!isAuthenticated) {
       setUser(null);
       setIsLoading(false);
@@ -44,15 +49,41 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    fetchRole();
+    let cancelled = false;
+
+    const load = async () => {
+      if (!isAuthenticated) {
+        if (!cancelled) {
+          setUser(null);
+          setIsLoading(false);
+        }
+        return;
+      }
+      try {
+        if (!cancelled) setIsLoading(true);
+        if (!cancelled) setError(null);
+        const currentUser = await fetchCurrentUser();
+        if (!cancelled) setUser(currentUser);
+      } catch (e) {
+        console.error('Failed to fetch current user role:', e);
+        if (!cancelled) setError('Failed to load user role');
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+
+    load();
 
     // Re-fetch when MSAL account changes (login/redirect)
-    const handleAccountChanged = () => fetchRole();
+    const handleAccountChanged = () => load();
     window.addEventListener('msal:accountChanged', handleAccountChanged);
-    return () => window.removeEventListener('msal:accountChanged', handleAccountChanged);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('msal:accountChanged', handleAccountChanged);
+    };
   }, [isAuthenticated]);
 
   return (
@@ -66,8 +97,4 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       {children}
     </RoleContext.Provider>
   );
-}
-
-export function useRole() {
-  return useContext(RoleContext);
 }
