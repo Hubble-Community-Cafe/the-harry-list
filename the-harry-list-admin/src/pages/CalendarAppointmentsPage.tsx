@@ -8,6 +8,7 @@ import {
   toggleCalendarAppointment, deleteCalendarAppointment,
 } from '../lib/api';
 import type { CalendarAppointment, RecurrenceType } from '../types/reservation';
+import { usePermissions } from '../lib/usePermissions';
 
 const RECURRENCE_OPTIONS: { value: RecurrenceType; label: string }[] = [
   { value: 'NONE', label: 'None' },
@@ -45,6 +46,7 @@ export function CalendarAppointmentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<CalendarAppointment | null>(null);
   const [saving, setSaving] = useState(false);
+  const { canManageAppointments } = usePermissions();
 
   useEffect(() => {
     fetchCalendarAppointments()
@@ -117,6 +119,7 @@ export function CalendarAppointmentsPage() {
           <h1 className="text-2xl font-title font-bold text-white">Calendar Appointments</h1>
           <p className="text-dark-400 font-light">Custom calendar entries that appear in the ICS feeds alongside reservations</p>
         </div>
+        {canManageAppointments && (
         <button
           onClick={() => setEditing({ ...emptyAppointment })}
           className="btn-primary flex items-center gap-2 shrink-0"
@@ -124,6 +127,7 @@ export function CalendarAppointmentsPage() {
           <Plus className="w-4 h-4" />
           Add Appointment
         </button>
+        )}
       </div>
 
       {/* Error */}
@@ -193,6 +197,7 @@ export function CalendarAppointmentsPage() {
                   <p className="text-sm text-dark-400 truncate">{appointment.description}</p>
                 )}
               </div>
+              {canManageAppointments && (
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => setEditing({ ...appointment })}
@@ -219,6 +224,7 @@ export function CalendarAppointmentsPage() {
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
+              )}
             </div>
           ))}
         </div>

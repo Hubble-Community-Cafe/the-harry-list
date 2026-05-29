@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,6 +39,7 @@ public class AdminCalendarAppointmentController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Create a new calendar appointment")
     public ResponseEntity<CalendarAppointment> create(@RequestBody CalendarAppointment appointment) {
         CalendarAppointment saved = repository.save(appointment);
@@ -45,6 +47,7 @@ public class AdminCalendarAppointmentController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Update a calendar appointment")
     public ResponseEntity<CalendarAppointment> update(@PathVariable Long id, @RequestBody CalendarAppointment appointment) {
         return repository.findById(id)
@@ -65,6 +68,7 @@ public class AdminCalendarAppointmentController {
     }
 
     @PatchMapping("/{id}/toggle")
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Toggle a calendar appointment's enabled state")
     public ResponseEntity<CalendarAppointment> toggle(@PathVariable Long id) {
         return repository.findById(id)
@@ -76,6 +80,7 @@ public class AdminCalendarAppointmentController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Delete a calendar appointment")
     public ResponseEntity<Map<String, String>> delete(@PathVariable Long id) {
         if (!repository.existsById(id)) {

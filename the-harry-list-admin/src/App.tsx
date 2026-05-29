@@ -10,9 +10,11 @@ import { EmailTemplatesPage } from './pages/EmailTemplatesPage';
 import { FormSettingsPage } from './pages/FormSettingsPage';
 import { CalendarAppointmentsPage } from './pages/CalendarAppointmentsPage';
 import { WeekOverviewPage } from './pages/WeekOverviewPage';
+import { UsersPage } from './pages/UsersPage';
 import { Layout } from './components/Layout';
 import { useGroupAuthorization } from './lib/useGroupAuthorization';
 import { ThemeProvider } from './lib/ThemeContext';
+import { RoleProvider } from './lib/RoleContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Loader2, ShieldX } from 'lucide-react';
 
@@ -72,6 +74,7 @@ function App() {
   return (
     <ErrorBoundary>
     <ThemeProvider>
+    <RoleProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
@@ -91,9 +94,11 @@ function App() {
           <Route path="email-templates" element={<EmailTemplatesPage />} />
           <Route path="form-settings" element={<FormSettingsPage />} />
           <Route path="calendar-appointments" element={<CalendarAppointmentsPage />} />
+          <Route path="users" element={<UsersPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+    </RoleProvider>
     </ThemeProvider>
     </ErrorBoundary>
   );

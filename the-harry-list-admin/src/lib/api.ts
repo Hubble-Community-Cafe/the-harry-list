@@ -1,4 +1,5 @@
 import { PublicClientApplication } from '@azure/msal-browser';
+import * as Sentry from '@sentry/react';
 // Note: Window.__RUNTIME_CONFIG__ type is declared in authConfig.ts
 
 // Get API URL from runtime config or fall back to build-time env
@@ -15,6 +16,13 @@ const getApiUrl = (): string => {
 };
 
 const API_BASE_URL = getApiUrl();
+
+export class ForbiddenError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ForbiddenError';
+  }
+}
 
 // MSAL instance for getting tokens
 let msalInstance: PublicClientApplication | null = null;
@@ -90,6 +98,12 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
   if (response.status === 401) {
     clearAuth();
     throw new Error('Authentication failed');
+  }
+
+  if (response.status === 403) {
+    const err = new ForbiddenError('You do not have permission to perform this action');
+    Sentry.captureException(err, { level: 'warning', extra: { url, method: options?.method || 'GET' } });
+    throw err;
   }
 
   return response;
@@ -326,6 +340,32 @@ export interface RetentionSettings {
 
 export async function fetchRetentionSettings(): Promise<RetentionSettings> {
   return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/settings/retention`) as Promise<RetentionSettings>;
+}
+
+// ===== Admin Users =====
+export interface AdminUser {
+  id: number;
+  azureOid: string;
+  email: string;
+  displayName: string;
+  role: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function fetchCurrentUser(): Promise<AdminUser> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/users/me`) as Promise<AdminUser>;
+}
+
+export async function fetchAllUsers(): Promise<AdminUser[]> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/users`) as Promise<AdminUser[]>;
+}
+
+export async function updateUserRole(userId: number, role: string): Promise<AdminUser> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/users/${userId}/role`, {
+    method: 'PUT',
+    body: JSON.stringify({ role }),
+  }) as Promise<AdminUser>;
 }
 
 // Test if authentication is working

@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { WeekOverviewPage } from '../pages/WeekOverviewPage';
 
 // Hoist mock data so vi.mock factory can access it
-const { mockFetchReservations, mockUpdateCateringArranged, mockFetchCalendarAppointments, testData } = vi.hoisted(() => {
+const { mockFetchReservations, mockUpdateCateringArranged, mockFetchCalendarAppointments, mockUsePermissions, testData } = vi.hoisted(() => {
   // Compute dates inside hoisted scope
   function _getMonday(): Date {
     const d = new Date();
@@ -92,9 +92,34 @@ const { mockFetchReservations, mockUpdateCateringArranged, mockFetchCalendarAppo
     mockFetchReservations: vi.fn().mockResolvedValue(reservations),
     mockUpdateCateringArranged: vi.fn().mockResolvedValue({ cateringArranged: true }),
     mockFetchCalendarAppointments: vi.fn().mockResolvedValue([]),
+    mockUsePermissions: vi.fn(),
     testData: { reservations },
   };
 });
+
+const allPermissions = {
+  canUpdateReservations: true,
+  canManageBlockedPeriods: true,
+  canManageAppointments: true,
+  canManageAttachments: true,
+  canEditEmailTemplates: true,
+  canEditFormSettings: true,
+  canManageUsers: true,
+};
+
+const viewerPermissions = {
+  canUpdateReservations: false,
+  canManageBlockedPeriods: false,
+  canManageAppointments: false,
+  canManageAttachments: false,
+  canEditEmailTemplates: false,
+  canEditFormSettings: false,
+  canManageUsers: false,
+};
+
+vi.mock('../lib/usePermissions', () => ({
+  usePermissions: () => mockUsePermissions(),
+}));
 
 vi.mock('../lib/api', () => ({
   fetchReservations: mockFetchReservations,
@@ -115,6 +140,7 @@ describe('WeekOverviewPage', () => {
     vi.clearAllMocks();
     mockFetchReservations.mockResolvedValue(testData.reservations);
     mockUpdateCateringArranged.mockResolvedValue({ cateringArranged: true });
+    mockUsePermissions.mockReturnValue(allPermissions);
   });
 
   it('renders the page title after loading', async () => {
@@ -314,6 +340,35 @@ describe('WeekOverviewPage', () => {
     renderPage();
     await waitFor(() => {
       expect(screen.getByText('Network error')).toBeInTheDocument();
+    });
+  });
+});
+
+describe('WeekOverviewPage - viewer permissions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFetchReservations.mockResolvedValue(testData.reservations);
+    mockUpdateCateringArranged.mockResolvedValue({ cateringArranged: true });
+    mockUsePermissions.mockReturnValue(viewerPermissions);
+  });
+
+  it('shows catering status as read-only for viewer', async () => {
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByText('Hubble Birthday')).toBeInTheDocument();
+    });
+
+    // Catering indicators should be spans, not buttons
+    const cateringButtons = screen.queryAllByTitle(/[Cc]atering/);
+    expect(cateringButtons).toHaveLength(0);
+  });
+
+  it('still shows all reservation data for viewer', async () => {
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByText('Hubble Birthday')).toBeInTheDocument();
+      expect(screen.getByText('Meteor Meeting')).toBeInTheDocument();
+      expect(screen.getByText('Wednesday Workshop')).toBeInTheDocument();
     });
   });
 });

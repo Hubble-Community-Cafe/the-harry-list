@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.pimvanleeuwen.the_harry_list_backend.config.SecurityConfig;
 import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
+import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import com.pimvanleeuwen.the_harry_list_backend.model.BlockedPeriod;
 import com.pimvanleeuwen.the_harry_list_backend.repository.BlockedPeriodRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,9 @@ class AdminBlockedPeriodControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private AdminUserService adminUserService;
 
     @MockitoBean
     private BlockedPeriodRepository repository;
@@ -93,7 +97,7 @@ class AdminBlockedPeriodControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void create_shouldReturn201() throws Exception {
         BlockedPeriod period = samplePeriod();
         when(repository.save(any())).thenReturn(period);
@@ -107,7 +111,7 @@ class AdminBlockedPeriodControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void toggle_shouldFlipEnabledState() throws Exception {
         BlockedPeriod period = samplePeriod();
         period.setEnabled(true);
@@ -124,7 +128,7 @@ class AdminBlockedPeriodControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void delete_shouldReturn200() throws Exception {
         when(repository.existsById(1L)).thenReturn(true);
         doNothing().when(repository).deleteById(1L);
@@ -135,7 +139,7 @@ class AdminBlockedPeriodControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "EDITOR")
     void delete_shouldReturn404ForMissing() throws Exception {
         when(repository.existsById(99L)).thenReturn(false);
 

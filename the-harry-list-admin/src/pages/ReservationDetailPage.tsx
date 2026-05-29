@@ -12,6 +12,7 @@ import {
   updateCateringArranged, fetchEmailAttachments, fetchCateringEmailPreview, sendCateringEmail
 } from '../lib/api';
 import type { Reservation, EmailAttachment } from '../types/reservation';
+import { usePermissions } from '../lib/usePermissions';
 import { HelpGuide } from '../components/HelpGuide';
 import { reservationDetailGuide } from '../lib/guideContent';
 
@@ -47,6 +48,7 @@ export function ReservationDetailPage() {
   const [sendingCateringEmail, setSendingCateringEmail] = useState(false);
   const [cateringEmailStatus, setCateringEmailStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  const { canUpdateReservations } = usePermissions();
   const userName = accounts[0]?.name || 'Staff';
 
   useEffect(() => {
@@ -230,6 +232,7 @@ export function ReservationDetailPage() {
       </div>
 
       {/* Actions */}
+      {canUpdateReservations && (
       <div className="card">
         <h2 className="text-lg font-title font-semibold text-white mb-4">Actions</h2>
 
@@ -451,6 +454,7 @@ export function ReservationDetailPage() {
           </div>
         )}
       </div>
+      )}
 
       {/* Details Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -540,6 +544,7 @@ export function ReservationDetailPage() {
             {reservation.specialActivities?.some(a => ['EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM'].includes(a)) && (
               <div className="flex items-center justify-between">
                 <span className="text-sm text-dark-400">Catering Arranged</span>
+                {canUpdateReservations ? (
                 <button
                   type="button"
                   onClick={async () => {
@@ -558,6 +563,16 @@ export function ReservationDetailPage() {
                   <UtensilsCrossed className="w-3 h-3" />
                   {reservation.cateringArranged ? 'Arranged ✓ (click to undo)' : 'Not arranged yet (click to mark done)'}
                 </button>
+                ) : (
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
+                    reservation.cateringArranged
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                  }`}>
+                  <UtensilsCrossed className="w-3 h-3" />
+                  {reservation.cateringArranged ? 'Arranged ✓' : 'Not arranged yet'}
+                </span>
+                )}
               </div>
             )}
           </div>

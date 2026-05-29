@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,6 +47,7 @@ public class AdminEmailTemplateController {
     }
 
     @PutMapping("/{type}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Save a custom email template", description = "Saves a custom subject and body for the given template type. Use {{variable}} placeholders.")
     public ResponseEntity<EmailTemplateDto> update(
             @PathVariable EmailTemplateType type,
@@ -55,6 +57,7 @@ public class AdminEmailTemplateController {
     }
 
     @DeleteMapping("/{type}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Reset template to default", description = "Removes any custom template, reverting to the built-in default.")
     public ResponseEntity<Void> reset(@PathVariable EmailTemplateType type) {
         emailTemplateService.reset(type);
@@ -62,6 +65,7 @@ public class AdminEmailTemplateController {
     }
 
     @PostMapping("/{type}/test")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
         summary = "Send a test email",
         description = "Renders the template with sample data and sends it to the provided address. " +

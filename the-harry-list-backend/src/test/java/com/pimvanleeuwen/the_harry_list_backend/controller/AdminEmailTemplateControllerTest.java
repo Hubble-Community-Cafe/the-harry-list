@@ -3,6 +3,7 @@ package com.pimvanleeuwen.the_harry_list_backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pimvanleeuwen.the_harry_list_backend.config.SecurityConfig;
 import com.pimvanleeuwen.the_harry_list_backend.dto.EmailTemplateDto;
+import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
@@ -33,6 +34,9 @@ class AdminEmailTemplateControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private AdminUserService adminUserService;
 
     @MockitoBean
     private EmailTemplateService emailTemplateService;
@@ -105,7 +109,7 @@ class AdminEmailTemplateControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void update_shouldSaveAndReturnTemplate() throws Exception {
         EmailTemplateDto updated = sampleDto(EmailTemplateType.SUBMITTED, true);
         when(emailTemplateService.update(eq(EmailTemplateType.SUBMITTED), any(), any())).thenReturn(updated);
@@ -128,7 +132,7 @@ class AdminEmailTemplateControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void update_shouldRejectBlankSubject() throws Exception {
         Map<String, String> request = Map.of(
                 "subject", "",
@@ -142,7 +146,7 @@ class AdminEmailTemplateControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void update_shouldRejectBlankBody() throws Exception {
         Map<String, String> request = Map.of(
                 "subject", "Valid subject",
@@ -156,7 +160,7 @@ class AdminEmailTemplateControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void reset_shouldReturn204() throws Exception {
         doNothing().when(emailTemplateService).reset(EmailTemplateType.UPDATED);
 
@@ -173,7 +177,7 @@ class AdminEmailTemplateControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void sendTestEmail_shouldSendAndReturnSentStatus() throws Exception {
         when(emailTemplateService.buildSampleVariables(EmailTemplateType.SUBMITTED)).thenReturn(Map.of("eventTitle", "Test"));
         when(emailTemplateService.renderForTest(any(), any())).thenReturn("Rendered subject", "Rendered body");
@@ -195,7 +199,7 @@ class AdminEmailTemplateControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void sendTestEmail_shouldRejectInvalidEmail() throws Exception {
         Map<String, String> request = Map.of("toEmail", "not-an-email");
 
@@ -207,7 +211,7 @@ class AdminEmailTemplateControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void sendTestEmail_shouldRejectMissingEmail() throws Exception {
         mockMvc.perform(post("/api/admin/email-templates/SUBMITTED/test")
                         .with(csrf())
