@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { fetchReservations, updateCateringArranged, fetchCalendarAppointments } from '../lib/api';
 import type { Reservation, CalendarAppointment } from '../types/reservation';
+import { usePermissions } from '../lib/usePermissions';
 import { HelpGuide } from '../components/HelpGuide';
 import { weekOverviewGuide } from '../lib/guideContent';
 
@@ -122,6 +123,7 @@ export function WeekOverviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [locationFilter, setLocationFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const { canUpdateReservations } = usePermissions();
 
   // Determine the Monday of the current week from URL or today
   const weekParam = searchParams.get('week');
@@ -349,6 +351,7 @@ export function WeekOverviewPage() {
                       <WeekReservationCard
                         key={reservation.id}
                         reservation={reservation}
+                        canEdit={canUpdateReservations}
                         onCateringToggle={async (id, newValue) => {
                           try {
                             const updated = await updateCateringArranged(id, newValue);
@@ -383,9 +386,11 @@ export function WeekOverviewPage() {
 
 function WeekReservationCard({
   reservation,
+  canEdit,
   onCateringToggle,
 }: {
   reservation: Reservation;
+  canEdit: boolean;
   onCateringToggle: (id: number, newValue: boolean) => Promise<void>;
 }) {
   const needsCatering = hasCatering(reservation.specialActivities);
@@ -432,7 +437,7 @@ function WeekReservationCard({
         </span>
 
         {/* Catering badge */}
-        {needsCatering && (
+        {needsCatering && (canEdit ? (
           <button
             type="button"
             onClick={(e) => {
@@ -450,7 +455,16 @@ function WeekReservationCard({
             <UtensilsCrossed className="w-3 h-3" />
             {reservation.cateringArranged ? 'OK' : '!'}
           </button>
-        )}
+        ) : (
+          <span className={`flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded ${
+              reservation.cateringArranged
+                ? 'bg-green-500/20 text-green-400'
+                : 'bg-orange-500/20 text-orange-400'
+            }`}>
+            <UtensilsCrossed className="w-3 h-3" />
+            {reservation.cateringArranged ? 'OK' : '!'}
+          </span>
+        ))}
       </div>
     </Link>
   );
