@@ -2,10 +2,12 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
   LayoutDashboard, Calendar, CalendarDays, LogOut,
-  User, Menu, CalendarSync, CalendarPlus, FileDown, Mail, Settings
+  User, Menu, CalendarSync, CalendarPlus, FileDown, Mail, Settings, Users
 } from 'lucide-react';
 import { useState } from 'react';
 import { clearAuth} from '../lib/api';
+import { usePermissions } from '../lib/usePermissions';
+import { useRole } from '../lib/RoleContext';
 import { ThemeToggle } from './ThemeToggle';
 import { version } from '../../package.json';
 
@@ -13,6 +15,8 @@ export function Layout() {
   const { instance, accounts } = useMsal();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { canEditEmailTemplates, canEditFormSettings, canManageUsers } = usePermissions();
+  const { role } = useRole();
 
   const user = accounts[0];
 
@@ -33,8 +37,9 @@ export function Layout() {
     { to: '/export', icon: FileDown, label: 'Export' },
     { to: '/calendar', icon: CalendarSync, label: 'Calendar Feeds' },
     { to: '/calendar-appointments', icon: CalendarPlus, label: 'Appointments' },
-    { to: '/email-templates', icon: Mail, label: 'Email Templates' },
-    { to: '/form-settings', icon: Settings, label: 'Form Settings' },
+    ...(canEditEmailTemplates ? [{ to: '/email-templates', icon: Mail, label: 'Email Templates' }] : []),
+    ...(canEditFormSettings ? [{ to: '/form-settings', icon: Settings, label: 'Form Settings' }] : []),
+    ...(canManageUsers ? [{ to: '/users', icon: Users, label: 'Users' }] : []),
   ];
 
   return (
@@ -107,8 +112,15 @@ export function Layout() {
                 <div className="text-sm font-medium text-white truncate">
                   {user?.name || 'Staff'}
                 </div>
-                <div className="text-xs text-dark-400 truncate">
+                <div className="text-xs text-dark-400 truncate flex items-center gap-1.5">
                   {user?.username || 'Logged in'}
+                  {role && (
+                    <span className={`text-[9px] font-semibold px-1 py-0.5 rounded ${
+                      role === 'ADMIN' ? 'bg-red-500/20 text-red-400' :
+                      role === 'EDITOR' ? 'bg-hubble-500/20 text-hubble-400' :
+                      'bg-dark-700 text-dark-400'
+                    }`}>{role}</span>
+                  )}
                 </div>
               </div>
             </div>
