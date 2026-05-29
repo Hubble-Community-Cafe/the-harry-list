@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
 
     /** Insufficient role (403) — expected, not sent to Sentry */
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException ex) {
+    public ResponseEntity<Map<String, String>> handleAccessDenied() {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(Map.of("error", "You do not have permission to perform this action"));
     }
