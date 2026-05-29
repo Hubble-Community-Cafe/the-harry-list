@@ -13,6 +13,7 @@ import { WeekOverviewPage } from './pages/WeekOverviewPage';
 import { Layout } from './components/Layout';
 import { useGroupAuthorization } from './lib/useGroupAuthorization';
 import { ThemeProvider } from './lib/ThemeContext';
+import { RoleProvider } from './lib/RoleContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Loader2, ShieldX } from 'lucide-react';
 
@@ -72,6 +73,7 @@ function App() {
   return (
     <ErrorBoundary>
     <ThemeProvider>
+    <RoleProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
@@ -94,6 +96,7 @@ function App() {
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+    </RoleProvider>
     </ThemeProvider>
     </ErrorBoundary>
   );
