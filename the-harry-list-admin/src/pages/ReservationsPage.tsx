@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { fetchReservations, updateCateringArranged } from '../lib/api';
 import type { Reservation } from '../types/reservation';
+import { usePermissions } from '../lib/usePermissions';
 import { HelpGuide } from '../components/HelpGuide';
 import { reservationsGuide } from '../lib/guideContent';
 
@@ -27,6 +28,7 @@ export function ReservationsPage() {
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'ALL');
   const [locationFilter, setLocationFilter] = useState('ALL');
   const [showPast, setShowPast] = useState(false);
+  const { canUpdateReservations } = usePermissions();
 
   const todayStr = toLocalDateString(new Date());
 
@@ -206,6 +208,7 @@ export function ReservationsPage() {
                             <div className="flex items-center gap-2 flex-wrap mb-0.5">
                               <h3 className="font-medium text-white truncate">{reservation.eventTitle}</h3>
                               {hasCatering(reservation.specialActivities) && (
+                                canUpdateReservations ? (
                                 <button
                                   type="button"
                                   onClick={async (e) => {
@@ -229,6 +232,16 @@ export function ReservationsPage() {
                                   <UtensilsCrossed className="w-3 h-3" />
                                   {reservation.cateringArranged ? 'Catering arranged' : 'Catering'}
                                 </button>
+                                ) : (
+                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
+                                    reservation.cateringArranged
+                                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                                  }`}>
+                                  <UtensilsCrossed className="w-3 h-3" />
+                                  {reservation.cateringArranged ? 'Catering arranged' : 'Catering'}
+                                </span>
+                                )
                               )}
                             </div>
                             <p className="text-sm text-dark-400 truncate">

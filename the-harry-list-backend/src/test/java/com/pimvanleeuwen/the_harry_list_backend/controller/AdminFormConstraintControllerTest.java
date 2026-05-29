@@ -3,6 +3,7 @@ package com.pimvanleeuwen.the_harry_list_backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pimvanleeuwen.the_harry_list_backend.config.SecurityConfig;
 import com.pimvanleeuwen.the_harry_list_backend.model.FormConstraint;
+import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import com.pimvanleeuwen.the_harry_list_backend.model.FormConstraintType;
 import com.pimvanleeuwen.the_harry_list_backend.repository.FormConstraintRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,9 @@ class AdminFormConstraintControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private AdminUserService adminUserService;
 
     @MockitoBean
     private FormConstraintRepository repository;
@@ -90,7 +94,7 @@ class AdminFormConstraintControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void create_shouldReturn201() throws Exception {
         FormConstraint constraint = sampleConstraint();
         when(repository.save(any())).thenReturn(constraint);
@@ -104,7 +108,7 @@ class AdminFormConstraintControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void update_shouldUpdateExisting() throws Exception {
         FormConstraint existing = sampleConstraint();
         FormConstraint updated = sampleConstraint();
@@ -122,7 +126,7 @@ class AdminFormConstraintControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void update_shouldReturn404ForMissing() throws Exception {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
@@ -134,7 +138,7 @@ class AdminFormConstraintControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void toggle_shouldFlipEnabledState() throws Exception {
         FormConstraint constraint = sampleConstraint();
         constraint.setEnabled(true);
@@ -151,7 +155,7 @@ class AdminFormConstraintControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void delete_shouldReturn200() throws Exception {
         when(repository.existsById(1L)).thenReturn(true);
         doNothing().when(repository).deleteById(1L);
@@ -162,7 +166,7 @@ class AdminFormConstraintControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void delete_shouldReturn404ForMissing() throws Exception {
         when(repository.existsById(99L)).thenReturn(false);
 

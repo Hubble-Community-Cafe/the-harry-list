@@ -3,15 +3,40 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { CalendarAppointmentsPage } from '../pages/CalendarAppointmentsPage';
 
-const { mockFetch, mockCreate, mockUpdate, mockToggle, mockDelete } = vi.hoisted(() => {
+const { mockFetch, mockCreate, mockUpdate, mockToggle, mockDelete, mockUsePermissions } = vi.hoisted(() => {
   return {
     mockFetch: vi.fn(),
     mockCreate: vi.fn(),
     mockUpdate: vi.fn(),
     mockToggle: vi.fn(),
     mockDelete: vi.fn(),
+    mockUsePermissions: vi.fn(),
   };
 });
+
+const allPermissions = {
+  canUpdateReservations: true,
+  canManageBlockedPeriods: true,
+  canManageAppointments: true,
+  canManageAttachments: true,
+  canEditEmailTemplates: true,
+  canEditFormSettings: true,
+  canManageUsers: true,
+};
+
+const viewerPermissions = {
+  canUpdateReservations: false,
+  canManageBlockedPeriods: false,
+  canManageAppointments: false,
+  canManageAttachments: false,
+  canEditEmailTemplates: false,
+  canEditFormSettings: false,
+  canManageUsers: false,
+};
+
+vi.mock('../lib/usePermissions', () => ({
+  usePermissions: () => mockUsePermissions(),
+}));
 
 vi.mock('../lib/api', () => ({
   fetchCalendarAppointments: mockFetch,
@@ -58,6 +83,7 @@ describe('CalendarAppointmentsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetch.mockResolvedValue(sampleAppointments);
+    mockUsePermissions.mockReturnValue(allPermissions);
   });
 
   it('renders page title', async () => {
@@ -182,7 +208,7 @@ describe('CalendarAppointmentsPage', () => {
     });
   });
 
-  it('calls delete when delete button clicked', async () => {
+  it('calls delete when delete button clicked and confirmed in dialog', async () => {
     mockDelete.mockResolvedValue(undefined);
     renderPage();
     await waitFor(() => {
@@ -190,8 +216,52 @@ describe('CalendarAppointmentsPage', () => {
     });
     const deleteButtons = screen.getAllByTitle('Delete');
     fireEvent.click(deleteButtons[0]);
+
+    // Confirmation dialog should appear
+    expect(screen.getByText('Delete appointment')).toBeInTheDocument();
+    expect(screen.getByText(/permanently deleted/)).toBeInTheDocument();
+
+    // Confirm the deletion
+    fireEvent.click(screen.getByText('Delete', { selector: 'button' }));
     await waitFor(() => {
       expect(mockDelete).toHaveBeenCalledWith(1);
+    });
+  });
+});
+
+describe('CalendarAppointmentsPage - viewer permissions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFetch.mockResolvedValue(sampleAppointments);
+    mockUsePermissions.mockReturnValue(viewerPermissions);
+  });
+
+  it('hides Add Appointment button for viewer', async () => {
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByText('Staff Meeting')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Add Appointment')).not.toBeInTheDocument();
+  });
+
+  it('hides edit, toggle, and delete buttons for viewer', async () => {
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByText('Staff Meeting')).toBeInTheDocument();
+    });
+    expect(screen.queryByTitle('Edit')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Disable')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Enable')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Delete')).not.toBeInTheDocument();
+  });
+
+  it('still shows appointment data for viewer', async () => {
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByText('Staff Meeting')).toBeInTheDocument();
+      expect(screen.getByText('Holiday Closure')).toBeInTheDocument();
+      expect(screen.getByText('HUBBLE')).toBeInTheDocument();
+      expect(screen.getByText('METEOR')).toBeInTheDocument();
     });
   });
 });

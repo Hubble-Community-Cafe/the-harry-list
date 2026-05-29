@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -66,6 +67,7 @@ public class AdminReservationController {
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Update reservation status", description = "Update the status of a reservation (confirm, reject, cancel)")
     public ResponseEntity<?> updateStatus(
             @PathVariable Long id,
@@ -110,6 +112,7 @@ public class AdminReservationController {
     }
 
     @PatchMapping("/{id}/catering-arranged")
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Toggle catering arranged", description = "Mark catering as arranged (or undo) for a reservation")
     public ResponseEntity<Reservation> updateCateringArranged(
             @PathVariable Long id,
@@ -129,6 +132,7 @@ public class AdminReservationController {
     }
 
     @PatchMapping("/{id}/notes")
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Update internal notes", description = "Add or update internal notes for a reservation")
     public ResponseEntity<Reservation> updateInternalNotes(
             @PathVariable Long id,
@@ -148,6 +152,7 @@ public class AdminReservationController {
     }
 
     @PostMapping("/{id}/email")
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Send custom email", description = "Send a custom email to the reservation contact")
     public ResponseEntity<Map<String, String>> sendCustomEmail(
             @PathVariable Long id,
@@ -192,6 +197,7 @@ public class AdminReservationController {
     }
 
     @PostMapping("/{id}/catering-email")
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Send catering options email", description = "Send catering email with PDF attachments to reservation contact")
     public ResponseEntity<Map<String, String>> sendCateringEmail(
             @PathVariable Long id,

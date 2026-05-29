@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   Plus, Trash2, Loader2, AlertCircle,
-  ToggleLeft, ToggleRight, Calendar, Shield, Pencil, X, Database, Clock
+  ToggleLeft, ToggleRight, Calendar, Shield, Pencil, X, Database, Clock, Users
 } from 'lucide-react';
 import {
   fetchFormConstraints, createFormConstraint, updateFormConstraint,
@@ -14,6 +14,9 @@ import type { FormConstraint, BlockedPeriod } from '../types/reservation';
 import type { RetentionSettings } from '../lib/api';
 import { HelpGuide } from '../components/HelpGuide';
 import { formSettingsGuide } from '../lib/guideContent';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { usePermissions } from '../lib/usePermissions';
+import { UsersTab } from './UsersPage';
 
 const CONSTRAINT_TYPES = [
   { value: 'ACTIVITY_CONFLICT', label: 'Activity Conflict' },
@@ -52,8 +55,12 @@ const emptyBlockedPeriod: BlockedPeriod = {
   enabled: true,
 };
 
-export function FormSettingsPage() {
-  const [activeTab, setActiveTab] = useState<'constraints' | 'blocked'>('constraints');
+/** @deprecated Use SettingsPage instead */
+export const FormSettingsPage = SettingsPage;
+
+export function SettingsPage() {
+  const [activeTab, setActiveTab] = useState<'constraints' | 'blocked' | 'retention' | 'users'>('constraints');
+  const { canEditFormSettings, canManageUsers } = usePermissions();
   const [constraints, setConstraints] = useState<FormConstraint[]>([]);
   const [blockedPeriods, setBlockedPeriods] = useState<BlockedPeriod[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,6 +75,10 @@ export function FormSettingsPage() {
   // Blocked period form state
   const [editingPeriod, setEditingPeriod] = useState<BlockedPeriod | null>(null);
   const [savingPeriod, setSavingPeriod] = useState(false);
+
+  // Delete confirmation state
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'constraint' | 'period'; id: number } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     Promise.all([fetchFormConstraints(), fetchBlockedPeriods(), fetchRetentionSettings()])
@@ -90,13 +101,22 @@ export function FormSettingsPage() {
     }
   }
 
-  async function handleDeleteConstraint(id: number) {
-    if (!confirm('Delete this constraint?')) return;
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await deleteFormConstraint(id);
-      setConstraints(prev => prev.filter(c => c.id !== id));
+      if (deleteTarget.type === 'constraint') {
+        await deleteFormConstraint(deleteTarget.id);
+        setConstraints(prev => prev.filter(c => c.id !== deleteTarget.id));
+      } else {
+        await deleteBlockedPeriod(deleteTarget.id);
+        setBlockedPeriods(prev => prev.filter(bp => bp.id !== deleteTarget.id));
+      }
+      setDeleteTarget(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete constraint');
+      setError(err instanceof Error ? err.message : `Failed to delete ${deleteTarget.type === 'constraint' ? 'constraint' : 'blocked period'}`);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -141,15 +161,7 @@ export function FormSettingsPage() {
     }
   }
 
-  async function handleDeletePeriod(id: number) {
-    if (!confirm('Delete this blocked period?')) return;
-    try {
-      await deleteBlockedPeriod(id);
-      setBlockedPeriods(prev => prev.filter(bp => bp.id !== id));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete blocked period');
-    }
-  }
+  // handleDeletePeriod and handleDeleteConstraint now use the shared handleConfirmDelete via ConfirmDialog
 
   async function handleSavePeriod() {
     if (!editingPeriod) return;
@@ -183,10 +195,10 @@ export function FormSettingsPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white">Form Settings</h1>
-          <p className="text-dark-400 font-light">Manage form constraints and blocked periods</p>
+          <h1 className="text-2xl font-title font-bold text-white">Settings</h1>
+          <p className="text-dark-400 font-light">Manage constraints, blocked periods, and admin settings</p>
         </div>
-        <HelpGuide title="Form Settings Guide" sections={formSettingsGuide} />
+        <HelpGuide title="Settings Guide" sections={formSettingsGuide} />
       </div>
 
       {error && (
@@ -199,31 +211,48 @@ export function FormSettingsPage() {
         </div>
       )}
 
-      {/* Tab Switcher */}
-      <div className="flex gap-2 border-b border-dark-800 pb-0">
-        <button
-          onClick={() => setActiveTab('constraints')}
-          className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 ${
-            activeTab === 'constraints'
-              ? 'bg-dark-800 text-hubble-400 border-b-2 border-hubble-500'
-              : 'text-dark-400 hover:text-white'
-          }`}
-        >
-          <Shield className="w-4 h-4" />
-          Form Constraints ({constraints.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('blocked')}
-          className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 ${
-            activeTab === 'blocked'
-              ? 'bg-dark-800 text-hubble-400 border-b-2 border-hubble-500'
-              : 'text-dark-400 hover:text-white'
-          }`}
-        >
-          <Calendar className="w-4 h-4" />
-          Blocked Periods ({blockedPeriods.length})
-        </button>
-      </div>
+      {/* Tab Switcher — dropdown on mobile, horizontal tabs on md+ */}
+      {(() => {
+        const tabs = [
+          { key: 'constraints' as const, icon: Shield, label: `Form Constraints (${constraints.length})` },
+          { key: 'blocked' as const, icon: Calendar, label: `Blocked Periods (${blockedPeriods.length})` },
+          ...(canEditFormSettings ? [{ key: 'retention' as const, icon: Database, label: 'Data Retention' }] : []),
+          ...(canManageUsers ? [{ key: 'users' as const, icon: Users, label: 'Users' }] : []),
+        ];
+        return (
+          <>
+            {/* Mobile: select dropdown */}
+            <div className="md:hidden">
+              <select
+                value={activeTab}
+                onChange={e => setActiveTab(e.target.value as typeof activeTab)}
+                className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2.5 text-white text-sm appearance-none"
+              >
+                {tabs.map(t => (
+                  <option key={t.key} value={t.key}>{t.label}</option>
+                ))}
+              </select>
+            </div>
+            {/* Desktop: horizontal tabs */}
+            <div className="hidden md:flex gap-2 border-b border-dark-800 pb-0">
+              {tabs.map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 ${
+                    activeTab === t.key
+                      ? 'bg-dark-800 text-hubble-400 border-b-2 border-hubble-500'
+                      : 'text-dark-400 hover:text-white'
+                  }`}
+                >
+                  <t.icon className="w-4 h-4" />
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </>
+        );
+      })()}
 
       {/* ===== Constraints Tab ===== */}
       {activeTab === 'constraints' && (
@@ -283,7 +312,7 @@ export function FormSettingsPage() {
                       }
                     </button>
                     <button
-                      onClick={() => c.id && handleDeleteConstraint(c.id)}
+                      onClick={() => c.id && setDeleteTarget({ type: 'constraint', id: c.id })}
                       className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                       title="Delete"
                     >
@@ -363,7 +392,7 @@ export function FormSettingsPage() {
                       }
                     </button>
                     <button
-                      onClick={() => bp.id && handleDeletePeriod(bp.id)}
+                      onClick={() => bp.id && setDeleteTarget({ type: 'period', id: bp.id })}
                       className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                       title="Delete"
                     >
@@ -623,37 +652,33 @@ export function FormSettingsPage() {
         </div>
       )}
 
-      {/* Data Retention */}
-      {retention && (
-        <div className="card">
-          <h2 className="text-lg font-title font-semibold text-white mb-1 flex items-center gap-2">
-            <Database className="w-5 h-5 text-hubble-400" />
-            Data Retention
-          </h2>
-          <p className="text-xs text-dark-500 mb-4">
-            Read-only — configure via <code className="bg-dark-800 text-hubble-400 px-1 rounded font-mono">DATA_RETENTION_DAYS</code> in your Docker Compose settings
+      {/* ===== Data Retention Tab (Admin only) ===== */}
+      {activeTab === 'retention' && retention && (
+        <div className="space-y-4">
+          <p className="text-sm text-dark-400">
+            Read-only overview of the automatic data retention policy. Configure via <code className="bg-dark-800 text-hubble-400 px-1 rounded font-mono text-xs">DATA_RETENTION_DAYS</code> in your Docker Compose settings.
           </p>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <div className="bg-dark-800 rounded-xl p-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-dark-900 border border-dark-800 rounded-xl p-4">
               <div className="text-xs text-dark-500 mb-1">Status</div>
               <div className={`text-sm font-semibold ${retention.enabled ? 'text-green-400' : 'text-dark-400'}`}>
                 {retention.enabled ? 'Enabled' : 'Disabled'}
               </div>
             </div>
-            <div className="bg-dark-800 rounded-xl p-4">
+            <div className="bg-dark-900 border border-dark-800 rounded-xl p-4">
               <div className="text-xs text-dark-500 mb-1">Retention Period</div>
               <div className="text-sm font-semibold text-white">
                 {retention.enabled ? `${retention.retentionDays} days` : '—'}
               </div>
             </div>
-            <div className="bg-dark-800 rounded-xl p-4">
+            <div className="bg-dark-900 border border-dark-800 rounded-xl p-4">
               <div className="text-xs text-dark-500 mb-1">Cutoff Date</div>
               <div className="text-sm font-semibold text-white">
                 {retention.cutoffDate ?? '—'}
               </div>
             </div>
-            <div className="bg-dark-800 rounded-xl p-4">
+            <div className="bg-dark-900 border border-dark-800 rounded-xl p-4">
               <div className="text-xs text-dark-500 mb-1">Eligible for Removal</div>
               <div className={`text-sm font-semibold ${retention.eligibleForDeletion > 0 ? 'text-amber-400' : 'text-white'}`}>
                 {retention.eligibleForDeletion} reservations
@@ -667,6 +692,20 @@ export function FormSettingsPage() {
           </div>
         </div>
       )}
+
+      {/* ===== Users Tab (Admin only) ===== */}
+      {activeTab === 'users' && <UsersTab />}
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={deleteTarget?.type === 'constraint' ? 'Delete constraint' : 'Delete blocked period'}
+        message="This will be permanently deleted. This action cannot be undone."
+        confirmLabel="Delete"
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

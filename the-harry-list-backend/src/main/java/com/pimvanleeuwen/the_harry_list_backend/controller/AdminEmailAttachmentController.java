@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,6 +42,7 @@ public class AdminEmailAttachmentController {
     }
 
     @PostMapping(consumes = "multipart/form-data")
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Upload a PDF attachment", description = "Upload a PDF file to use as email attachment")
     public ResponseEntity<?> uploadAttachment(
             @RequestParam("file") MultipartFile file,
@@ -78,6 +80,7 @@ public class AdminEmailAttachmentController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Delete an attachment", description = "Permanently delete an email attachment")
     public ResponseEntity<Void> deleteAttachment(@PathVariable Long id) {
         if (!repository.existsById(id)) {
@@ -89,6 +92,7 @@ public class AdminEmailAttachmentController {
     }
 
     @PatchMapping("/{id}/active")
+    @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Toggle attachment active status", description = "Enable or disable an attachment")
     public ResponseEntity<?> toggleActive(@PathVariable Long id, @RequestParam boolean active) {
         return repository.findById(id)

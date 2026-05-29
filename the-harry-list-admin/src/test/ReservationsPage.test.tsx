@@ -10,6 +10,18 @@ function dateOffset(monthOffset: number, dayOffset = 0): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+vi.mock('../lib/usePermissions', () => ({
+  usePermissions: () => ({
+    canUpdateReservations: true,
+    canManageBlockedPeriods: true,
+    canManageAppointments: true,
+    canManageAttachments: true,
+    canEditEmailTemplates: true,
+    canEditFormSettings: true,
+    canManageUsers: true,
+  }),
+}));
+
 // Mock the API
 vi.mock('../lib/api', () => ({
   fetchReservations: vi.fn().mockResolvedValue([

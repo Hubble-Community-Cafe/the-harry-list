@@ -8,6 +8,8 @@ import {
   toggleCalendarAppointment, deleteCalendarAppointment,
 } from '../lib/api';
 import type { CalendarAppointment, RecurrenceType } from '../types/reservation';
+import { usePermissions } from '../lib/usePermissions';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 const RECURRENCE_OPTIONS: { value: RecurrenceType; label: string }[] = [
   { value: 'NONE', label: 'None' },
@@ -45,6 +47,9 @@ export function CalendarAppointmentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<CalendarAppointment | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const { canManageAppointments } = usePermissions();
 
   useEffect(() => {
     fetchCalendarAppointments()
@@ -92,12 +97,17 @@ export function CalendarAppointmentsPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await deleteCalendarAppointment(id);
-      setAppointments(prev => prev.filter(a => a.id !== id));
+      await deleteCalendarAppointment(deleteTarget);
+      setAppointments(prev => prev.filter(a => a.id !== deleteTarget));
+      setDeleteTarget(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete appointment');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -117,6 +127,7 @@ export function CalendarAppointmentsPage() {
           <h1 className="text-2xl font-title font-bold text-white">Calendar Appointments</h1>
           <p className="text-dark-400 font-light">Custom calendar entries that appear in the ICS feeds alongside reservations</p>
         </div>
+        {canManageAppointments && (
         <button
           onClick={() => setEditing({ ...emptyAppointment })}
           className="btn-primary flex items-center gap-2 shrink-0"
@@ -124,6 +135,7 @@ export function CalendarAppointmentsPage() {
           <Plus className="w-4 h-4" />
           Add Appointment
         </button>
+        )}
       </div>
 
       {/* Error */}
@@ -193,6 +205,7 @@ export function CalendarAppointmentsPage() {
                   <p className="text-sm text-dark-400 truncate">{appointment.description}</p>
                 )}
               </div>
+              {canManageAppointments && (
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => setEditing({ ...appointment })}
@@ -212,13 +225,14 @@ export function CalendarAppointmentsPage() {
                   }
                 </button>
                 <button
-                  onClick={() => appointment.id && handleDelete(appointment.id)}
+                  onClick={() => appointment.id && setDeleteTarget(appointment.id)}
                   className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10"
                   title="Delete"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
+              )}
             </div>
           ))}
         </div>
@@ -374,6 +388,17 @@ export function CalendarAppointmentsPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete appointment"
+        message="This appointment will be permanently deleted. This action cannot be undone."
+        confirmLabel="Delete"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

@@ -1,10 +1,12 @@
 package com.pimvanleeuwen.the_harry_list_backend.config;
 
+import com.pimvanleeuwen.the_harry_list_backend.filter.RoleAuthorizationFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
@@ -15,6 +17,7 @@ import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -25,6 +28,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Value("${azure.tenant-id:}")
@@ -35,6 +39,12 @@ public class SecurityConfig {
 
     @Value("${cors.allowed-origins:}")
     private String corsAllowedOrigins;
+
+    private final RoleAuthorizationFilter roleAuthorizationFilter;
+
+    public SecurityConfig(RoleAuthorizationFilter roleAuthorizationFilter) {
+        this.roleAuthorizationFilter = roleAuthorizationFilter;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -65,6 +75,9 @@ public class SecurityConfig {
 
         // Only allow OAuth2 JWT (Microsoft login)
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+
+        // Enrich authenticated admin requests with role-based authorities
+        http.addFilterAfter(roleAuthorizationFilter, BearerTokenAuthenticationFilter.class);
 
         return http.build();
     }
