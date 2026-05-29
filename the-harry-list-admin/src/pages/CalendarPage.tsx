@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Copy, Check, ExternalLink, RefreshCw, Loader2, AlertCircle, Lock, Unlock } from 'lucide-react';
+import { Calendar, Copy, Check, ExternalLink, RefreshCw, Loader2, AlertCircle, Lock, Unlock, EyeOff, Eye, ShieldAlert } from 'lucide-react';
 import { fetchWithAuth } from '../lib/api';
 import { HelpGuide } from '../components/HelpGuide';
 import { calendarGuide } from '../lib/guideContent';
@@ -31,6 +31,7 @@ export function CalendarPage() {
   const [parameters, setParameters] = useState<ParameterInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [revealedFeeds, setRevealedFeeds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function loadFeeds() {
@@ -136,37 +137,59 @@ export function CalendarPage() {
         {/* Content */}
         <div className="p-4">
           {feed.hasToken && feed.url ? (
-            <div className="space-y-3">
-              {/* URL Display */}
-              <input
-                type="text"
-                readOnly
-                value={feed.url}
-                className="w-full px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-xs text-dark-400 truncate"
-              />
+            revealedFeeds.has(feed.id) ? (
+              <div className="space-y-3">
+                {/* URL Display */}
+                <input
+                  type="text"
+                  readOnly
+                  value={feed.url}
+                  className="w-full px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-xs text-dark-400 truncate"
+                />
 
-              {/* Quick Actions */}
-              <div className="flex gap-2">
-                <a
-                  href={feed.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-dark-800 hover:bg-dark-700 text-dark-300 hover:text-white rounded-lg text-xs transition-colors"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Preview
-                </a>
-                <a
-                  href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(feed.url.replace('https://', 'webcal://').replace('http://', 'webcal://'))}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-dark-800 hover:bg-dark-700 text-dark-300 hover:text-white rounded-lg text-xs transition-colors"
-                >
-                  <Calendar className="w-3.5 h-3.5" />
-                  Add to Google
-                </a>
+                {/* Quick Actions */}
+                <div className="flex gap-2">
+                  <a
+                    href={feed.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-dark-800 hover:bg-dark-700 text-dark-300 hover:text-white rounded-lg text-xs transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Preview
+                  </a>
+                  <a
+                    href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(feed.url.replace('https://', 'webcal://').replace('http://', 'webcal://'))}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-dark-800 hover:bg-dark-700 text-dark-300 hover:text-white rounded-lg text-xs transition-colors"
+                  >
+                    <Calendar className="w-3.5 h-3.5" />
+                    Add to Google
+                  </a>
+                  <button
+                    onClick={() => setRevealedFeeds(prev => { const next = new Set(prev); next.delete(feed.id); return next; })}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-dark-800 hover:bg-dark-700 text-dark-300 hover:text-white rounded-lg text-xs transition-colors ml-auto"
+                  >
+                    <EyeOff className="w-3.5 h-3.5" />
+                    Hide
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <button
+                onClick={() => setRevealedFeeds(prev => new Set(prev).add(feed.id))}
+                className="w-full py-4 rounded-lg border border-dashed border-dark-700 hover:border-amber-500/40 bg-dark-800/50 hover:bg-amber-500/5 transition-all group"
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <ShieldAlert className="w-5 h-5 text-amber-400/70 group-hover:text-amber-400 transition-colors" />
+                  <span className="text-xs text-dark-400 group-hover:text-dark-300 transition-colors">
+                    This URL contains a secret token — click to reveal
+                  </span>
+                  <Eye className="w-3.5 h-3.5 text-dark-500 group-hover:text-dark-400 transition-colors" />
+                </div>
+              </button>
+            )
           ) : (
             <div className="text-center py-2">
               <p className="text-xs text-dark-500">Token not configured</p>
