@@ -17,7 +17,11 @@ const ROLE_DESCRIPTIONS: Record<string, string> = {
   VIEWER: 'Read-only access to all pages, can export data',
 };
 
-export function UsersPage() {
+/**
+ * Users tab content — used inside the Settings page.
+ * Does not render its own page header.
+ */
+export function UsersTab() {
   const { user: currentUser, refetch: refetchRole } = useRole();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,13 +58,7 @@ export function UsersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-title font-bold text-white">User Management</h1>
-        <p className="text-dark-400 font-light">Manage admin panel access and roles</p>
-      </div>
-
+    <div className="space-y-4">
       {/* Error */}
       {error && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center gap-3">
@@ -154,6 +152,21 @@ export function UsersPage() {
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Standalone Users page — kept for backwards compatibility with /users route.
+ */
+export function UsersPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-title font-bold text-white">User Management</h1>
+        <p className="text-dark-400 font-light">Manage admin panel access and roles</p>
+      </div>
+      <UsersTab />
     </div>
   );
 }

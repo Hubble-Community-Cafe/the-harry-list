@@ -3,6 +3,27 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { FormSettingsPage } from '../pages/FormSettingsPage';
 
+vi.mock('../lib/usePermissions', () => ({
+  usePermissions: () => ({
+    canUpdateReservations: true,
+    canManageBlockedPeriods: true,
+    canManageAppointments: true,
+    canManageAttachments: true,
+    canEditEmailTemplates: true,
+    canEditFormSettings: true,
+    canManageUsers: true,
+  }),
+}));
+
+vi.mock('../lib/RoleContext', () => ({
+  useRole: () => ({
+    role: 'ADMIN',
+    user: { id: 1, azureOid: 'test', email: 'test@test.com', displayName: 'Test', role: 'ADMIN' },
+    isLoading: false,
+    refetch: vi.fn(),
+  }),
+}));
+
 // Mock the API
 vi.mock('../lib/api', () => ({
   fetchFormConstraints: vi.fn().mockResolvedValue([
@@ -64,6 +85,8 @@ vi.mock('../lib/api', () => ({
     nextRunAt: '2026-04-03T02:00:00',
     cutoffDate: '2025-04-02',
   }),
+  fetchAllUsers: vi.fn().mockResolvedValue([]),
+  updateUserRole: vi.fn(),
 }));
 
 const renderWithRouter = (component: React.ReactNode) => {
@@ -82,7 +105,7 @@ describe('FormSettingsPage', () => {
   it('renders the page title', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getByText('Form Settings')).toBeInTheDocument();
+      expect(screen.getByText('Settings')).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
@@ -95,14 +118,14 @@ describe('FormSettingsPage', () => {
   it('displays constraints tab with constraint count', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getByText(/Form Constraints \(3\)/)).toBeInTheDocument();
+      expect(screen.getAllByText(/Form Constraints \(3\)/).length).toBeGreaterThanOrEqual(1);
     }, { timeout: 3000 });
   });
 
   it('displays blocked periods tab with count', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getByText(/Blocked Periods \(1\)/)).toBeInTheDocument();
+      expect(screen.getAllByText(/Blocked Periods \(1\)/).length).toBeGreaterThanOrEqual(1);
     }, { timeout: 3000 });
   });
 
@@ -126,10 +149,12 @@ describe('FormSettingsPage', () => {
   it('switches to blocked periods tab', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getByText(/Blocked Periods/)).toBeInTheDocument();
+      expect(screen.getAllByText(/Blocked Periods/).length).toBeGreaterThanOrEqual(1);
     }, { timeout: 3000 });
 
-    fireEvent.click(screen.getByText(/Blocked Periods/));
+    // Click the button tab (not the select option)
+    const blockedBtn = screen.getAllByText(/Blocked Periods/).find(el => el.closest('button'));
+    fireEvent.click(blockedBtn!);
 
     await waitFor(() => {
       expect(screen.getByText('Spring maintenance')).toBeInTheDocument();
@@ -140,10 +165,11 @@ describe('FormSettingsPage', () => {
   it('shows blocked period date range and location', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getByText(/Blocked Periods/)).toBeInTheDocument();
+      expect(screen.getAllByText(/Blocked Periods/).length).toBeGreaterThanOrEqual(1);
     }, { timeout: 3000 });
 
-    fireEvent.click(screen.getByText(/Blocked Periods/));
+    const blockedBtn = screen.getAllByText(/Blocked Periods/).find(el => el.closest('button'));
+    fireEvent.click(blockedBtn!);
 
     await waitFor(() => {
       expect(screen.getByText('2026-04-01 — 2026-04-03')).toBeInTheDocument();
@@ -167,10 +193,11 @@ describe('FormSettingsPage', () => {
   it('opens new blocked period modal when Add Blocked Period is clicked', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getByText(/Blocked Periods/)).toBeInTheDocument();
+      expect(screen.getAllByText(/Blocked Periods/).length).toBeGreaterThanOrEqual(1);
     }, { timeout: 3000 });
 
-    fireEvent.click(screen.getByText(/Blocked Periods/));
+    const blockedBtn = screen.getAllByText(/Blocked Periods/).find(el => el.closest('button'));
+    fireEvent.click(blockedBtn!);
 
     await waitFor(() => {
       expect(screen.getByText('Add Blocked Period')).toBeInTheDocument();
