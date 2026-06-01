@@ -1,0 +1,7 @@
+# Example/placeholder curl credentials in documentation files (admin:admin, admin:YOUR_ADMIN_PASSWORD)
+# These files have been removed from the codebase but still exist in git history.
+41c90c80527bc0f223c05cb3b3ea7c1fe413ecb9:POSTMAN_TESTING_GUIDE.md:curl-auth-user:461
+41c90c80527bc0f223c05cb3b3ea7c1fe413ecb9:POSTMAN_TESTING_GUIDE.md:curl-auth-user:471
+41c90c80527bc0f223c05cb3b3ea7c1fe413ecb9:POSTMAN_TESTING_GUIDE.md:curl-auth-user:493
+41c90c80527bc0f223c05cb3b3ea7c1fe413ecb9:POSTMAN_TESTING_GUIDE.md:curl-auth-user:499
+c2ee063057b077c8aea3ecaae5f8390eacba39f6:QUICKSTART.md:curl-auth-user:112
