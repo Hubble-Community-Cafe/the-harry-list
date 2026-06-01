@@ -169,6 +169,9 @@ jobs:
           output: trivy-repo.sarif
           severity: HIGH,CRITICAL
           ignore-unfixed: true
+          # Skip Java/Maven scanning — handled by OWASP Dependency-Check job.
+          # This avoids Maven Central 429 rate-limit errors in CI.
+          trivy-config: trivy.yaml
 
       - name: Upload SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
