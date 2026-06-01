@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.pimvanleeuwen</groupId>
 	<artifactId>the-harry-list-backend</artifactId>
-	<version>1.2.1</version>
+	<version>1.2.2</version>
 	<name>the-harry-list-backend</name>
 	<description>The Harry List, reservation system for Stichting Bar Potential</description>
 	<url/>
@@ -66,12 +66,12 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.5.32</version>
+            <version>1.5.34</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
-            <version>1.5.32</version>
+            <version>1.5.34</version>
         </dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -127,7 +127,7 @@
 		<dependency>
 			<groupId>io.sentry</groupId>
 			<artifactId>sentry</artifactId>
-			<version>8.42.0</version>
+			<version>8.43.0</version>
 		</dependency>
 	</dependencies>
 
