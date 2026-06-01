@@ -62,8 +62,9 @@ public final class AuditDiff {
                     String label = labels.getOrDefault(field.getName(), field.getName());
                     changes.add(new FieldChange(label, stringify(oldValue), stringify(newValue)));
                 }
-            } catch (IllegalAccessException e) {
-                // Skip fields we cannot read rather than failing the whole diff.
+            } catch (Exception e) {
+                // Skip fields we cannot read (e.g. IllegalAccessException, InaccessibleObjectException)
+                // rather than failing the whole diff. Auditing must never break the caller.
             }
         }
         return changes;
