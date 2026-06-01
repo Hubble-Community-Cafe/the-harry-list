@@ -1,0 +1,6 @@
+# Trivy configuration
+# Java/Maven dependency scanning is handled by OWASP Dependency-Check.
+# Skipping it here avoids Maven Central 429 rate-limit errors in CI.
+scan:
+  skip-dirs:
+    - the-harry-list-backend
