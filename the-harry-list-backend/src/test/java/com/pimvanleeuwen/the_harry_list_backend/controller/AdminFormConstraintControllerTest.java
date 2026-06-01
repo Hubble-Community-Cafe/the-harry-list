@@ -38,6 +38,9 @@ class AdminFormConstraintControllerTest {
     @MockitoBean
     private FormConstraintRepository repository;
 
+    @MockitoBean
+    private com.pimvanleeuwen.the_harry_list_backend.service.AuditService auditService;
+
     private ObjectMapper objectMapper;
 
     @BeforeEach
@@ -105,6 +108,10 @@ class AdminFormConstraintControllerTest {
                         .content(objectMapper.writeValueAsString(constraint)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.constraintType").value("ACTIVITY_CONFLICT"));
+
+        verify(auditService).recordCreate(
+                eq(com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType.FORM_CONSTRAINT),
+                any(), any(), any(), any());
     }
 
     @Test
@@ -157,12 +164,13 @@ class AdminFormConstraintControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void delete_shouldReturn200() throws Exception {
-        when(repository.existsById(1L)).thenReturn(true);
-        doNothing().when(repository).deleteById(1L);
+        when(repository.findById(1L)).thenReturn(Optional.of(sampleConstraint()));
 
         mockMvc.perform(delete("/api/admin/form-constraints/1").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("deleted"));
+
+        verify(repository).delete(any());
     }
 
     @Test

@@ -1,7 +1,12 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
+import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditAction;
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.FormConstraint;
 import com.pimvanleeuwen.the_harry_list_backend.repository.FormConstraintRepository;
+import com.pimvanleeuwen.the_harry_list_backend.service.AuditDiff;
+import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +22,15 @@ import java.util.Map;
 public class AdminFormConstraintController {
 
     private final FormConstraintRepository repository;
+    private final AuditService auditService;
 
-    public AdminFormConstraintController(FormConstraintRepository repository) {
+    public AdminFormConstraintController(FormConstraintRepository repository, AuditService auditService) {
         this.repository = repository;
+        this.auditService = auditService;
+    }
+
+    private static String label(FormConstraint c) {
+        return "Form constraint: " + c.getConstraintType();
     }
 
     @GetMapping
@@ -41,6 +52,8 @@ public class AdminFormConstraintController {
     @Operation(summary = "Create a new form constraint")
     public ResponseEntity<FormConstraint> create(@RequestBody FormConstraint constraint) {
         FormConstraint saved = repository.save(constraint);
+        auditService.recordCreate(AuditEntityType.FORM_CONSTRAINT, saved.getId(), label(saved),
+                List.of(), "Form constraint created");
         return ResponseEntity.status(201).body(saved);
     }
 
@@ -50,6 +63,7 @@ public class AdminFormConstraintController {
     public ResponseEntity<FormConstraint> update(@PathVariable Long id, @RequestBody FormConstraint constraint) {
         return repository.findById(id)
                 .map(existing -> {
+                    List<FieldChange> diffs = AuditDiff.compare(existing, constraint);
                     existing.setConstraintType(constraint.getConstraintType());
                     existing.setTriggerActivity(constraint.getTriggerActivity());
                     existing.setTargetValue(constraint.getTargetValue());
@@ -57,7 +71,10 @@ public class AdminFormConstraintController {
                     existing.setSecondaryValue(constraint.getSecondaryValue());
                     existing.setMessage(constraint.getMessage());
                     existing.setEnabled(constraint.getEnabled());
-                    return ResponseEntity.ok(repository.save(existing));
+                    FormConstraint saved = repository.save(existing);
+                    auditService.recordUpdate(AuditEntityType.FORM_CONSTRAINT, saved.getId(), label(saved),
+                            diffs, "Form constraint updated");
+                    return ResponseEntity.ok(saved);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -68,8 +85,14 @@ public class AdminFormConstraintController {
     public ResponseEntity<FormConstraint> toggle(@PathVariable Long id) {
         return repository.findById(id)
                 .map(existing -> {
+                    boolean previous = Boolean.TRUE.equals(existing.getEnabled());
                     existing.setEnabled(!existing.getEnabled());
-                    return ResponseEntity.ok(repository.save(existing));
+                    FormConstraint saved = repository.save(existing);
+                    auditService.recordAction(AuditEntityType.FORM_CONSTRAINT, saved.getId(), label(saved),
+                            AuditAction.TOGGLE,
+                            List.of(new FieldChange("enabled", String.valueOf(previous), String.valueOf(saved.getEnabled()))),
+                            "Form constraint " + (saved.getEnabled() ? "enabled" : "disabled"));
+                    return ResponseEntity.ok(saved);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -78,10 +101,13 @@ public class AdminFormConstraintController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a form constraint")
     public ResponseEntity<Map<String, String>> delete(@PathVariable Long id) {
-        if (!repository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        repository.deleteById(id);
-        return ResponseEntity.ok(Map.of("status", "deleted"));
+        return repository.findById(id)
+                .map(existing -> {
+                    repository.delete(existing);
+                    auditService.recordDelete(AuditEntityType.FORM_CONSTRAINT, id, label(existing),
+                            "Form constraint deleted");
+                    return ResponseEntity.ok(Map.of("status", "deleted"));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

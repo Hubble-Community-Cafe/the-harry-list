@@ -1,8 +1,12 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
 import com.pimvanleeuwen.the_harry_list_backend.dto.EmailAttachmentDto;
+import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditAction;
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailAttachment;
 import com.pimvanleeuwen.the_harry_list_backend.repository.EmailAttachmentRepository;
+import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,9 +31,11 @@ public class AdminEmailAttachmentController {
     private static final long MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB (Graph API inline attachment limit)
 
     private final EmailAttachmentRepository repository;
+    private final AuditService auditService;
 
-    public AdminEmailAttachmentController(EmailAttachmentRepository repository) {
+    public AdminEmailAttachmentController(EmailAttachmentRepository repository, AuditService auditService) {
         this.repository = repository;
+        this.auditService = auditService;
     }
 
     @GetMapping
@@ -72,6 +78,9 @@ public class AdminEmailAttachmentController {
 
             EmailAttachment saved = repository.save(attachment);
             log.info("Uploaded email attachment: id={} name='{}' filename='{}'", saved.getId(), saved.getName(), saved.getFilename());
+            auditService.recordCreate(AuditEntityType.EMAIL_ATTACHMENT, saved.getId(),
+                    "Attachment: " + saved.getName(), List.of(),
+                    "Attachment uploaded (" + saved.getFilename() + ")");
             return ResponseEntity.ok(EmailAttachmentDto.fromEntity(saved));
         } catch (IOException e) {
             log.error("Failed to read uploaded file", e);
@@ -83,12 +92,15 @@ public class AdminEmailAttachmentController {
     @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Delete an attachment", description = "Permanently delete an email attachment")
     public ResponseEntity<Void> deleteAttachment(@PathVariable Long id) {
-        if (!repository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        repository.deleteById(id);
-        log.info("Deleted email attachment: id={}", id);
-        return ResponseEntity.ok().build();
+        return repository.findById(id)
+                .map(attachment -> {
+                    repository.delete(attachment);
+                    log.info("Deleted email attachment: id={}", id);
+                    auditService.recordDelete(AuditEntityType.EMAIL_ATTACHMENT, id,
+                            "Attachment: " + attachment.getName(), "Attachment deleted");
+                    return ResponseEntity.ok().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PatchMapping("/{id}/active")
@@ -97,9 +109,14 @@ public class AdminEmailAttachmentController {
     public ResponseEntity<?> toggleActive(@PathVariable Long id, @RequestParam boolean active) {
         return repository.findById(id)
                 .map(attachment -> {
+                    boolean previous = attachment.isActive();
                     attachment.setActive(active);
                     EmailAttachment saved = repository.save(attachment);
                     log.info("Toggled email attachment active: id={} active={}", id, active);
+                    auditService.recordAction(AuditEntityType.EMAIL_ATTACHMENT, id,
+                            "Attachment: " + saved.getName(), AuditAction.TOGGLE,
+                            List.of(new FieldChange("active", String.valueOf(previous), String.valueOf(active))),
+                            "Attachment " + (active ? "activated" : "deactivated"));
                     return ResponseEntity.ok(EmailAttachmentDto.fromEntity(saved));
                 })
                 .orElse(ResponseEntity.notFound().build());

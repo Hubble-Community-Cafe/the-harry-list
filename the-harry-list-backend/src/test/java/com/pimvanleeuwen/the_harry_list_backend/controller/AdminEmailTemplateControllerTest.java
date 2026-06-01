@@ -44,6 +44,9 @@ class AdminEmailTemplateControllerTest {
     @MockitoBean
     private EmailNotificationService emailNotificationService;
 
+    @MockitoBean
+    private com.pimvanleeuwen.the_harry_list_backend.service.AuditService auditService;
+
     private ObjectMapper objectMapper;
 
     @BeforeEach

@@ -1,7 +1,12 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
+import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditAction;
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.CalendarAppointment;
 import com.pimvanleeuwen.the_harry_list_backend.repository.CalendarAppointmentRepository;
+import com.pimvanleeuwen.the_harry_list_backend.service.AuditDiff;
+import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,9 +24,15 @@ import java.util.Map;
 public class AdminCalendarAppointmentController {
 
     private final CalendarAppointmentRepository repository;
+    private final AuditService auditService;
 
-    public AdminCalendarAppointmentController(CalendarAppointmentRepository repository) {
+    public AdminCalendarAppointmentController(CalendarAppointmentRepository repository, AuditService auditService) {
         this.repository = repository;
+        this.auditService = auditService;
+    }
+
+    private static String label(CalendarAppointment a) {
+        return "Appointment: " + a.getTitle();
     }
 
     @GetMapping
@@ -43,6 +54,8 @@ public class AdminCalendarAppointmentController {
     @Operation(summary = "Create a new calendar appointment")
     public ResponseEntity<CalendarAppointment> create(@RequestBody CalendarAppointment appointment) {
         CalendarAppointment saved = repository.save(appointment);
+        auditService.recordCreate(AuditEntityType.CALENDAR_APPOINTMENT, saved.getId(), label(saved),
+                List.of(), "Appointment created");
         return ResponseEntity.status(201).body(saved);
     }
 
@@ -52,6 +65,7 @@ public class AdminCalendarAppointmentController {
     public ResponseEntity<CalendarAppointment> update(@PathVariable Long id, @RequestBody CalendarAppointment appointment) {
         return repository.findById(id)
                 .map(existing -> {
+                    List<FieldChange> diffs = AuditDiff.compare(existing, appointment);
                     existing.setTitle(appointment.getTitle());
                     existing.setDescription(appointment.getDescription());
                     existing.setDate(appointment.getDate());
@@ -62,7 +76,10 @@ public class AdminCalendarAppointmentController {
                     existing.setRecurrenceType(appointment.getRecurrenceType());
                     existing.setRecurrenceEndDate(appointment.getRecurrenceEndDate());
                     existing.setEnabled(appointment.getEnabled());
-                    return ResponseEntity.ok(repository.save(existing));
+                    CalendarAppointment saved = repository.save(existing);
+                    auditService.recordUpdate(AuditEntityType.CALENDAR_APPOINTMENT, saved.getId(), label(saved),
+                            diffs, "Appointment updated");
+                    return ResponseEntity.ok(saved);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -73,8 +90,14 @@ public class AdminCalendarAppointmentController {
     public ResponseEntity<CalendarAppointment> toggle(@PathVariable Long id) {
         return repository.findById(id)
                 .map(existing -> {
+                    boolean previous = Boolean.TRUE.equals(existing.getEnabled());
                     existing.setEnabled(!existing.getEnabled());
-                    return ResponseEntity.ok(repository.save(existing));
+                    CalendarAppointment saved = repository.save(existing);
+                    auditService.recordAction(AuditEntityType.CALENDAR_APPOINTMENT, saved.getId(), label(saved),
+                            AuditAction.TOGGLE,
+                            List.of(new FieldChange("enabled", String.valueOf(previous), String.valueOf(saved.getEnabled()))),
+                            "Appointment " + (saved.getEnabled() ? "enabled" : "disabled"));
+                    return ResponseEntity.ok(saved);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -83,10 +106,13 @@ public class AdminCalendarAppointmentController {
     @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Delete a calendar appointment")
     public ResponseEntity<Map<String, String>> delete(@PathVariable Long id) {
-        if (!repository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        repository.deleteById(id);
-        return ResponseEntity.ok(Map.of("status", "deleted"));
+        return repository.findById(id)
+                .map(existing -> {
+                    repository.delete(existing);
+                    auditService.recordDelete(AuditEntityType.CALENDAR_APPOINTMENT, id, label(existing),
+                            "Appointment deleted");
+                    return ResponseEntity.ok(Map.of("status", "deleted"));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

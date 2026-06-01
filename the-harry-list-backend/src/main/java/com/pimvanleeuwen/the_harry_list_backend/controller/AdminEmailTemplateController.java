@@ -3,7 +3,9 @@ package com.pimvanleeuwen.the_harry_list_backend.controller;
 import com.pimvanleeuwen.the_harry_list_backend.dto.EmailTemplateDto;
 import com.pimvanleeuwen.the_harry_list_backend.dto.TestEmailRequest;
 import com.pimvanleeuwen.the_harry_list_backend.dto.UpdateEmailTemplateRequest;
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
+import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,12 +26,15 @@ public class AdminEmailTemplateController {
 
     private final EmailTemplateService emailTemplateService;
     private final Optional<EmailNotificationService> emailNotificationService;
+    private final AuditService auditService;
 
     public AdminEmailTemplateController(
             EmailTemplateService emailTemplateService,
-            Optional<EmailNotificationService> emailNotificationService) {
+            Optional<EmailNotificationService> emailNotificationService,
+            AuditService auditService) {
         this.emailTemplateService = emailTemplateService;
         this.emailNotificationService = emailNotificationService;
+        this.auditService = auditService;
     }
 
     @GetMapping
@@ -53,6 +58,9 @@ public class AdminEmailTemplateController {
             @PathVariable EmailTemplateType type,
             @Valid @RequestBody UpdateEmailTemplateRequest request) {
         EmailTemplateDto updated = emailTemplateService.update(type, request.getSubject(), request.getBodyTemplate());
+        auditService.recordAction(AuditEntityType.EMAIL_TEMPLATE, null, "Email template: " + type,
+                com.pimvanleeuwen.the_harry_list_backend.model.AuditAction.UPDATE,
+                List.of(), "Email template '" + type + "' saved");
         return ResponseEntity.ok(updated);
     }
 
@@ -61,6 +69,9 @@ public class AdminEmailTemplateController {
     @Operation(summary = "Reset template to default", description = "Removes any custom template, reverting to the built-in default.")
     public ResponseEntity<Void> reset(@PathVariable EmailTemplateType type) {
         emailTemplateService.reset(type);
+        auditService.recordAction(AuditEntityType.EMAIL_TEMPLATE, null, "Email template: " + type,
+                com.pimvanleeuwen.the_harry_list_backend.model.AuditAction.UPDATE,
+                List.of(), "Email template '" + type + "' reset to default");
         return ResponseEntity.noContent().build();
     }
 

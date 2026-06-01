@@ -42,6 +42,9 @@ class AdminCalendarAppointmentControllerTest {
     @MockitoBean
     private CalendarAppointmentRepository repository;
 
+    @MockitoBean
+    private com.pimvanleeuwen.the_harry_list_backend.service.AuditService auditService;
+
     private ObjectMapper objectMapper;
 
     @BeforeEach
@@ -129,6 +132,10 @@ class AdminCalendarAppointmentControllerTest {
                         .content(objectMapper.writeValueAsString(appointment)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Staff Meeting"));
+
+        verify(auditService).recordCreate(
+                eq(com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType.CALENDAR_APPOINTMENT),
+                any(), any(), any(), any());
     }
 
     @Test
@@ -166,12 +173,13 @@ class AdminCalendarAppointmentControllerTest {
     @Test
     @WithMockUser(roles = "EDITOR")
     void delete_shouldReturn200() throws Exception {
-        when(repository.existsById(1L)).thenReturn(true);
-        doNothing().when(repository).deleteById(1L);
+        when(repository.findById(1L)).thenReturn(Optional.of(sampleAppointment()));
 
         mockMvc.perform(delete("/api/admin/calendar-appointments/1").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("deleted"));
+
+        verify(repository).delete(any());
     }
 
     @Test
