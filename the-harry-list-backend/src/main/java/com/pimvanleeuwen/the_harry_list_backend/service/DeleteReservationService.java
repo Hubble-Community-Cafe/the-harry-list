@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.slf4j.Logger;
@@ -17,12 +18,14 @@ public class DeleteReservationService implements Command<Long, Void> {
     private static final Logger log = LoggerFactory.getLogger(DeleteReservationService.class);
 
     private final ReservationRepository reservationRepository;
+    private final AuditService auditService;
 
     @Autowired(required = false)
     private EmailNotificationService emailService;
 
-    public DeleteReservationService(ReservationRepository reservationRepository) {
+    public DeleteReservationService(ReservationRepository reservationRepository, AuditService auditService) {
         this.reservationRepository = reservationRepository;
+        this.auditService = auditService;
     }
 
     @Override
@@ -60,6 +63,10 @@ public class DeleteReservationService implements Command<Long, Void> {
                 r.getEventDate(), r.getContactName(), r.getEmail());
 
         reservationRepository.deleteById(id);
+
+        auditService.recordDelete(AuditEntityType.RESERVATION, id,
+                r.getConfirmationNumber() + " - " + r.getEventTitle(),
+                "Reservation deleted (contact: " + r.getContactName() + ")");
 
         return ResponseEntity.noContent().build();
     }

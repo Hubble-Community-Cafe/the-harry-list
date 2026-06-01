@@ -6,6 +6,7 @@ import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,7 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -33,6 +34,9 @@ class UpdateReservationServiceTest {
 
     @Mock
     private ReservationMapper reservationMapper;
+
+    @Mock
+    private AuditService auditService;
 
     @InjectMocks
     private UpdateReservationService updateReservationService;
@@ -65,6 +69,32 @@ class UpdateReservationServiceTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         verify(reservationRepository, times(1)).save(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void execute_shouldRecordFieldLevelDiff() {
+        // Given: only the contact name changes between existing and the incoming entity
+        sampleDto.setId(1L);
+        com.pimvanleeuwen.the_harry_list_backend.model.Reservation incoming = createExistingEntity();
+        incoming.setContactName("Updated Name");
+
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(existingEntity));
+        when(reservationMapper.toEntity(sampleDto)).thenReturn(incoming);
+        when(reservationRepository.save(any())).thenReturn(incoming);
+        when(reservationMapper.toDto(incoming)).thenReturn(sampleDto);
+
+        // When
+        updateReservationService.execute(sampleDto);
+
+        // Then
+        ArgumentCaptor<java.util.List<com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange>> captor =
+                ArgumentCaptor.forClass(java.util.List.class);
+        verify(auditService).recordUpdate(eq(AuditEntityType.RESERVATION), eq(1L), any(), captor.capture(), any());
+        assertTrue(captor.getValue().stream().anyMatch(c ->
+                c.field().equals("contactName")
+                        && "Original Name".equals(c.oldValue())
+                        && "Updated Name".equals(c.newValue())));
     }
 
     @Test

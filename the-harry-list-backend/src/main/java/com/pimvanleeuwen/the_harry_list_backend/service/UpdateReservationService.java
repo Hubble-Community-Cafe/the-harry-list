@@ -1,5 +1,7 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.slf4j.Logger;
@@ -9,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -18,13 +21,17 @@ public class UpdateReservationService implements Command<com.pimvanleeuwen.the_h
 
     private final ReservationRepository reservationRepository;
     private final ReservationMapper reservationMapper;
+    private final AuditService auditService;
 
     @Autowired(required = false)
     private EmailNotificationService emailService;
 
-    public UpdateReservationService(ReservationRepository reservationRepository, ReservationMapper reservationMapper) {
+    public UpdateReservationService(ReservationRepository reservationRepository,
+                                    ReservationMapper reservationMapper,
+                                    AuditService auditService) {
         this.reservationRepository = reservationRepository;
         this.reservationMapper = reservationMapper;
+        this.auditService = auditService;
     }
 
     @Override
@@ -66,6 +73,10 @@ public class UpdateReservationService implements Command<com.pimvanleeuwen.the_h
         // Internal notes can be updated by staff; fall back to existing if not provided
         entity.setInternalNotes(input.getInternalNotes() != null ? input.getInternalNotes() : existing.getInternalNotes());
 
+        // Compute the field-level diff BEFORE saving: persisting merges the new state
+        // onto the managed `existing` instance, after which they would compare equal.
+        List<FieldChange> diffs = AuditDiff.compare(existing, entity);
+
         // Save updated entity
         Reservation savedEntity = reservationRepository.save(entity);
 
@@ -73,6 +84,9 @@ public class UpdateReservationService implements Command<com.pimvanleeuwen.the_h
                 savedEntity.getId(), savedEntity.getConfirmationNumber(),
                 savedEntity.getEventTitle(), savedEntity.getEventDate(),
                 savedEntity.getLocation(), savedEntity.getExpectedGuests());
+
+        auditService.recordUpdate(AuditEntityType.RESERVATION, savedEntity.getId(),
+                label(savedEntity), diffs, "Reservation updated");
 
         // Send email notification if enabled
         if (sendEmail && emailService != null) {
@@ -84,5 +98,9 @@ public class UpdateReservationService implements Command<com.pimvanleeuwen.the_h
         }
 
         return ResponseEntity.ok(reservationMapper.toDto(savedEntity));
+    }
+
+    private static String label(Reservation r) {
+        return r.getConfirmationNumber() + " - " + r.getEventTitle();
     }
 }

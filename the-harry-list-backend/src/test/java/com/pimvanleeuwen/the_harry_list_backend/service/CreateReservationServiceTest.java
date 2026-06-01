@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -35,6 +35,9 @@ class CreateReservationServiceTest {
 
     @Mock
     private ConstraintValidationService constraintValidationService;
+
+    @Mock
+    private AuditService auditService;
 
     @InjectMocks
     private CreateReservationService createReservationService;
@@ -64,6 +67,16 @@ class CreateReservationServiceTest {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         verify(reservationRepository, times(1)).save(any());
+        verify(auditService).recordCreate(eq(AuditEntityType.RESERVATION), eq(1L), any(), any(), any());
+    }
+
+    @Test
+    void execute_shouldNotAuditWhenConstraintViolation() {
+        when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
+                .thenReturn(List.of("violation"));
+
+        assertThrows(IllegalArgumentException.class, () -> createReservationService.execute(sampleDto));
+        verifyNoInteractions(auditService);
     }
 
     @Test
