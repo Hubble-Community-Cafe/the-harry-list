@@ -221,7 +221,7 @@ class AdminReservationControllerTest {
             .andExpect(status().isOk());
 
         // Then
-        verify(emailNotificationService).sendStatusChangeEmail(any(), any(), any(), any());
+        verify(emailNotificationService).sendStatusChangeEmail(any(), any());
     }
 
     @Test
@@ -240,7 +240,7 @@ class AdminReservationControllerTest {
             .andExpect(status().isOk());
 
         // Then
-        verify(emailNotificationService, never()).sendStatusChangeEmail(any(), any(), any(), any());
+        verify(emailNotificationService, never()).sendStatusChangeEmail(any(), any());
     }
 
     @Test
@@ -259,7 +259,7 @@ class AdminReservationControllerTest {
             .andExpect(status().isOk());
 
         // Then
-        verify(emailNotificationService).sendStatusChangeEmail(any(), any(), any(),
+        verify(emailNotificationService).sendStatusChangeEmail(any(),
                 eq("Sorry, we are fully booked that day."));
     }
 

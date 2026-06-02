@@ -90,8 +90,7 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
     }
 
     @Override
-    public void sendStatusChangeEmail(Reservation reservation, ReservationStatus oldStatus, String confirmedBy,
-                                      String customMessage) {
+    public void sendStatusChangeEmail(Reservation reservation, String customMessage) {
         try {
             Map<String, String> vars = buildStatusChangeVars(reservation);
             Map<String, String> rawHtmlVars = Map.of(

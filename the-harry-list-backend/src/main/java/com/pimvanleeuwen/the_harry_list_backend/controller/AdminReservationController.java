@@ -122,7 +122,7 @@ public class AdminReservationController {
                     // Send email notification if enabled
                     if (sendEmail && emailService != null) {
                         try {
-                            emailService.sendStatusChangeEmail(saved, oldStatus, confirmedBy, customMessage);
+                            emailService.sendStatusChangeEmail(saved, customMessage);
                         } catch (Exception e) {
                             log.error("Failed to send status change email, but status was updated successfully", e);
                         }
