@@ -39,5 +39,19 @@ describe('ExportPage', () => {
     renderWithRouter(<ExportPage />);
     expect(screen.getByText(/confirmed/i)).toBeInTheDocument();
   });
+
+  it('displays catering only filter', () => {
+    renderWithRouter(<ExportPage />);
+    expect(screen.getByText(/catering reservations only/i)).toBeInTheDocument();
+  });
+
+  it('catering filter is unchecked by default', () => {
+    renderWithRouter(<ExportPage />);
+    const cateringCheckbox = screen
+      .getByText(/catering reservations only/i)
+      .closest('label')!
+      .querySelector('input[type="checkbox"]') as HTMLInputElement;
+    expect(cateringCheckbox).not.toBeChecked();
+  });
 });
 

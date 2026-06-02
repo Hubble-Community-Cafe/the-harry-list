@@ -169,7 +169,10 @@ export const exportGuide: GuideSection[] = [
 1. **Select a date** — choose the day you want the report for
 2. **Select a location** — choose either Hubble or Meteor
 3. **Confirmed only** — toggle this on to exclude pending, rejected, or cancelled reservations (recommended for daily prep sheets)
-4. Click **"Export PDF"**
+4. **Catering only** — toggle this on to include only reservations that have catering (eat a la carte, eat catering, or Catering Corona Room) — handy for the kitchen's prep list
+5. Click **"Export PDF"**
+
+You can combine the two toggles, e.g. **Confirmed only + Catering only** for a confirmed catering prep sheet.
 
 The PDF will automatically download to your device.
 
