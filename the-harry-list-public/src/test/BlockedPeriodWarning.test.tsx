@@ -1,37 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import type { BlockedPeriod } from '../types/reservation';
+import { checkBlockedDate, DEFAULT_SOFT_BLOCK_ACKNOWLEDGEMENT } from '../lib/blockedPeriods';
 
 /**
  * Tests for the blocked period date checking logic used in ReservationForm.
- * Tests the pure logic extracted from the component's useMemo.
+ * Exercises the shared helper the component itself uses.
  */
-
-function checkBlockedDate(
-  eventDate: string,
-  location: string | null | undefined,
-  blockedPeriods: BlockedPeriod[],
-  startTime?: string
-): string | null {
-  if (!eventDate || blockedPeriods.length === 0) return null;
-  for (const bp of blockedPeriods) {
-    if (eventDate >= bp.startDate && eventDate <= bp.endDate) {
-      if (bp.location) {
-        // Location-specific block: only warn if user selected that exact location
-        if (!location || location === 'NO_PREFERENCE' || location === '' || bp.location !== location) {
-          continue;
-        }
-      }
-      // Time-specific block: only warn if user's start time falls within the blocked window
-      if (bp.startTime && bp.endTime) {
-        if (!startTime || startTime < bp.startTime || startTime >= bp.endTime) {
-          continue;
-        }
-      }
-      return bp.publicMessage || 'This date is not available for reservations.';
-    }
-  }
-  return null;
-}
 
 describe('Blocked period date validation', () => {
   const samplePeriods: BlockedPeriod[] = [
@@ -64,38 +38,32 @@ describe('Blocked period date validation', () => {
 
   it('returns warning when date falls within a location-specific blocked period', () => {
     const result = checkBlockedDate('2026-04-02', 'HUBBLE', samplePeriods);
-    expect(result).toBe('Closed for maintenance from April 1-3');
+    expect(result?.message).toBe('Closed for maintenance from April 1-3');
+    expect(result?.soft).toBe(false);
   });
 
   it('returns null when date is in blocked period but for a different location', () => {
-    const result = checkBlockedDate('2026-04-02', 'METEOR', samplePeriods);
-    expect(result).toBeNull();
+    expect(checkBlockedDate('2026-04-02', 'METEOR', samplePeriods)).toBeNull();
   });
 
   it('returns warning for global blocked period regardless of location', () => {
-    const result = checkBlockedDate('2026-12-25', 'METEOR', samplePeriods);
-    expect(result).toBe('Closed for Christmas');
+    expect(checkBlockedDate('2026-12-25', 'METEOR', samplePeriods)?.message).toBe('Closed for Christmas');
   });
 
   it('returns warning for global blocked period with HUBBLE location', () => {
-    const result = checkBlockedDate('2026-12-26', 'HUBBLE', samplePeriods);
-    expect(result).toBe('Closed for Christmas');
+    expect(checkBlockedDate('2026-12-26', 'HUBBLE', samplePeriods)?.message).toBe('Closed for Christmas');
   });
 
   it('skips location-specific block when user has NO_PREFERENCE', () => {
-    const result = checkBlockedDate('2026-04-01', 'NO_PREFERENCE', samplePeriods);
-    expect(result).toBeNull();
+    expect(checkBlockedDate('2026-04-01', 'NO_PREFERENCE', samplePeriods)).toBeNull();
   });
 
   it('skips location-specific block when location is empty string (No Preference)', () => {
-    // The form uses value="" for the "No Preference" radio
-    const result = checkBlockedDate('2026-04-01', '', samplePeriods);
-    expect(result).toBeNull();
+    expect(checkBlockedDate('2026-04-01', '', samplePeriods)).toBeNull();
   });
 
   it('skips location-specific block when location is null', () => {
-    const result = checkBlockedDate('2026-04-01', null, samplePeriods);
-    expect(result).toBeNull();
+    expect(checkBlockedDate('2026-04-01', null, samplePeriods)).toBeNull();
   });
 
   it('returns null when date is outside all blocked periods', () => {
@@ -103,13 +71,11 @@ describe('Blocked period date validation', () => {
   });
 
   it('matches on exact start date', () => {
-    const result = checkBlockedDate('2026-04-01', 'HUBBLE', samplePeriods);
-    expect(result).toBe('Closed for maintenance from April 1-3');
+    expect(checkBlockedDate('2026-04-01', 'HUBBLE', samplePeriods)?.message).toBe('Closed for maintenance from April 1-3');
   });
 
   it('matches on exact end date', () => {
-    const result = checkBlockedDate('2026-04-03', 'HUBBLE', samplePeriods);
-    expect(result).toBe('Closed for maintenance from April 1-3');
+    expect(checkBlockedDate('2026-04-03', 'HUBBLE', samplePeriods)?.message).toBe('Closed for maintenance from April 1-3');
   });
 
   it('returns default message when publicMessage is not set', () => {
@@ -122,8 +88,8 @@ describe('Blocked period date validation', () => {
         enabled: true,
       },
     ];
-    const result = checkBlockedDate('2026-06-01', 'HUBBLE', periodsNoMessage);
-    expect(result).toBe('This date is not available for reservations.');
+    expect(checkBlockedDate('2026-06-01', 'HUBBLE', periodsNoMessage)?.message)
+      .toBe('This date is not available for reservations.');
   });
 });
 
@@ -150,42 +116,70 @@ describe('Blocked period time-specific validation', () => {
   ];
 
   it('blocks when start time falls within blocked time window', () => {
-    const result = checkBlockedDate('2026-05-01', 'HUBBLE', timeSpecificPeriods, '10:00');
-    expect(result).toBe('Not available in the morning');
+    expect(checkBlockedDate('2026-05-01', 'HUBBLE', timeSpecificPeriods, '10:00')?.message)
+      .toBe('Not available in the morning');
   });
 
   it('blocks at exact start of blocked time window', () => {
-    const result = checkBlockedDate('2026-05-01', 'HUBBLE', timeSpecificPeriods, '09:00');
-    expect(result).toBe('Not available in the morning');
+    expect(checkBlockedDate('2026-05-01', 'HUBBLE', timeSpecificPeriods, '09:00')?.message)
+      .toBe('Not available in the morning');
   });
 
   it('does not block when start time is at or after the blocked end time', () => {
-    const result = checkBlockedDate('2026-05-01', 'HUBBLE', timeSpecificPeriods, '14:00');
-    expect(result).toBeNull();
+    expect(checkBlockedDate('2026-05-01', 'HUBBLE', timeSpecificPeriods, '14:00')).toBeNull();
   });
 
   it('does not block when start time is after blocked time window', () => {
-    const result = checkBlockedDate('2026-05-01', 'HUBBLE', timeSpecificPeriods, '15:00');
-    expect(result).toBeNull();
+    expect(checkBlockedDate('2026-05-01', 'HUBBLE', timeSpecificPeriods, '15:00')).toBeNull();
   });
 
   it('does not block when start time is before blocked time window', () => {
-    const result = checkBlockedDate('2026-05-01', 'HUBBLE', timeSpecificPeriods, '08:30');
-    expect(result).toBeNull();
+    expect(checkBlockedDate('2026-05-01', 'HUBBLE', timeSpecificPeriods, '08:30')).toBeNull();
   });
 
   it('does not block time-specific period when no start time selected', () => {
-    const result = checkBlockedDate('2026-05-01', 'HUBBLE', timeSpecificPeriods);
-    expect(result).toBeNull();
+    expect(checkBlockedDate('2026-05-01', 'HUBBLE', timeSpecificPeriods)).toBeNull();
   });
 
   it('blocks full-day period regardless of start time', () => {
-    const result = checkBlockedDate('2026-05-10', 'HUBBLE', timeSpecificPeriods, '10:00');
-    expect(result).toBe('Closed all day');
+    expect(checkBlockedDate('2026-05-10', 'HUBBLE', timeSpecificPeriods, '10:00')?.message).toBe('Closed all day');
   });
 
   it('blocks full-day period when no start time selected', () => {
-    const result = checkBlockedDate('2026-05-10', 'HUBBLE', timeSpecificPeriods);
-    expect(result).toBe('Closed all day');
+    expect(checkBlockedDate('2026-05-10', 'HUBBLE', timeSpecificPeriods)?.message).toBe('Closed all day');
+  });
+});
+
+describe('Soft blocked periods', () => {
+  const softPeriod: BlockedPeriod = {
+    id: 20,
+    startDate: '2026-07-01',
+    endDate: '2026-08-31',
+    reason: 'Summer closing',
+    publicMessage: 'The bar is closed by default this summer, but you can request a reservation.',
+    softBlock: true,
+    acknowledgementText: 'I understand the bar may be closed and my booking is a request',
+    enabled: true,
+  };
+
+  it('flags a soft block as soft and surfaces the public message', () => {
+    const result = checkBlockedDate('2026-07-15', 'HUBBLE', [softPeriod]);
+    expect(result?.soft).toBe(true);
+    expect(result?.message).toBe(softPeriod.publicMessage);
+  });
+
+  it('returns the configured acknowledgement text', () => {
+    const result = checkBlockedDate('2026-07-15', 'HUBBLE', [softPeriod]);
+    expect(result?.acknowledgementText).toBe('I understand the bar may be closed and my booking is a request');
+  });
+
+  it('falls back to the default acknowledgement text when none is configured', () => {
+    const result = checkBlockedDate('2026-07-15', 'HUBBLE', [{ ...softPeriod, acknowledgementText: undefined }]);
+    expect(result?.acknowledgementText).toBe(DEFAULT_SOFT_BLOCK_ACKNOWLEDGEMENT);
+  });
+
+  it('treats a period without softBlock as a hard block', () => {
+    const result = checkBlockedDate('2026-07-15', 'HUBBLE', [{ ...softPeriod, softBlock: undefined }]);
+    expect(result?.soft).toBe(false);
   });
 });
