@@ -129,7 +129,7 @@ class ReservationControllerTest {
         // Given
         sampleReservation.setId(1L);
         sampleReservation.setContactName("Updated Name");
-        when(updateReservationService.executeWithEmail(any(Reservation.class), anyBoolean()))
+        when(updateReservationService.executeWithEmail(any(Reservation.class), anyBoolean(), any()))
                 .thenReturn(ResponseEntity.ok(sampleReservation));
 
         // When & Then

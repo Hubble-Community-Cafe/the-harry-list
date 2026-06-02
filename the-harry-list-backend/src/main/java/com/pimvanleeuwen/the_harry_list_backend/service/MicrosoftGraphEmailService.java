@@ -90,11 +90,14 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
     }
 
     @Override
-    public void sendStatusChangeEmail(Reservation reservation, ReservationStatus oldStatus, String confirmedBy) {
+    public void sendStatusChangeEmail(Reservation reservation, ReservationStatus oldStatus, String confirmedBy,
+                                      String customMessage) {
         try {
             Map<String, String> vars = buildStatusChangeVars(reservation);
+            Map<String, String> rawHtmlVars = Map.of(
+                    "customMessage", EmailTemplates.buildCustomMessageBlock(customMessage));
             String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.STATUS_CHANGED, vars);
-            String body = emailTemplateService.getRenderedBody(EmailTemplateType.STATUS_CHANGED, vars);
+            String body = emailTemplateService.getRenderedBody(EmailTemplateType.STATUS_CHANGED, vars, rawHtmlVars);
             sendEmail(reservation.getEmail(), subject, body);
             log.info("LOGGING email.status_change_sent confirmation='{}' to='{}' status={}",
                     reservation.getConfirmationNumber(), reservation.getEmail(), reservation.getStatus());
@@ -104,12 +107,14 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
     }
 
     @Override
-    public void sendReservationUpdatedEmail(Reservation reservation) {
+    public void sendReservationUpdatedEmail(Reservation reservation, String customMessage) {
         try {
             Map<String, String> vars = buildBaseVars(reservation);
             vars.put("status", reservation.getStatus().getDisplayName());
+            Map<String, String> rawHtmlVars = Map.of(
+                    "customMessage", EmailTemplates.buildCustomMessageBlock(customMessage));
             String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.UPDATED, vars);
-            String body = emailTemplateService.getRenderedBody(EmailTemplateType.UPDATED, vars);
+            String body = emailTemplateService.getRenderedBody(EmailTemplateType.UPDATED, vars, rawHtmlVars);
             sendEmail(reservation.getEmail(), subject, body);
             log.info("LOGGING email.updated_sent confirmation='{}' to='{}'",
                     reservation.getConfirmationNumber(), reservation.getEmail());

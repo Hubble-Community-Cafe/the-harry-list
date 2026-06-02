@@ -221,7 +221,7 @@ class AdminReservationControllerTest {
             .andExpect(status().isOk());
 
         // Then
-        verify(emailNotificationService).sendStatusChangeEmail(any(), any(), any());
+        verify(emailNotificationService).sendStatusChangeEmail(any(), any(), any(), any());
     }
 
     @Test
@@ -240,7 +240,47 @@ class AdminReservationControllerTest {
             .andExpect(status().isOk());
 
         // Then
-        verify(emailNotificationService, never()).sendStatusChangeEmail(any(), any(), any());
+        verify(emailNotificationService, never()).sendStatusChangeEmail(any(), any(), any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldForwardCustomMessageToEmail() throws Exception {
+        // Given
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        // When
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "REJECTED")
+                .param("customMessage", "Sorry, we are fully booked that day."))
+            .andExpect(status().isOk());
+
+        // Then
+        verify(emailNotificationService).sendStatusChangeEmail(any(), any(), any(),
+                eq("Sorry, we are fully booked that day."));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldNoteCustomMessageInAuditWhenProvided() throws Exception {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "REJECTED")
+                .param("customMessage", "No space available."))
+            .andExpect(status().isOk());
+
+        verify(auditService).recordAction(
+            eq(com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType.RESERVATION),
+            eq(1L), any(),
+            eq(com.pimvanleeuwen.the_harry_list_backend.model.AuditAction.STATUS_CHANGE),
+            any(), contains("(with message)"));
     }
 
     @Test

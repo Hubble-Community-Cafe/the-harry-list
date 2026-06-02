@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -38,6 +39,9 @@ class UpdateReservationServiceTest {
     @Mock
     private AuditService auditService;
 
+    @Mock
+    private EmailNotificationService emailService;
+
     @InjectMocks
     private UpdateReservationService updateReservationService;
 
@@ -48,6 +52,9 @@ class UpdateReservationServiceTest {
     void setUp() {
         sampleDto = createSampleDto();
         existingEntity = createExistingEntity();
+        // emailService is an optional (@Autowired(required=false)) field, not a constructor arg, so
+        // @InjectMocks (constructor injection) doesn't set it — wire the mock in explicitly.
+        ReflectionTestUtils.setField(updateReservationService, "emailService", emailService);
     }
 
     @Test
@@ -95,6 +102,44 @@ class UpdateReservationServiceTest {
                 c.field().equals("contactName")
                         && "Original Name".equals(c.oldValue())
                         && "Updated Name".equals(c.newValue())));
+    }
+
+    @Test
+    void executeWithEmail_shouldForwardCustomMessageToEmail() {
+        // Given
+        sampleDto.setId(1L);
+        com.pimvanleeuwen.the_harry_list_backend.model.Reservation incoming = createExistingEntity();
+        incoming.setContactName("Updated Name");
+
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(existingEntity));
+        when(reservationMapper.toEntity(sampleDto)).thenReturn(incoming);
+        when(reservationRepository.save(any())).thenReturn(incoming);
+        when(reservationMapper.toDto(incoming)).thenReturn(sampleDto);
+
+        // When
+        updateReservationService.executeWithEmail(sampleDto, true, "We moved your booking to the terrace.");
+
+        // Then
+        verify(emailService).sendReservationUpdatedEmail(any(), eq("We moved your booking to the terrace."));
+    }
+
+    @Test
+    void executeWithEmail_shouldNotSendEmailWhenDisabled() {
+        // Given
+        sampleDto.setId(1L);
+        com.pimvanleeuwen.the_harry_list_backend.model.Reservation incoming = createExistingEntity();
+        incoming.setContactName("Updated Name");
+
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(existingEntity));
+        when(reservationMapper.toEntity(sampleDto)).thenReturn(incoming);
+        when(reservationRepository.save(any())).thenReturn(incoming);
+        when(reservationMapper.toDto(incoming)).thenReturn(sampleDto);
+
+        // When
+        updateReservationService.executeWithEmail(sampleDto, false, "ignored message");
+
+        // Then
+        verify(emailService, never()).sendReservationUpdatedEmail(any(), any());
     }
 
     @Test

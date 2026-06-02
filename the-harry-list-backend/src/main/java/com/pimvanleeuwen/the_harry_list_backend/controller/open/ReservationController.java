@@ -59,13 +59,14 @@ public class ReservationController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update a reservation", description = "Update an existing reservation (staff only). Set sendEmail=false to skip email notification.")
+    @Operation(summary = "Update a reservation", description = "Update an existing reservation (staff only). Set sendEmail=false to skip email notification. Optionally pass customMessage to add a note to the update email.")
     public ResponseEntity<Reservation> updateReservation(
             @PathVariable Long id,
             @Valid @RequestBody Reservation reservation,
-            @RequestParam(required = false, defaultValue = "true") boolean sendEmail) {
+            @RequestParam(required = false, defaultValue = "true") boolean sendEmail,
+            @RequestParam(required = false) String customMessage) {
         reservation.setId(id);
-        return updateReservationService.executeWithEmail(reservation, sendEmail);
+        return updateReservationService.executeWithEmail(reservation, sendEmail, customMessage);
     }
 
     @DeleteMapping("/{id}")
