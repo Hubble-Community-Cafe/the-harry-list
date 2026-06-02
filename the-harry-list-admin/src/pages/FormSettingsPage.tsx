@@ -591,21 +591,47 @@ export function SettingsPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
                     <label className="block text-sm text-dark-400 mb-1">Start Time (optional)</label>
-                    <input
-                      type="time"
-                      value={editingPeriod.startTime || ''}
-                      onChange={e => setEditingPeriod({ ...editingPeriod, startTime: e.target.value || undefined })}
-                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
-                    />
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="time"
+                        value={editingPeriod.startTime || ''}
+                        onChange={e => setEditingPeriod({ ...editingPeriod, startTime: e.target.value || undefined })}
+                        className="w-full min-w-0 flex-1 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      />
+                      {editingPeriod.startTime && (
+                        <button
+                          type="button"
+                          onClick={() => setEditingPeriod({ ...editingPeriod, startTime: undefined })}
+                          aria-label="Clear start time"
+                          title="Clear start time"
+                          className="shrink-0 p-2 text-dark-400 hover:text-white"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="min-w-0">
                     <label className="block text-sm text-dark-400 mb-1">End Time (optional)</label>
-                    <input
-                      type="time"
-                      value={editingPeriod.endTime || ''}
-                      onChange={e => setEditingPeriod({ ...editingPeriod, endTime: e.target.value || undefined })}
-                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
-                    />
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="time"
+                        value={editingPeriod.endTime || ''}
+                        onChange={e => setEditingPeriod({ ...editingPeriod, endTime: e.target.value || undefined })}
+                        className="w-full min-w-0 flex-1 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      />
+                      {editingPeriod.endTime && (
+                        <button
+                          type="button"
+                          onClick={() => setEditingPeriod({ ...editingPeriod, endTime: undefined })}
+                          aria-label="Clear end time"
+                          title="Clear end time"
+                          className="shrink-0 p-2 text-dark-400 hover:text-white"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
