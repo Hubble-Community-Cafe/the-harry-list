@@ -568,43 +568,43 @@ export function SettingsPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm text-dark-400 mb-1">Start Date *</label>
                     <input
                       type="date"
                       value={editingPeriod.startDate}
                       onChange={e => setEditingPeriod({ ...editingPeriod, startDate: e.target.value })}
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm text-dark-400 mb-1">End Date *</label>
                     <input
                       type="date"
                       value={editingPeriod.endDate}
                       onChange={e => setEditingPeriod({ ...editingPeriod, endDate: e.target.value })}
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm text-dark-400 mb-1">Start Time (optional)</label>
                     <input
                       type="time"
                       value={editingPeriod.startTime || ''}
                       onChange={e => setEditingPeriod({ ...editingPeriod, startTime: e.target.value || undefined })}
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm text-dark-400 mb-1">End Time (optional)</label>
                     <input
                       type="time"
                       value={editingPeriod.endTime || ''}
                       onChange={e => setEditingPeriod({ ...editingPeriod, endTime: e.target.value || undefined })}
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
                     />
                   </div>
                 </div>
