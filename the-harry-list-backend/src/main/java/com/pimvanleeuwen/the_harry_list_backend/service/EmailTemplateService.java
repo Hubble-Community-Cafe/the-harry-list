@@ -39,11 +39,11 @@ public class EmailTemplateService {
         AVAILABLE_VARIABLES.put(EmailTemplateType.STATUS_CHANGED, List.of(
                 "contactName", "confirmationNumber", "eventTitle", "eventDate",
                 "startTime", "endTime", "location", "expectedGuests",
-                "status", "statusMessage", "statusColor", "barName", "staffEmail"));
+                "status", "statusMessage", "statusColor", "barName", "staffEmail", "customMessage"));
 
         AVAILABLE_VARIABLES.put(EmailTemplateType.UPDATED, List.of(
                 "contactName", "confirmationNumber", "eventTitle", "eventDate",
-                "startTime", "endTime", "location", "expectedGuests", "status", "barName"));
+                "startTime", "endTime", "location", "expectedGuests", "status", "barName", "customMessage"));
 
         AVAILABLE_VARIABLES.put(EmailTemplateType.CANCELLED, List.of(
                 "contactName", "eventTitle", "confirmationNumber", "staffEmail", "barName"));
@@ -126,6 +126,7 @@ public class EmailTemplateService {
                         <div class="content">
                             <p>Dear {{contactName}},</p>
                             <p>{{statusMessage}}</p>
+                            {{customMessage}}
                             <div class="details">
                                 <p><strong>Confirmation Number:</strong> {{confirmationNumber}}</p>
                                 <p><strong>Event:</strong> {{eventTitle}}</p>
@@ -160,6 +161,7 @@ public class EmailTemplateService {
                         <div class="content">
                             <p>Dear {{contactName}},</p>
                             <p>Your reservation has been updated. Please review the details below:</p>
+                            {{customMessage}}
                             <div class="details">
                                 <p><strong>Confirmation Number:</strong> {{confirmationNumber}}</p>
                                 <p><strong>Event:</strong> {{eventTitle}}</p>
@@ -290,10 +292,26 @@ public class EmailTemplateService {
      * All variable values are HTML-escaped before substitution to prevent XSS.
      */
     public String getRenderedBody(EmailTemplateType type, Map<String, String> variables) {
+        // Types that support an optional {{customMessage}} block default to an empty block when no
+        // message is supplied, so the placeholder never renders literally.
+        Map<String, String> rawHtmlVariables =
+                (type == EmailTemplateType.STATUS_CHANGED || type == EmailTemplateType.UPDATED)
+                        ? Map.of("customMessage", "")
+                        : Map.of();
+        return getRenderedBody(type, variables, rawHtmlVariables);
+    }
+
+    /**
+     * Render a template body with both escaped variables and pre-sanitized raw-HTML variables.
+     * Raw-HTML variables (e.g. {@code customMessage}) are substituted verbatim and must already be
+     * safe HTML — see {@link EmailTemplates#buildCustomMessageBlock(String)}.
+     */
+    public String getRenderedBody(EmailTemplateType type, Map<String, String> variables,
+                                  Map<String, String> rawHtmlVariables) {
         String template = repository.findByTemplateType(type)
                 .map(EmailTemplate::getBodyTemplate)
                 .orElse(DEFAULT_BODIES.get(type));
-        return render(template, variables);
+        return render(template, variables, rawHtmlVariables);
     }
 
     /**
@@ -303,7 +321,7 @@ public class EmailTemplateService {
         String template = repository.findByTemplateType(type)
                 .map(EmailTemplate::getSubject)
                 .orElse(DEFAULT_SUBJECTS.get(type));
-        return render(template, variables);
+        return render(template, variables, Map.of());
     }
 
     public List<EmailTemplateDto> findAll() {
@@ -374,7 +392,26 @@ public class EmailTemplateService {
 
     /** Render an arbitrary template string with the given variables (used for test previews). */
     public String renderForTest(String template, Map<String, String> variables) {
-        return render(template, variables);
+        return render(template, variables, Map.of());
+    }
+
+    /** Render an arbitrary template string with escaped variables plus pre-sanitized raw-HTML variables. */
+    public String renderForTest(String template, Map<String, String> variables,
+                                Map<String, String> rawHtmlVariables) {
+        return render(template, variables, rawHtmlVariables);
+    }
+
+    /**
+     * Returns sample raw-HTML variables (e.g. a {@code customMessage} block) for test/preview
+     * rendering, so admins can see how the optional message appears. Empty for types that do not
+     * support a custom message.
+     */
+    public Map<String, String> buildSampleRawHtmlVariables(EmailTemplateType type) {
+        if (type == EmailTemplateType.STATUS_CHANGED || type == EmailTemplateType.UPDATED) {
+            return Map.of("customMessage", EmailTemplates.buildCustomMessageBlock(
+                    "We read your special request and will make sure you have a spot in the shade."));
+        }
+        return Map.of();
     }
 
     public String getDefaultBody(EmailTemplateType type) {
@@ -399,11 +436,17 @@ public class EmailTemplateService {
                 .build();
     }
 
-    private String render(String template, Map<String, String> variables) {
+    private String render(String template, Map<String, String> variables,
+                          Map<String, String> rawHtmlVariables) {
         if (template == null) return "";
         String result = template;
         for (Map.Entry<String, String> entry : variables.entrySet()) {
             result = result.replace("{{" + entry.getKey() + "}}", escapeHtml(entry.getValue()));
+        }
+        // Raw-HTML variables are pre-sanitized and substituted verbatim (no escaping).
+        for (Map.Entry<String, String> entry : rawHtmlVariables.entrySet()) {
+            String value = entry.getValue() != null ? entry.getValue() : "";
+            result = result.replace("{{" + entry.getKey() + "}}", value);
         }
         return result;
     }

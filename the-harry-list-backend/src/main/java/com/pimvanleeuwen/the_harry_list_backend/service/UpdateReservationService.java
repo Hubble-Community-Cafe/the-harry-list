@@ -39,13 +39,19 @@ public class UpdateReservationService implements Command<com.pimvanleeuwen.the_h
         return executeWithEmail(input, true);
     }
 
-    /**
-     * Update a reservation with optional email notification.
-     * @param input The reservation DTO
-     * @param sendEmail Whether to send email notification
-     */
     public ResponseEntity<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> executeWithEmail(
             com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input, boolean sendEmail) {
+        return executeWithEmail(input, sendEmail, null);
+    }
+
+    /**
+     * Update a reservation with optional email notification and an optional custom message.
+     * @param input The reservation DTO
+     * @param sendEmail Whether to send email notification
+     * @param customMessage Optional free-text note added to the update email; may be null/blank to omit.
+     */
+    public ResponseEntity<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> executeWithEmail(
+            com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input, boolean sendEmail, String customMessage) {
         if (input.getId() == null) {
             log.error("Cannot update reservation without ID");
             return ResponseEntity.badRequest().build();
@@ -96,7 +102,7 @@ public class UpdateReservationService implements Command<com.pimvanleeuwen.the_h
         // Send email notification if enabled
         if (sendEmail && emailService != null) {
             try {
-                emailService.sendReservationUpdatedEmail(savedEntity);
+                emailService.sendReservationUpdatedEmail(savedEntity, customMessage);
             } catch (Exception e) {
                 log.error("Failed to send update email, but reservation was updated successfully", e);
             }
