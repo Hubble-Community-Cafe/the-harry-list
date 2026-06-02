@@ -10,6 +10,7 @@ import { EmailTemplatesPage } from './pages/EmailTemplatesPage';
 import { SettingsPage } from './pages/FormSettingsPage';
 import { CalendarAppointmentsPage } from './pages/CalendarAppointmentsPage';
 import { WeekOverviewPage } from './pages/WeekOverviewPage';
+import { AuditLogPage } from './pages/AuditLogPage';
 import { Layout } from './components/Layout';
 import { useGroupAuthorization } from './lib/useGroupAuthorization';
 import { ThemeProvider } from './lib/ThemeContext';
@@ -94,6 +95,7 @@ function App() {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="form-settings" element={<SettingsPage />} />
           <Route path="calendar-appointments" element={<CalendarAppointmentsPage />} />
+          <Route path="audit" element={<AuditLogPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

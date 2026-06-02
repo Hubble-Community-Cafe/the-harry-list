@@ -40,6 +40,9 @@ class AdminBlockedPeriodControllerTest {
     @MockitoBean
     private BlockedPeriodRepository repository;
 
+    @MockitoBean
+    private com.pimvanleeuwen.the_harry_list_backend.service.AuditService auditService;
+
     private ObjectMapper objectMapper;
 
     @BeforeEach
@@ -108,6 +111,10 @@ class AdminBlockedPeriodControllerTest {
                         .content(objectMapper.writeValueAsString(period)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.reason").value("Spring maintenance"));
+
+        verify(auditService).recordCreate(
+                eq(com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType.BLOCKED_PERIOD),
+                any(), any(), any(), any());
     }
 
     @Test
@@ -130,12 +137,13 @@ class AdminBlockedPeriodControllerTest {
     @Test
     @WithMockUser(roles = "EDITOR")
     void delete_shouldReturn200() throws Exception {
-        when(repository.existsById(1L)).thenReturn(true);
-        doNothing().when(repository).deleteById(1L);
+        when(repository.findById(1L)).thenReturn(Optional.of(samplePeriod()));
 
         mockMvc.perform(delete("/api/admin/blocked-periods/1").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("deleted"));
+
+        verify(repository).delete(any());
     }
 
     @Test

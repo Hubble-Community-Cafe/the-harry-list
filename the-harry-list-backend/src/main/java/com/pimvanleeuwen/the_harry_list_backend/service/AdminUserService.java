@@ -1,7 +1,10 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminRole;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminUser;
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditAction;
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.repository.AdminUserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,12 +19,15 @@ public class AdminUserService {
     private static final Logger log = LoggerFactory.getLogger(AdminUserService.class);
 
     private final AdminUserRepository adminUserRepository;
+    private final AuditService auditService;
     private final String initialAdminOid;
 
     public AdminUserService(
             AdminUserRepository adminUserRepository,
+            AuditService auditService,
             @Value("${app.initial-admin-oid:}") String initialAdminOid) {
         this.adminUserRepository = adminUserRepository;
+        this.auditService = auditService;
         this.initialAdminOid = initialAdminOid;
     }
 
@@ -57,11 +63,19 @@ public class AdminUserService {
             throw new IllegalArgumentException("Cannot change your own role");
         }
 
+        AdminRole oldRole = target.getRole();
         log.info("AUDIT user.role_changed userId={} oldRole={} newRole={} changedBy='{}'",
-                userId, target.getRole(), newRole, requestingUserOid);
+                userId, oldRole, newRole, requestingUserOid);
 
         target.setRole(newRole);
-        return adminUserRepository.save(target);
+        AdminUser saved = adminUserRepository.save(target);
+
+        auditService.recordAction(AuditEntityType.ADMIN_USER, userId, saved.getEmail(),
+                AuditAction.ROLE_CHANGED,
+                List.of(new FieldChange("role", String.valueOf(oldRole), String.valueOf(newRole))),
+                "Role changed for " + saved.getEmail());
+
+        return saved;
     }
 
     private AdminUser createUser(String azureOid, String email, String displayName) {

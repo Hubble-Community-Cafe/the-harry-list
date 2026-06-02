@@ -3,6 +3,7 @@ package com.pimvanleeuwen.the_harry_list_backend.controller;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminRole;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminUser;
 import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
+import com.pimvanleeuwen.the_harry_list_backend.util.AuditActorResolver;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -72,8 +73,7 @@ public class AdminUserController {
 
     private String extractOid(Authentication auth) {
         if (auth instanceof JwtAuthenticationToken jwtAuth) {
-            String oid = jwtAuth.getToken().getClaimAsString("oid");
-            return oid != null ? oid : jwtAuth.getToken().getSubject();
+            return AuditActorResolver.extractOid(jwtAuth.getToken());
         }
         return auth.getName();
     }

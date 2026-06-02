@@ -1,13 +1,17 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
 import com.pimvanleeuwen.the_harry_list_backend.dto.CateringEmailRequest;
+import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
 import com.pimvanleeuwen.the_harry_list_backend.dto.Reservation;
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditAction;
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailAttachment;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.repository.EmailAttachmentRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
+import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
 import com.pimvanleeuwen.the_harry_list_backend.service.ReservationMapper;
@@ -46,6 +50,7 @@ public class AdminReservationController {
     private final ReservationMapper reservationMapper;
     private final EmailTemplateService emailTemplateService;
     private final EmailAttachmentRepository emailAttachmentRepository;
+    private final AuditService auditService;
     private final String barName;
     private final String staffEmail;
 
@@ -56,14 +61,20 @@ public class AdminReservationController {
                                       ReservationMapper reservationMapper,
                                       EmailTemplateService emailTemplateService,
                                       EmailAttachmentRepository emailAttachmentRepository,
+                                      AuditService auditService,
                                       @Value("${app.bar.name:Hubble and Meteor Community Cafes}") String barName,
                                       @Value("${app.mail.staff:events@hubble.cafe}") String staffEmail) {
         this.reservationRepository = reservationRepository;
         this.reservationMapper = reservationMapper;
         this.emailTemplateService = emailTemplateService;
         this.emailAttachmentRepository = emailAttachmentRepository;
+        this.auditService = auditService;
         this.barName = barName;
         this.staffEmail = staffEmail;
+    }
+
+    private static String label(com.pimvanleeuwen.the_harry_list_backend.model.Reservation r) {
+        return r.getConfirmationNumber() + " - " + r.getEventTitle();
     }
 
     @PatchMapping("/{id}/status")
@@ -97,6 +108,11 @@ public class AdminReservationController {
                             oldStatus, status, principal != null ? principal.getName() : "unknown",
                             confirmedBy != null ? " confirmedBy='" + confirmedBy + "'" : "");
 
+                    auditService.recordAction(AuditEntityType.RESERVATION, id, label(saved),
+                            AuditAction.STATUS_CHANGE,
+                            List.of(new FieldChange("status", String.valueOf(oldStatus), String.valueOf(status))),
+                            "Status changed" + (confirmedBy != null ? " (confirmed by " + confirmedBy + ")" : ""));
+
                     // Send email notification if enabled
                     if (sendEmail && emailService != null) {
                         try {
@@ -124,8 +140,15 @@ public class AdminReservationController {
 
         return reservationRepository.findById(id)
                 .map(reservation -> {
+                    boolean previous = reservation.isCateringArranged();
                     reservation.setCateringArranged(arranged);
                     com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
+
+                    auditService.recordAction(AuditEntityType.RESERVATION, id, label(saved),
+                            AuditAction.CATERING_ARRANGED,
+                            List.of(new FieldChange("cateringArranged", String.valueOf(previous), String.valueOf(arranged))),
+                            arranged ? "Catering marked as arranged" : "Catering arranged unset");
+
                     return ResponseEntity.ok(reservationMapper.toDto(saved));
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -146,6 +169,11 @@ public class AdminReservationController {
                 .map(reservation -> {
                     reservation.setInternalNotes(notes);
                     com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
+
+                    // Note content is intentionally not stored in the audit log (may be long/sensitive).
+                    auditService.recordAction(AuditEntityType.RESERVATION, id, label(saved),
+                            AuditAction.NOTES_UPDATED, List.of(), "Internal notes updated");
+
                     return ResponseEntity.ok(reservationMapper.toDto(saved));
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -170,6 +198,9 @@ public class AdminReservationController {
                     if (emailService != null) {
                         try {
                             emailService.sendCustomEmail(reservation, subject, message);
+                            auditService.recordAction(AuditEntityType.RESERVATION, id, label(reservation),
+                                    AuditAction.EMAIL_SENT, List.of(),
+                                    "Custom email sent" + (subject != null ? ": " + subject : ""));
                             return ResponseEntity.ok(Map.of("status", "sent", "message", "Email sent successfully"));
                         } catch (Exception e) {
                             log.error("Failed to send custom email", e);
@@ -235,6 +266,10 @@ public class AdminReservationController {
                         log.info("AUDIT email.catering_delivered confirmation='{}' to='{}' attachments={} user='{}'",
                                 reservation.getConfirmationNumber(), reservation.getEmail(), attachments.size(),
                                 principal != null ? principal.getName() : "unknown");
+
+                        auditService.recordAction(AuditEntityType.RESERVATION, id, label(reservation),
+                                AuditAction.EMAIL_SENT, List.of(),
+                                "Catering email sent (" + attachments.size() + " attachment(s))");
 
                         return ResponseEntity.ok(Map.of("status", "sent", "message", "Catering email sent successfully"));
                     } catch (Exception e) {

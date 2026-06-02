@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
@@ -20,16 +21,19 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
     private final ReservationRepository reservationRepository;
     private final ReservationMapper reservationMapper;
     private final ConstraintValidationService constraintValidationService;
+    private final AuditService auditService;
 
     @Autowired(required = false)
     private EmailNotificationService emailService;
 
     public CreateReservationService(ReservationRepository reservationRepository,
                                      ReservationMapper reservationMapper,
-                                     ConstraintValidationService constraintValidationService) {
+                                     ConstraintValidationService constraintValidationService,
+                                     AuditService auditService) {
         this.reservationRepository = reservationRepository;
         this.reservationMapper = reservationMapper;
         this.constraintValidationService = constraintValidationService;
+        this.auditService = auditService;
     }
 
     @Override
@@ -74,6 +78,10 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
         log.info("LOGGING reservation.created id={} confirmation='{}' event='{}' date={} location={}",
                 savedEntity.getId(), savedEntity.getConfirmationNumber(),
                 savedEntity.getEventTitle(), savedEntity.getEventDate(), savedEntity.getLocation());
+
+        auditService.recordCreate(AuditEntityType.RESERVATION, savedEntity.getId(),
+                savedEntity.getConfirmationNumber() + " - " + savedEntity.getEventTitle(),
+                List.of(), "Reservation created");
 
         // Send email notification if enabled
         if (sendEmail && emailService != null) {

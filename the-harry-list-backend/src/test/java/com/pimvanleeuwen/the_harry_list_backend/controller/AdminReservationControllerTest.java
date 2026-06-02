@@ -7,6 +7,7 @@ import com.pimvanleeuwen.the_harry_list_backend.model.*;
 import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import com.pimvanleeuwen.the_harry_list_backend.repository.EmailAttachmentRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
+import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
 import com.pimvanleeuwen.the_harry_list_backend.service.ReservationMapper;
@@ -57,6 +58,9 @@ class AdminReservationControllerTest {
     @MockitoBean
     private EmailAttachmentRepository emailAttachmentRepository;
 
+    @MockitoBean
+    private AuditService auditService;
+
     private ObjectMapper objectMapper;
     private Reservation sampleReservation;
     private com.pimvanleeuwen.the_harry_list_backend.dto.Reservation sampleDto;
@@ -89,6 +93,45 @@ class AdminReservationControllerTest {
             res.getStatus() == ReservationStatus.CONFIRMED &&
             "Admin User".equals(res.getConfirmedBy())
         ));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldRecordAuditEntry() throws Exception {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "CONFIRMED"))
+            .andExpect(status().isOk());
+
+        verify(auditService).recordAction(
+            eq(com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType.RESERVATION),
+            eq(1L), any(),
+            eq(com.pimvanleeuwen.the_harry_list_backend.model.AuditAction.STATUS_CHANGE),
+            any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateInternalNotes_shouldRecordAuditEntry() throws Exception {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/notes")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("\"secret notes\""))
+            .andExpect(status().isOk());
+
+        verify(auditService).recordAction(
+            eq(com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType.RESERVATION),
+            eq(1L), any(),
+            eq(com.pimvanleeuwen.the_harry_list_backend.model.AuditAction.NOTES_UPDATED),
+            any(), any());
     }
 
     @Test

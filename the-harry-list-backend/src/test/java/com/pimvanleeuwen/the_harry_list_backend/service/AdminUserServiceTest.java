@@ -23,6 +23,9 @@ class AdminUserServiceTest {
     @Mock
     private AdminUserRepository adminUserRepository;
 
+    @Mock
+    private AuditService auditService;
+
     private AdminUserService service;
 
     private static final String ADMIN_OID = "d7795f0e-32fd-4618-b5da-bf2c0079dd4a";
@@ -30,7 +33,7 @@ class AdminUserServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new AdminUserService(adminUserRepository, ADMIN_OID);
+        service = new AdminUserService(adminUserRepository, auditService, ADMIN_OID);
     }
 
     @Test
@@ -106,6 +109,24 @@ class AdminUserServiceTest {
 
         assertEquals(AdminRole.EDITOR, result.getRole());
         verify(adminUserRepository).save(target);
+        verify(auditService).recordAction(
+                eq(com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType.ADMIN_USER),
+                eq(2L), eq("josselyn@hubble.cafe"),
+                eq(com.pimvanleeuwen.the_harry_list_backend.model.AuditAction.ROLE_CHANGED),
+                any(), any());
+    }
+
+    @Test
+    void updateRole_shouldNotAuditWhenChangingOwnRole() {
+        AdminUser self = createUser(1L, ADMIN_OID, "pim@hubble.cafe", "Pim", AdminRole.ADMIN);
+        when(adminUserRepository.findById(1L)).thenReturn(Optional.of(self));
+
+        try {
+            service.updateRole(1L, AdminRole.EDITOR, ADMIN_OID);
+        } catch (IllegalArgumentException ignored) {
+            // expected
+        }
+        verifyNoInteractions(auditService);
     }
 
     @Test
@@ -127,7 +148,7 @@ class AdminUserServiceTest {
 
     @Test
     void getOrCreateUser_shouldCreateViewerWhenInitialAdminOidIsEmpty() {
-        service = new AdminUserService(adminUserRepository, "");
+        service = new AdminUserService(adminUserRepository, auditService, "");
         when(adminUserRepository.findByAzureOid(ADMIN_OID)).thenReturn(Optional.empty());
         when(adminUserRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 

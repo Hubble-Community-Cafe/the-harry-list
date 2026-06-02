@@ -27,6 +27,9 @@ class DeleteReservationServiceTest {
     @Mock
     private ReservationRepository reservationRepository;
 
+    @Mock
+    private AuditService auditService;
+
     @InjectMocks
     private DeleteReservationService deleteReservationService;
 
@@ -50,6 +53,16 @@ class DeleteReservationServiceTest {
         // Then
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         verify(reservationRepository, times(1)).deleteById(id);
+        verify(auditService).recordDelete(eq(AuditEntityType.RESERVATION), eq(id), any(), any());
+    }
+
+    @Test
+    void execute_shouldNotAuditWhenReservationDoesNotExist() {
+        when(reservationRepository.findById(999L)).thenReturn(Optional.empty());
+
+        deleteReservationService.execute(999L);
+
+        verifyNoInteractions(auditService);
     }
 
     @Test

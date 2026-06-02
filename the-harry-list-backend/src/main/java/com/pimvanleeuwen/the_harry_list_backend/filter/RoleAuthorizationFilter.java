@@ -3,6 +3,7 @@ package com.pimvanleeuwen.the_harry_list_backend.filter;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminRole;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminUser;
 import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
+import com.pimvanleeuwen.the_harry_list_backend.util.AuditActorResolver;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,9 +51,10 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         if (auth instanceof JwtAuthenticationToken jwtAuth) {
             Jwt jwt = jwtAuth.getToken();
 
-            String oid = extractOid(jwt);
-            String email = extractEmail(jwt);
-            String name = extractName(jwt);
+            String oid = AuditActorResolver.extractOid(jwt);
+            String email = AuditActorResolver.extractEmail(jwt);
+            if (email == null) email = "unknown";
+            String name = AuditActorResolver.extractName(jwt);
 
             if (oid != null) {
                 AdminUser user = adminUserService.getOrCreateUser(oid, email, name);
@@ -83,21 +85,4 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         return authorities;
     }
 
-    private String extractOid(Jwt jwt) {
-        // Azure AD v2.0 tokens use "oid" claim, v1.0 uses "sub"
-        String oid = jwt.getClaimAsString("oid");
-        return oid != null ? oid : jwt.getSubject();
-    }
-
-    private String extractEmail(Jwt jwt) {
-        // Azure AD tokens may use "preferred_username", "email", or "upn"
-        String email = jwt.getClaimAsString("preferred_username");
-        if (email == null) email = jwt.getClaimAsString("email");
-        if (email == null) email = jwt.getClaimAsString("upn");
-        return email != null ? email : "unknown";
-    }
-
-    private String extractName(Jwt jwt) {
-        return jwt.getClaimAsString("name");
-    }
 }

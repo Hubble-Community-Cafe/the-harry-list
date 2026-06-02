@@ -35,6 +35,9 @@ class AdminEmailAttachmentControllerTest {
     @MockitoBean
     private EmailAttachmentRepository repository;
 
+    @MockitoBean
+    private com.pimvanleeuwen.the_harry_list_backend.service.AuditService auditService;
+
     private EmailAttachment sampleAttachment() {
         return EmailAttachment.builder()
                 .id(1L)
@@ -85,6 +88,9 @@ class AdminEmailAttachmentControllerTest {
             .andExpect(jsonPath("$.name").value("Catering Menu"));
 
         verify(repository).save(any());
+        verify(auditService).recordCreate(
+                eq(com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType.EMAIL_ATTACHMENT),
+                any(), any(), any(), any());
     }
 
     @Test
@@ -138,12 +144,12 @@ class AdminEmailAttachmentControllerTest {
     @Test
     @WithMockUser(roles = "EDITOR")
     void deleteAttachment_shouldDeleteExisting() throws Exception {
-        when(repository.existsById(1L)).thenReturn(true);
+        when(repository.findById(1L)).thenReturn(Optional.of(sampleAttachment()));
 
         mockMvc.perform(delete("/api/admin/email-attachments/1").with(csrf()))
             .andExpect(status().isOk());
 
-        verify(repository).deleteById(1L);
+        verify(repository).delete(any());
     }
 
     @Test
