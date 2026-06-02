@@ -1,17 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
   ArrowLeft, Calendar, Clock, MapPin, Users, Mail, Phone,
   Building2, CreditCard, UtensilsCrossed, MessageSquare,
   CheckCircle, XCircle, Loader2, AlertCircle, Trash2,
-  Send, Edit, X, FileText, Paperclip
+  Send, Edit, X, FileText, Paperclip, History
 } from 'lucide-react';
 import {
   fetchReservation, updateReservationStatus, deleteReservation, updateReservation,
-  updateCateringArranged, fetchEmailAttachments, fetchCateringEmailPreview, sendCateringEmail
+  updateCateringArranged, fetchEmailAttachments, fetchCateringEmailPreview, sendCateringEmail,
+  fetchReservationAuditLog
 } from '../lib/api';
 import type { Reservation, EmailAttachment } from '../types/reservation';
+import type { AuditLogEntry } from '../types/audit';
 import { usePermissions } from '../lib/usePermissions';
 import { HelpGuide } from '../components/HelpGuide';
 import { reservationDetailGuide } from '../lib/guideContent';
@@ -24,6 +26,8 @@ export function ReservationDetailPage() {
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
+  const [loadingAudit, setLoadingAudit] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -51,12 +55,28 @@ export function ReservationDetailPage() {
   const { canUpdateReservations } = usePermissions();
   const userName = accounts[0]?.name || 'Staff';
 
+  // Loading the audit history must never break the page — failures fall back to empty.
+  const loadAuditLog = useCallback(() => {
+    if (!id) return;
+    setLoadingAudit(true);
+    fetchReservationAuditLog(parseInt(id))
+      .then(setAuditLog)
+      .catch(() => setAuditLog([]))
+      .finally(() => setLoadingAudit(false));
+  }, [id]);
+
   useEffect(() => {
     if (!id) return;
     fetchReservation(parseInt(id))
       .then(data => setReservation(data))
       .catch(err => setError(err instanceof Error ? err.message : 'Failed to load reservation'))
       .finally(() => setIsLoading(false));
+    // Initial audit load — state is only set inside async callbacks (loadingAudit
+    // already starts true), so we don't call setState synchronously in the effect body.
+    fetchReservationAuditLog(parseInt(id))
+      .then(setAuditLog)
+      .catch(() => setAuditLog([]))
+      .finally(() => setLoadingAudit(false));
   }, [id]);
 
   const handleStatusChange = async (newStatus: string) => {
@@ -66,6 +86,7 @@ export function ReservationDetailPage() {
     try {
       await updateReservationStatus(reservation.id, newStatus, userName, sendEmail);
       setReservation({ ...reservation, status: newStatus });
+      loadAuditLog();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update status');
     } finally {
@@ -131,6 +152,7 @@ export function ReservationDetailPage() {
       setReservation(updatedReservation);
       setIsEditing(false);
       setEditData({});
+      loadAuditLog();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update reservation');
     } finally {
@@ -552,6 +574,7 @@ export function ReservationDetailPage() {
                     try {
                       const updated = await updateCateringArranged(reservation.id, newValue);
                       setReservation({ ...reservation, cateringArranged: updated.cateringArranged });
+                      loadAuditLog();
                     } catch (error) { console.error('Failed to update catering status:', error); }
                   }}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
@@ -606,6 +629,49 @@ export function ReservationDetailPage() {
           )}
         </div>
       )}
+
+      {/* Change History */}
+      <div className="card">
+        <h2 className="text-lg font-title font-semibold text-white mb-4 flex items-center gap-2">
+          <History className="w-5 h-5 text-hubble-400" />
+          Change History
+        </h2>
+        {loadingAudit ? (
+          <div className="flex items-center gap-2 text-dark-400 text-sm">
+            <Loader2 className="w-4 h-4 animate-spin" /> Loading history…
+          </div>
+        ) : auditLog.length === 0 ? (
+          <p className="text-sm text-dark-400">No changes recorded yet.</p>
+        ) : (
+          <ol className="space-y-4">
+            {auditLog.map((entry) => (
+              <li key={entry.id} className="border-l-2 border-dark-700 pl-4 relative">
+                <span className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-hubble-400" />
+                <div className="flex items-center justify-between flex-wrap gap-1">
+                  <AuditActionBadge action={entry.action} />
+                  <time className="text-xs text-dark-500">{new Date(entry.createdAt).toLocaleString()}</time>
+                </div>
+                <div className="text-sm text-dark-300 mt-1">
+                  <span className="text-white">{entry.actorName || entry.actorEmail || 'system'}</span>
+                  {entry.summary && <span className="text-dark-400"> — {entry.summary}</span>}
+                </div>
+                {entry.changes.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {entry.changes.map((change, i) => (
+                      <li key={i} className="text-xs text-dark-400">
+                        <code className="text-dark-300">{change.field}</code>:{' '}
+                        <span className="line-through text-red-400/70">{change.oldValue ?? '—'}</span>
+                        {' → '}
+                        <span className="text-green-400/80">{change.newValue ?? '—'}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
 
       {/* Metadata */}
       <div className="text-sm text-dark-500 flex gap-6">
@@ -1096,6 +1162,20 @@ function InfoRow({ icon: Icon, label, value }: { icon?: typeof Users; label: str
       </div>
     </div>
   );
+}
+
+function AuditActionBadge({ action }: { action: string }) {
+  const config: Record<string, { label: string; color: string; bg: string }> = {
+    CREATE: { label: 'Created', color: 'text-green-400', bg: 'bg-green-500/20' },
+    UPDATE: { label: 'Updated', color: 'text-blue-400', bg: 'bg-blue-500/20' },
+    DELETE: { label: 'Deleted', color: 'text-red-400', bg: 'bg-red-500/20' },
+    STATUS_CHANGE: { label: 'Status changed', color: 'text-amber-400', bg: 'bg-amber-500/20' },
+    NOTES_UPDATED: { label: 'Notes updated', color: 'text-hubble-400', bg: 'bg-hubble-500/20' },
+    CATERING_ARRANGED: { label: 'Catering', color: 'text-orange-400', bg: 'bg-orange-500/20' },
+    EMAIL_SENT: { label: 'Email sent', color: 'text-meteor-400', bg: 'bg-meteor-500/20' },
+  };
+  const { label, color, bg } = config[action] || { label: action, color: 'text-dark-300', bg: 'bg-dark-700' };
+  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${bg} ${color}`}>{label}</span>;
 }
 
 function StatusBadge({ status, large }: { status: string; large?: boolean }) {

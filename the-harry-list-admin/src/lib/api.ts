@@ -145,6 +145,7 @@ async function fetchJsonWithAuth(url: string, options: RequestInit = {}): Promis
 
 // Import types for proper typing
 import type { Reservation, FormConstraint, BlockedPeriod, EmailAttachment, CateringEmailRequest, CalendarAppointment } from '../types/reservation';
+import type { AuditLogEntry, AuditLogPageResponse, AuditLogFilters } from '../types/audit';
 
 // API Functions
 export async function fetchReservations(): Promise<Reservation[]> {
@@ -366,6 +367,25 @@ export async function updateUserRole(userId: number, role: string): Promise<Admi
     method: 'PUT',
     body: JSON.stringify({ role }),
   }) as Promise<AdminUser>;
+}
+
+// ===== Audit Log =====
+export async function fetchReservationAuditLog(reservationId: number): Promise<AuditLogEntry[]> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/audit/reservation/${reservationId}`) as Promise<AuditLogEntry[]>;
+}
+
+export async function fetchAuditLog(filters: AuditLogFilters = {}): Promise<AuditLogPageResponse> {
+  const params = new URLSearchParams();
+  if (filters.entityType) params.set('entityType', filters.entityType);
+  if (filters.entityId != null) params.set('entityId', String(filters.entityId));
+  if (filters.actorEmail) params.set('actorEmail', filters.actorEmail);
+  if (filters.action) params.set('action', filters.action);
+  if (filters.from) params.set('from', filters.from);
+  if (filters.to) params.set('to', filters.to);
+  if (filters.page != null) params.set('page', String(filters.page));
+  if (filters.size != null) params.set('size', String(filters.size));
+  const qs = params.toString();
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/audit${qs ? `?${qs}` : ''}`) as Promise<AuditLogPageResponse>;
 }
 
 // Test if authentication is working
