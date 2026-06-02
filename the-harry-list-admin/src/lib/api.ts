@@ -156,7 +156,12 @@ export async function fetchReservation(id: number): Promise<Reservation | null> 
   return fetchJsonWithAuth(`${API_BASE_URL}/api/reservations/${id}`) as Promise<Reservation | null>;
 }
 
-export async function updateReservation(id: number, data: Record<string, unknown>, sendEmail: boolean = true): Promise<Reservation> {
+export async function updateReservation(
+  id: number,
+  data: Record<string, unknown>,
+  sendEmail: boolean = true,
+  customMessage?: string
+): Promise<Reservation> {
   // Clean up empty strings to null for enum fields that the backend expects
   const cleanedData: Record<string, unknown> = { ...data };
   const enumFields = ['seatingArea', 'location', 'paymentOption', 'invoiceType'];
@@ -166,7 +171,11 @@ export async function updateReservation(id: number, data: Record<string, unknown
     }
   });
 
-  return fetchJsonWithAuth(`${API_BASE_URL}/api/reservations/${id}?sendEmail=${sendEmail}`, {
+  let url = `${API_BASE_URL}/api/reservations/${id}?sendEmail=${sendEmail}`;
+  if (customMessage && customMessage.trim()) {
+    url += `&customMessage=${encodeURIComponent(customMessage)}`;
+  }
+  return fetchJsonWithAuth(url, {
     method: 'PUT',
     body: JSON.stringify(cleanedData),
   }) as Promise<Reservation>;
@@ -182,11 +191,15 @@ export async function updateReservationStatus(
   id: number,
   status: string,
   confirmedBy?: string,
-  sendEmail: boolean = true
+  sendEmail: boolean = true,
+  customMessage?: string
 ): Promise<Reservation> {
   let url = `${API_BASE_URL}/api/admin/reservations/${id}/status?status=${status}&sendEmail=${sendEmail}`;
   if (confirmedBy) {
     url += `&confirmedBy=${encodeURIComponent(confirmedBy)}`;
+  }
+  if (customMessage && customMessage.trim()) {
+    url += `&customMessage=${encodeURIComponent(customMessage)}`;
   }
   return fetchJsonWithAuth(url, { method: 'PATCH' }) as Promise<Reservation>;
 }
