@@ -305,22 +305,22 @@ export function CalendarAppointmentsPage() {
               {/* Time fields (hidden when all-day) */}
               {!editing.allDay && (
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <div className="min-w-0">
                     <label className="label">Start Time *</label>
                     <input
                       type="time"
                       value={editing.startTime || ''}
                       onChange={e => setEditing({ ...editing, startTime: e.target.value })}
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="label">End Time *</label>
                     <input
                       type="time"
                       value={editing.endTime || ''}
                       onChange={e => setEditing({ ...editing, endTime: e.target.value })}
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
                     />
                   </div>
                 </div>
