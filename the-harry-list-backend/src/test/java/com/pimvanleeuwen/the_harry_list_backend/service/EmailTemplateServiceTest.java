@@ -186,6 +186,114 @@ class EmailTemplateServiceTest {
         assertTrue(subject.contains("Team Lunch"));
     }
 
+    // --- Custom message block ---
+
+    private Map<String, String> statusChangeVars() {
+        Map<String, String> vars = new java.util.HashMap<>();
+        vars.put("statusColor", "#f44336");
+        vars.put("status", "Rejected");
+        vars.put("statusMessage", "Unfortunately, we're unable to accommodate your request.");
+        vars.put("contactName", "Alice");
+        vars.put("confirmationNumber", "X");
+        vars.put("eventTitle", "Borrel");
+        vars.put("eventDate", "Monday");
+        vars.put("startTime", "18:00");
+        vars.put("endTime", "22:00");
+        vars.put("location", "Hubble");
+        vars.put("expectedGuests", "20");
+        vars.put("barName", "Hubble Cafe");
+        vars.put("staffEmail", "staff@hubble.cafe");
+        vars.put("statusSubject", "Reservation Request Update");
+        return vars;
+    }
+
+    @Test
+    void statusChanged_shouldInjectCustomMessageBlockWhenProvided() {
+        String block = EmailTemplates.buildCustomMessageBlock("We will keep a shaded spot for you.");
+        String body = service.getRenderedBody(EmailTemplateType.STATUS_CHANGED,
+                statusChangeVars(), Map.of("customMessage", block));
+
+        assertTrue(body.contains("We will keep a shaded spot for you."));
+        // The block HTML must survive verbatim (not double-escaped).
+        assertTrue(body.contains("border-left: 4px solid #6b46c1"));
+        assertFalse(body.contains("{{customMessage}}"));
+    }
+
+    @Test
+    void statusChanged_shouldOmitCustomMessageWhenNoneProvided() {
+        // The 2-arg overload defaults the block to empty for status-change emails.
+        String body = service.getRenderedBody(EmailTemplateType.STATUS_CHANGED, statusChangeVars());
+
+        assertFalse(body.contains("{{customMessage}}"), "Placeholder must not render literally");
+        assertFalse(body.contains("border-left: 4px solid #6b46c1"), "No block when no message");
+    }
+
+    @Test
+    void updated_shouldInjectCustomMessageBlockWhenProvided() {
+        Map<String, String> vars = new java.util.HashMap<>();
+        vars.put("contactName", "Bob");
+        vars.put("confirmationNumber", "U1");
+        vars.put("eventTitle", "Workshop");
+        vars.put("eventDate", "Tuesday");
+        vars.put("startTime", "10:00");
+        vars.put("endTime", "12:00");
+        vars.put("location", "Meteor");
+        vars.put("expectedGuests", "12");
+        vars.put("status", "Confirmed");
+        vars.put("barName", "Meteor Cafe");
+
+        String block = EmailTemplates.buildCustomMessageBlock("We moved you to the larger room.");
+        String body = service.getRenderedBody(EmailTemplateType.UPDATED, vars,
+                Map.of("customMessage", block));
+
+        assertTrue(body.contains("We moved you to the larger room."));
+        assertFalse(body.contains("{{customMessage}}"));
+    }
+
+    @Test
+    void customMessageBlock_shouldEscapeHtmlButRenderVerbatim() {
+        String block = EmailTemplates.buildCustomMessageBlock("<script>alert('x')</script>");
+        String body = service.getRenderedBody(EmailTemplateType.STATUS_CHANGED,
+                statusChangeVars(), Map.of("customMessage", block));
+
+        assertFalse(body.contains("<script>"), "Message text must be escaped");
+        assertTrue(body.contains("&lt;script&gt;"));
+        // The wrapping div is intentional HTML and must remain.
+        assertTrue(body.contains("<div"));
+    }
+
+    @Test
+    void buildCustomMessageBlock_shouldReturnEmptyForBlankOrNull() {
+        assertEquals("", EmailTemplates.buildCustomMessageBlock(null));
+        assertEquals("", EmailTemplates.buildCustomMessageBlock(""));
+        assertEquals("", EmailTemplates.buildCustomMessageBlock("   "));
+    }
+
+    @Test
+    void buildCustomMessageBlock_shouldConvertNewlinesToBreaks() {
+        String block = EmailTemplates.buildCustomMessageBlock("line one\nline two");
+        assertTrue(block.contains("line one<br>line two"));
+    }
+
+    @Test
+    void availableVariables_shouldIncludeCustomMessageForStatusAndUpdatedOnly() {
+        assertTrue(service.getAvailableVariables(EmailTemplateType.STATUS_CHANGED).contains("customMessage"));
+        assertTrue(service.getAvailableVariables(EmailTemplateType.UPDATED).contains("customMessage"));
+        assertFalse(service.getAvailableVariables(EmailTemplateType.SUBMITTED).contains("customMessage"));
+        assertFalse(service.getAvailableVariables(EmailTemplateType.CANCELLED).contains("customMessage"));
+    }
+
+    @Test
+    void buildSampleRawHtmlVariables_shouldProvideBlockForStatusAndUpdatedOnly() {
+        assertTrue(service.buildSampleRawHtmlVariables(EmailTemplateType.STATUS_CHANGED)
+                .containsKey("customMessage"));
+        assertFalse(service.buildSampleRawHtmlVariables(EmailTemplateType.STATUS_CHANGED)
+                .get("customMessage").isBlank());
+        assertTrue(service.buildSampleRawHtmlVariables(EmailTemplateType.UPDATED)
+                .containsKey("customMessage"));
+        assertTrue(service.buildSampleRawHtmlVariables(EmailTemplateType.SUBMITTED).isEmpty());
+    }
+
     // --- Default content ---
 
     @Test
