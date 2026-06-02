@@ -4,6 +4,13 @@ import type { BlockedPeriod } from '../types/reservation';
 export const DEFAULT_SOFT_BLOCK_ACKNOWLEDGEMENT =
   'I understand the bar may be closed during this period and that my reservation is a request.';
 
+/** Default warning shown for a soft block when no public message is configured. */
+export const DEFAULT_SOFT_BLOCK_MESSAGE =
+  'We are by default closed during this period, but by acknowledging the message below you can still place a reservation request.';
+
+/** Default message shown for a (hard) block when no public message is configured. */
+export const DEFAULT_HARD_BLOCK_MESSAGE = 'This date is not available for reservations.';
+
 export interface BlockedDateMatch {
   /** Public-facing message to display to the guest. */
   message: string;
@@ -11,6 +18,8 @@ export interface BlockedDateMatch {
   soft: boolean;
   /** Checkbox label for the acknowledgement (only meaningful when soft). */
   acknowledgementText: string;
+  /** True when the block only applies because of the selected location. */
+  locationSpecific: boolean;
 }
 
 /**
@@ -41,10 +50,12 @@ export function checkBlockedDate(
           continue;
         }
       }
+      const soft = bp.softBlock === true;
       return {
-        message: bp.publicMessage || 'This date is not available for reservations.',
-        soft: bp.softBlock === true,
+        message: bp.publicMessage || (soft ? DEFAULT_SOFT_BLOCK_MESSAGE : DEFAULT_HARD_BLOCK_MESSAGE),
+        soft,
         acknowledgementText: bp.acknowledgementText?.trim() || DEFAULT_SOFT_BLOCK_ACKNOWLEDGEMENT,
+        locationSpecific: !!bp.location,
       };
     }
   }

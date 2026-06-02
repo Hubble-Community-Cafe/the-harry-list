@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import type { BlockedPeriod } from '../types/reservation';
-import { checkBlockedDate, DEFAULT_SOFT_BLOCK_ACKNOWLEDGEMENT } from '../lib/blockedPeriods';
+import {
+  checkBlockedDate,
+  DEFAULT_SOFT_BLOCK_ACKNOWLEDGEMENT,
+  DEFAULT_SOFT_BLOCK_MESSAGE,
+} from '../lib/blockedPeriods';
 
 /**
  * Tests for the blocked period date checking logic used in ReservationForm.
@@ -178,8 +182,22 @@ describe('Soft blocked periods', () => {
     expect(result?.acknowledgementText).toBe(DEFAULT_SOFT_BLOCK_ACKNOWLEDGEMENT);
   });
 
+  it('uses the soft-specific default message when no public message is set', () => {
+    const result = checkBlockedDate('2026-07-15', 'HUBBLE', [{ ...softPeriod, publicMessage: undefined }]);
+    expect(result?.message).toBe(DEFAULT_SOFT_BLOCK_MESSAGE);
+  });
+
   it('treats a period without softBlock as a hard block', () => {
     const result = checkBlockedDate('2026-07-15', 'HUBBLE', [{ ...softPeriod, softBlock: undefined }]);
     expect(result?.soft).toBe(false);
+  });
+
+  it('flags a global block as not location-specific', () => {
+    expect(checkBlockedDate('2026-07-15', 'HUBBLE', [softPeriod])?.locationSpecific).toBe(false);
+  });
+
+  it('flags a location-scoped block as location-specific', () => {
+    const result = checkBlockedDate('2026-07-15', 'HUBBLE', [{ ...softPeriod, location: 'HUBBLE' }]);
+    expect(result?.locationSpecific).toBe(true);
   });
 });

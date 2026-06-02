@@ -1092,8 +1092,9 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               </label>
             </div>
 
-            {/* Blocked period notice (shows when location triggers a location-specific block) */}
-            {blockedDateNotice}
+            {/* Blocked period notice — only for location-specific blocks here; global/time
+                blocks are already surfaced (and acknowledged) on the date step. */}
+            {blockedDateInfo?.locationSpecific && blockedDateNotice}
 
             {/* Seating Area Selection */}
             <div className="form-group">
