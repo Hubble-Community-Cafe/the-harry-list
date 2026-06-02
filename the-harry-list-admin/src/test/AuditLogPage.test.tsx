@@ -73,6 +73,27 @@ describe('AuditLogPage', () => {
     });
   });
 
+  it('passes the selected date range to the API as inclusive ISO bounds', async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('ABC123 - Birthday Party')).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2026-06-01' } });
+    fireEvent.change(screen.getByLabelText('To date'), { target: { value: '2026-06-30' } });
+
+    await waitFor(() => {
+      expect(fetchAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: '2026-06-01T00:00:00',
+          to: '2026-06-30T23:59:59',
+          page: 0,
+        })
+      );
+    });
+  });
+
   it('shows an empty state when there are no entries', async () => {
     vi.mocked(fetchAuditLog).mockResolvedValueOnce({
       content: [], page: 0, size: 50, totalElements: 0, totalPages: 0,

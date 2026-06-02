@@ -27,6 +27,8 @@ export function AuditLogPage() {
   const [entityType, setEntityType] = useState<AuditEntityType | ''>('');
   const [action, setAction] = useState<AuditAction | ''>('');
   const [actorEmail, setActorEmail] = useState('');
+  const [fromDate, setFromDate] = useState(''); // YYYY-MM-DD
+  const [toDate, setToDate] = useState('');     // YYYY-MM-DD
 
   // State is only set inside async callbacks (not synchronously in the effect body),
   // to satisfy the react-hooks/set-state-in-effect rule. `loading` starts true.
@@ -38,6 +40,9 @@ export function AuditLogPage() {
       entityType: entityType || undefined,
       action: action || undefined,
       actorEmail: actorEmail.trim() || undefined,
+      // Backend expects ISO date-times; widen the day bounds so the range is inclusive.
+      from: fromDate ? `${fromDate}T00:00:00` : undefined,
+      to: toDate ? `${toDate}T23:59:59` : undefined,
     })
       .then(result => {
         if (cancelled) return;
@@ -53,7 +58,7 @@ export function AuditLogPage() {
         if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
-  }, [page, entityType, action, actorEmail]);
+  }, [page, entityType, action, actorEmail, fromDate, toDate]);
 
   // Changing a filter resets to the first page.
   const onFilterChange = <T,>(setter: (v: T) => void) => (value: T) => {
@@ -109,6 +114,28 @@ export function AuditLogPage() {
               value={actorEmail}
               onChange={e => onFilterChange(setActorEmail)(e.target.value)}
               placeholder="e.g. staff@example.com"
+              className="input-field"
+            />
+          </div>
+          <div className="form-group">
+            <label className="label" htmlFor="audit-from">From date</label>
+            <input
+              id="audit-from"
+              type="date"
+              value={fromDate}
+              max={toDate || undefined}
+              onChange={e => onFilterChange(setFromDate)(e.target.value)}
+              className="input-field"
+            />
+          </div>
+          <div className="form-group">
+            <label className="label" htmlFor="audit-to">To date</label>
+            <input
+              id="audit-to"
+              type="date"
+              value={toDate}
+              min={fromDate || undefined}
+              onChange={e => onFilterChange(setToDate)(e.target.value)}
               className="input-field"
             />
           </div>

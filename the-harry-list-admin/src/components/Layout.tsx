@@ -38,8 +38,8 @@ export function Layout() {
     { to: '/calendar', icon: CalendarSync, label: 'Calendar Feeds' },
     { to: '/calendar-appointments', icon: CalendarPlus, label: 'Appointments' },
     ...(canEditEmailTemplates ? [{ to: '/email-templates', icon: Mail, label: 'Email Templates' }] : []),
-    ...(canEditFormSettings ? [{ to: '/settings', icon: Settings, label: 'Settings' }] : []),
     ...(canViewAuditLog ? [{ to: '/audit', icon: History, label: 'Audit Log' }] : []),
+    ...(canEditFormSettings ? [{ to: '/settings', icon: Settings, label: 'Settings' }] : []),
   ];
 
   return (
