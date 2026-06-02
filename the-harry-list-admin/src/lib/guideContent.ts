@@ -259,6 +259,10 @@ Templates support **variables** that get replaced with actual reservation data w
 - \`{{location}}\` — Hubble or Meteor
 - \`{{confirmationNumber}}\` — the unique booking reference
 
+The **Reservation Confirmed/Rejected** and **Reservation Updated** templates also support:
+
+- \`{{customMessage}}\` — the optional message a staff member types when confirming, rejecting, cancelling, completing, or editing a reservation. It renders as a highlighted note, or nothing at all when no message is entered. Keep this placeholder in the template if you want those one-off messages to appear.
+
 ### Actions
 
 - **Save** — save your changes
@@ -408,7 +412,7 @@ The available actions depend on the current status:
 
 ### Pending Reservations
 - **Confirm** — approve the reservation. Optionally sends a confirmation email
-- **Reject** — decline with an optional reason (included in the rejection email)
+- **Reject** — decline the reservation. The rejection email is pre-filled with a default reason you can edit or replace
 
 ### Confirmed Reservations
 - **Complete** — mark as completed after the event has taken place
@@ -419,7 +423,10 @@ The available actions depend on the current status:
 - **Delete** — permanently remove (with confirmation dialog)
 
 ### Email Notifications
-Each status change dialog has a **"Send email notification"** checkbox. Keep this checked to automatically notify the customer. Uncheck it only if you've already communicated with them directly.`,
+Each status change dialog (and the edit form) has a **"Send email notification"** checkbox. Keep this checked to automatically notify the customer. Uncheck it only if you've already communicated with them directly.
+
+### Adding a Message to the Email
+When the email notification is on, every status dialog and the edit form shows an optional **"Add a message to the email"** box. Anything you type here appears as a highlighted note in that email — use it to clarify things the standard template doesn't cover, e.g. *"We read your special request and will keep a shaded spot for you."* For **Reject**, this box is pre-filled with a default reason that you can edit, replace, or clear before sending.`,
   },
   {
     title: 'Catering Email',
