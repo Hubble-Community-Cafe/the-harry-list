@@ -87,6 +87,10 @@ export interface BlockedPeriod {
   endTime?: string;
   reason: string;
   publicMessage?: string;
+  /** When true, the period warns but does not block reservations. */
+  softBlock?: boolean;
+  /** Optional checkbox label the guest must tick to acknowledge a soft block. */
+  acknowledgementText?: string;
   enabled: boolean;
   updatedAt?: string;
 }

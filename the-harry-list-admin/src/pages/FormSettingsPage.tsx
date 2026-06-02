@@ -52,6 +52,8 @@ const emptyBlockedPeriod: BlockedPeriod = {
   endTime: '',
   reason: '',
   publicMessage: '',
+  softBlock: false,
+  acknowledgementText: '',
   enabled: true,
 };
 
@@ -353,10 +355,15 @@ export function SettingsPage() {
                   }`}
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-dark-800 text-red-400">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className={`text-xs font-mono px-2 py-0.5 rounded bg-dark-800 ${bp.softBlock ? 'text-amber-400' : 'text-red-400'}`}>
                         {bp.startDate} — {bp.endDate}
                       </span>
+                      {bp.softBlock && (
+                        <span className="text-xs font-medium px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                          Soft block
+                        </span>
+                      )}
                       {bp.location && (
                         <span className="text-xs font-mono px-2 py-0.5 rounded bg-dark-800 text-amber-400">
                           {bp.location}
@@ -655,6 +662,44 @@ export function SettingsPage() {
                     placeholder="e.g. Closed for maintenance"
                     className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
                   />
+                </div>
+
+                <div className="rounded-lg border border-dark-700 bg-dark-800/40 p-3 space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={!!editingPeriod.softBlock}
+                      onClick={() => setEditingPeriod({ ...editingPeriod, softBlock: !editingPeriod.softBlock })}
+                      className="shrink-0 mt-0.5"
+                      title="Toggle soft block"
+                    >
+                      {editingPeriod.softBlock
+                        ? <ToggleRight className="w-6 h-6 text-amber-400" />
+                        : <ToggleLeft className="w-6 h-6 text-dark-500" />}
+                    </button>
+                    <span className="text-sm text-white">
+                      Soft block (allow bookings with a warning)
+                      <span className="block text-xs text-dark-400 font-light mt-0.5">
+                        Guests can still book during this period, but must acknowledge a warning first.
+                        Use this for e.g. a summer closing where the bar opens on request.
+                      </span>
+                    </span>
+                  </label>
+
+                  {editingPeriod.softBlock && (
+                    <div>
+                      <label className="block text-sm text-dark-400 mb-1">Acknowledgement text (checkbox label)</label>
+                      <input
+                        type="text"
+                        value={editingPeriod.acknowledgementText || ''}
+                        onChange={e => setEditingPeriod({ ...editingPeriod, acknowledgementText: e.target.value })}
+                        placeholder="I understand the bar may be closed and my reservation is a request"
+                        className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      />
+                      <p className="text-xs text-dark-500 mt-1">Leave blank to use a default acknowledgement message.</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
