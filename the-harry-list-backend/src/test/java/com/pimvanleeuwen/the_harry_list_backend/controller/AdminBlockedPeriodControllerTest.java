@@ -119,6 +119,43 @@ class AdminBlockedPeriodControllerTest {
 
     @Test
     @WithMockUser(roles = "EDITOR")
+    void create_shouldPersistSoftBlockFields() throws Exception {
+        BlockedPeriod soft = samplePeriod();
+        soft.setSoftBlock(true);
+        soft.setAcknowledgementText("I understand the bar may be closed");
+        when(repository.save(any())).thenReturn(soft);
+
+        mockMvc.perform(post("/api/admin/blocked-periods")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(soft)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.softBlock").value(true))
+                .andExpect(jsonPath("$.acknowledgementText").value("I understand the bar may be closed"));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void update_shouldCopySoftBlockFields() throws Exception {
+        BlockedPeriod existing = samplePeriod();
+        when(repository.findById(1L)).thenReturn(Optional.of(existing));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        BlockedPeriod update = samplePeriod();
+        update.setSoftBlock(true);
+        update.setAcknowledgementText("Open on request");
+
+        mockMvc.perform(put("/api/admin/blocked-periods/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(update)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.softBlock").value(true))
+                .andExpect(jsonPath("$.acknowledgementText").value("Open on request"));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
     void toggle_shouldFlipEnabledState() throws Exception {
         BlockedPeriod period = samplePeriod();
         period.setEnabled(true);

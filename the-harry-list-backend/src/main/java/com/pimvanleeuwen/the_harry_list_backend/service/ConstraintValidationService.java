@@ -174,6 +174,11 @@ public class ConstraintValidationService {
         }
 
         for (BlockedPeriod bp : blocking) {
+            // Soft blocks are advisory only: the guest is warned and must acknowledge
+            // on the form, but the booking is allowed, so they are not server-side violations.
+            if (Boolean.TRUE.equals(bp.getSoftBlock())) {
+                continue;
+            }
             String msg = bp.getPublicMessage() != null ? bp.getPublicMessage()
                     : "This date is not available for reservations";
             violations.add(msg);

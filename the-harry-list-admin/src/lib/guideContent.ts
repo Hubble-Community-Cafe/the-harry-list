@@ -361,7 +361,20 @@ Click **"Add Blocked Period"** and fill in:
 2. **Location** — optionally limit the block to just Hubble or Meteor (leave empty for both)
 3. **Reason** — internal note for staff (not shown to customers)
 4. **Public message** — the message customers see when trying to book these dates
-5. **Enabled** — toggle on/off
+5. **Soft block** — see below
+6. **Enabled** — toggle on/off
+
+### Hard vs. Soft Blocks
+
+By default a blocked period is a **hard block**: customers cannot book those dates at all.
+
+Turn on **Soft block (allow bookings with a warning)** when the venue is closed *by default* but bookings are still possible — for example a summer closing where the bar opens only on request. With a soft block:
+
+- The period is still marked and the **public message** is shown as a warning.
+- The customer must tick an **acknowledgement checkbox** before continuing, then can complete the booking.
+- Soft-blocked rows are marked with an amber **"Soft block"** badge in the list.
+
+When soft block is on you can set the **acknowledgement text** — the checkbox label the customer must tick (e.g. *"I understand the bar may be closed and my reservation is a request"*). Leave it blank to use a sensible default.
 
 ### Tip
 You can create blocked periods in advance. Use the **enabled toggle** to activate them when needed instead of creating and deleting them each time.`,

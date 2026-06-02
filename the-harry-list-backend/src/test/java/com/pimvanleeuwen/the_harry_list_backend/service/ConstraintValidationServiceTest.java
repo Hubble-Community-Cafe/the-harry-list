@@ -287,6 +287,65 @@ class ConstraintValidationServiceTest {
     }
 
     @Test
+    void validate_shouldNotFlagSoftBlockedPeriod() {
+        LocalDate eventDate = LocalDate.now().plusDays(5);
+
+        BlockedPeriod softBlocked = BlockedPeriod.builder()
+                .startDate(eventDate.minusDays(1))
+                .endDate(eventDate.plusDays(1))
+                .reason("Summer closing")
+                .publicMessage("Bar open on request only")
+                .softBlock(true)
+                .enabled(true)
+                .build();
+
+        when(constraintRepository.findByEnabledTrue()).thenReturn(List.of());
+        when(blockedPeriodRepository.findBlockingPeriods(eventDate, BarLocation.HUBBLE))
+                .thenReturn(List.of(softBlocked));
+
+        List<String> violations = service.validate(
+                Set.of(SpecialActivity.GRADUATION),
+                BarLocation.HUBBLE,
+                SeatingArea.INSIDE,
+                eventDate,
+                LocalTime.of(14, 0),
+                30);
+
+        assertTrue(violations.isEmpty(), "Soft blocks must not block submission server-side");
+    }
+
+    @Test
+    void validate_shouldStillFlagHardBlockAlongsideSoftBlock() {
+        LocalDate eventDate = LocalDate.now().plusDays(5);
+
+        BlockedPeriod softBlocked = BlockedPeriod.builder()
+                .startDate(eventDate).endDate(eventDate)
+                .reason("Summer closing").publicMessage("Bar open on request only")
+                .softBlock(true).enabled(true)
+                .build();
+        BlockedPeriod hardBlocked = BlockedPeriod.builder()
+                .startDate(eventDate).endDate(eventDate)
+                .reason("Private event").publicMessage("Fully booked")
+                .softBlock(false).enabled(true)
+                .build();
+
+        when(constraintRepository.findByEnabledTrue()).thenReturn(List.of());
+        when(blockedPeriodRepository.findBlockingPeriods(eventDate, BarLocation.HUBBLE))
+                .thenReturn(List.of(softBlocked, hardBlocked));
+
+        List<String> violations = service.validate(
+                Set.of(SpecialActivity.GRADUATION),
+                BarLocation.HUBBLE,
+                SeatingArea.INSIDE,
+                eventDate,
+                LocalTime.of(14, 0),
+                30);
+
+        assertEquals(1, violations.size());
+        assertTrue(violations.get(0).contains("Fully booked"));
+    }
+
+    @Test
     void validate_shouldCollectMultipleViolations() {
         FormConstraint conflict = FormConstraint.builder()
                 .constraintType(FormConstraintType.ACTIVITY_CONFLICT)
