@@ -85,6 +85,7 @@ public class AdminReservationController {
             @RequestParam ReservationStatus status,
             @RequestParam(required = false) String confirmedBy,
             @RequestParam(required = false, defaultValue = "true") boolean sendEmail,
+            @RequestParam(required = false) String customMessage,
             Principal principal) {
 
         return reservationRepository.findById(id)
@@ -108,15 +109,20 @@ public class AdminReservationController {
                             oldStatus, status, principal != null ? principal.getName() : "unknown",
                             confirmedBy != null ? " confirmedBy='" + confirmedBy + "'" : "");
 
+                    // The message content itself is not stored in the audit log (may be long); we only
+                    // record that a custom message accompanied the status change.
+                    boolean hasCustomMessage = customMessage != null && !customMessage.isBlank();
                     auditService.recordAction(AuditEntityType.RESERVATION, id, label(saved),
                             AuditAction.STATUS_CHANGE,
                             List.of(new FieldChange("status", String.valueOf(oldStatus), String.valueOf(status))),
-                            "Status changed" + (confirmedBy != null ? " (confirmed by " + confirmedBy + ")" : ""));
+                            "Status changed"
+                                    + (confirmedBy != null ? " (confirmed by " + confirmedBy + ")" : "")
+                                    + (hasCustomMessage ? " (with message)" : ""));
 
                     // Send email notification if enabled
                     if (sendEmail && emailService != null) {
                         try {
-                            emailService.sendStatusChangeEmail(saved, oldStatus, confirmedBy);
+                            emailService.sendStatusChangeEmail(saved, customMessage);
                         } catch (Exception e) {
                             log.error("Failed to send status change email, but status was updated successfully", e);
                         }

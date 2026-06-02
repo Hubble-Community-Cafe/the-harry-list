@@ -10,6 +10,7 @@ export function ExportPage() {
   );
   const [selectedLocation, setSelectedLocation] = useState<'HUBBLE' | 'METEOR'>('HUBBLE');
   const [confirmedOnly, setConfirmedOnly] = useState(true);
+  const [cateringOnly, setCateringOnly] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,7 +20,7 @@ export function ExportPage() {
 
     try {
       const response = await fetchWithAuth(
-        `/api/admin/export/daily-report?date=${selectedDate}&location=${selectedLocation}&confirmedOnly=${confirmedOnly}`
+        `/api/admin/export/daily-report?date=${selectedDate}&location=${selectedLocation}&confirmedOnly=${confirmedOnly}&cateringOnly=${cateringOnly}`
       );
 
       if (!response.ok) {
@@ -146,18 +147,33 @@ export function ExportPage() {
               <Filter className="w-4 h-4" />
               Filter
             </label>
-            <label className="flex items-center gap-3 p-4 bg-dark-800/50 border border-dark-700 rounded-xl cursor-pointer hover:border-dark-600 transition-colors">
-              <input
-                type="checkbox"
-                checked={confirmedOnly}
-                onChange={(e) => setConfirmedOnly(e.target.checked)}
-                className="w-5 h-5 rounded border-dark-600 bg-dark-800 text-hubble-500 focus:ring-hubble-500 focus:ring-offset-0"
-              />
-              <div>
-                <span className="text-sm font-medium text-white">Confirmed reservations only</span>
-                <p className="text-xs text-dark-400">Exclude pending, rejected, and cancelled reservations</p>
-              </div>
-            </label>
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 p-4 bg-dark-800/50 border border-dark-700 rounded-xl cursor-pointer hover:border-dark-600 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={confirmedOnly}
+                  onChange={(e) => setConfirmedOnly(e.target.checked)}
+                  className="w-5 h-5 rounded border-dark-600 bg-dark-800 text-hubble-500 focus:ring-hubble-500 focus:ring-offset-0"
+                />
+                <div>
+                  <span className="text-sm font-medium text-white">Confirmed reservations only</span>
+                  <p className="text-xs text-dark-400">Exclude pending, rejected, and cancelled reservations</p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 p-4 bg-dark-800/50 border border-dark-700 rounded-xl cursor-pointer hover:border-dark-600 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={cateringOnly}
+                  onChange={(e) => setCateringOnly(e.target.checked)}
+                  className="w-5 h-5 rounded border-dark-600 bg-dark-800 text-hubble-500 focus:ring-hubble-500 focus:ring-offset-0"
+                />
+                <div>
+                  <span className="text-sm font-medium text-white">Catering reservations only</span>
+                  <p className="text-xs text-dark-400">Only include reservations with catering (eat a la carte, eat catering, or Catering Corona Room)</p>
+                </div>
+              </label>
+            </div>
           </div>
 
           {/* Error Message */}

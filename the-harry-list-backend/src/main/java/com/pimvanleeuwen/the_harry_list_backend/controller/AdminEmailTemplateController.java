@@ -92,14 +92,15 @@ public class AdminEmailTemplateController {
         }
 
         Map<String, String> sampleVars = emailTemplateService.buildSampleVariables(type);
+        Map<String, String> sampleRawHtml = emailTemplateService.buildSampleRawHtmlVariables(type);
 
         String subject = (request.getSubject() != null && !request.getSubject().isBlank())
                 ? emailTemplateService.renderForTest(request.getSubject(), sampleVars)
                 : emailTemplateService.getRenderedSubject(type, sampleVars);
 
         String body = (request.getBodyTemplate() != null && !request.getBodyTemplate().isBlank())
-                ? emailTemplateService.renderForTest(request.getBodyTemplate(), sampleVars)
-                : emailTemplateService.getRenderedBody(type, sampleVars);
+                ? emailTemplateService.renderForTest(request.getBodyTemplate(), sampleVars, sampleRawHtml)
+                : emailTemplateService.getRenderedBody(type, sampleVars, sampleRawHtml);
 
         try {
             emailNotificationService.get().sendRawEmail(request.getToEmail(), subject, body);

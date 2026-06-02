@@ -39,7 +39,7 @@ class AdminExportControllerTest {
     void generateDailyReport_shouldReturnPdf() throws Exception {
         // Given
         byte[] mockPdf = "%PDF-1.4 mock pdf content".getBytes();
-        when(pdfExportService.generateDailyReport(any(LocalDate.class), eq(BarLocation.HUBBLE), anyBoolean()))
+        when(pdfExportService.generateDailyReport(any(LocalDate.class), eq(BarLocation.HUBBLE), anyBoolean(), anyBoolean()))
             .thenReturn(mockPdf);
 
         // When/Then
@@ -55,7 +55,7 @@ class AdminExportControllerTest {
     void generateDailyReport_shouldAcceptConfirmedOnlyParameter() throws Exception {
         // Given
         byte[] mockPdf = "%PDF-1.4 mock pdf content".getBytes();
-        when(pdfExportService.generateDailyReport(any(LocalDate.class), eq(BarLocation.HUBBLE), eq(false)))
+        when(pdfExportService.generateDailyReport(any(LocalDate.class), eq(BarLocation.HUBBLE), eq(false), anyBoolean()))
             .thenReturn(mockPdf);
 
         // When/Then
@@ -63,6 +63,38 @@ class AdminExportControllerTest {
                 .param("date", "2026-02-15")
                 .param("location", "HUBBLE")
                 .param("confirmedOnly", "false"))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser
+    void generateDailyReport_shouldAcceptCateringOnlyParameter() throws Exception {
+        // Given
+        byte[] mockPdf = "%PDF-1.4 mock pdf content".getBytes();
+        when(pdfExportService.generateDailyReport(any(LocalDate.class), eq(BarLocation.HUBBLE), anyBoolean(), eq(true)))
+            .thenReturn(mockPdf);
+
+        // When/Then
+        mockMvc.perform(get("/api/admin/export/daily-report")
+                .param("date", "2026-02-15")
+                .param("location", "HUBBLE")
+                .param("cateringOnly", "true"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+    }
+
+    @Test
+    @WithMockUser
+    void generateDailyReport_shouldDefaultCateringOnlyToFalse() throws Exception {
+        // Given - no cateringOnly param supplied, service should be called with false
+        byte[] mockPdf = "%PDF-1.4 mock pdf content".getBytes();
+        when(pdfExportService.generateDailyReport(any(LocalDate.class), eq(BarLocation.HUBBLE), anyBoolean(), eq(false)))
+            .thenReturn(mockPdf);
+
+        // When/Then
+        mockMvc.perform(get("/api/admin/export/daily-report")
+                .param("date", "2026-02-15")
+                .param("location", "HUBBLE"))
             .andExpect(status().isOk());
     }
 
@@ -91,7 +123,7 @@ class AdminExportControllerTest {
     void generateDailyReport_shouldAcceptMeteorLocation() throws Exception {
         // Given
         byte[] mockPdf = "%PDF-1.4 mock pdf content".getBytes();
-        when(pdfExportService.generateDailyReport(any(LocalDate.class), eq(BarLocation.METEOR), anyBoolean()))
+        when(pdfExportService.generateDailyReport(any(LocalDate.class), eq(BarLocation.METEOR), anyBoolean(), anyBoolean()))
             .thenReturn(mockPdf);
 
         // When/Then
@@ -107,7 +139,7 @@ class AdminExportControllerTest {
     void generateDailyReport_shouldAcceptLowercaseLocation() throws Exception {
         // Given
         byte[] mockPdf = "%PDF-1.4 mock pdf content".getBytes();
-        when(pdfExportService.generateDailyReport(any(LocalDate.class), eq(BarLocation.HUBBLE), anyBoolean()))
+        when(pdfExportService.generateDailyReport(any(LocalDate.class), eq(BarLocation.HUBBLE), anyBoolean(), anyBoolean()))
             .thenReturn(mockPdf);
 
         // When/Then
@@ -121,7 +153,7 @@ class AdminExportControllerTest {
     @WithMockUser
     void generateDailyReport_shouldReturnInternalServerErrorOnException() throws Exception {
         // Given
-        when(pdfExportService.generateDailyReport(any(LocalDate.class), any(BarLocation.class), anyBoolean()))
+        when(pdfExportService.generateDailyReport(any(LocalDate.class), any(BarLocation.class), anyBoolean(), anyBoolean()))
             .thenThrow(new DocumentException("PDF generation failed"));
 
         // When/Then

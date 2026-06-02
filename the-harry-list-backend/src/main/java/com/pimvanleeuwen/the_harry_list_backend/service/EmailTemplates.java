@@ -430,4 +430,21 @@ public class EmailTemplates {
             escapeHtml(barName)
         );
     }
+
+    /**
+     * Builds the optional "custom message" block injected into status-change and update emails.
+     * Returns an empty string when no message is provided, so the surrounding template renders
+     * nothing. The message text is HTML-escaped (newlines become &lt;br&gt;) so the block is safe
+     * to substitute as raw HTML into a template.
+     */
+    public static String buildCustomMessageBlock(String message) {
+        if (message == null || message.isBlank()) {
+            return "";
+        }
+        String htmlMessage = escapeHtml(message).replace("\n", "<br>");
+        return String.format("""
+            <div style="background-color: #ffffff; padding: 15px; margin: 15px 0; border-left: 4px solid #6b46c1;">
+                <p style="margin: 0;">%s</p>
+            </div>""", htmlMessage);
+    }
 }

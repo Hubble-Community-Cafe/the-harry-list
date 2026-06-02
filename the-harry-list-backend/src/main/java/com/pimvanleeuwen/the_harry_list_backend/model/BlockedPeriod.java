@@ -53,6 +53,22 @@ public class BlockedPeriod {
     @Column(name = "public_message", length = 500)
     private String publicMessage;
 
+    /**
+     * When true, this period does not block reservations: bookings are still allowed,
+     * but the guest is shown a warning and must acknowledge it before continuing.
+     * When false (default), the period hard-blocks reservations as before.
+     */
+    @Column(name = "soft_block", nullable = false)
+    @Builder.Default
+    private Boolean softBlock = false;
+
+    /**
+     * Optional checkbox label the guest must tick to acknowledge a soft block before
+     * proceeding. Only relevant when {@link #softBlock} is true; a default is used when blank.
+     */
+    @Column(name = "acknowledgement_text", length = 500)
+    private String acknowledgementText;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean enabled = true;

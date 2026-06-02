@@ -169,7 +169,10 @@ export const exportGuide: GuideSection[] = [
 1. **Select a date** — choose the day you want the report for
 2. **Select a location** — choose either Hubble or Meteor
 3. **Confirmed only** — toggle this on to exclude pending, rejected, or cancelled reservations (recommended for daily prep sheets)
-4. Click **"Export PDF"**
+4. **Catering only** — toggle this on to include only reservations that have catering (eat a la carte, eat catering, or Catering Corona Room) — handy for the kitchen's prep list
+5. Click **"Export PDF"**
+
+You can combine the two toggles, e.g. **Confirmed only + Catering only** for a confirmed catering prep sheet.
 
 The PDF will automatically download to your device.
 
@@ -258,6 +261,10 @@ Templates support **variables** that get replaced with actual reservation data w
 - \`{{eventDate}}\` — the date of the event
 - \`{{location}}\` — Hubble or Meteor
 - \`{{confirmationNumber}}\` — the unique booking reference
+
+The **Reservation Confirmed/Rejected** and **Reservation Updated** templates also support:
+
+- \`{{customMessage}}\` — the optional message a staff member types when confirming, rejecting, cancelling, completing, or editing a reservation. It renders as a highlighted note, or nothing at all when no message is entered. Keep this placeholder in the template if you want those one-off messages to appear.
 
 ### Actions
 
@@ -354,7 +361,20 @@ Click **"Add Blocked Period"** and fill in:
 2. **Location** — optionally limit the block to just Hubble or Meteor (leave empty for both)
 3. **Reason** — internal note for staff (not shown to customers)
 4. **Public message** — the message customers see when trying to book these dates
-5. **Enabled** — toggle on/off
+5. **Soft block** — see below
+6. **Enabled** — toggle on/off
+
+### Hard vs. Soft Blocks
+
+By default a blocked period is a **hard block**: customers cannot book those dates at all.
+
+Turn on **Soft block (allow bookings with a warning)** when the venue is closed *by default* but bookings are still possible — for example a summer closing where the bar opens only on request. With a soft block:
+
+- The period is still marked and the **public message** is shown as a warning.
+- The customer must tick an **acknowledgement checkbox** before continuing, then can complete the booking.
+- Soft-blocked rows are marked with an amber **"Soft block"** badge in the list.
+
+When soft block is on you can set the **acknowledgement text** — the checkbox label the customer must tick (e.g. *"I understand the bar may be closed and my reservation is a request"*). Leave it blank to use a sensible default.
 
 ### Tip
 You can create blocked periods in advance. Use the **enabled toggle** to activate them when needed instead of creating and deleting them each time.`,
@@ -408,7 +428,7 @@ The available actions depend on the current status:
 
 ### Pending Reservations
 - **Confirm** — approve the reservation. Optionally sends a confirmation email
-- **Reject** — decline with an optional reason (included in the rejection email)
+- **Reject** — decline the reservation. The rejection email is pre-filled with a default reason you can edit or replace
 
 ### Confirmed Reservations
 - **Complete** — mark as completed after the event has taken place
@@ -419,7 +439,10 @@ The available actions depend on the current status:
 - **Delete** — permanently remove (with confirmation dialog)
 
 ### Email Notifications
-Each status change dialog has a **"Send email notification"** checkbox. Keep this checked to automatically notify the customer. Uncheck it only if you've already communicated with them directly.`,
+Each status change dialog (and the edit form) has a **"Send email notification"** checkbox. Keep this checked to automatically notify the customer. Uncheck it only if you've already communicated with them directly.
+
+### Adding a Message to the Email
+When the email notification is on, every status dialog and the edit form shows an optional **"Add a message to the email"** box. Anything you type here appears as a highlighted note in that email — use it to clarify things the standard template doesn't cover, e.g. *"We read your special request and will keep a shaded spot for you."* For **Reject**, this box is pre-filled with a default reason that you can edit, replace, or clear before sending.`,
   },
   {
     title: 'Catering Email',

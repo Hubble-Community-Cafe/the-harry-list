@@ -18,6 +18,39 @@ import { usePermissions } from '../lib/usePermissions';
 import { HelpGuide } from '../components/HelpGuide';
 import { reservationDetailGuide } from '../lib/guideContent';
 
+// Pre-filled (editable) default shown when rejecting a reservation. Staff can edit or clear it.
+const DEFAULT_REJECTION_MESSAGE =
+  'Unfortunately we cannot host you since we do not have any places left at this time';
+
+/**
+ * Optional free-text message added to the notification email for a reservation action.
+ * Only rendered when an email will actually be sent.
+ */
+function EmailMessageField({
+  value,
+  onChange,
+  show,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  show: boolean;
+}) {
+  if (!show) return null;
+  return (
+    <div className="mt-3">
+      <label className="block text-sm text-dark-300 mb-1">
+        Add a message to the email <span className="text-dark-500">(optional)</span>
+      </label>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="input-field min-h-[80px] w-full"
+        placeholder="e.g. We read your special request and will keep a shaded spot for you."
+      />
+    </div>
+  );
+}
+
 export function ReservationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -35,11 +68,15 @@ export function ReservationDetailPage() {
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [sendEmail, setSendEmail] = useState(true);
+  // Optional free-text message added to the status-change email (pre-filled for rejections).
+  const [actionMessage, setActionMessage] = useState('');
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<Reservation>>({});
   const [sendEditEmail, setSendEditEmail] = useState(true);
+  // Optional free-text message added to the "reservation updated" email.
+  const [editMessage, setEditMessage] = useState('');
 
   // Catering email state
   const [showCateringEmail, setShowCateringEmail] = useState(false);
@@ -84,7 +121,8 @@ export function ReservationDetailPage() {
 
     setIsUpdating(true);
     try {
-      await updateReservationStatus(reservation.id, newStatus, userName, sendEmail);
+      await updateReservationStatus(
+        reservation.id, newStatus, userName, sendEmail, sendEmail ? actionMessage : undefined);
       setReservation({ ...reservation, status: newStatus });
       loadAuditLog();
     } catch (err) {
@@ -140,6 +178,7 @@ export function ReservationDetailPage() {
       comments: reservation.comments || '',
       internalNotes: reservation.internalNotes || '',
     });
+    setEditMessage('');
     setIsEditing(true);
   };
 
@@ -148,7 +187,8 @@ export function ReservationDetailPage() {
 
     setIsUpdating(true);
     try {
-      const updatedReservation = await updateReservation(reservation.id, editData, sendEditEmail);
+      const updatedReservation = await updateReservation(
+        reservation.id, editData, sendEditEmail, sendEditEmail ? editMessage : undefined);
       setReservation(updatedReservation);
       setIsEditing(false);
       setEditData({});
@@ -298,7 +338,7 @@ export function ReservationDetailPage() {
           {reservation.status === 'PENDING' && (
             <>
               <button
-                onClick={() => setShowConfirmDialog(true)}
+                onClick={() => { setActionMessage(''); setShowConfirmDialog(true); }}
                 disabled={isUpdating}
                 className="btn-primary flex items-center gap-2"
               >
@@ -306,7 +346,7 @@ export function ReservationDetailPage() {
                 Confirm
               </button>
               <button
-                onClick={() => setShowRejectDialog(true)}
+                onClick={() => { setActionMessage(DEFAULT_REJECTION_MESSAGE); setShowRejectDialog(true); }}
                 disabled={isUpdating}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
               >
@@ -318,7 +358,7 @@ export function ReservationDetailPage() {
 
           {reservation.status === 'CONFIRMED' && (
             <button
-              onClick={() => setShowCompleteDialog(true)}
+              onClick={() => { setActionMessage(''); setShowCompleteDialog(true); }}
               disabled={isUpdating}
               className="btn-secondary flex items-center gap-2"
             >
@@ -329,7 +369,7 @@ export function ReservationDetailPage() {
 
           {reservation.status === 'CONFIRMED' && (
             <button
-              onClick={() => setShowCancelDialog(true)}
+              onClick={() => { setActionMessage(''); setShowCancelDialog(true); }}
               disabled={isUpdating}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors ml-auto"
             >
@@ -376,7 +416,8 @@ export function ReservationDetailPage() {
         {showConfirmDialog && (
           <div className="mt-4 p-4 rounded-xl bg-green-500/10 border border-green-500/50">
             <p className="text-green-400 mb-3">Are you sure you want to confirm this reservation? {sendEmail && 'A confirmation email will be sent to the customer.'}</p>
-            <div className="flex gap-3">
+            <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
+            <div className="flex gap-3 mt-3">
               <button
                 onClick={() => {
                   handleStatusChange('CONFIRMED');
@@ -402,7 +443,8 @@ export function ReservationDetailPage() {
         {showRejectDialog && (
           <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/50">
             <p className="text-red-400 mb-3">Are you sure you want to reject this reservation? {sendEmail && 'A rejection email will be sent to the customer.'}</p>
-            <div className="flex gap-3">
+            <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
+            <div className="flex gap-3 mt-3">
               <button
                 onClick={() => {
                   handleStatusChange('REJECTED');
@@ -428,7 +470,8 @@ export function ReservationDetailPage() {
         {showCompleteDialog && (
           <div className="mt-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/50">
             <p className="text-blue-400 mb-3">Are you sure you want to mark this reservation as completed?</p>
-            <div className="flex gap-3">
+            <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
+            <div className="flex gap-3 mt-3">
               <button
                 onClick={() => {
                   handleStatusChange('COMPLETED');
@@ -454,7 +497,8 @@ export function ReservationDetailPage() {
         {showCancelDialog && (
           <div className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/50">
             <p className="text-amber-400 mb-3">Are you sure you want to cancel this reservation? {sendEmail && 'A cancellation email will be sent to the customer.'}</p>
-            <div className="flex gap-3">
+            <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
+            <div className="flex gap-3 mt-3">
               <button
                 onClick={() => {
                   handleStatusChange('CANCELLED');
@@ -828,6 +872,8 @@ export function ReservationDetailPage() {
                   Send email notification about changes to customer
                 </span>
               </label>
+
+              <EmailMessageField value={editMessage} onChange={setEditMessage} show={sendEditEmail} />
 
               {/* Contact Information */}
               <div>

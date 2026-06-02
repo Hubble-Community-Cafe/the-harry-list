@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ReservationDetailPage } from '../pages/ReservationDetailPage';
 
@@ -57,7 +57,10 @@ vi.mock('../lib/api', () => ({
   sendCateringEmail: vi.fn(),
 }));
 
-import { fetchReservationAuditLog } from '../lib/api';
+import { fetchReservationAuditLog, fetchReservation, updateReservationStatus } from '../lib/api';
+
+const DEFAULT_REJECTION_MESSAGE =
+  'Unfortunately we cannot host you since we do not have any places left at this time';
 
 const renderPage = () =>
   render(
@@ -100,5 +103,62 @@ describe('ReservationDetailPage — change history', () => {
 
     // The rest of the page still renders.
     expect(screen.getByText('Birthday Party')).toBeInTheDocument();
+  });
+});
+
+describe('ReservationDetailPage — custom email message', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('pre-fills the editable default rejection message and sends it', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+    vi.mocked(updateReservationStatus).mockResolvedValueOnce({ ...sampleReservation, status: 'REJECTED' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    fireEvent.click(screen.getByRole('button', { name: /^Reject$/ }));
+
+    const textarea = await screen.findByPlaceholderText(/shaded spot/i);
+    expect(textarea).toHaveValue(DEFAULT_REJECTION_MESSAGE);
+
+    fireEvent.click(screen.getByRole('button', { name: /Yes, Reject Reservation/ }));
+
+    await waitFor(() =>
+      expect(updateReservationStatus).toHaveBeenCalledWith(
+        1, 'REJECTED', 'Staff Member', true, DEFAULT_REJECTION_MESSAGE));
+  });
+
+  it('sends a typed message when confirming', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+    vi.mocked(updateReservationStatus).mockResolvedValueOnce({ ...sampleReservation, status: 'CONFIRMED' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    fireEvent.click(screen.getByRole('button', { name: /^Confirm$/ }));
+
+    const textarea = await screen.findByPlaceholderText(/shaded spot/i);
+    expect(textarea).toHaveValue(''); // no default for confirmations
+    fireEvent.change(textarea, { target: { value: 'We saved you a spot in the shade!' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /Yes, Confirm Reservation/ }));
+
+    await waitFor(() =>
+      expect(updateReservationStatus).toHaveBeenCalledWith(
+        1, 'CONFIRMED', 'Staff Member', true, 'We saved you a spot in the shade!'));
+  });
+
+  it('hides the message field when email notification is turned off', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    fireEvent.click(screen.getByRole('checkbox')); // turn off "send email notification"
+    fireEvent.click(screen.getByRole('button', { name: /^Reject$/ }));
+
+    expect(screen.queryByPlaceholderText(/shaded spot/i)).not.toBeInTheDocument();
   });
 });

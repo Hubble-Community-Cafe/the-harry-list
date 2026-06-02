@@ -34,7 +34,8 @@ public class AdminExportController {
     public ResponseEntity<byte[]> generateDailyReport(
             @RequestParam String date,
             @RequestParam String location,
-            @RequestParam(required = false, defaultValue = "true") boolean confirmedOnly) {
+            @RequestParam(required = false, defaultValue = "true") boolean confirmedOnly,
+            @RequestParam(required = false, defaultValue = "false") boolean cateringOnly) {
 
         // Parse date
         LocalDate reportDate;
@@ -53,7 +54,7 @@ public class AdminExportController {
         }
 
         try {
-            byte[] pdfBytes = pdfExportService.generateDailyReport(reportDate, reportLocation, confirmedOnly);
+            byte[] pdfBytes = pdfExportService.generateDailyReport(reportDate, reportLocation, confirmedOnly, cateringOnly);
 
             String filename = String.format("reservations-%s-%s.pdf",
                     reportLocation.name().toLowerCase(),

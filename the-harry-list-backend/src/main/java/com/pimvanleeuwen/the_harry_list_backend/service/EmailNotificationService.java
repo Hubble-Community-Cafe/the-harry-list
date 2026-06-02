@@ -2,7 +2,6 @@ package com.pimvanleeuwen.the_harry_list_backend.service;
 
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailAttachment;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
-import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 
 import java.util.List;
 
@@ -19,13 +18,19 @@ public interface EmailNotificationService {
 
     /**
      * Send email when reservation status changes.
+     *
+     * @param customMessage optional free-text note from staff, added to the email as a highlighted
+     *                      block; may be {@code null} or blank to omit it.
      */
-    void sendStatusChangeEmail(Reservation reservation, ReservationStatus oldStatus, String confirmedBy);
+    void sendStatusChangeEmail(Reservation reservation, String customMessage);
 
     /**
      * Send email when reservation is updated.
+     *
+     * @param customMessage optional free-text note from staff, added to the email as a highlighted
+     *                      block; may be {@code null} or blank to omit it.
      */
-    void sendReservationUpdatedEmail(Reservation reservation);
+    void sendReservationUpdatedEmail(Reservation reservation, String customMessage);
 
     /**
      * Send email when reservation is deleted/cancelled.
