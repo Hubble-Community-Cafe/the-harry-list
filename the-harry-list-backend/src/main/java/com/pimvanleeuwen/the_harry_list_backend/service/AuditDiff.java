@@ -56,11 +56,14 @@ public final class AuditDiff {
             }
             try {
                 field.setAccessible(true);
-                Object oldValue = field.get(before);
-                Object newValue = field.get(after);
+                // Normalize null and blank strings to the same value so that, e.g.,
+                // null -> "" (common when an edit form sends empty strings for previously
+                // unset optional fields) is not reported as a spurious change.
+                String oldValue = normalize(field.get(before));
+                String newValue = normalize(field.get(after));
                 if (!Objects.equals(oldValue, newValue)) {
                     String label = labels.getOrDefault(field.getName(), field.getName());
-                    changes.add(new FieldChange(label, stringify(oldValue), stringify(newValue)));
+                    changes.add(new FieldChange(label, oldValue, newValue));
                 }
             } catch (Exception e) {
                 // Skip fields we cannot read (e.g. IllegalAccessException, InaccessibleObjectException)
@@ -78,7 +81,15 @@ public final class AuditDiff {
         return fields;
     }
 
-    private static String stringify(Object value) {
-        return value == null ? null : String.valueOf(value);
+    /**
+     * Render a value to its string form, collapsing null and blank/whitespace-only
+     * strings to {@code null} so they compare (and display) as "no value".
+     */
+    private static String normalize(Object value) {
+        if (value == null) {
+            return null;
+        }
+        String s = String.valueOf(value);
+        return s.isBlank() ? null : s;
     }
 }

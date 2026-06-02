@@ -152,6 +152,39 @@ class UpdateReservationServiceTest {
         verify(reservationRepository, times(1)).save(any());
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    void execute_shouldPreserveTermsAcceptedAndCateringArranged() {
+        // Existing reservation has terms accepted and catering arranged...
+        sampleDto.setId(1L);
+        existingEntity.setTermsAccepted(true);
+        existingEntity.setCateringArranged(true);
+
+        // ...but the incoming edit payload (mapped) carries neither (form doesn't send them).
+        com.pimvanleeuwen.the_harry_list_backend.model.Reservation incoming = createExistingEntity();
+        incoming.setTermsAccepted(null);
+        incoming.setCateringArranged(false);
+        incoming.setContactName("Updated Name"); // one real change so an audit entry is recorded
+
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(existingEntity));
+        when(reservationMapper.toEntity(sampleDto)).thenReturn(incoming);
+        when(reservationRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        updateReservationService.execute(sampleDto);
+
+        // The saved entity keeps the preserved values...
+        verify(reservationRepository).save(argThat(saved ->
+                Boolean.TRUE.equals(saved.getTermsAccepted()) && saved.isCateringArranged()));
+
+        // ...and neither shows up as a spurious audit change.
+        ArgumentCaptor<java.util.List<com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange>> captor =
+                ArgumentCaptor.forClass(java.util.List.class);
+        verify(auditService).recordUpdate(any(), any(), any(), captor.capture(), any());
+        assertTrue(captor.getValue().stream().noneMatch(c ->
+                c.field().equals("termsAccepted") || c.field().equals("cateringArranged")));
+    }
+
     private Reservation createSampleDto() {
         return Reservation.builder()
                 .contactName("John Doe")

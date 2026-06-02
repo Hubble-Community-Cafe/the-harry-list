@@ -50,6 +50,35 @@ class AuditDiffTest {
     }
 
     @Test
+    void compare_shouldTreatNullAndBlankStringAsEqual() {
+        // Common case: an edit form sends "" for a field that was null in the DB.
+        Reservation before = base();
+        before.setComments(null);
+        before.setCostCenter(null);
+        Reservation after = base();
+        after.setComments("");
+        after.setCostCenter("   ");
+
+        assertTrue(AuditDiff.compare(before, after).isEmpty(),
+                "null vs empty/blank string must not be reported as a change");
+    }
+
+    @Test
+    void compare_shouldStillDetectBlankToRealValue() {
+        Reservation before = base();
+        before.setComments("");
+        Reservation after = base();
+        after.setComments("Details");
+
+        List<FieldChange> changes = AuditDiff.compare(before, after);
+
+        assertEquals(1, changes.size());
+        assertEquals("comments", changes.get(0).field());
+        assertNull(changes.get(0).oldValue(), "blank old value should normalize to null");
+        assertEquals("Details", changes.get(0).newValue());
+    }
+
+    @Test
     void compare_shouldReturnEmptyWhenEitherSideNull() {
         assertTrue(AuditDiff.compare(null, base()).isEmpty());
         assertTrue(AuditDiff.compare(base(), null).isEmpty());
