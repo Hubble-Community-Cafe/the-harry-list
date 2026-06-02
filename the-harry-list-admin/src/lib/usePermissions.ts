@@ -17,5 +17,6 @@ export function usePermissions() {
     canEditEmailTemplates: isAdmin,
     canEditFormSettings: isAdmin,
     canManageUsers: isAdmin,
+    canViewAuditLog: isAdmin,
   };
 }
