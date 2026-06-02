@@ -72,6 +72,8 @@ public class AdminBlockedPeriodController {
                     existing.setEndTime(period.getEndTime());
                     existing.setReason(period.getReason());
                     existing.setPublicMessage(period.getPublicMessage());
+                    existing.setSoftBlock(period.getSoftBlock());
+                    existing.setAcknowledgementText(period.getAcknowledgementText());
                     existing.setEnabled(period.getEnabled());
                     BlockedPeriod saved = repository.save(existing);
                     auditService.recordUpdate(AuditEntityType.BLOCKED_PERIOD, saved.getId(), label(saved),

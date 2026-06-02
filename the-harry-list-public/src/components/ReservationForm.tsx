@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import * as Sentry from '@sentry/react';
 import { submitReservation, fetchFormOptions, fetchFormConstraints, fetchBlockedPeriods, getRecaptchaSiteKey } from '../lib/api';
+import { checkBlockedDate } from '../lib/blockedPeriods';
 import type { ReservationFormData, FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
 
 // Phone number validation - allows international formats
@@ -306,31 +307,42 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
 
   // Blocked period check for selected date
   const watchEventDate = watch('eventDate');
-  const blockedDateWarning = useMemo(() => {
-    if (!watchEventDate || blockedPeriods.length === 0) return null;
-    const selectedDate = watchEventDate;
-    const selectedLocation = watchLocation;
-    const selectedTime = watchStartTime;
-    for (const bp of blockedPeriods) {
-      if (selectedDate >= bp.startDate && selectedDate <= bp.endDate) {
-        if (bp.location) {
-          // Location-specific block: only warn if user selected that exact location
-          if (!selectedLocation || selectedLocation === 'NO_PREFERENCE' || selectedLocation === '' || bp.location !== selectedLocation) {
-            continue;
-          }
-        }
-        // Time-specific block: only warn if user's start time falls within the blocked window
-        if (bp.startTime && bp.endTime) {
-          if (!selectedTime || selectedTime < bp.startTime || selectedTime >= bp.endTime) {
-            continue;
-          }
-        }
-        // Global block (no location) or matching location
-        return bp.publicMessage || 'This date is not available for reservations.';
-      }
-    }
-    return null;
-  }, [watchEventDate, blockedPeriods, watchLocation, watchStartTime]);
+  const blockedDateInfo = useMemo(
+    () => checkBlockedDate(watchEventDate, watchLocation, blockedPeriods, watchStartTime),
+    [watchEventDate, blockedPeriods, watchLocation, watchStartTime]
+  );
+
+  // A soft block is informational: the guest can proceed after acknowledging it.
+  const [softBlockAcknowledged, setSoftBlockAcknowledged] = useState(false);
+  // Reset the acknowledgement whenever the matched (soft) block changes.
+  useEffect(() => {
+    setSoftBlockAcknowledged(false);
+  }, [blockedDateInfo?.message, blockedDateInfo?.soft]);
+
+  // Notice rendered wherever a blocked period applies. Hard blocks show a red,
+  // blocking error; soft blocks show an amber warning with an acknowledgement checkbox.
+  const blockedDateNotice = !blockedDateInfo ? null : blockedDateInfo.soft ? (
+    <div className="mt-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 space-y-2">
+      <div className="flex items-start gap-2">
+        <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+        <span>{blockedDateInfo.message}</span>
+      </div>
+      <label className="flex items-start gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={softBlockAcknowledged}
+          onChange={e => setSoftBlockAcknowledged(e.target.checked)}
+          className="mt-0.5 shrink-0"
+        />
+        <span>{blockedDateInfo.acknowledgementText}</span>
+      </label>
+    </div>
+  ) : (
+    <div className="mt-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
+      <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+      <span>{blockedDateInfo.message}</span>
+    </div>
+  );
 
   const requiresAdvanceBooking = advanceBookingDays > 0;
   const minDateForBooking = useMemo(() => {
@@ -439,9 +451,12 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
       return false;
     }
 
-    // Block advance if date is in a blocked period (step 2 for global blocks, step 3 for location-specific)
-    if ((step === 2 || step === 3) && blockedDateWarning) {
-      return false;
+    // Block advance if date is in a blocked period (step 2 for global blocks, step 3 for location-specific).
+    // Hard blocks always prevent advancing; soft blocks only until the guest acknowledges the warning.
+    if ((step === 2 || step === 3) && blockedDateInfo) {
+      if (!blockedDateInfo.soft || !softBlockAcknowledged) {
+        return false;
+      }
     }
 
     // Block step 2 advance if long reservation reason is missing
@@ -864,12 +879,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                   />
                 </div>
                 {errors.eventDate && <p id="eventDate-error" className="error-text">{errors.eventDate.message}</p>}
-                {blockedDateWarning && (
-                  <div className="mt-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
-                    <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                    <span>{blockedDateWarning}</span>
-                  </div>
-                )}
+                {blockedDateNotice}
               </div>
 
               {/* Start Time */}
@@ -1082,13 +1092,9 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               </label>
             </div>
 
-            {/* Blocked period warning (shows when location triggers a location-specific block) */}
-            {blockedDateWarning && (
-              <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>{blockedDateWarning}</span>
-              </div>
-            )}
+            {/* Blocked period notice — only for location-specific blocks here; global/time
+                blocks are already surfaced (and acknowledged) on the date step. */}
+            {blockedDateInfo?.locationSpecific && blockedDateNotice}
 
             {/* Seating Area Selection */}
             <div className="form-group">

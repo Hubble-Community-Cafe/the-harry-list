@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { FormSettingsPage } from '../pages/FormSettingsPage';
+import { fetchBlockedPeriods } from '../lib/api';
 
 vi.mock('../lib/usePermissions', () => ({
   usePermissions: () => ({
@@ -207,6 +208,60 @@ describe('FormSettingsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('New Blocked Period')).toBeInTheDocument();
+    });
+  });
+
+  it('reveals the acknowledgement text field when soft block is toggled on', async () => {
+    renderWithRouter(<FormSettingsPage />);
+    await waitFor(() => {
+      expect(screen.getAllByText(/Blocked Periods/).length).toBeGreaterThanOrEqual(1);
+    }, { timeout: 3000 });
+
+    const blockedBtn = screen.getAllByText(/Blocked Periods/).find(el => el.closest('button'));
+    fireEvent.click(blockedBtn!);
+
+    await waitFor(() => {
+      expect(screen.getByText('Add Blocked Period')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Add Blocked Period'));
+
+    await waitFor(() => {
+      expect(screen.getByText('New Blocked Period')).toBeInTheDocument();
+    });
+
+    // Acknowledgement field hidden until soft block is enabled
+    expect(screen.queryByText(/Acknowledgement text/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTitle('Toggle soft block'));
+
+    expect(await screen.findByText(/Acknowledgement text/i)).toBeInTheDocument();
+  });
+
+  it('shows a "Soft block" badge for soft-blocked periods', async () => {
+    vi.mocked(fetchBlockedPeriods).mockResolvedValueOnce([
+      {
+        id: 1,
+        startDate: '2026-07-01',
+        endDate: '2026-08-31',
+        reason: 'Summer closing',
+        publicMessage: 'Bar open on request only',
+        softBlock: true,
+        acknowledgementText: 'I understand the bar may be closed',
+        enabled: true,
+      },
+    ]);
+
+    renderWithRouter(<FormSettingsPage />);
+    await waitFor(() => {
+      expect(screen.getAllByText(/Blocked Periods/).length).toBeGreaterThanOrEqual(1);
+    }, { timeout: 3000 });
+
+    const blockedBtn = screen.getAllByText(/Blocked Periods/).find(el => el.closest('button'));
+    fireEvent.click(blockedBtn!);
+
+    await waitFor(() => {
+      expect(screen.getByText('Summer closing')).toBeInTheDocument();
+      expect(screen.getByText('Soft block')).toBeInTheDocument();
     });
   });
 

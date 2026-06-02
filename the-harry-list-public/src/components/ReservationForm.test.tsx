@@ -522,6 +522,124 @@ describe('ReservationForm', () => {
     });
   });
 
+  // ==================== SOFT / HARD BLOCKED PERIODS ====================
+
+  describe('blocked periods', () => {
+    // Wide global range so it always covers the "tomorrow" date used by fillStep2Fields.
+    const wideRange = { startDate: '2020-01-01', endDate: '2099-12-31' };
+
+    async function goToStep2(user: ReturnType<typeof userEvent.setup>) {
+      await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
+      await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      await waitFor(() => expect(screen.getByText('Activity Details')).toBeInTheDocument());
+    }
+
+    it('lets the guest proceed past a soft block only after acknowledging it', async () => {
+      vi.mocked(fetchBlockedPeriods).mockResolvedValue([
+        {
+          id: 1,
+          ...wideRange,
+          reason: 'Summer closing',
+          publicMessage: 'The bar is closed by default this summer.',
+          softBlock: true,
+          acknowledgementText: 'I understand the bar may be closed',
+          enabled: true,
+        },
+      ]);
+
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep2(user);
+      await fillStep2Fields(user);
+
+      // Warning + acknowledgement checkbox are shown
+      expect(screen.getByText('The bar is closed by default this summer.')).toBeInTheDocument();
+      const ack = screen.getByRole('checkbox', { name: 'I understand the bar may be closed' });
+
+      // Cannot advance until acknowledged
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      expect(screen.getByText('Activity Details')).toBeInTheDocument();
+
+      // Acknowledge, then advance succeeds
+      await user.click(ack);
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      await waitFor(() =>
+        expect(screen.getByText('Where would you like to host your event?')).toBeInTheDocument()
+      );
+
+      // The global soft-block warning is not repeated under the location step
+      expect(screen.queryByText('The bar is closed by default this summer.')).not.toBeInTheDocument();
+      expect(screen.queryByRole('checkbox', { name: 'I understand the bar may be closed' }))
+        .not.toBeInTheDocument();
+    });
+
+    it('shows a location-specific soft block on the location step with its own acknowledgement', async () => {
+      vi.mocked(fetchBlockedPeriods).mockResolvedValue([
+        {
+          id: 3,
+          location: 'HUBBLE',
+          ...wideRange,
+          reason: 'Hubble summer closing',
+          publicMessage: 'Hubble is closed by default this summer.',
+          softBlock: true,
+          acknowledgementText: 'I understand Hubble may be closed',
+          enabled: true,
+        },
+      ]);
+
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep2(user);
+      await fillStep2Fields(user);
+
+      // No location chosen yet → location-specific block does not surface on the date step
+      expect(screen.queryByText('Hubble is closed by default this summer.')).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      await waitFor(() =>
+        expect(screen.getByText('Where would you like to host your event?')).toBeInTheDocument()
+      );
+
+      // Choosing Hubble triggers the soft block here, with its acknowledgement
+      await user.click(screen.getByText('Hubble'));
+      await user.click(screen.getByText('Inside')); // seating is required to advance
+      expect(await screen.findByText('Hubble is closed by default this summer.')).toBeInTheDocument();
+      const ack = screen.getByRole('checkbox', { name: 'I understand Hubble may be closed' });
+
+      // Still blocked until the soft block is acknowledged
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      expect(screen.getByText('Where would you like to host your event?')).toBeInTheDocument();
+
+      await user.click(ack);
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      await waitFor(() => expect(screen.getByText('Payment Information')).toBeInTheDocument());
+    });
+
+    it('does not allow proceeding past a hard block and shows no acknowledgement checkbox', async () => {
+      vi.mocked(fetchBlockedPeriods).mockResolvedValue([
+        {
+          id: 2,
+          ...wideRange,
+          reason: 'Renovation',
+          publicMessage: 'Closed for renovation.',
+          softBlock: false,
+          enabled: true,
+        },
+      ]);
+
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep2(user);
+      await fillStep2Fields(user);
+
+      expect(screen.getByText('Closed for renovation.')).toBeInTheDocument();
+      expect(screen.queryByRole('checkbox', { name: /understand/i })).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      expect(screen.getByText('Activity Details')).toBeInTheDocument();
+    });
+  });
+
   // ==================== STEP 4: PAYMENT ====================
 
   describe('step 4 - payment', () => {
