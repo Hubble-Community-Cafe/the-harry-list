@@ -41,6 +41,26 @@ Bar reservation system for Stichting Bar Potential.
    - Backend API: http://localhost:8080
    - Swagger UI: http://localhost:8080/swagger-ui/index.html
 
+## Testing
+
+Each component has its own fast test suite:
+
+- **Backend:** `cd the-harry-list-backend && ./mvnw test`
+- **Public / Admin frontends:** `cd the-harry-list-<public|admin> && npm run test:run`
+
+**End-to-end (Playwright):** full-stack browser tests that drive the real public + admin
+apps and assert on UI, database, and email (via Mailpit), with screenshots/traces/emails as
+evidence. They run on PRs via `.github/workflows/e2e.yml`.
+
+```bash
+cd e2e
+npm install && npx playwright install --with-deps chromium
+npm test
+```
+
+See [`e2e/README.md`](e2e/README.md) for the architecture, how to read the evidence, the
+**regression coverage map**, and how to maintain/add specs.
+
 ## Production Deployment
 
 ### Prerequisites
