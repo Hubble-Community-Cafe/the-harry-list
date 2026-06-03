@@ -30,7 +30,7 @@ test.describe('admin: week overview shows reservations', () => {
 
   test('a reservation appears in its week', async ({ page }, testInfo) => {
     await page.goto(`/week-overview?week=${EVENT_DATE}`);
-    await expect(page.getByText('Week Overview')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Week Overview' })).toBeVisible();
 
     const card = page.getByTestId('week-reservation').filter({ hasText: 'Week Overview Event' });
     await expect(card).toHaveCount(1);

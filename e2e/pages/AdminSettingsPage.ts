@@ -9,7 +9,8 @@ export class AdminSettingsPage {
 
   async goto(): Promise<void> {
     await this.page.goto('/settings');
-    await expect(this.page.getByText('Settings')).toBeVisible();
+    // Assert the page heading specifically — "Settings" also appears in the nav/sidebar.
+    await expect(this.page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   }
 
   async openBlockedPeriodsTab(): Promise<void> {
