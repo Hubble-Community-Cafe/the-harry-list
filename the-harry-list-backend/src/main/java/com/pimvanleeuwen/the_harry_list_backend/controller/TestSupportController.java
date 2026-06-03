@@ -9,6 +9,7 @@ import com.pimvanleeuwen.the_harry_list_backend.repository.AdminUserRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.AuditLogRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.BlockedPeriodRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.CalendarAppointmentRepository;
+import com.pimvanleeuwen.the_harry_list_backend.repository.EmailTemplateRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.FormConstraintRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,19 +41,22 @@ public class TestSupportController {
     private final CalendarAppointmentRepository calendarAppointmentRepository;
     private final AuditLogRepository auditLogRepository;
     private final AdminUserRepository adminUserRepository;
+    private final EmailTemplateRepository emailTemplateRepository;
 
     public TestSupportController(ReservationRepository reservationRepository,
                                  BlockedPeriodRepository blockedPeriodRepository,
                                  FormConstraintRepository formConstraintRepository,
                                  CalendarAppointmentRepository calendarAppointmentRepository,
                                  AuditLogRepository auditLogRepository,
-                                 AdminUserRepository adminUserRepository) {
+                                 AdminUserRepository adminUserRepository,
+                                 EmailTemplateRepository emailTemplateRepository) {
         this.reservationRepository = reservationRepository;
         this.blockedPeriodRepository = blockedPeriodRepository;
         this.formConstraintRepository = formConstraintRepository;
         this.calendarAppointmentRepository = calendarAppointmentRepository;
         this.auditLogRepository = auditLogRepository;
         this.adminUserRepository = adminUserRepository;
+        this.emailTemplateRepository = emailTemplateRepository;
     }
 
     /** Wipe the mutable state an e2e test cares about, for a clean run. */
@@ -64,6 +68,8 @@ public class TestSupportController {
         formConstraintRepository.deleteAll();
         calendarAppointmentRepository.deleteAll();
         adminUserRepository.deleteAll();
+        // Clear customized templates so each test starts from the default templates.
+        emailTemplateRepository.deleteAll();
         return ResponseEntity.ok(Map.of("status", "reset"));
     }
 
