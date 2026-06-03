@@ -20,7 +20,10 @@ export default defineConfig({
     ? [['github'], ['html', { open: 'never' }], ['list']]
     : [['html', { open: 'never' }], ['list']],
   use: {
-    trace: 'on-first-retry',
+    // Capture a full, replayable trace for every run (pass or fail) so each spec
+    // is self-documenting in the HTML report. Specs also attach curated
+    // screenshots + email/DB snapshots at key moments (see fixtures/evidence.ts).
+    trace: 'on',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
