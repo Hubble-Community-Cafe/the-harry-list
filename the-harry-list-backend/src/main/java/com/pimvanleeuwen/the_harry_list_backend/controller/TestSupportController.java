@@ -3,6 +3,8 @@ package com.pimvanleeuwen.the_harry_list_backend.controller;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminRole;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminUser;
 import com.pimvanleeuwen.the_harry_list_backend.model.BlockedPeriod;
+import com.pimvanleeuwen.the_harry_list_backend.model.FormConstraint;
+import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.repository.AdminUserRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.AuditLogRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.BlockedPeriodRepository;
@@ -85,5 +87,20 @@ public class TestSupportController {
     @PostMapping("/blocked-periods")
     public ResponseEntity<BlockedPeriod> seedBlockedPeriod(@RequestBody BlockedPeriod period) {
         return ResponseEntity.ok(blockedPeriodRepository.save(period));
+    }
+
+    /** Seed a form constraint so constraint-enforcement scenarios can be exercised. */
+    @PostMapping("/constraints")
+    public ResponseEntity<FormConstraint> seedConstraint(@RequestBody FormConstraint constraint) {
+        return ResponseEntity.ok(formConstraintRepository.save(constraint));
+    }
+
+    /**
+     * Seed a reservation directly. @PrePersist fills confirmationNumber/status/timestamps,
+     * so the body only needs the business fields. Returns the saved row (with its id).
+     */
+    @PostMapping("/reservations")
+    public ResponseEntity<Reservation> seedReservation(@RequestBody Reservation reservation) {
+        return ResponseEntity.ok(reservationRepository.save(reservation));
     }
 }
