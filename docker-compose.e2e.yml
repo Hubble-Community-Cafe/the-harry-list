@@ -57,6 +57,7 @@ services:
       - SPRING_MAIL_HOST=mailpit
       - SPRING_MAIL_PORT=1025
       - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
+      - CALENDAR_FEED_TOKEN=e2e-feed-token
     ports:
       - "8080:8080"
     depends_on:

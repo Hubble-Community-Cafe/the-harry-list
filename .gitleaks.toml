@@ -32,6 +32,8 @@ regexes = [
   '''harrypass''',
   '''harryuser''',
   '''rootpass''',
+  # Non-secret token used only by the e2e calendar-feed test stack.
+  '''e2e-feed-token''',
 ]
 
 commits = []

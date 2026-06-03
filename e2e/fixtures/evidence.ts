@@ -25,6 +25,11 @@ export async function attachHtml(testInfo: TestInfo, name: string, html: string)
   await testInfo.attach(name, { body: html, contentType: 'text/html' });
 }
 
+/** Attach plain text (e.g. an .ics calendar feed) for the report. */
+export async function attachText(testInfo: TestInfo, name: string, text: string): Promise<void> {
+  await testInfo.attach(name, { body: text, contentType: 'text/plain' });
+}
+
 /** Attach an object as pretty JSON (e.g. a DB/API snapshot). */
 export async function attachJson(testInfo: TestInfo, name: string, value: unknown): Promise<void> {
   await testInfo.attach(name, {
