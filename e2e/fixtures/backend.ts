@@ -82,6 +82,7 @@ export interface SeedReservation {
   seatingArea: string;
   paymentOption: string;
   status?: string;
+  specialActivities?: string[];
 }
 
 /** Seed a reservation directly; returns the saved row (with its id). */

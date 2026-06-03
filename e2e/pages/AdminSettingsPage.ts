@@ -16,6 +16,34 @@ export class AdminSettingsPage {
     await this.page.getByRole('button', { name: /Blocked Periods/ }).click();
   }
 
+  // ---- Form constraints ----
+  constraintRows(): Locator {
+    return this.page.getByTestId('constraint-row');
+  }
+
+  /** Create a form constraint through the editor modal. */
+  async createConstraint(opts: {
+    type: string;
+    triggerActivity?: string;
+    targetValue?: string;
+    numericValue?: number;
+    message: string;
+  }): Promise<void> {
+    await this.page.getByTestId('add-constraint').click();
+    await this.page.getByTestId('constraint-type').selectOption(opts.type);
+    if (opts.triggerActivity) {
+      await this.page.getByTestId('constraint-trigger').selectOption(opts.triggerActivity);
+    }
+    if (opts.targetValue !== undefined) {
+      await this.page.getByTestId('constraint-target').fill(opts.targetValue);
+    }
+    if (opts.numericValue !== undefined) {
+      await this.page.getByTestId('constraint-numeric').fill(String(opts.numericValue));
+    }
+    await this.page.getByTestId('constraint-message').fill(opts.message);
+    await this.page.getByTestId('save-constraint').click();
+  }
+
   async openNewBlockedPeriod(): Promise<void> {
     await this.page.getByTestId('add-blocked-period').click();
     await expect(this.page.getByText('New Blocked Period')).toBeVisible();

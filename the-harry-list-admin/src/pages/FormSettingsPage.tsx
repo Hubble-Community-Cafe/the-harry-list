@@ -279,6 +279,7 @@ export function SettingsPage() {
               {constraints.map((c) => (
                 <div
                   key={c.id}
+                  data-testid="constraint-row"
                   className={`bg-dark-900 border rounded-xl p-4 flex items-start gap-4 transition-colors ${
                     c.enabled ? 'border-dark-800' : 'border-dark-800/50 opacity-60'
                   }`}
@@ -434,6 +435,7 @@ export function SettingsPage() {
                 <div>
                   <label className="block text-sm text-dark-400 mb-1">Constraint Type</label>
                   <select
+                    data-testid="constraint-type"
                     value={editingConstraint.constraintType}
                     onChange={e => setEditingConstraint({
                       ...editingConstraint,
@@ -452,6 +454,7 @@ export function SettingsPage() {
                   <div>
                     <label className="block text-sm text-dark-400 mb-1">Trigger Activity</label>
                     <select
+                      data-testid="constraint-trigger"
                       value={editingConstraint.triggerActivity}
                       onChange={e => setEditingConstraint({ ...editingConstraint, triggerActivity: e.target.value })}
                       className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
@@ -467,6 +470,7 @@ export function SettingsPage() {
                   <label className="block text-sm text-dark-400 mb-1">Target Value</label>
                   <input
                     type="text"
+                    data-testid="constraint-target"
                     value={editingConstraint.targetValue || ''}
                     onChange={e => setEditingConstraint({ ...editingConstraint, targetValue: e.target.value })}
                     placeholder="e.g. EAT_A_LA_CARTE, HUBBLE, INSIDE"
@@ -494,6 +498,7 @@ export function SettingsPage() {
                     </label>
                     <input
                       type="number"
+                      data-testid="constraint-numeric"
                       value={editingConstraint.numericValue ?? ''}
                       onChange={e => setEditingConstraint({
                         ...editingConstraint,
@@ -520,6 +525,7 @@ export function SettingsPage() {
                 <div>
                   <label className="block text-sm text-dark-400 mb-1">Message (shown to users)</label>
                   <textarea
+                    data-testid="constraint-message"
                     value={editingConstraint.message}
                     onChange={e => setEditingConstraint({ ...editingConstraint, message: e.target.value })}
                     rows={2}
@@ -537,6 +543,7 @@ export function SettingsPage() {
                 </button>
                 <button
                   onClick={handleSaveConstraint}
+                  data-testid="save-constraint"
                   disabled={savingConstraint || !editingConstraint.message}
                   className="flex-1 px-4 py-2 bg-hubble-600 hover:bg-hubble-500 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
                 >

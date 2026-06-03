@@ -81,6 +81,7 @@ export function ExportPage() {
             </label>
             <input
               type="date"
+              data-testid="export-date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-xl text-white
@@ -164,6 +165,7 @@ export function ExportPage() {
               <label className="flex items-center gap-3 p-4 bg-dark-800/50 border border-dark-700 rounded-xl cursor-pointer hover:border-dark-600 transition-colors">
                 <input
                   type="checkbox"
+                  data-testid="export-catering-only"
                   checked={cateringOnly}
                   onChange={(e) => setCateringOnly(e.target.checked)}
                   className="w-5 h-5 rounded border-dark-600 bg-dark-800 text-hubble-500 focus:ring-hubble-500 focus:ring-offset-0"
@@ -187,6 +189,7 @@ export function ExportPage() {
           {/* Export Button */}
           <button
             onClick={handleExport}
+            data-testid="export-submit"
             disabled={loading}
             className={`
               w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all
