@@ -9,6 +9,9 @@ export const ADMIN_BASE_URL = process.env.ADMIN_BASE_URL ?? 'http://localhost:51
 export const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8080';
 export const MAILPIT_URL = process.env.MAILPIT_URL ?? 'http://localhost:8025';
 
+// CI builds all images from scratch, so allow plenty of time for the stack to come up.
+const WEBSERVER_TIMEOUT = process.env.CI ? 600_000 : 240_000;
+
 export default defineConfig({
   testDir: './tests',
   // The suite shares one backend + database, so tests run serially for isolation.
@@ -41,7 +44,7 @@ export default defineConfig({
           command: 'docker compose -f ../docker-compose.e2e.yml up --build',
           url: `${BACKEND_URL}/actuator/health`,
           reuseExistingServer: !process.env.CI,
-          timeout: 240_000,
+          timeout: WEBSERVER_TIMEOUT,
         },
         {
           // Wait for the public frontend nginx to actually serve before testing
@@ -49,14 +52,14 @@ export default defineConfig({
           command: 'node -e "setInterval(() => {}, 1 << 30)"',
           url: PUBLIC_BASE_URL,
           reuseExistingServer: true,
-          timeout: 240_000,
+          timeout: WEBSERVER_TIMEOUT,
         },
         {
           // Likewise for the admin frontend.
           command: 'node -e "setInterval(() => {}, 1 << 30)"',
           url: ADMIN_BASE_URL,
           reuseExistingServer: true,
-          timeout: 240_000,
+          timeout: WEBSERVER_TIMEOUT,
         },
       ],
 
