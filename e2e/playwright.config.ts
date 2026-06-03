@@ -35,12 +35,30 @@ export default defineConfig({
    */
   webServer: process.env.E2E_NO_WEBSERVER
     ? undefined
-    : {
-        command: 'docker compose -f ../docker-compose.e2e.yml up --build',
-        url: `${BACKEND_URL}/actuator/health`,
-        reuseExistingServer: !process.env.CI,
-        timeout: 240_000,
-      },
+    : [
+        {
+          // Boots the whole stack. Backend health gates that the API is ready.
+          command: 'docker compose -f ../docker-compose.e2e.yml up --build',
+          url: `${BACKEND_URL}/actuator/health`,
+          reuseExistingServer: !process.env.CI,
+          timeout: 240_000,
+        },
+        {
+          // Wait for the public frontend nginx to actually serve before testing
+          // (it comes up after the backend, so gating only on the API races).
+          command: 'node -e "setInterval(() => {}, 1 << 30)"',
+          url: PUBLIC_BASE_URL,
+          reuseExistingServer: true,
+          timeout: 240_000,
+        },
+        {
+          // Likewise for the admin frontend.
+          command: 'node -e "setInterval(() => {}, 1 << 30)"',
+          url: ADMIN_BASE_URL,
+          reuseExistingServer: true,
+          timeout: 240_000,
+        },
+      ],
 
   projects: [
     {
