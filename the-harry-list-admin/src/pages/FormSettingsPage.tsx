@@ -265,6 +265,7 @@ export function SettingsPage() {
             </p>
             <button
               onClick={() => setEditingConstraint({ ...emptyConstraint })}
+              data-testid="add-constraint"
               className="flex items-center gap-2 px-3 py-2 bg-hubble-600 hover:bg-hubble-500 text-white rounded-lg text-sm transition-colors"
             >
               <Plus className="w-4 h-4" /> Add Constraint
@@ -337,6 +338,7 @@ export function SettingsPage() {
             </p>
             <button
               onClick={() => setEditingPeriod({ ...emptyBlockedPeriod })}
+              data-testid="add-blocked-period"
               className="flex items-center gap-2 px-3 py-2 bg-hubble-600 hover:bg-hubble-500 text-white rounded-lg text-sm transition-colors"
             >
               <Plus className="w-4 h-4" /> Add Blocked Period
@@ -350,6 +352,7 @@ export function SettingsPage() {
               {blockedPeriods.map((bp) => (
                 <div
                   key={bp.id}
+                  data-testid="blocked-period-row"
                   className={`bg-dark-900 border rounded-xl p-4 flex items-start gap-4 transition-colors ${
                     bp.enabled ? 'border-dark-800' : 'border-dark-800/50 opacity-60'
                   }`}
@@ -360,7 +363,7 @@ export function SettingsPage() {
                         {bp.startDate} — {bp.endDate}
                       </span>
                       {bp.softBlock && (
-                        <span className="text-xs font-medium px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                        <span data-testid="soft-block-badge" className="text-xs font-medium px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
                           Soft block
                         </span>
                       )}
@@ -669,6 +672,7 @@ export function SettingsPage() {
                     <button
                       type="button"
                       role="switch"
+                      data-testid="soft-block-toggle"
                       aria-checked={!!editingPeriod.softBlock}
                       onClick={() => setEditingPeriod({ ...editingPeriod, softBlock: !editingPeriod.softBlock })}
                       className="shrink-0 mt-0.5"
@@ -692,6 +696,7 @@ export function SettingsPage() {
                       <label className="block text-sm text-dark-400 mb-1">Acknowledgement text (checkbox label)</label>
                       <input
                         type="text"
+                        data-testid="ack-text-input"
                         value={editingPeriod.acknowledgementText || ''}
                         onChange={e => setEditingPeriod({ ...editingPeriod, acknowledgementText: e.target.value })}
                         placeholder="I understand the bar may be closed and my reservation is a request"
@@ -712,6 +717,7 @@ export function SettingsPage() {
                 </button>
                 <button
                   onClick={handleSavePeriod}
+                  data-testid="save-blocked-period"
                   disabled={savingPeriod || !editingPeriod.reason || !editingPeriod.startDate || !editingPeriod.endDate}
                   className="flex-1 px-4 py-2 bg-hubble-600 hover:bg-hubble-500 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
                 >
