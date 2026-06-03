@@ -1,0 +1,59 @@
+import { defineConfig, devices } from '@playwright/test';
+
+/**
+ * Service URLs. Defaults match docker-compose.e2e.yml's published ports, but can be
+ * overridden (e.g. when pointing the suite at an already-running stack or staging).
+ */
+export const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL ?? 'http://localhost:5173';
+export const ADMIN_BASE_URL = process.env.ADMIN_BASE_URL ?? 'http://localhost:5174';
+export const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8080';
+export const MAILPIT_URL = process.env.MAILPIT_URL ?? 'http://localhost:8025';
+
+export default defineConfig({
+  testDir: './tests',
+  // The suite shares one backend + database, so tests run serially for isolation.
+  fullyParallel: false,
+  workers: 1,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI
+    ? [['github'], ['html', { open: 'never' }], ['list']]
+    : [['html', { open: 'never' }], ['list']],
+  use: {
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+  },
+
+  /**
+   * Boot the full e2e stack (MariaDB + backend[e2e] + Mailpit + frontends) before the run.
+   * Set E2E_NO_WEBSERVER=1 to skip this when the stack is already running locally
+   * (e.g. `npm run stack:up` in another terminal) for faster iteration.
+   */
+  webServer: process.env.E2E_NO_WEBSERVER
+    ? undefined
+    : {
+        command: 'docker compose -f ../docker-compose.e2e.yml up --build',
+        url: `${BACKEND_URL}/actuator/health`,
+        reuseExistingServer: !process.env.CI,
+        timeout: 240_000,
+      },
+
+  projects: [
+    {
+      name: 'public',
+      testDir: './tests/public',
+      use: { ...devices['Desktop Chrome'], baseURL: PUBLIC_BASE_URL },
+    },
+    {
+      name: 'admin',
+      testDir: './tests/admin',
+      use: { ...devices['Desktop Chrome'], baseURL: ADMIN_BASE_URL },
+    },
+    {
+      name: 'mobile-public',
+      testDir: './tests/mobile-public',
+      use: { ...devices['iPhone 13'], baseURL: PUBLIC_BASE_URL },
+    },
+  ],
+});
