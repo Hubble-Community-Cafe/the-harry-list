@@ -82,7 +82,7 @@ services:
     networks: [e2e]
 
   # Admin portal. Azure is intentionally unset; the admin e2e auth bridge
-  # (added in the next step) uses the X-Test-* headers the e2e backend accepts.
+  # uses the X-Test-* headers the e2e backend accepts.
   admin:
     build:
       context: ./the-harry-list-admin

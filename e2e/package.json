@@ -8,12 +8,14 @@
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
+    "typecheck": "tsc --noEmit",
     "report": "playwright show-report",
     "stack:up": "docker compose -f ../docker-compose.e2e.yml up --build -d",
     "stack:down": "docker compose -f ../docker-compose.e2e.yml down -v"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",
-    "@types/node": "^22.10.0"
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
   }
 }
