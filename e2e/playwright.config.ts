@@ -75,9 +75,11 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], baseURL: ADMIN_BASE_URL },
     },
     {
+      // Pixel 5 is a Chromium-based mobile device, so the suite only needs the
+      // chromium browser (iPhone devices would require WebKit).
       name: 'mobile-public',
       testDir: './tests/mobile-public',
-      use: { ...devices['iPhone 13'], baseURL: PUBLIC_BASE_URL },
+      use: { ...devices['Pixel 5'], baseURL: PUBLIC_BASE_URL },
     },
   ],
 });

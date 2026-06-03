@@ -6,10 +6,16 @@ import type { Page, TestInfo } from '@playwright/test';
  * run has the exact UI/email/DB state at the point of interest.
  */
 
-/** Attach a full-page screenshot under a descriptive step name. */
+/**
+ * Attach a full-page screenshot under a descriptive step name.
+ *
+ * Uses `animations: 'disabled'` so Playwright fast-forwards CSS transitions/animations
+ * (the form fades between steps) to their final state before capturing — otherwise a
+ * screenshot can catch a mid-animation frame before the desired result has rendered.
+ */
 export async function captureScreenshot(testInfo: TestInfo, page: Page, name: string): Promise<void> {
   await testInfo.attach(name, {
-    body: await page.screenshot({ fullPage: true }),
+    body: await page.screenshot({ fullPage: true, animations: 'disabled', caret: 'hide' }),
     contentType: 'image/png',
   });
 }
