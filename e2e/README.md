@@ -81,8 +81,10 @@ Every run is self-documenting:
   feed, and DB/API snapshots (`attachJson`).
 - Screenshots + video are also auto-captured on failure.
 
-In CI (`.github/workflows/e2e.yml`) the HTML report and all artifacts are uploaded, and the
-backend log is dumped on failure.
+In CI (`.github/workflows/e2e.yml`) a per-test summary table (status, duration, errors) is
+written directly to the GitHub Actions run page via `@estruyf/github-actions-reporter`, so
+you can see results without downloading anything. The HTML report and all artifacts are also
+uploaded, and the backend log is dumped on failure.
 
 ## Layout
 
@@ -154,5 +156,5 @@ faster layers.
 ## CI
 
 `.github/workflows/e2e.yml` runs the suite on PRs to `main` (and on demand), boots the
-stack, and uploads the HTML report + traces/screenshots/videos. Making it a required check
-is a branch-protection setting.
+stack, writes a per-test summary table to the run page, and uploads the HTML report +
+traces/screenshots/videos. Making it a required check is a branch-protection setting.

@@ -20,7 +20,15 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI
-    ? [['github'], ['html', { open: 'never' }], ['list']]
+    ? [
+        // Inline annotations on failing lines.
+        ['github'],
+        // A readable per-test summary table on the GitHub Actions run page
+        // (no need to download the HTML report just to see what passed/failed).
+        ['@estruyf/github-actions-reporter', { title: 'Playwright E2E results', useDetails: true, showError: true }],
+        ['html', { open: 'never' }],
+        ['list'],
+      ]
     : [['html', { open: 'never' }], ['list']],
   use: {
     // Capture a full, replayable trace for every run (pass or fail) so each spec
