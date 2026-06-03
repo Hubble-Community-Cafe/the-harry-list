@@ -314,9 +314,12 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
 
   // A soft block is informational: the guest can proceed after acknowledging it.
   const [softBlockAcknowledged, setSoftBlockAcknowledged] = useState(false);
-  // Reset the acknowledgement whenever the matched (soft) block changes.
+  // Set when the guest tries to continue without acknowledging, so we can prompt them.
+  const [softBlockAckError, setSoftBlockAckError] = useState(false);
+  // Reset state whenever the matched (soft) block changes.
   useEffect(() => {
     setSoftBlockAcknowledged(false);
+    setSoftBlockAckError(false);
   }, [blockedDateInfo?.message, blockedDateInfo?.soft]);
 
   // Notice rendered wherever a blocked period applies. Hard blocks show a red,
@@ -327,15 +330,21 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
         <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
         <span>{blockedDateInfo.message}</span>
       </div>
-      <label className="flex items-start gap-2 cursor-pointer">
+      <label className={`flex items-start gap-2 cursor-pointer rounded-md p-1 -m-1 ${softBlockAckError ? 'ring-1 ring-red-500/60 bg-red-500/10' : ''}`}>
         <input
           type="checkbox"
           checked={softBlockAcknowledged}
-          onChange={e => setSoftBlockAcknowledged(e.target.checked)}
+          onChange={e => {
+            setSoftBlockAcknowledged(e.target.checked);
+            if (e.target.checked) setSoftBlockAckError(false);
+          }}
           className="mt-0.5 shrink-0"
         />
-        <span>{blockedDateInfo.acknowledgementText}</span>
+        <span className={softBlockAckError ? 'text-red-300' : undefined}>{blockedDateInfo.acknowledgementText}</span>
       </label>
+      {softBlockAckError && (
+        <p className="text-red-300 font-medium">Please tick the box above to confirm before continuing.</p>
+      )}
     </div>
   ) : (
     <div className="mt-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
@@ -454,7 +463,12 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
     // Block advance if date is in a blocked period (step 2 for global blocks, step 3 for location-specific).
     // Hard blocks always prevent advancing; soft blocks only until the guest acknowledges the warning.
     if ((step === 2 || step === 3) && blockedDateInfo) {
-      if (!blockedDateInfo.soft || !softBlockAcknowledged) {
+      if (!blockedDateInfo.soft) {
+        return false;
+      }
+      if (!softBlockAcknowledged) {
+        // Surface why we're not advancing so the form doesn't feel broken.
+        setSoftBlockAckError(true);
         return false;
       }
     }

@@ -557,12 +557,14 @@ describe('ReservationForm', () => {
       expect(screen.getByText('The bar is closed by default this summer.')).toBeInTheDocument();
       const ack = screen.getByRole('checkbox', { name: 'I understand the bar may be closed' });
 
-      // Cannot advance until acknowledged
+      // Cannot advance until acknowledged — and the form explains why
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       expect(screen.getByText('Activity Details')).toBeInTheDocument();
+      expect(screen.getByText(/tick the box above to confirm/i)).toBeInTheDocument();
 
-      // Acknowledge, then advance succeeds
+      // Acknowledge, then advance succeeds (and the prompt disappears)
       await user.click(ack);
+      expect(screen.queryByText(/tick the box above to confirm/i)).not.toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       await waitFor(() =>
         expect(screen.getByText('Where would you like to host your event?')).toBeInTheDocument()
