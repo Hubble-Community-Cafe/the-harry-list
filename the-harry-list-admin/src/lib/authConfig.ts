@@ -11,6 +11,10 @@ declare global {
       REDIRECT_URI?: string;
       ALLOWED_GROUP_ID?: string;
       SENTRY_DSN?: string;
+      // e2e-only: injected by docker-compose.e2e.yml to bypass MSAL in tests.
+      E2E_AUTH_OID?: string;
+      E2E_AUTH_EMAIL?: string;
+      E2E_AUTH_NAME?: string;
     };
   }
 }

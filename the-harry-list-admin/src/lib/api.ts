@@ -1,5 +1,6 @@
 import { PublicClientApplication } from '@azure/msal-browser';
 import * as Sentry from '@sentry/react';
+import { getE2eAuth } from './e2eAuth';
 // Note: Window.__RUNTIME_CONFIG__ type is declared in authConfig.ts
 
 // Get API URL from runtime config or fall back to build-time env
@@ -72,11 +73,6 @@ const getAccessToken = async (): Promise<string | null> => {
 
 // Main fetch function with authentication
 export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
-  const token = await getAccessToken();
-  if (!token) {
-    throw new Error('Not authenticated');
-  }
-
   // Ensure URL is absolute
   const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
 
@@ -84,8 +80,22 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
   const isFormData = options.body instanceof FormData;
   const headers: Record<string, string> = {
     ...options.headers as Record<string, string>,
-    'Authorization': `Bearer ${token}`,
   };
+
+  // In e2e runs, authenticate via X-Test-* headers instead of MSAL (see e2eAuth.ts).
+  const e2e = getE2eAuth();
+  if (e2e) {
+    headers['X-Test-Oid'] = e2e.oid;
+    if (e2e.email) headers['X-Test-Email'] = e2e.email;
+    if (e2e.name) headers['X-Test-Name'] = e2e.name;
+  } else {
+    const token = await getAccessToken();
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   if (!isFormData) {
     headers['Content-Type'] = 'application/json';
   }
