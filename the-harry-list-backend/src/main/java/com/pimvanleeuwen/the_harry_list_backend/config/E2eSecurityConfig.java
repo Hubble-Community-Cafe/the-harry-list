@@ -102,8 +102,12 @@ public class E2eSecurityConfig {
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
                 throws ServletException, IOException {
             String oid = request.getHeader("X-Test-Oid");
-            if (oid != null && !oid.isBlank()
-                    && SecurityContextHolder.getContext().getAuthentication() == null) {
+            // Set our token whenever the header is present and we haven't already authenticated
+            // via JWT. We must overwrite any AnonymousAuthenticationToken (Spring's anonymous
+            // filter runs before this one), otherwise admin requests stay anonymous -> 403.
+            boolean alreadyJwt = SecurityContextHolder.getContext().getAuthentication()
+                    instanceof JwtAuthenticationToken;
+            if (oid != null && !oid.isBlank() && !alreadyJwt) {
                 String email = request.getHeader("X-Test-Email");
                 if (email == null || email.isBlank()) email = oid + "@e2e.test";
                 String name = request.getHeader("X-Test-Name");
