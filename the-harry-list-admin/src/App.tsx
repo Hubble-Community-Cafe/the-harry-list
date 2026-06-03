@@ -13,6 +13,7 @@ import { WeekOverviewPage } from './pages/WeekOverviewPage';
 import { AuditLogPage } from './pages/AuditLogPage';
 import { Layout } from './components/Layout';
 import { useGroupAuthorization } from './lib/useGroupAuthorization';
+import { isE2E } from './lib/e2eAuth';
 import { ThemeProvider } from './lib/ThemeContext';
 import { RoleProvider } from './lib/RoleContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -22,11 +23,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isMsalAuthenticated = useIsAuthenticated();
   const { isLoading: isCheckingGroup, isAuthorized, error: groupError } = useGroupAuthorization();
 
-  // Only Microsoft authentication is allowed
-  const isAuthenticated = isMsalAuthenticated;
+  // e2e runs bypass MSAL/group checks; backend RBAC still applies via X-Test-* headers.
+  const e2e = isE2E();
+  const isAuthenticated = isMsalAuthenticated || e2e;
 
   // Show loading while checking group membership
-  if (isAuthenticated && isCheckingGroup) {
+  if (isAuthenticated && !e2e && isCheckingGroup) {
     return (
       <div className="min-h-screen bg-dark-950 flex items-center justify-center">
         <div className="text-center">
@@ -38,7 +40,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   // Show unauthorized message if user is not in the allowed group
-  if (isAuthenticated && !isAuthorized) {
+  if (isAuthenticated && !e2e && !isAuthorized) {
     return (
       <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-dark-900 border border-dark-800 rounded-xl p-8 text-center">

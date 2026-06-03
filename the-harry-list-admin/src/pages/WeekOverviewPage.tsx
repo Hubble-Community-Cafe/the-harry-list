@@ -399,6 +399,7 @@ function WeekReservationCard({
   return (
     <Link
       to={`/reservations/${reservation.id}`}
+      data-testid="week-reservation"
       className={`block rounded-lg bg-dark-800/80 hover:bg-dark-800 border-l-2 p-2 transition-colors ${STATUS_COLORS[reservation.status] || 'border-l-dark-600'}`}
     >
       {/* Status badge */}

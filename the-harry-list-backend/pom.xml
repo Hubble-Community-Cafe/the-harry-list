@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.pimvanleeuwen</groupId>
 	<artifactId>the-harry-list-backend</artifactId>
-	<version>1.4.2</version>
+	<version>1.5.0</version>
 	<name>the-harry-list-backend</name>
 	<description>The Harry List, reservation system for Stichting Bar Potential</description>
 	<url/>
@@ -50,6 +50,13 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- SMTP mail sender — used by the e2e profile to deliver email to a local
+		     catcher (Mailpit) so end-to-end tests can assert real messages. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 
 		<dependency>

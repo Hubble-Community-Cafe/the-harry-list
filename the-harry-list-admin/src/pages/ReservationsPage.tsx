@@ -197,6 +197,7 @@ export function ReservationsPage() {
                 {items.map((reservation) => (
                   <Link
                     key={reservation.id}
+                    data-testid="reservation-row"
                     to={`/reservations/${reservation.id}`}
                     className="card block hover:border-hubble-500/50 transition-all"
                   >

@@ -325,7 +325,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
   // Notice rendered wherever a blocked period applies. Hard blocks show a red,
   // blocking error; soft blocks show an amber warning with an acknowledgement checkbox.
   const blockedDateNotice = !blockedDateInfo ? null : blockedDateInfo.soft ? (
-    <div className="mt-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 space-y-2">
+    <div data-testid="blocked-date-notice" data-soft="true" className="mt-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 space-y-2">
       <div className="flex items-start gap-2">
         <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
         <span>{blockedDateInfo.message}</span>
@@ -333,6 +333,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
       <label className={`flex items-start gap-2 cursor-pointer rounded-md p-1 -m-1 ${softBlockAckError ? 'ring-1 ring-red-500/60 bg-red-500/10' : ''}`}>
         <input
           type="checkbox"
+          data-testid="soft-block-ack"
           checked={softBlockAcknowledged}
           onChange={e => {
             setSoftBlockAcknowledged(e.target.checked);
@@ -343,11 +344,11 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
         <span className={softBlockAckError ? 'text-red-300' : undefined}>{blockedDateInfo.acknowledgementText}</span>
       </label>
       {softBlockAckError && (
-        <p className="text-red-300 font-medium">Please tick the box above to confirm before continuing.</p>
+        <p data-testid="soft-block-ack-error" className="text-red-300 font-medium">Please tick the box above to confirm before continuing.</p>
       )}
     </div>
   ) : (
-    <div className="mt-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
+    <div data-testid="blocked-date-notice" data-soft="false" className="mt-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
       <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
       <span>{blockedDateInfo.message}</span>
     </div>
@@ -1012,6 +1013,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                   type="radio"
                   {...register('location')}
                   value="HUBBLE"
+                  data-testid="location-HUBBLE"
                   className="sr-only"
                   disabled={!!locationLocked && locationLocked !== 'HUBBLE'}
                 />
@@ -1049,6 +1051,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                   type="radio"
                   {...register('location')}
                   value="METEOR"
+                  data-testid="location-METEOR"
                   className="sr-only"
                   disabled={!!locationLocked && locationLocked !== 'METEOR'}
                 />
@@ -1086,6 +1089,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                   type="radio"
                   {...register('location')}
                   value=""
+                  data-testid="location-NO_PREFERENCE"
                   className="sr-only"
                   disabled={!!locationLocked}
                 />
@@ -1140,6 +1144,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                       type="radio"
                       {...register('seatingArea')}
                       value={area}
+                      data-testid={`seating-${area}`}
                       className="sr-only"
                       disabled={!!seatingLocked && area !== seatingLocked}
                     />
@@ -1392,6 +1397,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                 <input
                   type="checkbox"
                   {...register('termsAccepted')}
+                  data-testid="terms-accepted"
                   className="w-5 h-5 mt-0.5 rounded border-dark-600 bg-dark-700 text-hubble-500 focus:ring-hubble-500 focus:ring-offset-dark-900"
                 />
                 <div>
@@ -1445,6 +1451,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
           ) : (
             <button
               type="submit"
+              data-testid="submit-reservation"
               disabled={isSubmitting || !!optionsError}
               className="btn-secondary flex items-center gap-2"
             >

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useIsAuthenticated } from '@azure/msal-react';
 import { fetchCurrentUser, type AdminUser } from './api';
+import { isE2E } from './e2eAuth';
 
 type AdminRole = 'VIEWER' | 'EDITOR' | 'ADMIN';
 
@@ -26,7 +27,8 @@ export function useRole() {
 }
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const isAuthenticated = useIsAuthenticated();
+  // e2e runs aren't MSAL-authenticated but should still load their role from the backend.
+  const isAuthenticated = useIsAuthenticated() || isE2E();
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -1,0 +1,39 @@
+import type { Page, TestInfo } from '@playwright/test';
+
+/**
+ * Helpers for attaching curated, human-readable evidence to the HTML report — so a
+ * passing run shows positive proof of each flow (not just a green check), and a failing
+ * run has the exact UI/email/DB state at the point of interest.
+ */
+
+/**
+ * Attach a full-page screenshot under a descriptive step name.
+ *
+ * Uses `animations: 'disabled'` so Playwright fast-forwards CSS transitions/animations
+ * (the form fades between steps) to their final state before capturing — otherwise a
+ * screenshot can catch a mid-animation frame before the desired result has rendered.
+ */
+export async function captureScreenshot(testInfo: TestInfo, page: Page, name: string): Promise<void> {
+  await testInfo.attach(name, {
+    body: await page.screenshot({ fullPage: true, animations: 'disabled', caret: 'hide' }),
+    contentType: 'image/png',
+  });
+}
+
+/** Attach rendered email HTML (e.g. from Mailpit) so the report shows what was sent. */
+export async function attachHtml(testInfo: TestInfo, name: string, html: string): Promise<void> {
+  await testInfo.attach(name, { body: html, contentType: 'text/html' });
+}
+
+/** Attach plain text (e.g. an .ics calendar feed) for the report. */
+export async function attachText(testInfo: TestInfo, name: string, text: string): Promise<void> {
+  await testInfo.attach(name, { body: text, contentType: 'text/plain' });
+}
+
+/** Attach an object as pretty JSON (e.g. a DB/API snapshot). */
+export async function attachJson(testInfo: TestInfo, name: string, value: unknown): Promise<void> {
+  await testInfo.attach(name, {
+    body: JSON.stringify(value, null, 2),
+    contentType: 'application/json',
+  });
+}

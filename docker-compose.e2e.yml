@@ -1,0 +1,106 @@
+# =====================================================================
+# End-to-end test stack — boots the whole system with test-only swaps so
+# Playwright (see ./e2e) can drive the real apps and assert on real email + DB.
+#
+#   docker compose -f docker-compose.e2e.yml up --build
+#
+# Test-only differences from dev/prod:
+#   - backend runs the `e2e` Spring profile: SMTP -> Mailpit, header-based
+#     test auth, and a throwaway MariaDB (ddl-auto=update).
+#   - Mailpit catches all outgoing mail; its REST API (:8025) lets tests read it.
+#   - MariaDB uses tmpfs, so every boot starts from a clean database.
+#
+# NEVER use this file in production. It exists purely for automated testing.
+# =====================================================================
+
+name: harry-list-e2e
+
+services:
+  # Throwaway database — tmpfs means a clean schema/data on every boot.
+  mariadb-e2e:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass
+      MARIADB_DATABASE: harrylist_e2e
+      MARIADB_USER: harryuser
+      MARIADB_PASSWORD: harrypass
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    networks: [e2e]
+
+  # Mail catcher — backend sends here over SMTP; tests read via the REST API.
+  mailpit:
+    image: axllent/mailpit:latest
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+    ports:
+      - "8025:8025" # web UI + REST API used by Playwright to assert emails
+    networks: [e2e]
+
+  backend:
+    build:
+      context: ./the-harry-list-backend
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_PROFILES_ACTIVE=e2e
+      - TZ=Europe/Amsterdam
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb-e2e:3306/harrylist_e2e
+      - SPRING_DATASOURCE_USERNAME=harryuser
+      - SPRING_DATASOURCE_PASSWORD=harrypass
+      - SPRING_MAIL_HOST=mailpit
+      - SPRING_MAIL_PORT=1025
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
+      - CALENDAR_FEED_TOKEN=e2e-feed-token
+    ports:
+      - "8080:8080"
+    depends_on:
+      mariadb-e2e:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    networks: [e2e]
+
+  # Public reservation form. The browser runs on the host, so it calls the
+  # backend at the host-published address (http://localhost:8080).
+  public:
+    build:
+      context: ./the-harry-list-public
+      dockerfile: Dockerfile
+    environment:
+      - API_URL=http://localhost:8080
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [e2e]
+
+  # Admin portal. Azure is intentionally unset; the admin e2e auth bridge
+  # uses the X-Test-* headers the e2e backend accepts.
+  admin:
+    build:
+      context: ./the-harry-list-admin
+      dockerfile: Dockerfile
+    environment:
+      - API_URL=http://localhost:8080
+      - E2E_AUTH_OID=e2e-admin
+      - E2E_AUTH_ROLE=ADMIN
+      - AZURE_CLIENT_ID=
+      - AZURE_TENANT_ID=
+      - REDIRECT_URI=http://localhost:5174
+    ports:
+      - "5174:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [e2e]
+
+networks:
+  e2e:

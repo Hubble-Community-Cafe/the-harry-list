@@ -27,9 +27,13 @@ regexes = [
   '''__[A-Z_]+__''',
   # Spring Boot property placeholders
   '''\$\{[A-Z_]+:[^}]*\}''',
-  # Example/placeholder credentials in application.properties (dev only)
+  # Example/placeholder credentials in application.properties and the dev/e2e
+  # docker-compose stacks (throwaway local/test databases only — never real).
   '''harrypass''',
   '''harryuser''',
+  '''rootpass''',
+  # Non-secret token used only by the e2e calendar-feed test stack.
+  '''e2e-feed-token''',
 ]
 
 commits = []

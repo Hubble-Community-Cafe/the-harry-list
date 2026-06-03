@@ -317,6 +317,7 @@ export function ReservationDetailPage() {
           {/* Edit Details Button */}
           <button
             onClick={startEditing}
+            data-testid="edit-reservation"
             disabled={isUpdating}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-hubble-500/20 text-hubble-400 hover:bg-hubble-500/30 transition-colors"
           >
@@ -339,6 +340,7 @@ export function ReservationDetailPage() {
             <>
               <button
                 onClick={() => { setActionMessage(''); setShowConfirmDialog(true); }}
+                data-testid="confirm-reservation"
                 disabled={isUpdating}
                 className="btn-primary flex items-center gap-2"
               >
@@ -347,6 +349,7 @@ export function ReservationDetailPage() {
               </button>
               <button
                 onClick={() => { setActionMessage(DEFAULT_REJECTION_MESSAGE); setShowRejectDialog(true); }}
+                data-testid="reject-reservation"
                 disabled={isUpdating}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
               >
@@ -370,6 +373,7 @@ export function ReservationDetailPage() {
           {reservation.status === 'CONFIRMED' && (
             <button
               onClick={() => { setActionMessage(''); setShowCancelDialog(true); }}
+              data-testid="cancel-reservation"
               disabled={isUpdating}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors ml-auto"
             >
@@ -381,6 +385,7 @@ export function ReservationDetailPage() {
           {(reservation.status === 'CANCELLED' || reservation.status === 'REJECTED') && (
             <button
               onClick={() => setShowDeleteConfirm(true)}
+              data-testid="remove-reservation"
               disabled={isUpdating}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/50 text-red-400 hover:bg-red-500/10 transition-colors ml-auto"
             >
@@ -397,6 +402,7 @@ export function ReservationDetailPage() {
             <div className="flex gap-3">
               <button
                 onClick={handleDelete}
+                data-testid="delete-dialog-submit"
                 disabled={isUpdating}
                 className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
               >
@@ -423,6 +429,7 @@ export function ReservationDetailPage() {
                   handleStatusChange('CONFIRMED');
                   setShowConfirmDialog(false);
                 }}
+                data-testid="confirm-dialog-submit"
                 disabled={isUpdating}
                 className="px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors flex items-center gap-2"
               >
@@ -450,6 +457,7 @@ export function ReservationDetailPage() {
                   handleStatusChange('REJECTED');
                   setShowRejectDialog(false);
                 }}
+                data-testid="reject-dialog-submit"
                 disabled={isUpdating}
                 className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors flex items-center gap-2"
               >
@@ -504,6 +512,7 @@ export function ReservationDetailPage() {
                   handleStatusChange('CANCELLED');
                   setShowCancelDialog(false);
                 }}
+                data-testid="cancel-dialog-submit"
                 disabled={isUpdating}
                 className="px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors flex items-center gap-2"
               >
@@ -972,6 +981,7 @@ export function ReservationDetailPage() {
                     <label className="label">Expected Guests</label>
                     <input
                       type="number"
+                      data-testid="edit-guests"
                       value={editData.expectedGuests || ''}
                       onChange={(e) => setEditData({ ...editData, expectedGuests: parseInt(e.target.value) })}
                       className="input-field"
@@ -1182,6 +1192,7 @@ export function ReservationDetailPage() {
               </button>
               <button
                 onClick={handleEditSave}
+                data-testid="edit-save"
                 disabled={isUpdating}
                 className="btn-primary flex items-center gap-2"
               >
@@ -1236,7 +1247,9 @@ function StatusBadge({ status, large }: { status: string; large?: boolean }) {
   const { color, bg } = config[status] || config.PENDING;
 
   return (
-    <span className={`
+    <span
+      data-testid="reservation-status"
+      className={`
       inline-flex items-center gap-2 px-3 py-1.5 rounded-xl font-medium
       ${bg} ${color}
       ${large ? 'text-sm' : 'text-xs'}
