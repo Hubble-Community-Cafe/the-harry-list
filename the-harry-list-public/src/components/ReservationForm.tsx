@@ -670,6 +670,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                   <input
                     type="text"
                     {...register('contactName')}
+                    data-testid="contact-name"
                     className="input-field pl-10"
                     placeholder="John Doe"
                     aria-describedby={errors.contactName ? 'contactName-error' : undefined}
@@ -685,6 +686,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                   <input
                     type="email"
                     {...register('email')}
+                    data-testid="contact-email"
                     className="input-field pl-10"
                     placeholder="john@example.com"
                     aria-describedby={errors.email ? 'email-error' : undefined}
@@ -744,6 +746,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                 <input
                   type="text"
                   {...register('eventTitle')}
+                  data-testid="event-title"
                   className="input-field"
                   placeholder="Annual Association Drinks"
                   aria-describedby={errors.eventTitle ? 'eventTitle-error' : undefined}
@@ -822,6 +825,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                     <input
                       type="number"
                       {...register('expectedGuests', { valueAsNumber: true })}
+                      data-testid="expected-guests"
                       className="input-field text-center text-xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       min={minGuests}
                       placeholder="50"
@@ -874,6 +878,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                   <input
                     type="date"
                     {...register('eventDate')}
+                    data-testid="event-date"
                     className="input-field pl-10 pr-4 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                     min={minDateForBooking}
                   />
@@ -885,7 +890,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               {/* Start Time */}
               <div className="form-group">
                 <label htmlFor="startTime" className="label">Start Time *</label>
-                <select {...register('startTime')} className="select-field">
+                <select {...register('startTime')} data-testid="start-time" className="select-field">
                   <option value="">Select start time...</option>
                   {startTimes.map(time => <option key={time} value={time}>{time}</option>)}
                 </select>
@@ -900,7 +905,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               {/* End Time */}
               <div className="form-group">
                 <label htmlFor="endTime" className="label">End Time *</label>
-                <select {...register('endTime')} className="select-field">
+                <select {...register('endTime')} data-testid="end-time" className="select-field">
                   <option value="">Select end time...</option>
                   {endTimes.map(time => <option key={time} value={time}>{time}</option>)}
                 </select>
