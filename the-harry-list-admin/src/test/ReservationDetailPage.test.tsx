@@ -57,7 +57,7 @@ vi.mock('../lib/api', () => ({
   sendCateringEmail: vi.fn(),
 }));
 
-import { fetchReservationAuditLog, fetchReservation, updateReservationStatus } from '../lib/api';
+import { fetchReservationAuditLog, fetchReservation, updateReservationStatus, updateReservation } from '../lib/api';
 
 const DEFAULT_REJECTION_MESSAGE =
   'Unfortunately we cannot host you since we do not have any places left at this time';
@@ -160,5 +160,37 @@ describe('ReservationDetailPage — custom email message', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Reject$/ }));
 
     expect(screen.queryByPlaceholderText(/shaded spot/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('ReservationDetailPage — edit email default', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('defaults the "send update email" checkbox to off when editing', async () => {
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('edit-reservation')).toBeInTheDocument(), { timeout: 3000 });
+
+    fireEvent.click(screen.getByTestId('edit-reservation'));
+
+    const sendEmailCheckbox = await screen.findByRole('checkbox', {
+      name: /send email notification about changes/i,
+    });
+    expect(sendEmailCheckbox).not.toBeChecked();
+  });
+
+  it('saves an edit with sendEmail=false unless the box is ticked', async () => {
+    vi.mocked(updateReservation).mockResolvedValueOnce(sampleReservation);
+
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('edit-reservation')).toBeInTheDocument(), { timeout: 3000 });
+
+    fireEvent.click(screen.getByTestId('edit-reservation'));
+    await screen.findByTestId('edit-save');
+    fireEvent.click(screen.getByTestId('edit-save'));
+
+    await waitFor(() =>
+      expect(updateReservation).toHaveBeenCalledWith(1, expect.any(Object), false, undefined));
   });
 });
