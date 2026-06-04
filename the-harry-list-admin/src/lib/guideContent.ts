@@ -439,7 +439,7 @@ The available actions depend on the current status:
 - **Delete** — permanently remove (with confirmation dialog)
 
 ### Email Notifications
-Each status change dialog (and the edit form) has a **"Send email notification"** checkbox. Keep this checked to automatically notify the customer. Uncheck it only if you've already communicated with them directly.
+Each status change dialog (and the edit form) has a **"Send email notification"** checkbox. For status changes it is **on** by default — uncheck it only if you've already communicated with the customer directly. For the **edit form** it is **off** by default, since most edits are internal tweaks; tick it when a change is worth notifying the customer about.
 
 ### Adding a Message to the Email
 When the email notification is on, every status dialog and the edit form shows an optional **"Add a message to the email"** box. Anything you type here appears as a highlighted note in that email — use it to clarify things the standard template doesn't cover, e.g. *"We read your special request and will keep a shaded spot for you."* For **Reject**, this box is pre-filled with a default reason that you can edit, replace, or clear before sending.`,

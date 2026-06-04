@@ -83,6 +83,11 @@ test.describe('admin: reservation lifecycle', () => {
 
     // Edit the guest count.
     await page.getByTestId('edit-reservation').click();
+    // The "send update email" notification defaults to OFF — editing should be silent
+    // unless the editor explicitly opts in.
+    await expect(
+      page.getByRole('checkbox', { name: /send email notification about changes/i })
+    ).not.toBeChecked();
     await page.getByTestId('edit-guests').fill('137');
     await page.getByTestId('edit-save').click();
     await expect(page.getByTestId('edit-save')).toHaveCount(0); // edit mode closed

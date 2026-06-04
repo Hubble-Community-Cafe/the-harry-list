@@ -5,13 +5,15 @@ import { EmailTemplatesPage } from '../pages/EmailTemplatesPage';
 
 // Hoist mocks so vi.mock factory can access them
 const { mockFetchWithAuth, mockFetchEmailAttachments, mockUploadEmailAttachment,
-  mockDeleteEmailAttachment, mockToggleEmailAttachmentActive } = vi.hoisted(() => {
+  mockDeleteEmailAttachment, mockToggleEmailAttachmentActive, mockPermissions } = vi.hoisted(() => {
   return {
     mockFetchWithAuth: vi.fn(),
     mockFetchEmailAttachments: vi.fn(),
     mockUploadEmailAttachment: vi.fn(),
     mockDeleteEmailAttachment: vi.fn(),
     mockToggleEmailAttachmentActive: vi.fn(),
+    // Defaults to admin (both true); individual tests override for the editor view.
+    mockPermissions: { canEditEmailTemplates: true, canManageAttachments: true },
   };
 });
 
@@ -21,6 +23,10 @@ vi.mock('../lib/api', () => ({
   uploadEmailAttachment: mockUploadEmailAttachment,
   deleteEmailAttachment: mockDeleteEmailAttachment,
   toggleEmailAttachmentActive: mockToggleEmailAttachmentActive,
+}));
+
+vi.mock('../lib/usePermissions', () => ({
+  usePermissions: () => mockPermissions,
 }));
 
 const sampleTemplates = [
@@ -52,6 +58,9 @@ function renderPage() {
 describe('EmailTemplatesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset to the admin view; editor-specific tests override below.
+    mockPermissions.canEditEmailTemplates = true;
+    mockPermissions.canManageAttachments = true;
     mockFetchWithAuth.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(sampleTemplates),
@@ -156,6 +165,27 @@ describe('EmailTemplatesPage', () => {
     renderPage();
     await waitFor(() => {
       expect(screen.getByText('Reservation Submitted')).toBeDefined();
+    });
+  });
+
+  describe('editor (attachments only)', () => {
+    beforeEach(() => {
+      mockPermissions.canEditEmailTemplates = false;
+      mockPermissions.canManageAttachments = true;
+    });
+
+    it('lets editors manage PDF attachments without loading the templates', async () => {
+      renderPage();
+
+      await waitFor(() => {
+        expect(screen.getByText('PDF Attachments')).toBeDefined();
+        expect(screen.getByText('Catering Menu')).toBeDefined();
+      });
+
+      // The template-editing UI is hidden and never fetched for editors.
+      expect(screen.queryByText('Reservation Submitted')).toBeNull();
+      expect(mockFetchWithAuth).not.toHaveBeenCalled();
+      expect(mockFetchEmailAttachments).toHaveBeenCalledOnce();
     });
   });
 });

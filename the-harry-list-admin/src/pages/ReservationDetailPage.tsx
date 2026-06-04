@@ -74,7 +74,7 @@ export function ReservationDetailPage() {
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<Reservation>>({});
-  const [sendEditEmail, setSendEditEmail] = useState(true);
+  const [sendEditEmail, setSendEditEmail] = useState(false);
   // Optional free-text message added to the "reservation updated" email.
   const [editMessage, setEditMessage] = useState('');
 
