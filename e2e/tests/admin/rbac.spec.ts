@@ -48,4 +48,28 @@ test.describe('admin: RBAC is enforced by the backend', () => {
     expect(viewerWrite.status()).toBe(403); // viewers cannot mutate
     expect(editorWrite.status(), `editor create response: ${editorWriteBody}`).toBe(201); // editors can
   });
+
+  test('an EDITOR can manage catering email PDF attachments; a VIEWER cannot', async ({ request }, testInfo) => {
+    const upload = (oid: string) =>
+      request.post(`${BACKEND_URL}/api/admin/email-attachments`, {
+        headers: adminAuthHeaders(oid),
+        multipart: {
+          name: 'RBAC Catering Menu',
+          file: { name: 'menu.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 rbac probe') },
+        },
+      });
+
+    const viewerUpload = await upload('e2e-viewer');
+    const editorUpload = await upload('e2e-editor');
+    const editorUploadBody = await editorUpload.text();
+
+    await attachJson(testInfo, 'rbac-attachment-results.json', {
+      viewerUpload: viewerUpload.status(),
+      editorUpload: editorUpload.status(),
+      editorUploadBody,
+    });
+
+    expect(viewerUpload.status()).toBe(403); // viewers cannot upload attachments
+    expect(editorUpload.status(), `editor upload response: ${editorUploadBody}`).toBe(200); // editors can
+  });
 });

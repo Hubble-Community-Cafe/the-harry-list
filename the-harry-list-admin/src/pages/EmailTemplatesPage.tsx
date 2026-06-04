@@ -4,6 +4,7 @@ import { fetchWithAuth, fetchEmailAttachments, uploadEmailAttachment, deleteEmai
 import type { EmailAttachment } from '../types/reservation';
 import { HelpGuide } from '../components/HelpGuide';
 import { emailTemplatesGuide } from '../lib/guideContent';
+import { usePermissions } from '../lib/usePermissions';
 
 interface EmailTemplateDto {
   templateType: string;
@@ -17,8 +18,12 @@ interface EmailTemplateDto {
 }
 
 export function EmailTemplatesPage() {
+  // Editors may manage PDF attachments but only admins can edit the templates
+  // themselves (the template PUT/DELETE/test endpoints require ADMIN).
+  const { canEditEmailTemplates, canManageAttachments } = usePermissions();
+
   const [templates, setTemplates] = useState<EmailTemplateDto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(canEditEmailTemplates);
   const [error, setError] = useState<string | null>(null);
   const [expandedType, setExpandedType] = useState<string | null>(null);
   const [editSubject, setEditSubject] = useState('');
@@ -39,9 +44,10 @@ export function EmailTemplatesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    loadTemplates();
-    loadAttachments();
-  }, []);
+    // Only admins load/see the templates; editors get the attachments only.
+    if (canEditEmailTemplates) loadTemplates();
+    if (canManageAttachments) loadAttachments();
+  }, [canEditEmailTemplates, canManageAttachments]);
 
   async function loadTemplates() {
     try {
@@ -205,20 +211,27 @@ export function EmailTemplatesPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-title font-bold text-white">Email Templates</h1>
-          <p className="text-dark-400 font-light">Customise the emails sent to customers and staff</p>
+          <p className="text-dark-400 font-light">
+            {canEditEmailTemplates
+              ? 'Customise the emails sent to customers and staff'
+              : 'Manage the PDF attachments used in catering option emails'}
+          </p>
         </div>
-        <HelpGuide title="Email Templates Guide" sections={emailTemplatesGuide} />
+        {canEditEmailTemplates && <HelpGuide title="Email Templates Guide" sections={emailTemplatesGuide} />}
       </div>
 
       {/* Info card */}
+      {canEditEmailTemplates && (
       <div className="bg-dark-900 border border-dark-800 rounded-2xl p-5">
         <p className="text-sm text-dark-300">
           Use <code className="bg-dark-800 text-hubble-400 px-1.5 py-0.5 rounded font-mono text-xs">{'{{variable}}'}</code> placeholders in your templates.
           Available variables are listed per template. Templates not yet customised use the built-in default.
         </p>
       </div>
+      )}
 
       {/* Template cards */}
+      {canEditEmailTemplates && (
       <div className="space-y-3">
         {templates.map((template) => {
           const isExpanded = expandedType === template.templateType;
@@ -374,8 +387,10 @@ export function EmailTemplatesPage() {
           );
         })}
       </div>
+      )}
 
       {/* PDF Attachments section */}
+      {canManageAttachments && (
       <div>
         <h2 className="text-xl font-title font-bold text-white mb-1">PDF Attachments</h2>
         <p className="text-dark-400 font-light text-sm mb-4">Manage PDF files that can be attached to catering option emails</p>
@@ -460,6 +475,7 @@ export function EmailTemplatesPage() {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

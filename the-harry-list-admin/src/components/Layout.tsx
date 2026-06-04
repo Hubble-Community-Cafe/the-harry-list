@@ -15,7 +15,7 @@ export function Layout() {
   const { instance, accounts } = useMsal();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { canEditEmailTemplates, canEditFormSettings, canViewAuditLog } = usePermissions();
+  const { canEditEmailTemplates, canManageAttachments, canEditFormSettings, canViewAuditLog } = usePermissions();
   const { role } = useRole();
 
   const user = accounts[0];
@@ -37,7 +37,7 @@ export function Layout() {
     { to: '/export', icon: FileDown, label: 'Export' },
     { to: '/calendar', icon: CalendarSync, label: 'Calendar Feeds' },
     { to: '/calendar-appointments', icon: CalendarPlus, label: 'Appointments' },
-    ...(canEditEmailTemplates ? [{ to: '/email-templates', icon: Mail, label: 'Email Templates' }] : []),
+    ...((canEditEmailTemplates || canManageAttachments) ? [{ to: '/email-templates', icon: Mail, label: canEditEmailTemplates ? 'Email Templates' : 'Email Attachments' }] : []),
     ...(canViewAuditLog ? [{ to: '/audit', icon: History, label: 'Audit Log' }] : []),
     ...(canEditFormSettings ? [{ to: '/settings', icon: Settings, label: 'Settings' }] : []),
   ];
