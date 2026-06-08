@@ -53,5 +53,10 @@ describe('ExportPage', () => {
       .querySelector('input[type="checkbox"]') as HTMLInputElement;
     expect(cateringCheckbox).not.toBeChecked();
   });
+
+  it('notes that appointments appear on the report', () => {
+    renderWithRouter(<ExportPage />);
+    expect(screen.getByText(/appointments page/i)).toBeInTheDocument();
+  });
 });
 
