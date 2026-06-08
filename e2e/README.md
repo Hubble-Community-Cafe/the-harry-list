@@ -151,6 +151,7 @@ faster layers.
 | Catering-only export (#280) | — | `PdfExportServiceTest` | `admin/catering-export` |
 | Week overview | `WeekOverviewPage` test | — | `admin/week-overview` |
 | Calendar feeds (iCal) | — | `ICalendarServiceTest` | `public/calendar-feed` |
+| Recurring appointments (incl. "Nth weekday", #286) | `recurrence` + `CalendarAppointmentsPage` tests | `ICalendarServiceTest` | `admin/calendar-appointments` |
 | Mobile date/time fields (#253) | — | — | `mobile-public/datetime` |
 
 ## CI

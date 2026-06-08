@@ -74,6 +74,9 @@ public class AdminCalendarAppointmentController {
                     existing.setEndTime(appointment.getEndTime());
                     existing.setLocation(appointment.getLocation());
                     existing.setRecurrenceType(appointment.getRecurrenceType());
+                    existing.setRecurrenceInterval(appointment.getRecurrenceInterval());
+                    existing.setRecurrenceWeekOfMonth(appointment.getRecurrenceWeekOfMonth());
+                    existing.setRecurrenceDayOfWeek(appointment.getRecurrenceDayOfWeek());
                     existing.setRecurrenceEndDate(appointment.getRecurrenceEndDate());
                     existing.setEnabled(appointment.getEnabled());
                     CalendarAppointment saved = repository.save(existing);

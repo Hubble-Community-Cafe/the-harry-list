@@ -9,6 +9,7 @@ import type { Reservation, CalendarAppointment } from '../types/reservation';
 import { usePermissions } from '../lib/usePermissions';
 import { HelpGuide } from '../components/HelpGuide';
 import { weekOverviewGuide } from '../lib/guideContent';
+import { expandOccurrences } from '../lib/recurrence';
 
 const CATERING_ACTIVITIES = ['EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM'];
 
@@ -52,68 +53,6 @@ const STATUS_BADGE: Record<string, string> = {
   CANCELLED: 'bg-dark-500/20 text-dark-400',
   COMPLETED: 'bg-blue-500/20 text-blue-400',
 };
-
-/** Expand a recurring appointment into occurrence dates within a given week. */
-function expandAppointmentOccurrences(appointment: CalendarAppointment, weekDateStrings: string[]): string[] {
-  if (!appointment.enabled) return [];
-  const startDate = new Date(appointment.date + 'T00:00:00');
-  const weekStart = new Date(weekDateStrings[0] + 'T00:00:00');
-  const weekEnd = new Date(weekDateStrings[6] + 'T00:00:00');
-
-  if (appointment.recurrenceType === 'NONE') {
-    return weekDateStrings.includes(appointment.date) ? [appointment.date] : [];
-  }
-
-  const endDate = appointment.recurrenceEndDate
-    ? new Date(appointment.recurrenceEndDate + 'T00:00:00')
-    : new Date(weekEnd.getTime() + 365 * 86400000); // reasonable horizon
-
-  const dates: string[] = [];
-  const current = new Date(startDate);
-
-  const advanceDate = (d: Date) => {
-    switch (appointment.recurrenceType) {
-      case 'DAILY': d.setDate(d.getDate() + 1); break;
-      case 'WEEKLY': d.setDate(d.getDate() + 7); break;
-      case 'BIWEEKLY': d.setDate(d.getDate() + 14); break;
-      case 'MONTHLY': d.setMonth(d.getMonth() + 1); break;
-      case 'YEARLY': d.setFullYear(d.getFullYear() + 1); break;
-    }
-  };
-
-  // Fast-forward to near the week if far in the past
-  while (current < weekStart) {
-    advanceDate(current);
-  }
-  // Also check one step back in case we overshot
-  const stepBack = new Date(current);
-  switch (appointment.recurrenceType) {
-    case 'DAILY': stepBack.setDate(stepBack.getDate() - 1); break;
-    case 'WEEKLY': stepBack.setDate(stepBack.getDate() - 7); break;
-    case 'BIWEEKLY': stepBack.setDate(stepBack.getDate() - 14); break;
-    case 'MONTHLY': stepBack.setMonth(stepBack.getMonth() - 1); break;
-    case 'YEARLY': stepBack.setFullYear(stepBack.getFullYear() - 1); break;
-  }
-  if (stepBack >= weekStart && stepBack >= startDate) {
-    current.setTime(stepBack.getTime());
-  }
-
-  // Collect occurrences within the week
-  const maxIterations = 400;
-  let iterations = 0;
-  while (current <= weekEnd && current <= endDate && iterations < maxIterations) {
-    if (current >= startDate) {
-      const dateStr = toLocalDateString(current);
-      if (weekDateStrings.includes(dateStr)) {
-        dates.push(dateStr);
-      }
-    }
-    advanceDate(current);
-    iterations++;
-  }
-
-  return dates;
-}
 
 export function WeekOverviewPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -167,7 +106,7 @@ export function WeekOverviewPage() {
   for (const appt of appointments) {
     if (!appt.enabled) continue;
     if (locationFilter !== 'ALL' && appt.location !== locationFilter) continue;
-    const occurrences = expandAppointmentOccurrences(appt, weekDateStrings);
+    const occurrences = expandOccurrences(appt, weekDateStrings[0], weekDateStrings[6]);
     for (const dateStr of occurrences) {
       weekAppointments[dateStr]?.push(appt);
     }
