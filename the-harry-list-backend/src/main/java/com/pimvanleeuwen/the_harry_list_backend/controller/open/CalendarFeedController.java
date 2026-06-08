@@ -50,6 +50,7 @@ public class CalendarFeedController {
             @RequestParam(required = false) String token,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String location,
+            @RequestParam(required = false) Boolean catering,
             @RequestParam(required = false, defaultValue = "false") boolean upcomingOnly) {
 
         // Validate token if configured (constant-time comparison to prevent timing attacks)
@@ -59,7 +60,7 @@ public class CalendarFeedController {
             }
         }
 
-        return generateFeed(status, location, upcomingOnly, false, "reservations.ics");
+        return generateFeed(status, location, catering, upcomingOnly, false, "reservations.ics");
     }
 
     @GetMapping(value = "/staff-feed.ics", produces = "text/calendar")
@@ -73,6 +74,7 @@ public class CalendarFeedController {
             @RequestParam(required = false) String token,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String location,
+            @RequestParam(required = false) Boolean catering,
             @RequestParam(required = false, defaultValue = "false") boolean upcomingOnly) {
 
         // Validate staff token (required, must be different from public token)
@@ -83,10 +85,10 @@ public class CalendarFeedController {
             return ResponseEntity.status(401).body("Invalid or missing staff token");
         }
 
-        return generateFeed(status, location, upcomingOnly, true, "staff-reservations.ics");
+        return generateFeed(status, location, catering, upcomingOnly, true, "staff-reservations.ics");
     }
 
-    private ResponseEntity<String> generateFeed(String status, String location, boolean upcomingOnly,
+    private ResponseEntity<String> generateFeed(String status, String location, Boolean catering, boolean upcomingOnly,
                                                   boolean includeConfidential, String filename) {
         // Parse status filter
         List<ReservationStatus> statusFilter = null;
@@ -105,9 +107,9 @@ public class CalendarFeedController {
         // Generate calendar
         String icsContent;
         if (upcomingOnly) {
-            icsContent = iCalendarService.generateUpcomingCalendarFeed(statusFilter, location, includeConfidential);
+            icsContent = iCalendarService.generateUpcomingCalendarFeed(statusFilter, location, catering, includeConfidential);
         } else {
-            icsContent = iCalendarService.generateCalendarFeed(statusFilter, location, includeConfidential);
+            icsContent = iCalendarService.generateCalendarFeed(statusFilter, location, catering, includeConfidential);
         }
 
         HttpHeaders headers = new HttpHeaders();
@@ -147,6 +149,7 @@ public class CalendarFeedController {
         info.parameters.token = "Required authentication token";
         info.parameters.status = "Optional: Filter by status (comma-separated: PENDING,CONFIRMED,REJECTED,CANCELLED)";
         info.parameters.location = "Optional: Filter by location (HUBBLE or METEOR)";
+        info.parameters.catering = "Optional: Set to true for catering events only, false for non-catering only (omit for all). Combine with other filters, e.g. location=HUBBLE&catering=true";
         info.parameters.upcomingOnly = "Optional: Set to true to only show upcoming events";
 
         info.instructions = new CalendarInfo.Instructions();
@@ -174,6 +177,7 @@ public class CalendarFeedController {
             public String token;
             public String status;
             public String location;
+            public String catering;
             public String upcomingOnly;
         }
 

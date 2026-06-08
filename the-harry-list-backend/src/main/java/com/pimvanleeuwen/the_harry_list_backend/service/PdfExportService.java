@@ -51,7 +51,7 @@ public class PdfExportService {
                 .filter(r -> r.getEventDate() != null && r.getEventDate().equals(date))
                 .filter(r -> r.getLocation() != null && r.getLocation().equals(location))
                 .filter(r -> !confirmedOnly || r.getStatus() == ReservationStatus.CONFIRMED)
-                .filter(r -> !cateringOnly || hasCateringActivity(r))
+                .filter(r -> !cateringOnly || r.hasCateringActivity())
                 .sorted(Comparator.comparing(r -> r.getStartTime() != null ? r.getStartTime() : java.time.LocalTime.MAX))
                 .toList();
 
@@ -329,7 +329,7 @@ public class PdfExportService {
         contentCell.addElement(content);
 
         // Add catering info if present
-        if (hasCateringActivity(res)) {
+        if (res.hasCateringActivity()) {
             Paragraph cateringStatusPara = new Paragraph();
             cateringStatusPara.setSpacingBefore(10);
             cateringStatusPara.add(new Chunk("Catering Arranged: ", labelFont));
@@ -568,18 +568,6 @@ public class PdfExportService {
         cell.setHorizontalAlignment(alignment);
         cell.setPaddingTop(5);
         table.addCell(cell);
-    }
-
-    /**
-     * Whether a reservation includes catering, i.e. has one of the catering-related
-     * special activities. Used both to filter the report (cateringOnly) and to decide
-     * whether to render the catering info block on a reservation card.
-     */
-    private boolean hasCateringActivity(Reservation res) {
-        return res.getSpecialActivities() != null && res.getSpecialActivities().stream()
-                .anyMatch(a -> a == SpecialActivity.EAT_A_LA_CARTE
-                        || a == SpecialActivity.EAT_CATERING
-                        || a == SpecialActivity.CATERING_CORONA_ROOM);
     }
 
     private void addField(Paragraph para, String label, String value, Font labelFont, Font valueFont) {

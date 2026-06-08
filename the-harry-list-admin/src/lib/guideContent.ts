@@ -222,7 +222,18 @@ Click the **"Add to Google Calendar"** link to open Google Calendar with the fee
 ### Important
 Calendar feeds update automatically — new and changed reservations appear within a few hours. You only need to subscribe once.
 
-Staff feed URLs contain a security token. **Do not share staff feed URLs** with people outside the team.`,
+Staff feed URLs contain a security token. **Do not share staff feed URLs** with people outside the team.
+
+## Filtering a Feed
+
+Each feed URL already includes a **location** filter. You can append extra parameters from the **Additional URL Parameters** section to narrow it further, and combine them:
+
+- \`&catering=true\` — only events that include catering (eat à la carte, eat catering, or Catering Corona Room)
+- \`&catering=false\` — only events **without** catering (custom calendar appointments count as non-catering)
+- \`&status=CONFIRMED\` — only a specific status
+- \`&upcomingOnly=true\` — hide past events
+
+For example, appending \`&catering=true\` to the Hubble staff feed gives a calendar of just the Hubble catering events. Leaving a parameter off keeps everything for that dimension, so any link you've already subscribed to keeps working unchanged.`,
   },
 ];
 

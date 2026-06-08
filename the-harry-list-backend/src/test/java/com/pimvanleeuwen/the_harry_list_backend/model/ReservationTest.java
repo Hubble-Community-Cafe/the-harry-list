@@ -160,4 +160,52 @@ class ReservationTest {
         // Then
         assertEquals("Large graduation ceremony with dinner", reservation.getLongReservationReason());
     }
+
+    @Test
+    void hasCateringActivity_shouldBeFalseWhenNoActivities() {
+        assertFalse(reservation.hasCateringActivity());
+
+        reservation.setSpecialActivities(Set.of());
+        assertFalse(reservation.hasCateringActivity());
+    }
+
+    @Test
+    void hasCateringActivity_shouldBeFalseForNonCateringActivities() {
+        // Given - only non-catering activities
+        reservation.setSpecialActivities(Set.of(SpecialActivity.GRADUATION, SpecialActivity.PRIVATE_EVENT));
+
+        // Then
+        assertFalse(reservation.hasCateringActivity());
+    }
+
+    @Test
+    void hasCateringActivity_shouldBeTrueForEachCateringActivity() {
+        for (SpecialActivity catering : new SpecialActivity[]{
+                SpecialActivity.EAT_A_LA_CARTE,
+                SpecialActivity.EAT_CATERING,
+                SpecialActivity.CATERING_CORONA_ROOM}) {
+            Reservation r = new Reservation();
+            r.setSpecialActivities(Set.of(catering));
+            assertTrue(r.hasCateringActivity(), () -> catering + " should count as catering");
+        }
+    }
+
+    @Test
+    void hasCateringActivity_shouldBeTrueWhenMixedWithNonCatering() {
+        // Given - a catering activity alongside a non-catering one
+        reservation.setSpecialActivities(Set.of(SpecialActivity.GRADUATION, SpecialActivity.EAT_CATERING));
+
+        // Then
+        assertTrue(reservation.hasCateringActivity());
+    }
+
+    @Test
+    void hasCateringActivity_shouldNotDependOnCateringArrangedFlag() {
+        // Given - catering requested but not yet arranged
+        reservation.setSpecialActivities(Set.of(SpecialActivity.EAT_CATERING));
+        reservation.setCateringArranged(false);
+
+        // Then - still counts as a catering event (reflects requested activities)
+        assertTrue(reservation.hasCateringActivity());
+    }
 }

@@ -86,6 +86,7 @@ class AdminCalendarControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.parameters", hasSize(greaterThan(0))))
             .andExpect(jsonPath("$.parameters[?(@.name=='status')]").exists())
+            .andExpect(jsonPath("$.parameters[?(@.name=='catering')]").exists())
             .andExpect(jsonPath("$.parameters[?(@.name=='upcomingOnly')]").exists());
     }
 
