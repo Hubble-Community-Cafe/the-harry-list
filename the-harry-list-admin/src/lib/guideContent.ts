@@ -416,7 +416,7 @@ export const reservationDetailGuide: GuideSection[] = [
 ## Information Sections
 
 - **Contact Information** — name, email, phone number
-- **Event Details** — title, date, start/end time, location, guest count
+- **Event Details** — title, date, start/end time, location, seating area (Inside / Outside), guest count
 - **Activities** — selected special activities (catering, à la carte, etc.)
 - **Additional Notes** — any comments the customer added
 - **Payment** — payment option and invoice details (if applicable)

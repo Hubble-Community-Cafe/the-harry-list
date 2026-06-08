@@ -81,6 +81,10 @@ test.describe('admin: reservation lifecycle', () => {
     await row.click();
     await expect(page.getByTestId('reservation-status')).toContainText('PENDING');
 
+    // The inside/outside seating area is visible in read mode (#292) — staff no longer
+    // have to open the editor to find out where the reservation is seated.
+    await expect(page.getByTestId('seating-area-badge')).toContainText('Inside');
+
     // Edit the guest count.
     await page.getByTestId('edit-reservation').click();
     // The "send update email" notification defaults to OFF — editing should be silent
