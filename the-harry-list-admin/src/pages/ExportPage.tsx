@@ -220,6 +220,7 @@ export function ExportPage() {
       <div className="bg-dark-800/50 border border-dark-700 rounded-xl p-5 max-w-xl">
         <h3 className="text-sm font-semibold text-white mb-3">What's included in the report?</h3>
         <ul className="text-sm text-dark-300 space-y-1.5">
+          <li>• A leading appointments page when calendar appointments fall on the selected date</li>
           <li>• All reservations for the selected date and location</li>
           <li>• Contact details (name, email, phone, organization)</li>
           <li>• Event details (title, time, guests, type)</li>

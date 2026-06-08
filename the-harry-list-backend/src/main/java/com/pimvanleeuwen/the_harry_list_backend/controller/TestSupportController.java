@@ -3,7 +3,9 @@ package com.pimvanleeuwen.the_harry_list_backend.controller;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminRole;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminUser;
 import com.pimvanleeuwen.the_harry_list_backend.model.BlockedPeriod;
+import com.pimvanleeuwen.the_harry_list_backend.model.CalendarAppointment;
 import com.pimvanleeuwen.the_harry_list_backend.model.FormConstraint;
+import com.pimvanleeuwen.the_harry_list_backend.model.RecurrenceType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.repository.AdminUserRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.AuditLogRepository;
@@ -108,5 +110,25 @@ public class TestSupportController {
     @PostMapping("/reservations")
     public ResponseEntity<Reservation> seedReservation(@RequestBody Reservation reservation) {
         return ResponseEntity.ok(reservationRepository.save(reservation));
+    }
+
+    /**
+     * Seed a calendar appointment directly. @PrePersist fills timestamps. Lombok's
+     * {@code @Builder.Default} values are not applied when Jackson uses the no-args
+     * constructor, so the non-null columns (allDay/recurrenceType/enabled) are defaulted
+     * here when the caller omits them.
+     */
+    @PostMapping("/appointments")
+    public ResponseEntity<CalendarAppointment> seedAppointment(@RequestBody CalendarAppointment appointment) {
+        if (appointment.getAllDay() == null) {
+            appointment.setAllDay(false);
+        }
+        if (appointment.getRecurrenceType() == null) {
+            appointment.setRecurrenceType(RecurrenceType.NONE);
+        }
+        if (appointment.getEnabled() == null) {
+            appointment.setEnabled(true);
+        }
+        return ResponseEntity.ok(calendarAppointmentRepository.save(appointment));
     }
 }

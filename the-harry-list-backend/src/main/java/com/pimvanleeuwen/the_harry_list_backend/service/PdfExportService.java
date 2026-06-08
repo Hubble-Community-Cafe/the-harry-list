@@ -3,11 +3,13 @@ package com.pimvanleeuwen.the_harry_list_backend.service;
 import org.openpdf.text.*;
 import org.openpdf.text.pdf.*;
 import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
+import com.pimvanleeuwen.the_harry_list_backend.model.CalendarAppointment;
 import com.pimvanleeuwen.the_harry_list_backend.model.InvoiceType;
 import com.pimvanleeuwen.the_harry_list_backend.model.PaymentOption;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.model.SpecialActivity;
+import com.pimvanleeuwen.the_harry_list_backend.repository.CalendarAppointmentRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,8 @@ import java.util.stream.Collectors;
 public class PdfExportService {
 
     private final ReservationRepository reservationRepository;
+    private final CalendarAppointmentRepository calendarAppointmentRepository;
+    private final AppointmentRecurrenceService appointmentRecurrenceService;
 
     // Colors for Hubble and Meteor branding
     private static final Color HUBBLE_PRIMARY = new Color(15, 77, 100);    // #0f4d64
@@ -34,8 +38,12 @@ public class PdfExportService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
-    public PdfExportService(ReservationRepository reservationRepository) {
+    public PdfExportService(ReservationRepository reservationRepository,
+                            CalendarAppointmentRepository calendarAppointmentRepository,
+                            AppointmentRecurrenceService appointmentRecurrenceService) {
         this.reservationRepository = reservationRepository;
+        this.calendarAppointmentRepository = calendarAppointmentRepository;
+        this.appointmentRecurrenceService = appointmentRecurrenceService;
     }
 
     public byte[] generateDailyReport(LocalDate date, BarLocation location, boolean confirmedOnly, boolean cateringOnly) throws DocumentException {
@@ -45,6 +53,16 @@ public class PdfExportService {
                 .filter(r -> !confirmedOnly || r.getStatus() == ReservationStatus.CONFIRMED)
                 .filter(r -> !cateringOnly || hasCateringActivity(r))
                 .sorted(Comparator.comparing(r -> r.getStartTime() != null ? r.getStartTime() : java.time.LocalTime.MAX))
+                .toList();
+
+        // Appointments for this date/location (recurrence expanded). Shown regardless of the
+        // confirmed-only/catering-only toggles, which only apply to reservations.
+        List<CalendarAppointment> appointments = calendarAppointmentRepository.findByEnabledTrue().stream()
+                .filter(a -> a.getLocation() != null && a.getLocation().equals(location))
+                .filter(a -> appointmentRecurrenceService.occursOn(a, date))
+                .sorted(Comparator
+                        .comparing((CalendarAppointment a) -> Boolean.TRUE.equals(a.getAllDay()) ? 0 : 1)
+                        .thenComparing(a -> a.getStartTime() != null ? a.getStartTime() : java.time.LocalTime.MAX))
                 .toList();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -65,8 +83,16 @@ public class PdfExportService {
         Font valueFont = new Font(Font.HELVETICA, 10, Font.NORMAL, Color.BLACK);
         Font smallFont = new Font(Font.HELVETICA, 9, Font.NORMAL, Color.GRAY);
 
-        // Title
         String locationName = location == BarLocation.HUBBLE ? "Hubble Community Café" : "Meteor Community Café";
+
+        // Appointments page first (if any), then continue with reservations as usual.
+        if (!appointments.isEmpty()) {
+            addAppointmentsPage(document, appointments, date, locationName,
+                    primaryColor, titleFont, subtitleFont, headerFont, labelFont, valueFont, smallFont);
+            document.newPage();
+        }
+
+        // Title
         Paragraph title = new Paragraph(locationName, titleFont);
         title.setAlignment(Element.ALIGN_CENTER);
         document.add(title);
@@ -129,6 +155,81 @@ public class PdfExportService {
 
         document.close();
         return baos.toByteArray();
+    }
+
+    /**
+     * Renders the leading "Appointments" page: a compact list of the calendar appointments
+     * that fall on the report date, so staff without portal access still see them. Each row
+     * shows the time (or "All day"), the title, and the description when present.
+     */
+    private void addAppointmentsPage(Document document, List<CalendarAppointment> appointments,
+                                     LocalDate date, String locationName, Color primaryColor,
+                                     Font titleFont, Font subtitleFont, Font headerFont,
+                                     Font labelFont, Font valueFont, Font smallFont)
+            throws DocumentException {
+
+        Paragraph title = new Paragraph(locationName, titleFont);
+        title.setAlignment(Element.ALIGN_CENTER);
+        document.add(title);
+
+        Paragraph datePara = new Paragraph("Appointments for " + date.format(DATE_FORMATTER), subtitleFont);
+        datePara.setAlignment(Element.ALIGN_CENTER);
+        datePara.setSpacingAfter(20);
+        document.add(datePara);
+
+        // Compact table: Time | Details
+        PdfPTable table = new PdfPTable(2);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[]{22, 78});
+        table.setSpacingBefore(5);
+
+        // Header row
+        PdfPCell timeHeader = new PdfPCell(new Phrase("Time", headerFont));
+        timeHeader.setBackgroundColor(primaryColor);
+        timeHeader.setPadding(8);
+        timeHeader.setBorder(Rectangle.NO_BORDER);
+        table.addCell(timeHeader);
+
+        PdfPCell detailHeader = new PdfPCell(new Phrase("Appointment", headerFont));
+        detailHeader.setBackgroundColor(primaryColor);
+        detailHeader.setPadding(8);
+        detailHeader.setBorder(Rectangle.NO_BORDER);
+        table.addCell(detailHeader);
+
+        Color rowBorder = new Color(220, 220, 220);
+        for (CalendarAppointment appointment : appointments) {
+            PdfPCell timeCell = new PdfPCell(new Phrase(formatAppointmentTime(appointment), valueFont));
+            timeCell.setPadding(8);
+            timeCell.setBorderColor(rowBorder);
+            table.addCell(timeCell);
+
+            PdfPCell detailCell = new PdfPCell();
+            detailCell.setPadding(8);
+            detailCell.setBorderColor(rowBorder);
+            Paragraph detail = new Paragraph();
+            detail.add(new Chunk(appointment.getTitle() != null ? appointment.getTitle() : "Untitled", labelFont));
+            if (appointment.getDescription() != null && !appointment.getDescription().isEmpty()) {
+                detail.add(new Chunk("\n" + appointment.getDescription(), smallFont));
+            }
+            detailCell.addElement(detail);
+            table.addCell(detailCell);
+        }
+
+        document.add(table);
+    }
+
+    /** Formats an appointment's time for the list: "All day", a "HH:mm - HH:mm" range, or a single start. */
+    private String formatAppointmentTime(CalendarAppointment appointment) {
+        if (Boolean.TRUE.equals(appointment.getAllDay())) {
+            return "All day";
+        }
+        if (appointment.getStartTime() == null) {
+            return "All day";
+        }
+        if (appointment.getEndTime() != null) {
+            return appointment.getStartTime().format(TIME_FORMATTER) + " - " + appointment.getEndTime().format(TIME_FORMATTER);
+        }
+        return appointment.getStartTime().format(TIME_FORMATTER);
     }
 
     private void addReservationCard(Document document, Reservation res, int number, int total,

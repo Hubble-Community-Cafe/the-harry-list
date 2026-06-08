@@ -176,6 +176,10 @@ You can combine the two toggles, e.g. **Confirmed only + Catering only** for a c
 
 The PDF will automatically download to your device.
 
+## Calendar Appointments
+
+If any **calendar appointments** (from the Calendar Appointments page, including recurring ones) fall on the selected date and location, they appear on a **leading page** before the reservations — so people without portal access still see them on the printout. Appointments are always included regardless of the **Confirmed only** / **Catering only** toggles, which only filter reservations.
+
 ## When to Use This
 
 - **Before opening** — print the day's reservation list for the bar
