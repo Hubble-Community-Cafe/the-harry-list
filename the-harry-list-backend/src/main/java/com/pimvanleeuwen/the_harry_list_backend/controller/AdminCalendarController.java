@@ -162,6 +162,12 @@ public class AdminCalendarController {
         status.example = "&status=CONFIRMED";
         params.add(status);
 
+        ParameterInfo catering = new ParameterInfo();
+        catering.name = "catering";
+        catering.description = "Show only catering events (true) or only non-catering events (false). Omit to show all. Combines with the other filters.";
+        catering.example = "&catering=true";
+        params.add(catering);
+
         ParameterInfo upcomingOnly = new ParameterInfo();
         upcomingOnly.name = "upcomingOnly";
         upcomingOnly.description = "Only show future events";

@@ -37,6 +37,20 @@ public class ICalendarService {
     }
 
     public String generateCalendarFeed(List<ReservationStatus> includeStatuses, String location, boolean includeConfidentialDetails) {
+        return generateCalendarFeed(includeStatuses, location, null, includeConfidentialDetails);
+    }
+
+    /**
+     * Generates the full ICS feed, optionally filtered by catering.
+     *
+     * @param catering {@code null} = all events (default, backward compatible);
+     *                 {@code true} = only catering reservations;
+     *                 {@code false} = only non-catering events. Custom calendar
+     *                 appointments carry no catering attribute and are treated as
+     *                 non-catering: included when {@code catering} is null/false,
+     *                 excluded when {@code catering} is true.
+     */
+    public String generateCalendarFeed(List<ReservationStatus> includeStatuses, String location, Boolean catering, boolean includeConfidentialDetails) {
         List<Reservation> reservations = reservationRepository.findAll();
 
         if (includeStatuses != null && !includeStatuses.isEmpty()) {
@@ -51,12 +65,23 @@ public class ICalendarService {
                     .toList();
         }
 
-        List<CalendarAppointment> appointments = getFilteredAppointments(location);
+        reservations = filterByCatering(reservations, catering);
+
+        List<CalendarAppointment> appointments = getFilteredAppointments(location, catering);
 
         return buildIcsCalendar(reservations, appointments, includeConfidentialDetails);
     }
 
     public String generateUpcomingCalendarFeed(List<ReservationStatus> includeStatuses, String location, boolean includeConfidentialDetails) {
+        return generateUpcomingCalendarFeed(includeStatuses, location, null, includeConfidentialDetails);
+    }
+
+    /**
+     * Generates the upcoming-only ICS feed, optionally filtered by catering.
+     * See {@link #generateCalendarFeed(List, String, Boolean, boolean)} for the
+     * catering filter semantics.
+     */
+    public String generateUpcomingCalendarFeed(List<ReservationStatus> includeStatuses, String location, Boolean catering, boolean includeConfidentialDetails) {
         LocalDate today = LocalDate.now();
         List<Reservation> reservations = reservationRepository.findAll().stream()
                 .filter(r -> r.getEventDate() != null && !r.getEventDate().isBefore(today))
@@ -74,7 +99,9 @@ public class ICalendarService {
                     .toList();
         }
 
-        List<CalendarAppointment> appointments = getFilteredAppointments(location).stream()
+        reservations = filterByCatering(reservations, catering);
+
+        List<CalendarAppointment> appointments = getFilteredAppointments(location, catering).stream()
                 .filter(a -> {
                     if (a.getRecurrenceType() != RecurrenceType.NONE) {
                         // Recurring: include if no end date or end date is in the future
@@ -88,7 +115,23 @@ public class ICalendarService {
         return buildIcsCalendar(reservations, appointments, includeConfidentialDetails);
     }
 
-    private List<CalendarAppointment> getFilteredAppointments(String location) {
+    /** Filters reservations to catering-only or non-catering-only; no-op when {@code catering} is null. */
+    private List<Reservation> filterByCatering(List<Reservation> reservations, Boolean catering) {
+        if (catering == null) {
+            return reservations;
+        }
+        return reservations.stream()
+                .filter(r -> r.hasCateringActivity() == catering)
+                .toList();
+    }
+
+    private List<CalendarAppointment> getFilteredAppointments(String location, Boolean catering) {
+        // Appointments carry no catering attribute, so they count as non-catering:
+        // when the feed is restricted to catering events, drop them entirely.
+        if (Boolean.TRUE.equals(catering)) {
+            return List.of();
+        }
+
         List<CalendarAppointment> appointments = calendarAppointmentRepository.findByEnabledTrue();
 
         if (location != null && !location.isEmpty()) {
