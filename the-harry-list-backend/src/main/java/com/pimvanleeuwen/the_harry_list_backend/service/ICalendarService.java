@@ -417,21 +417,52 @@ public class ICalendarService {
         return event.toString();
     }
 
+    /**
+     * Builds the RFC 5545 RRULE line for an appointment's recurrence.
+     *
+     * <p>This is the single mapping from our structured recurrence model to iCal.
+     * Frequency comes from {@link RecurrenceType}; "every N" from
+     * {@code recurrenceInterval}; and the nth-weekday detail from
+     * {@code recurrenceWeekOfMonth} + {@code recurrenceDayOfWeek}. New recurrence
+     * patterns should be expressed here rather than scattered across the codebase.
+     */
     private String buildRecurrenceRule(CalendarAppointment appointment) {
-        if (appointment.getRecurrenceType() == null || appointment.getRecurrenceType() == RecurrenceType.NONE) {
+        RecurrenceType type = appointment.getRecurrenceType();
+        if (type == null || type == RecurrenceType.NONE) {
             return "";
         }
 
-        StringBuilder rrule = new StringBuilder("RRULE:FREQ=");
-        switch (appointment.getRecurrenceType()) {
-            case DAILY -> rrule.append("DAILY");
-            case WEEKLY -> rrule.append("WEEKLY");
-            case BIWEEKLY -> rrule.append("WEEKLY;INTERVAL=2");
-            case MONTHLY -> rrule.append("MONTHLY");
-            case YEARLY -> rrule.append("YEARLY");
+        String freq;
+        String byDay = null;
+        int interval = effectiveInterval(appointment);
+
+        switch (type) {
+            case DAILY -> freq = "DAILY";
+            case WEEKLY -> freq = "WEEKLY";
+            case BIWEEKLY -> {
+                freq = "WEEKLY";
+                interval = Math.max(interval, 2); // legacy shorthand for every 2 weeks
+            }
+            case MONTHLY -> freq = "MONTHLY";
+            case YEARLY -> freq = "YEARLY";
+            case MONTHLY_NTH_WEEKDAY -> {
+                byDay = formatNthWeekday(appointment);
+                if (byDay == null) {
+                    return ""; // incomplete config — emit no RRULE rather than an invalid one
+                }
+                freq = "MONTHLY";
+            }
             default -> { return ""; }
         }
 
+        StringBuilder rrule = new StringBuilder("RRULE:FREQ=").append(freq);
+
+        if (interval > 1) {
+            rrule.append(";INTERVAL=").append(interval);
+        }
+        if (byDay != null) {
+            rrule.append(";BYDAY=").append(byDay);
+        }
         if (appointment.getRecurrenceEndDate() != null) {
             rrule.append(";UNTIL=").append(
                     appointment.getRecurrenceEndDate().atTime(23, 59, 59).format(ICS_DATE_FORMAT));
@@ -439,6 +470,39 @@ public class ICalendarService {
 
         rrule.append("\r\n");
         return rrule.toString();
+    }
+
+    /** Resolves the effective "every N" interval, defaulting to 1 when unset or invalid. */
+    private int effectiveInterval(CalendarAppointment appointment) {
+        Integer interval = appointment.getRecurrenceInterval();
+        return (interval != null && interval > 0) ? interval : 1;
+    }
+
+    /**
+     * Formats the BYDAY token for a monthly nth-weekday rule, e.g. {@code 2FR} for the
+     * 2nd Friday or {@code -1MO} for the last Monday. Returns null if either the week
+     * ordinal or the weekday is missing.
+     */
+    private String formatNthWeekday(CalendarAppointment appointment) {
+        Integer week = appointment.getRecurrenceWeekOfMonth();
+        java.time.DayOfWeek day = appointment.getRecurrenceDayOfWeek();
+        if (week == null || day == null) {
+            return null;
+        }
+        return week + icsWeekdayCode(day);
+    }
+
+    /** Two-letter RRULE weekday code (MO, TU, … SU) for a java.time DayOfWeek. */
+    private String icsWeekdayCode(java.time.DayOfWeek day) {
+        return switch (day) {
+            case MONDAY -> "MO";
+            case TUESDAY -> "TU";
+            case WEDNESDAY -> "WE";
+            case THURSDAY -> "TH";
+            case FRIDAY -> "FR";
+            case SATURDAY -> "SA";
+            case SUNDAY -> "SU";
+        };
     }
 
     private String escapeIcsText(String text) {

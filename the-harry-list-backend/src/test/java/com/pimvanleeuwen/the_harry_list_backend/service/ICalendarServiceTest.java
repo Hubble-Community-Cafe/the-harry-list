@@ -294,6 +294,118 @@ class ICalendarServiceTest {
     }
 
     @Test
+    void generateCalendarFeed_shouldIncludeIntervalForEveryNWeeks() {
+        CalendarAppointment appointment = CalendarAppointment.builder()
+                .id(7L)
+                .title("Every Three Weeks")
+                .date(LocalDate.of(2026, 6, 1))
+                .allDay(false)
+                .startTime(LocalTime.of(9, 0))
+                .endTime(LocalTime.of(10, 0))
+                .location(BarLocation.HUBBLE)
+                .recurrenceType(RecurrenceType.WEEKLY)
+                .recurrenceInterval(3)
+                .enabled(true)
+                .build();
+        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
+
+        String ics = iCalendarService.generateCalendarFeed(null, null, false);
+
+        assertTrue(ics.contains("RRULE:FREQ=WEEKLY;INTERVAL=3"));
+    }
+
+    @Test
+    void generateCalendarFeed_shouldIncludeRruleForNthWeekdayOfMonth() {
+        CalendarAppointment appointment = CalendarAppointment.builder()
+                .id(8L)
+                .title("Second Friday Meetup")
+                .date(LocalDate.of(2026, 6, 12)) // a 2nd Friday
+                .allDay(false)
+                .startTime(LocalTime.of(18, 0))
+                .endTime(LocalTime.of(20, 0))
+                .location(BarLocation.HUBBLE)
+                .recurrenceType(RecurrenceType.MONTHLY_NTH_WEEKDAY)
+                .recurrenceWeekOfMonth(2)
+                .recurrenceDayOfWeek(java.time.DayOfWeek.FRIDAY)
+                .recurrenceEndDate(LocalDate.of(2026, 12, 31))
+                .enabled(true)
+                .build();
+        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
+
+        String ics = iCalendarService.generateCalendarFeed(null, null, false);
+
+        assertTrue(ics.contains("RRULE:FREQ=MONTHLY;BYDAY=2FR;UNTIL=20261231T235959"));
+    }
+
+    @Test
+    void generateCalendarFeed_shouldRenderLastWeekdayOfMonth() {
+        CalendarAppointment appointment = CalendarAppointment.builder()
+                .id(9L)
+                .title("Last Monday Cleanup")
+                .date(LocalDate.of(2026, 6, 29))
+                .allDay(true)
+                .location(BarLocation.METEOR)
+                .recurrenceType(RecurrenceType.MONTHLY_NTH_WEEKDAY)
+                .recurrenceWeekOfMonth(-1)
+                .recurrenceDayOfWeek(java.time.DayOfWeek.MONDAY)
+                .enabled(true)
+                .build();
+        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
+
+        String ics = iCalendarService.generateCalendarFeed(null, null, false);
+
+        assertTrue(ics.contains("RRULE:FREQ=MONTHLY;BYDAY=-1MO"));
+    }
+
+    @Test
+    void generateCalendarFeed_shouldHonourIntervalForNthWeekday() {
+        CalendarAppointment appointment = CalendarAppointment.builder()
+                .id(10L)
+                .title("Every Other Month, First Tuesday")
+                .date(LocalDate.of(2026, 6, 2))
+                .allDay(true)
+                .location(BarLocation.HUBBLE)
+                .recurrenceType(RecurrenceType.MONTHLY_NTH_WEEKDAY)
+                .recurrenceInterval(2)
+                .recurrenceWeekOfMonth(1)
+                .recurrenceDayOfWeek(java.time.DayOfWeek.TUESDAY)
+                .enabled(true)
+                .build();
+        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
+
+        String ics = iCalendarService.generateCalendarFeed(null, null, false);
+
+        assertTrue(ics.contains("RRULE:FREQ=MONTHLY;INTERVAL=2;BYDAY=1TU"));
+    }
+
+    @Test
+    void generateCalendarFeed_shouldOmitRruleForIncompleteNthWeekday() {
+        // Missing day-of-week => no valid BYDAY can be built; emit no RRULE rather than invalid iCal
+        CalendarAppointment appointment = CalendarAppointment.builder()
+                .id(11L)
+                .title("Incomplete Nth Weekday")
+                .date(LocalDate.of(2026, 6, 1))
+                .allDay(true)
+                .location(BarLocation.HUBBLE)
+                .recurrenceType(RecurrenceType.MONTHLY_NTH_WEEKDAY)
+                .recurrenceWeekOfMonth(2)
+                .enabled(true)
+                .build();
+        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
+
+        String ics = iCalendarService.generateCalendarFeed(null, null, false);
+
+        assertTrue(ics.contains("SUMMARY:Incomplete Nth Weekday"));
+        // VTIMEZONE legitimately contains RRULE lines, so assert no *event* monthly rule was emitted
+        assertFalse(ics.contains("RRULE:FREQ=MONTHLY"));
+    }
+
+    @Test
     void generateCalendarFeed_shouldExcludeDisabledAppointments() {
         // findByEnabledTrue() already filters, so an empty result means disabled ones are excluded
         when(reservationRepository.findAll()).thenReturn(Collections.emptyList());

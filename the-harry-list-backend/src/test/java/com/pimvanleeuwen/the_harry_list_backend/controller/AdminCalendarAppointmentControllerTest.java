@@ -155,6 +155,64 @@ class AdminCalendarAppointmentControllerTest {
 
     @Test
     @WithMockUser(roles = "EDITOR")
+    void create_nthWeekday_shouldPersistStructuredFields() throws Exception {
+        CalendarAppointment appointment = CalendarAppointment.builder()
+                .id(3L)
+                .title("Second Friday Meetup")
+                .date(LocalDate.of(2026, 6, 12))
+                .allDay(true)
+                .location(BarLocation.HUBBLE)
+                .recurrenceType(RecurrenceType.MONTHLY_NTH_WEEKDAY)
+                .recurrenceInterval(1)
+                .recurrenceWeekOfMonth(2)
+                .recurrenceDayOfWeek(java.time.DayOfWeek.FRIDAY)
+                .enabled(true)
+                .build();
+        when(repository.save(any())).thenReturn(appointment);
+
+        mockMvc.perform(post("/api/admin/calendar-appointments")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(appointment)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.recurrenceType").value("MONTHLY_NTH_WEEKDAY"))
+                .andExpect(jsonPath("$.recurrenceWeekOfMonth").value(2))
+                .andExpect(jsonPath("$.recurrenceDayOfWeek").value("FRIDAY"));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void update_shouldCopyStructuredRecurrenceFields() throws Exception {
+        CalendarAppointment existing = sampleAppointment();
+        when(repository.findById(1L)).thenReturn(Optional.of(existing));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        CalendarAppointment payload = CalendarAppointment.builder()
+                .id(1L)
+                .title("Updated Meetup")
+                .date(LocalDate.of(2026, 6, 12))
+                .allDay(true)
+                .location(BarLocation.HUBBLE)
+                .recurrenceType(RecurrenceType.MONTHLY_NTH_WEEKDAY)
+                .recurrenceInterval(2)
+                .recurrenceWeekOfMonth(-1)
+                .recurrenceDayOfWeek(java.time.DayOfWeek.MONDAY)
+                .enabled(true)
+                .build();
+
+        mockMvc.perform(put("/api/admin/calendar-appointments/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.recurrenceType").value("MONTHLY_NTH_WEEKDAY"))
+                .andExpect(jsonPath("$.recurrenceInterval").value(2))
+                .andExpect(jsonPath("$.recurrenceWeekOfMonth").value(-1))
+                .andExpect(jsonPath("$.recurrenceDayOfWeek").value("MONDAY"));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
     void toggle_shouldFlipEnabledState() throws Exception {
         CalendarAppointment appointment = sampleAppointment();
         appointment.setEnabled(true);
