@@ -5,7 +5,8 @@ import {
   ArrowLeft, Calendar, Clock, MapPin, Users, Mail, Phone,
   Building2, CreditCard, UtensilsCrossed, MessageSquare,
   CheckCircle, XCircle, Loader2, AlertCircle, Trash2,
-  Send, Edit, X, FileText, Paperclip, History, RotateCcw
+  Send, Edit, X, FileText, Paperclip, History, RotateCcw,
+  Home, Sun
 } from 'lucide-react';
 import {
   fetchReservation, updateReservationStatus, deleteReservation, updateReservation,
@@ -616,6 +617,18 @@ export function ReservationDetailPage() {
             <InfoRow icon={Calendar} label="Date" value={new Date(reservation.eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} />
             <InfoRow icon={Clock} label="Time" value={`${reservation.startTime.slice(0, 5)} - ${reservation.endTime.slice(0, 5)}`} />
             <InfoRow icon={MapPin} label="Location" value={reservation.location} />
+            {/* Inside/outside is set on booking and editable, but was previously only visible
+                in edit mode — surface it here so staff can see it at a glance. */}
+            {(reservation.seatingArea === 'INSIDE' || reservation.seatingArea === 'OUTSIDE') && (
+              <div className="flex items-start gap-3">
+                <div className="pl-7">
+                  <div className="text-xs text-dark-500">Seating Area</div>
+                  <div className="mt-1">
+                    <SeatingAreaBadge area={reservation.seatingArea} />
+                  </div>
+                </div>
+              </div>
+            )}
             <InfoRow icon={Users} label="Expected Guests" value={reservation.expectedGuests.toString()} />
             <div className="flex items-start gap-3">
               <div className="pl-7">
@@ -1266,6 +1279,26 @@ function InfoRow({ icon: Icon, label, value }: { icon?: typeof Users; label: str
         <div className="text-white">{value}</div>
       </div>
     </div>
+  );
+}
+
+// Surfaces the inside/outside seating area as a colored badge so staff can see it at a
+// glance, without having to open the editor.
+function SeatingAreaBadge({ area }: { area: string }) {
+  const isInside = area === 'INSIDE';
+  const Icon = isInside ? Home : Sun;
+  return (
+    <span
+      data-testid="seating-area-badge"
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
+        isInside
+          ? 'bg-green-500/20 text-green-400 border-green-500/30'
+          : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+      }`}
+    >
+      <Icon className="w-3 h-3" />
+      {isInside ? 'Inside' : 'Outside'}
+    </span>
   );
 }
 

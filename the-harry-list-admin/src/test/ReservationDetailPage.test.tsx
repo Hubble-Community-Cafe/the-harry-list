@@ -250,6 +250,39 @@ describe('ReservationDetailPage — reopen rejected reservation', () => {
   });
 });
 
+describe('ReservationDetailPage — seating area indicator', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('shows an "Inside" badge in read mode without opening the editor', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, seatingArea: 'INSIDE' });
+
+    renderPage();
+
+    const badge = await screen.findByTestId('seating-area-badge', {}, { timeout: 3000 });
+    expect(badge).toHaveTextContent('Inside');
+  });
+
+  it('shows an "Outside" badge in read mode', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, seatingArea: 'OUTSIDE' });
+
+    renderPage();
+
+    const badge = await screen.findByTestId('seating-area-badge', {}, { timeout: 3000 });
+    expect(badge).toHaveTextContent('Outside');
+  });
+
+  it('hides the badge when no seating area is stored', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, seatingArea: undefined });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Birthday Party')).toBeInTheDocument(), { timeout: 3000 });
+
+    expect(screen.queryByTestId('seating-area-badge')).not.toBeInTheDocument();
+  });
+});
+
 describe('ReservationDetailPage — edit email default', () => {
   beforeEach(() => {
     vi.clearAllMocks();
