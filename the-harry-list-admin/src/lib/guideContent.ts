@@ -176,6 +176,10 @@ You can combine the two toggles, e.g. **Confirmed only + Catering only** for a c
 
 The PDF will automatically download to your device.
 
+## Calendar Appointments
+
+If any **calendar appointments** (from the Calendar Appointments page, including recurring ones) fall on the selected date and location, they appear on a **leading page** before the reservations — so people without portal access still see them on the printout. Appointments are always included regardless of the **Confirmed only** / **Catering only** toggles, which only filter reservations.
+
 ## When to Use This
 
 - **Before opening** — print the day's reservation list for the bar
@@ -412,7 +416,7 @@ export const reservationDetailGuide: GuideSection[] = [
 ## Information Sections
 
 - **Contact Information** — name, email, phone number
-- **Event Details** — title, date, start/end time, location, guest count
+- **Event Details** — title, date, start/end time, location, seating area (Inside / Outside), guest count
 - **Activities** — selected special activities (catering, à la carte, etc.)
 - **Additional Notes** — any comments the customer added
 - **Payment** — payment option and invoice details (if applicable)
@@ -434,12 +438,16 @@ The available actions depend on the current status:
 - **Complete** — mark as completed after the event has taken place
 - **Cancel** — cancel the reservation (e.g. customer called to cancel)
 
+### Rejected Reservations
+- **Move back to Pending** — reopen a rejected reservation. Use this when the event is going ahead after all (e.g. a different date or location frees up) so you can edit the existing details instead of asking the customer to fill everything in again. The reservation returns to **Pending**, ready to confirm or reject. The customer email is **off** by default for this action — tick the box only if you want to let them know it's being reconsidered.
+- **Remove** — permanently delete the rejected reservation (with confirmation dialog)
+
 ### All Reservations
 - **Edit** — open the edit form to change any field
 - **Delete** — permanently remove (with confirmation dialog)
 
 ### Email Notifications
-Each status change dialog (and the edit form) has a **"Send email notification"** checkbox. For status changes it is **on** by default — uncheck it only if you've already communicated with the customer directly. For the **edit form** it is **off** by default, since most edits are internal tweaks; tick it when a change is worth notifying the customer about.
+Each status change dialog (and the edit form) has a **"Send email notification"** checkbox. For most status changes it is **on** by default — uncheck it only if you've already communicated with the customer directly. For the **edit form** and the **Move back to Pending** action it is **off** by default, since those are usually internal corrections; tick it when the change is worth notifying the customer about.
 
 ### Adding a Message to the Email
 When the email notification is on, every status dialog and the edit form shows an optional **"Add a message to the email"** box. Anything you type here appears as a highlighted note in that email — use it to clarify things the standard template doesn't cover, e.g. *"We read your special request and will keep a shaded spot for you."* For **Reject**, this box is pre-filled with a default reason that you can edit, replace, or clear before sending.`,

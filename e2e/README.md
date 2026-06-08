@@ -144,13 +144,17 @@ faster layers.
 | Form constraints (all types) | form tests | `ConstraintValidationServiceTest` | `public/constraints-blocking`, `public/constraints-dynamic`, `admin/constraints-roundtrip` |
 | Confirm a reservation (appears in admin) | `ReservationsPage`/detail tests | controller tests | `admin/reservation-lifecycle` #1 |
 | Edit / remove a reservation | `ReservationDetailPage` test | `Update`/`DeleteReservationServiceTest` | `admin/reservation-lifecycle` #2 |
+| Seating area (inside/outside) shown in detail (#292) | `ReservationDetailPage` test | — | `admin/reservation-lifecycle` #2 |
+| Reopen a rejected reservation to pending | `ReservationDetailPage` test | `AdminReservationControllerTest` | `admin/reservation-lifecycle` #3 |
 | Status-change email + custom message | — | `AdminReservationControllerTest` | `admin/status-email` |
 | Editable email templates | — | `EmailTemplateServiceTest` | `admin/email-template` |
 | RBAC (viewer/editor/admin) | `usePermissions` | filter tests | `admin/rbac` |
 | Audit log | `AuditDiff`/`AuditService` | controller tests | `admin/audit-log` |
 | Catering-only export (#280) | — | `PdfExportServiceTest` | `admin/catering-export` |
+| Appointments on the PDF export (#303) | — | `PdfExportServiceTest`, `AppointmentRecurrenceServiceTest` | `admin/appointments-export` |
 | Week overview | `WeekOverviewPage` test | — | `admin/week-overview` |
 | Calendar feeds (iCal) | — | `ICalendarServiceTest` | `public/calendar-feed` |
+| Recurring appointments (incl. "Nth weekday", #286) | `recurrence` + `CalendarAppointmentsPage` tests | `ICalendarServiceTest` | `admin/calendar-appointments` |
 | Mobile date/time fields (#253) | — | — | `mobile-public/datetime` |
 
 ## CI

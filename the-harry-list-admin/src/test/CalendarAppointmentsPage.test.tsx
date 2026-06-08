@@ -189,7 +189,7 @@ describe('CalendarAppointmentsPage', () => {
     expect(screen.queryByText('Recurrence End Date')).not.toBeInTheDocument();
 
     // Change recurrence to Weekly
-    const recurrenceSelect = screen.getByDisplayValue('None');
+    const recurrenceSelect = screen.getByDisplayValue('Does not repeat');
     fireEvent.change(recurrenceSelect, { target: { value: 'WEEKLY' } });
 
     expect(screen.getByText('Recurrence End Date')).toBeInTheDocument();
@@ -226,6 +226,86 @@ describe('CalendarAppointmentsPage', () => {
     await waitFor(() => {
       expect(mockDelete).toHaveBeenCalledWith(1);
     });
+  });
+
+  // ── Guided recurrence builder ───────────────────────────────────────────────
+
+  const dateInputs = () => Array.from(document.querySelectorAll('input[type="date"]')) as HTMLInputElement[];
+
+  const startNewAllDayAppointment = (title: string, date: string) => {
+    fireEvent.click(screen.getByText('Add Appointment'));
+    fireEvent.change(screen.getByPlaceholderText(/Staff Meeting/), { target: { value: title } });
+    fireEvent.change(dateInputs()[0], { target: { value: date } });
+    // all-day so we don't need start/end times to enable the submit button
+    fireEvent.click(screen.getByText('All-day event').previousElementSibling as HTMLElement);
+  };
+
+  it('saves an "every N weeks" interval', async () => {
+    mockCreate.mockResolvedValue({ id: 9, title: 'Sprint Sync', date: '2026-06-01', allDay: true, location: 'HUBBLE', recurrenceType: 'WEEKLY', recurrenceInterval: 3, enabled: true });
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Staff Meeting')).toBeInTheDocument());
+
+    startNewAllDayAppointment('Sprint Sync', '2026-06-01');
+    fireEvent.change(screen.getByDisplayValue('Does not repeat'), { target: { value: 'WEEKLY' } });
+    fireEvent.change(screen.getByLabelText('Repeat interval'), { target: { value: '3' } });
+    fireEvent.click(screen.getByText('Create Appointment'));
+
+    await waitFor(() => expect(mockCreate).toHaveBeenCalled());
+    const payload = mockCreate.mock.calls[0][0];
+    expect(payload.recurrenceType).toBe('WEEKLY');
+    expect(payload.recurrenceInterval).toBe(3);
+  });
+
+  it('saves a "monthly on the Nth weekday" pattern', async () => {
+    mockCreate.mockResolvedValue({ id: 10, title: '2nd Friday Drinks', date: '2026-06-12', allDay: true, location: 'HUBBLE', recurrenceType: 'MONTHLY_NTH_WEEKDAY', recurrenceWeekOfMonth: 2, recurrenceDayOfWeek: 'FRIDAY', enabled: true });
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Staff Meeting')).toBeInTheDocument());
+
+    startNewAllDayAppointment('2nd Friday Drinks', '2026-06-12');
+    fireEvent.change(screen.getByDisplayValue('Does not repeat'), { target: { value: 'MONTHLY' } });
+
+    // Switch to the "on the Nth weekday" mode
+    const radios = screen.getAllByRole('radio');
+    fireEvent.click(radios[1]);
+    fireEvent.change(screen.getByLabelText('Week of month'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Day of week'), { target: { value: 'FRIDAY' } });
+
+    fireEvent.click(screen.getByText('Create Appointment'));
+
+    await waitFor(() => expect(mockCreate).toHaveBeenCalled());
+    const payload = mockCreate.mock.calls[0][0];
+    expect(payload.recurrenceType).toBe('MONTHLY_NTH_WEEKDAY');
+    expect(payload.recurrenceWeekOfMonth).toBe(2);
+    expect(payload.recurrenceDayOfWeek).toBe('FRIDAY');
+  });
+
+  it('renders a descriptive badge for nth-weekday recurrence', async () => {
+    mockFetch.mockResolvedValue([
+      { id: 7, title: 'Board Meeting', date: '2026-06-12', allDay: true, location: 'HUBBLE', recurrenceType: 'MONTHLY_NTH_WEEKDAY', recurrenceWeekOfMonth: 2, recurrenceDayOfWeek: 'FRIDAY', enabled: true },
+    ]);
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Board Meeting')).toBeInTheDocument());
+    expect(screen.getByText('Every 2nd Friday')).toBeInTheDocument();
+  });
+
+  it('edits a Weekly appointment to "every 2 weeks" and saves the interval', async () => {
+    mockFetch.mockResolvedValue([
+      { id: 8, title: 'Fortnightly Sync', date: '2026-06-01', allDay: true, location: 'HUBBLE', recurrenceType: 'WEEKLY', recurrenceInterval: 1, enabled: true },
+    ]);
+    mockUpdate.mockResolvedValue({ id: 8, title: 'Fortnightly Sync', date: '2026-06-01', allDay: true, location: 'HUBBLE', recurrenceType: 'WEEKLY', recurrenceInterval: 2, enabled: true });
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Fortnightly Sync')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByTitle('Edit'));
+    expect(screen.getByDisplayValue('Weekly')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Repeat interval'), { target: { value: '2' } });
+
+    fireEvent.click(screen.getByText('Save Changes'));
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
+    const [id, payload] = mockUpdate.mock.calls[0];
+    expect(id).toBe(8);
+    expect(payload.recurrenceType).toBe('WEEKLY');
+    expect(payload.recurrenceInterval).toBe(2);
   });
 });
 

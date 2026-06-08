@@ -5,7 +5,8 @@ import {
   ArrowLeft, Calendar, Clock, MapPin, Users, Mail, Phone,
   Building2, CreditCard, UtensilsCrossed, MessageSquare,
   CheckCircle, XCircle, Loader2, AlertCircle, Trash2,
-  Send, Edit, X, FileText, Paperclip, History
+  Send, Edit, X, FileText, Paperclip, History, RotateCcw,
+  Home, Sun
 } from 'lucide-react';
 import {
   fetchReservation, updateReservationStatus, deleteReservation, updateReservation,
@@ -67,6 +68,7 @@ export function ReservationDetailPage() {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showReopenDialog, setShowReopenDialog] = useState(false);
   const [sendEmail, setSendEmail] = useState(true);
   // Optional free-text message added to the status-change email (pre-filled for rejections).
   const [actionMessage, setActionMessage] = useState('');
@@ -325,7 +327,7 @@ export function ReservationDetailPage() {
             Edit Details
           </button>
 
-          {hasCateringActivity && (
+          {hasCateringActivity && reservation.status !== 'REJECTED' && (
             <button
               onClick={openCateringEmailDialog}
               disabled={isUpdating}
@@ -379,6 +381,21 @@ export function ReservationDetailPage() {
             >
               <XCircle className="w-4 h-4" />
               Cancel
+            </button>
+          )}
+
+          {/* A rejected event is often only rejected because the date or location needs to
+              change. Reopening it puts it back to PENDING so staff can edit the existing
+              details instead of asking the customer to submit everything again. */}
+          {reservation.status === 'REJECTED' && (
+            <button
+              onClick={() => { setActionMessage(''); setSendEmail(false); setShowReopenDialog(true); }}
+              data-testid="reopen-reservation"
+              disabled={isUpdating}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Move back to Pending
             </button>
           )}
 
@@ -528,6 +545,38 @@ export function ReservationDetailPage() {
             </div>
           </div>
         )}
+
+        {/* Reopen (Reject -> Pending) Dialog */}
+        {showReopenDialog && (
+          <div className="mt-4 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/50">
+            <p className="text-yellow-400 mb-3">
+              Move this rejected reservation back to <strong>Pending</strong>? You'll be able to
+              edit the date, location and other details, then confirm or reject it again.
+              {sendEmail && ' A status-update email will be sent to the customer.'}
+            </p>
+            <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
+            <div className="flex gap-3 mt-3">
+              <button
+                onClick={() => {
+                  handleStatusChange('PENDING');
+                  setShowReopenDialog(false);
+                }}
+                data-testid="reopen-dialog-submit"
+                disabled={isUpdating}
+                className="px-4 py-2 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 transition-colors flex items-center gap-2"
+              >
+                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+                Yes, Move to Pending
+              </button>
+              <button
+                onClick={() => setShowReopenDialog(false)}
+                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+              >
+                Go Back
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       )}
 
@@ -568,6 +617,18 @@ export function ReservationDetailPage() {
             <InfoRow icon={Calendar} label="Date" value={new Date(reservation.eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} />
             <InfoRow icon={Clock} label="Time" value={`${reservation.startTime.slice(0, 5)} - ${reservation.endTime.slice(0, 5)}`} />
             <InfoRow icon={MapPin} label="Location" value={reservation.location} />
+            {/* Inside/outside is set on booking and editable, but was previously only visible
+                in edit mode — surface it here so staff can see it at a glance. */}
+            {(reservation.seatingArea === 'INSIDE' || reservation.seatingArea === 'OUTSIDE') && (
+              <div className="flex items-start gap-3">
+                <div className="pl-7">
+                  <div className="text-xs text-dark-500">Seating Area</div>
+                  <div className="mt-1">
+                    <SeatingAreaBadge area={reservation.seatingArea} />
+                  </div>
+                </div>
+              </div>
+            )}
             <InfoRow icon={Users} label="Expected Guests" value={reservation.expectedGuests.toString()} />
             <div className="flex items-start gap-3">
               <div className="pl-7">
@@ -1218,6 +1279,26 @@ function InfoRow({ icon: Icon, label, value }: { icon?: typeof Users; label: str
         <div className="text-white">{value}</div>
       </div>
     </div>
+  );
+}
+
+// Surfaces the inside/outside seating area as a colored badge so staff can see it at a
+// glance, without having to open the editor.
+function SeatingAreaBadge({ area }: { area: string }) {
+  const isInside = area === 'INSIDE';
+  const Icon = isInside ? Home : Sun;
+  return (
+    <span
+      data-testid="seating-area-badge"
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
+        isInside
+          ? 'bg-green-500/20 text-green-400 border-green-500/30'
+          : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+      }`}
+    >
+      <Icon className="w-3 h-3" />
+      {isInside ? 'Inside' : 'Outside'}
+    </span>
   );
 }
 

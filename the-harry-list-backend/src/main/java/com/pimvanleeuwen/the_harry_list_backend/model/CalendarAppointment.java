@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -53,6 +54,27 @@ public class CalendarAppointment {
     @Column(name = "recurrence_type", length = 20, nullable = false)
     @Builder.Default
     private RecurrenceType recurrenceType = RecurrenceType.NONE;
+
+    /**
+     * "Every N" multiplier for the recurrence (RRULE INTERVAL). Null or 1 means every period.
+     * Applies to DAILY/WEEKLY/MONTHLY/YEARLY/MONTHLY_NTH_WEEKDAY.
+     */
+    @Column(name = "recurrence_interval")
+    private Integer recurrenceInterval;
+
+    /**
+     * Which week of the month for {@link RecurrenceType#MONTHLY_NTH_WEEKDAY}:
+     * 1–4 for first–fourth, or -1 for the last occurrence (RRULE BYSETPOS/BYDAY ordinal).
+     */
+    @Column(name = "recurrence_week_of_month")
+    private Integer recurrenceWeekOfMonth;
+
+    /**
+     * Which weekday for {@link RecurrenceType#MONTHLY_NTH_WEEKDAY}, e.g. FRIDAY for "2nd Friday".
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "recurrence_day_of_week", length = 10)
+    private DayOfWeek recurrenceDayOfWeek;
 
     @Column(name = "recurrence_end_date")
     private LocalDate recurrenceEndDate;

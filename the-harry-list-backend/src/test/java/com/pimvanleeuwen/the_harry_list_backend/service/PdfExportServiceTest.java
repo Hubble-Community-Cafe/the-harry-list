@@ -1,16 +1,18 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
-import org.openpdf.text.DocumentException;
 import org.openpdf.text.pdf.PdfReader;
 import org.openpdf.text.pdf.parser.PdfTextExtractor;
 import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
+import com.pimvanleeuwen.the_harry_list_backend.model.CalendarAppointment;
+import com.pimvanleeuwen.the_harry_list_backend.model.RecurrenceType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.model.SpecialActivity;
+import com.pimvanleeuwen.the_harry_list_backend.repository.CalendarAppointmentRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 /**
@@ -33,10 +36,23 @@ class PdfExportServiceTest {
     @Mock
     private ReservationRepository reservationRepository;
 
-    @InjectMocks
+    @Mock
+    private CalendarAppointmentRepository calendarAppointmentRepository;
+
     private PdfExportService pdfExportService;
 
     private static final LocalDate REPORT_DATE = LocalDate.of(2026, 2, 15);
+
+    @BeforeEach
+    void setUp() {
+        // Uses the real recurrence resolver — its behaviour is covered by its own unit test.
+        pdfExportService = new PdfExportService(
+                reservationRepository,
+                calendarAppointmentRepository,
+                new AppointmentRecurrenceService());
+        // Most reservation-focused tests have no appointments; appointment tests override this.
+        lenient().when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of());
+    }
 
     @Test
     void generateDailyReport_cateringOnly_includesOnlyCateringReservations() throws Exception {
@@ -135,7 +151,122 @@ class PdfExportServiceTest {
         assertFalse(text.contains("Plain Drinks"));
     }
 
+    // --- appointment rendering ---
+
+    @Test
+    void generateDailyReport_includesAppointmentsForTheDateAndLocation() throws Exception {
+        // Given: a reservation and an appointment on the report date/location
+        Reservation res = reservation("Evening Drinks", LocalTime.of(20, 0),
+                ReservationStatus.CONFIRMED, Set.of(SpecialActivity.PRIVATE_EVENT));
+        when(reservationRepository.findAll()).thenReturn(List.of(res));
+        CalendarAppointment appt = appointment("Staff Meeting", "Discuss the roster",
+                LocalTime.of(9, 0), LocalTime.of(10, 0), BarLocation.HUBBLE);
+        when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appt));
+
+        // When
+        byte[] pdf = pdfExportService.generateDailyReport(REPORT_DATE, BarLocation.HUBBLE, false, false);
+
+        // Then: the appointments page lists the appointment, and the reservation still appears
+        String text = extractText(pdf);
+        assertTrue(text.contains("Appointments for"), "Appointments section heading should appear");
+        assertTrue(text.contains("Staff Meeting"));
+        assertTrue(text.contains("Discuss the roster"));
+        assertTrue(text.contains("09:00 - 10:00"));
+        assertTrue(text.contains("Evening Drinks"));
+    }
+
+    @Test
+    void generateDailyReport_excludesAppointmentsForOtherLocations() throws Exception {
+        when(reservationRepository.findAll()).thenReturn(List.of());
+        CalendarAppointment meteorAppt = appointment("Meteor Only", null,
+                LocalTime.of(9, 0), LocalTime.of(10, 0), BarLocation.METEOR);
+        when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(meteorAppt));
+
+        // When: exporting the HUBBLE report
+        byte[] pdf = pdfExportService.generateDailyReport(REPORT_DATE, BarLocation.HUBBLE, false, false);
+
+        // Then: the Meteor appointment is not shown and no appointments heading appears
+        String text = extractText(pdf);
+        assertFalse(text.contains("Meteor Only"));
+        assertFalse(text.contains("Appointments for"));
+    }
+
+    @Test
+    void generateDailyReport_excludesAppointmentsNotOccurringOnTheDate() throws Exception {
+        when(reservationRepository.findAll()).thenReturn(List.of());
+        // A one-off appointment on a different day
+        CalendarAppointment otherDay = appointment("Other Day", null,
+                LocalTime.of(9, 0), LocalTime.of(10, 0), BarLocation.HUBBLE);
+        otherDay.setDate(REPORT_DATE.plusDays(1));
+        when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(otherDay));
+
+        byte[] pdf = pdfExportService.generateDailyReport(REPORT_DATE, BarLocation.HUBBLE, false, false);
+
+        String text = extractText(pdf);
+        assertFalse(text.contains("Other Day"));
+    }
+
+    @Test
+    void generateDailyReport_includesRecurringAppointmentOnAnOccurrence() throws Exception {
+        when(reservationRepository.findAll()).thenReturn(List.of());
+        // Weekly appointment starting two weeks before the report date — should recur onto it
+        CalendarAppointment weekly = appointment("Weekly Standup", null,
+                LocalTime.of(9, 0), LocalTime.of(9, 30), BarLocation.HUBBLE);
+        weekly.setDate(REPORT_DATE.minusWeeks(2));
+        weekly.setRecurrenceType(RecurrenceType.WEEKLY);
+        when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(weekly));
+
+        byte[] pdf = pdfExportService.generateDailyReport(REPORT_DATE, BarLocation.HUBBLE, false, false);
+
+        String text = extractText(pdf);
+        assertTrue(text.contains("Weekly Standup"));
+    }
+
+    @Test
+    void generateDailyReport_showsAppointmentsEvenWithConfirmedAndCateringOnlyFilters() throws Exception {
+        // Given: no reservations match, but an appointment exists. The filters only apply to
+        // reservations, so the appointment must still appear.
+        when(reservationRepository.findAll()).thenReturn(List.of());
+        CalendarAppointment appt = appointment("Always Visible", null,
+                LocalTime.of(8, 0), null, BarLocation.HUBBLE);
+        when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appt));
+
+        byte[] pdf = pdfExportService.generateDailyReport(REPORT_DATE, BarLocation.HUBBLE, true, true);
+
+        String text = extractText(pdf);
+        assertTrue(text.contains("Always Visible"));
+    }
+
+    @Test
+    void generateDailyReport_rendersAllDayAppointmentTime() throws Exception {
+        when(reservationRepository.findAll()).thenReturn(List.of());
+        CalendarAppointment allDay = appointment("Closed for Holiday", null, null, null, BarLocation.HUBBLE);
+        allDay.setAllDay(true);
+        when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(allDay));
+
+        byte[] pdf = pdfExportService.generateDailyReport(REPORT_DATE, BarLocation.HUBBLE, false, false);
+
+        String text = extractText(pdf);
+        assertTrue(text.contains("Closed for Holiday"));
+        assertTrue(text.contains("All day"));
+    }
+
     // --- helpers ---
+
+    private CalendarAppointment appointment(String title, String description, LocalTime start,
+                                            LocalTime end, BarLocation location) {
+        return CalendarAppointment.builder()
+                .title(title)
+                .description(description)
+                .date(REPORT_DATE)
+                .startTime(start)
+                .endTime(end)
+                .allDay(false)
+                .location(location)
+                .recurrenceType(RecurrenceType.NONE)
+                .enabled(true)
+                .build();
+    }
 
     private Reservation reservation(String title, LocalTime start, ReservationStatus status,
                                     Set<SpecialActivity> activities) {

@@ -95,6 +95,32 @@ export async function seedReservation(
   return res.json();
 }
 
+export interface SeedAppointment {
+  title: string;
+  description?: string;
+  date: string;            // yyyy-mm-dd
+  allDay?: boolean;
+  startTime?: string;      // HH:mm (omit for all-day)
+  endTime?: string;        // HH:mm (omit for all-day)
+  location: string;        // 'HUBBLE' | 'METEOR'
+  recurrenceType?: string; // defaults to NONE
+  recurrenceInterval?: number;
+  recurrenceWeekOfMonth?: number;
+  recurrenceDayOfWeek?: string;
+  recurrenceEndDate?: string;
+  enabled?: boolean;
+}
+
+/** Seed a calendar appointment directly; returns the saved row (with its id). */
+export async function seedAppointment(
+  request: APIRequestContext,
+  appointment: SeedAppointment
+): Promise<{ id: number }> {
+  const res = await request.post(`${BACKEND_URL}/test/appointments`, { data: appointment });
+  if (!res.ok()) throw new Error(`/test/appointments failed: ${res.status()}`);
+  return res.json();
+}
+
 /** Auth headers for calling /api/admin/* as a seeded user in e2e (see E2eSecurityConfig). */
 export function adminAuthHeaders(oid: string): Record<string, string> {
   return { 'X-Test-Oid': oid };

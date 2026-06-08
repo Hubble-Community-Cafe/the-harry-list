@@ -81,6 +81,10 @@ test.describe('admin: reservation lifecycle', () => {
     await row.click();
     await expect(page.getByTestId('reservation-status')).toContainText('PENDING');
 
+    // The inside/outside seating area is visible in read mode (#292) — staff no longer
+    // have to open the editor to find out where the reservation is seated.
+    await expect(page.getByTestId('seating-area-badge')).toContainText('Inside');
+
     // Edit the guest count.
     await page.getByTestId('edit-reservation').click();
     // The "send update email" notification defaults to OFF — editing should be silent
@@ -107,5 +111,44 @@ test.describe('admin: reservation lifecycle', () => {
     await expect(page).toHaveURL(/\/reservations$/);
     await expect(page.getByTestId('reservation-row').filter({ hasText: 'Editable Booking' })).toHaveCount(0);
     await captureScreenshot(testInfo, page, '2-removed');
+  });
+
+  test('a rejected reservation can be moved back to pending and confirmed', async ({ page, request }, testInfo) => {
+    // A rejected event whose date/location changed — staff reopen it rather than
+    // asking the customer to re-submit everything.
+    await seedReservation(request, {
+      contactName: 'Reopen Guest',
+      email: 'reopen.guest@example.com',
+      eventTitle: 'Reopenable Booking',
+      description: 'Rejected, then revived',
+      eventDate: '2030-12-05',
+      startTime: '18:00',
+      endTime: '20:00',
+      expectedGuests: 20,
+      location: 'HUBBLE',
+      seatingArea: 'INSIDE',
+      paymentOption: 'INDIVIDUAL',
+      status: 'REJECTED',
+    });
+
+    await page.goto('/reservations');
+    await page.getByPlaceholder(/Search by name/).fill('Reopenable Booking');
+    const row = page.getByTestId('reservation-row').filter({ hasText: 'Reopenable Booking' });
+    await expect(row).toHaveCount(1);
+    await row.click();
+    await expect(page.getByTestId('reservation-status')).toContainText('REJECTED');
+    await captureScreenshot(testInfo, page, '1-rejected');
+
+    // Move it back to pending (email stays off — internal correction).
+    await page.getByTestId('reopen-reservation').click();
+    await page.getByTestId('reopen-dialog-submit').click();
+    await expect(page.getByTestId('reservation-status')).toContainText('PENDING');
+    await captureScreenshot(testInfo, page, '2-back-to-pending');
+
+    // Now pending, it offers confirm/reject again and can be confirmed straight away.
+    await page.getByTestId('confirm-reservation').click();
+    await page.getByTestId('confirm-dialog-submit').click();
+    await expect(page.getByTestId('reservation-status')).toContainText('CONFIRMED');
+    await captureScreenshot(testInfo, page, '3-confirmed-after-reopen');
   });
 });
