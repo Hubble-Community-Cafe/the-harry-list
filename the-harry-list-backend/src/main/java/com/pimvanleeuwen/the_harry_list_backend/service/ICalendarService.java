@@ -264,9 +264,7 @@ public class ICalendarService {
         }
 
         // Catering
-        boolean hasCateringActivity = activities != null && activities.stream()
-                .anyMatch(a -> a == SpecialActivity.EAT_A_LA_CARTE || a == SpecialActivity.EAT_CATERING || a == SpecialActivity.CATERING_CORONA_ROOM);
-        if (hasCateringActivity) {
+        if (reservation.hasCateringActivity()) {
             sb.append("\nCatering Arranged: ").append(reservation.isCateringArranged() ? "Yes ✓" : "Not yet").append("\n");
         }
         if (reservation.getCateringDietaryNotes() != null && !reservation.getCateringDietaryNotes().isEmpty()) {

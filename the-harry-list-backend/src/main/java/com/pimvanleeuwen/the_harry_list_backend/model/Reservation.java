@@ -215,6 +215,23 @@ public class Reservation {
         updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * Whether this reservation includes catering, i.e. it has one of the
+     * catering-related special activities ({@link SpecialActivity#EAT_A_LA_CARTE},
+     * {@link SpecialActivity#EAT_CATERING} or {@link SpecialActivity#CATERING_CORONA_ROOM}).
+     *
+     * <p>This is the single source of truth for "is this a catering event?" and is
+     * shared by the PDF day-report export, the ICS calendar feeds and the staff
+     * feed description. Note it reflects the <em>requested</em> activities, not the
+     * {@link #cateringArranged} follow-up flag.
+     */
+    public boolean hasCateringActivity() {
+        return specialActivities != null && specialActivities.stream()
+                .anyMatch(a -> a == SpecialActivity.EAT_A_LA_CARTE
+                        || a == SpecialActivity.EAT_CATERING
+                        || a == SpecialActivity.CATERING_CORONA_ROOM);
+    }
+
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /**
