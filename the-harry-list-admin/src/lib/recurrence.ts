@@ -88,6 +88,18 @@ export function nthWeekdayOfMonth(
   return result.getMonth() === monthIndex ? result : null;
 }
 
+/**
+ * Derives a sensible "Nth weekday" default from a concrete date, e.g. 2026-06-12
+ * (the 2nd Friday) → { week: 2, day: 'FRIDAY' }. A 5th occurrence collapses to
+ * "last" (-1). Used to pre-fill the guided builder when switching to that mode.
+ */
+export function nthWeekdayFromDate(dateStr: string): { week: number; day: DayOfWeek } {
+  const d = parseDate(dateStr);
+  const week = Math.ceil(d.getDate() / 7);
+  const day = WEEKDAYS.find(w => w.jsDay === d.getDay())!.value;
+  return { week: week > 4 ? -1 : week, day };
+}
+
 /** Resolves the effective "every N" interval, defaulting to 1. */
 export function effectiveInterval(appointment: CalendarAppointment): number {
   const i = appointment.recurrenceInterval;

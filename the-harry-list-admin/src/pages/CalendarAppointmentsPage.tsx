@@ -7,26 +7,46 @@ import {
   fetchCalendarAppointments, createCalendarAppointment, updateCalendarAppointment,
   toggleCalendarAppointment, deleteCalendarAppointment,
 } from '../lib/api';
-import type { CalendarAppointment, RecurrenceType } from '../types/reservation';
+import type { CalendarAppointment, RecurrenceType, DayOfWeek } from '../types/reservation';
 import { usePermissions } from '../lib/usePermissions';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import {
+  FREQUENCY_OPTIONS, WEEK_OF_MONTH_OPTIONS, WEEKDAYS,
+  recurrenceSummary, nthWeekdayFromDate,
+} from '../lib/recurrence';
 
-const RECURRENCE_OPTIONS: { value: RecurrenceType; label: string }[] = [
-  { value: 'NONE', label: 'None' },
-  { value: 'DAILY', label: 'Daily' },
-  { value: 'WEEKLY', label: 'Weekly' },
-  { value: 'BIWEEKLY', label: 'Bi-weekly' },
-  { value: 'MONTHLY', label: 'Monthly' },
-  { value: 'YEARLY', label: 'Yearly' },
-];
+/** The frequency family shown in the builder (BIWEEKLY/nth-weekday are derived detail). */
+type Frequency = 'NONE' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
 
-const RECURRENCE_LABELS: Record<string, string> = {
-  DAILY: 'Daily',
-  WEEKLY: 'Weekly',
-  BIWEEKLY: 'Bi-weekly',
-  MONTHLY: 'Monthly',
-  YEARLY: 'Yearly',
-};
+/** Maps a stored recurrence type to the frequency option the builder displays. */
+function frequencyOf(type: RecurrenceType): Frequency {
+  switch (type) {
+    case 'DAILY': return 'DAILY';
+    case 'WEEKLY':
+    case 'BIWEEKLY': return 'WEEKLY';
+    case 'MONTHLY':
+    case 'MONTHLY_NTH_WEEKDAY': return 'MONTHLY';
+    case 'YEARLY': return 'YEARLY';
+    default: return 'NONE';
+  }
+}
+
+/** Singular noun for the interval unit of a frequency. */
+function unitNoun(freq: Frequency): string {
+  return FREQUENCY_OPTIONS.find(o => o.value === freq)?.unitLabel ?? '';
+}
+
+/**
+ * Normalizes an appointment for editing in the guided builder. Legacy BIWEEKLY
+ * records are presented as "Weekly, every 2 weeks" — an equivalent representation
+ * that round-trips to the same RRULE — and the interval defaults to 1.
+ */
+function normalizeForEditing(a: CalendarAppointment): CalendarAppointment {
+  if (a.recurrenceType === 'BIWEEKLY') {
+    return { ...a, recurrenceType: 'WEEKLY', recurrenceInterval: 2 };
+  }
+  return { ...a, recurrenceInterval: a.recurrenceInterval ?? 1 };
+}
 
 const emptyAppointment: CalendarAppointment = {
   title: '',
@@ -37,6 +57,7 @@ const emptyAppointment: CalendarAppointment = {
   endTime: '',
   location: 'HUBBLE',
   recurrenceType: 'NONE',
+  recurrenceInterval: 1,
   recurrenceEndDate: '',
   enabled: true,
 };
@@ -63,13 +84,20 @@ export function CalendarAppointmentsPage() {
     setSaving(true);
     setError(null);
 
-    // Clean empty strings to null for optional fields
+    const isRecurring = editing.recurrenceType !== 'NONE';
+    const isNthWeekday = editing.recurrenceType === 'MONTHLY_NTH_WEEKDAY';
+
+    // Clean empty strings to null and drop recurrence detail that doesn't apply
+    // to the selected pattern, so the payload stays consistent.
     const cleaned = {
       ...editing,
       description: editing.description || undefined,
       startTime: editing.allDay ? undefined : editing.startTime || undefined,
       endTime: editing.allDay ? undefined : editing.endTime || undefined,
-      recurrenceEndDate: editing.recurrenceType === 'NONE' ? undefined : editing.recurrenceEndDate || undefined,
+      recurrenceInterval: isRecurring ? (editing.recurrenceInterval ?? 1) : undefined,
+      recurrenceWeekOfMonth: isNthWeekday ? editing.recurrenceWeekOfMonth : undefined,
+      recurrenceDayOfWeek: isNthWeekday ? editing.recurrenceDayOfWeek : undefined,
+      recurrenceEndDate: isRecurring ? editing.recurrenceEndDate || undefined : undefined,
     };
 
     try {
@@ -108,6 +136,37 @@ export function CalendarAppointmentsPage() {
       setError(err instanceof Error ? err.message : 'Failed to delete appointment');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  // Switch the recurrence frequency, mapping it to a concrete stored type and
+  // preserving the nth-weekday sub-mode when staying on Monthly.
+  const handleFrequencyChange = (freq: Frequency) => {
+    if (!editing) return;
+    let recurrenceType: RecurrenceType = freq;
+    if (freq === 'MONTHLY' && editing.recurrenceType === 'MONTHLY_NTH_WEEKDAY') {
+      recurrenceType = 'MONTHLY_NTH_WEEKDAY';
+    }
+    setEditing({
+      ...editing,
+      recurrenceType,
+      recurrenceInterval: freq === 'NONE' ? undefined : editing.recurrenceInterval ?? 1,
+    });
+  };
+
+  // Toggle between "on day N of the month" and "on the Nth weekday".
+  const setMonthlyMode = (mode: 'dayOfMonth' | 'nthWeekday') => {
+    if (!editing) return;
+    if (mode === 'dayOfMonth') {
+      setEditing({ ...editing, recurrenceType: 'MONTHLY', recurrenceWeekOfMonth: undefined, recurrenceDayOfWeek: undefined });
+    } else {
+      const def = editing.date ? nthWeekdayFromDate(editing.date) : { week: 1, day: 'MONDAY' as DayOfWeek };
+      setEditing({
+        ...editing,
+        recurrenceType: 'MONTHLY_NTH_WEEKDAY',
+        recurrenceWeekOfMonth: editing.recurrenceWeekOfMonth ?? def.week,
+        recurrenceDayOfWeek: editing.recurrenceDayOfWeek ?? def.day,
+      });
     }
   };
 
@@ -191,7 +250,7 @@ export function CalendarAppointmentsPage() {
                   {appointment.recurrenceType !== 'NONE' && (
                     <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 flex items-center gap-1">
                       <Repeat className="w-3 h-3" />
-                      {RECURRENCE_LABELS[appointment.recurrenceType] || appointment.recurrenceType}
+                      {recurrenceSummary(appointment)}
                     </span>
                   )}
                 </div>
@@ -208,7 +267,7 @@ export function CalendarAppointmentsPage() {
               {canManageAppointments && (
               <div className="flex items-center gap-2 shrink-0">
                 <button
-                  onClick={() => setEditing({ ...appointment })}
+                  onClick={() => setEditing(normalizeForEditing(appointment))}
                   className="p-1.5 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800"
                   title="Edit"
                 >
@@ -339,32 +398,112 @@ export function CalendarAppointmentsPage() {
                 </select>
               </div>
 
-              {/* Recurrence */}
+              {/* Recurrence — guided builder */}
               <div>
                 <label className="label">Recurrence</label>
                 <select
-                  value={editing.recurrenceType}
-                  onChange={e => setEditing({ ...editing, recurrenceType: e.target.value as RecurrenceType })}
+                  value={frequencyOf(editing.recurrenceType)}
+                  onChange={e => handleFrequencyChange(e.target.value as Frequency)}
                   className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
                 >
-                  {RECURRENCE_OPTIONS.map(opt => (
+                  {FREQUENCY_OPTIONS.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Recurrence end date (shown when recurrence != NONE) */}
               {editing.recurrenceType !== 'NONE' && (
-                <div>
-                  <label className="label">Recurrence End Date</label>
-                  <input
-                    type="date"
-                    value={editing.recurrenceEndDate || ''}
-                    onChange={e => setEditing({ ...editing, recurrenceEndDate: e.target.value })}
-                    className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
-                  />
-                  <p className="text-xs text-dark-500 mt-1">Leave empty for indefinite recurrence</p>
-                </div>
+                <>
+                  {/* Interval — "repeat every N units" */}
+                  <div className="flex items-end gap-2">
+                    <div>
+                      <label className="label">Repeat every</label>
+                      <input
+                        type="number"
+                        min={1}
+                        aria-label="Repeat interval"
+                        value={editing.recurrenceInterval ?? 1}
+                        onChange={e => setEditing({
+                          ...editing,
+                          recurrenceInterval: Math.max(1, parseInt(e.target.value, 10) || 1),
+                        })}
+                        className="w-20 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      />
+                    </div>
+                    <span className="text-sm text-dark-300 pb-2">
+                      {unitNoun(frequencyOf(editing.recurrenceType))}
+                      {(editing.recurrenceInterval ?? 1) > 1 ? 's' : ''}
+                    </span>
+                  </div>
+
+                  {/* Monthly pattern: day-of-month vs Nth weekday */}
+                  {frequencyOf(editing.recurrenceType) === 'MONTHLY' && (
+                    <div className="space-y-2">
+                      <label className="label">Monthly pattern</label>
+                      <label className="flex items-center gap-2 text-sm text-dark-300">
+                        <input
+                          type="radio"
+                          name="monthlyMode"
+                          checked={editing.recurrenceType === 'MONTHLY'}
+                          onChange={() => setMonthlyMode('dayOfMonth')}
+                        />
+                        On day {editing.date ? new Date(editing.date + 'T00:00:00').getDate() : '—'} of the month
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-dark-300 flex-wrap">
+                        <input
+                          type="radio"
+                          name="monthlyMode"
+                          checked={editing.recurrenceType === 'MONTHLY_NTH_WEEKDAY'}
+                          onChange={() => setMonthlyMode('nthWeekday')}
+                        />
+                        On the
+                        <select
+                          aria-label="Week of month"
+                          value={editing.recurrenceWeekOfMonth ?? 1}
+                          onChange={e => setEditing({
+                            ...editing,
+                            recurrenceType: 'MONTHLY_NTH_WEEKDAY',
+                            recurrenceWeekOfMonth: parseInt(e.target.value, 10),
+                            recurrenceDayOfWeek: editing.recurrenceDayOfWeek
+                              ?? (editing.date ? nthWeekdayFromDate(editing.date).day : 'MONDAY'),
+                          })}
+                          className="bg-dark-800 border border-dark-700 rounded-lg px-2 py-1 text-white text-sm"
+                        >
+                          {WEEK_OF_MONTH_OPTIONS.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                        <select
+                          aria-label="Day of week"
+                          value={editing.recurrenceDayOfWeek ?? 'MONDAY'}
+                          onChange={e => setEditing({
+                            ...editing,
+                            recurrenceType: 'MONTHLY_NTH_WEEKDAY',
+                            recurrenceWeekOfMonth: editing.recurrenceWeekOfMonth ?? 1,
+                            recurrenceDayOfWeek: e.target.value as DayOfWeek,
+                          })}
+                          className="bg-dark-800 border border-dark-700 rounded-lg px-2 py-1 text-white text-sm"
+                        >
+                          {WEEKDAYS.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Recurrence end date */}
+                  <div>
+                    <label className="label">Recurrence End Date</label>
+                    <input
+                      type="date"
+                      value={editing.recurrenceEndDate || ''}
+                      onChange={e => setEditing({ ...editing, recurrenceEndDate: e.target.value })}
+                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                    />
+                    <p className="text-xs text-dark-500 mt-1">Leave empty for indefinite recurrence</p>
+                  </div>
+                </>
               )}
 
               {/* Actions */}
