@@ -1,4 +1,5 @@
-import { CheckCircle, PartyPopper, Mail, Calendar } from 'lucide-react';
+import { CheckCircle, PartyPopper, Mail, Calendar, MailWarning } from 'lucide-react';
+import { getSenderEmail } from '../lib/api';
 
 interface SuccessMessageProps {
   result: {
@@ -11,6 +12,7 @@ interface SuccessMessageProps {
 }
 
 export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps) {
+  const senderEmail = getSenderEmail();
   return (
     <div className="max-w-2xl mx-auto animate-fade-in">
       <div className="card text-center">
@@ -55,6 +57,23 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Sender / spam-folder notice */}
+        <div
+          data-testid="sender-notice"
+          className="bg-meteor-950/50 border border-meteor-800/50 rounded-xl p-4 mb-4 text-left"
+        >
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-meteor-300 mb-2">
+            <MailWarning className="w-4 h-4 shrink-0" />
+            Check your inbox (and spam folder)
+          </h3>
+          <p className="text-sm text-dark-400">
+            Your confirmation will be sent from{' '}
+            <strong className="text-white">{senderEmail}</strong>. If you don't see it within a few
+            minutes, please check your spam or junk folder and add this address to your contacts so
+            future updates reach your inbox.
+          </p>
         </div>
 
         {/* Important notice */}

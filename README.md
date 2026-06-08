@@ -92,6 +92,7 @@ See [`e2e/README.md`](e2e/README.md) for the architecture, how to read the evide
    | `RECAPTCHA_ENABLED` | Set to `true` to enable reCAPTCHA (recommended for production) |
    | `RECAPTCHA_SECRET_KEY` | Google reCAPTCHA v3 secret key (backend) |
    | `RECAPTCHA_SITE_KEY` | Google reCAPTCHA v3 site key (public frontend) |
+   | `EMAIL_FROM` | Address confirmation emails are sent from. Also shown in the public confirmation screen's "check your spam folder" notice (`SENDER_EMAIL` derives from this in the compose template). |
 
 4. **Deploy** the stack in Portainer using the modified compose file
 
@@ -212,9 +213,14 @@ Subscribe to reservations from any calendar app (Google Calendar, Outlook, Apple
 |-----------|-------------|
 | `status` | Filter by status: `PENDING`, `CONFIRMED`, `REJECTED`, `CANCELLED` (comma-separated) |
 | `location` | Filter by location: `HUBBLE` or `METEOR` |
+| `catering` | `true` for catering events only, `false` for non-catering only (omit for all). Custom calendar appointments count as non-catering |
 | `upcomingOnly` | Set to `true` for future events only |
+
+Filters can be combined freely. Omitting a parameter leaves that dimension unfiltered, so existing feed URLs keep working unchanged.
 
 **Examples:**
 - All confirmed: `?token=XXX&status=CONFIRMED`
 - Hubble upcoming: `?token=XXX&location=HUBBLE&upcomingOnly=true`
+- Hubble catering only: `?token=XXX&location=HUBBLE&catering=true`
+- Non-catering events: `?token=XXX&catering=false`
 

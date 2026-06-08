@@ -369,6 +369,12 @@ body {
   background-color: rgba(3, 15, 20, 0.04);
 }
 
+.light .bg-meteor-950\/50 {
+  /* meteor-950 is a near-black gray; in light mode use a faint meteor-green tint
+     to match the hubble-950/50 notice instead of rendering a dark grey block */
+  background-color: rgba(5, 56, 38, 0.05);
+}
+
 .light .bg-meteor-500\/10 {
   background-color: rgba(5, 56, 38, 0.06);
 }
@@ -408,6 +414,10 @@ body {
 
 .light .border-meteor-500\/30 {
   border-color: rgba(5, 56, 38, 0.2);
+}
+
+.light .border-meteor-800\/50 {
+  border-color: rgba(2, 22, 16, 0.12);
 }
 
 .light .border-red-500\/20 {

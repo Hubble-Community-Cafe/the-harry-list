@@ -39,8 +39,9 @@ class ICalendarServiceTest {
     @BeforeEach
     void setUp() {
         sampleReservation = createSampleReservation();
-        // Default: no appointments (existing tests should not be affected)
-        when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(Collections.emptyList());
+        // Default: no appointments (existing tests should not be affected). Lenient because the
+        // catering-only path short-circuits and never queries the appointment repository.
+        lenient().when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(Collections.emptyList());
     }
 
     @Test
@@ -167,6 +168,113 @@ class ICalendarServiceTest {
         // Then
         assertTrue(ics.contains("Future Event"));
         assertFalse(ics.contains("Past Event"));
+    }
+
+    // ===== Catering Filter Tests =====
+
+    @Test
+    void generateCalendarFeed_shouldDefaultToAllWhenCateringNull() {
+        Reservation cateringReservation = createCateringReservation();
+        when(reservationRepository.findAll()).thenReturn(Arrays.asList(sampleReservation, cateringReservation));
+
+        // catering = null => no catering filtering (backward compatible)
+        String ics = iCalendarService.generateCalendarFeed(null, null, null, false);
+
+        assertTrue(ics.contains("Test Event"));
+        assertTrue(ics.contains("Catering Event"));
+    }
+
+    @Test
+    void generateCalendarFeed_shouldFilterCateringOnly() {
+        Reservation cateringReservation = createCateringReservation();
+        when(reservationRepository.findAll()).thenReturn(Arrays.asList(sampleReservation, cateringReservation));
+
+        String ics = iCalendarService.generateCalendarFeed(null, null, true, false);
+
+        assertTrue(ics.contains("Catering Event"));
+        assertFalse(ics.contains("Test Event"));
+    }
+
+    @Test
+    void generateCalendarFeed_shouldFilterNonCateringOnly() {
+        Reservation cateringReservation = createCateringReservation();
+        when(reservationRepository.findAll()).thenReturn(Arrays.asList(sampleReservation, cateringReservation));
+
+        String ics = iCalendarService.generateCalendarFeed(null, null, false, false);
+
+        assertTrue(ics.contains("Test Event"));
+        assertFalse(ics.contains("Catering Event"));
+    }
+
+    @Test
+    void generateCalendarFeed_shouldExcludeAppointmentsWhenCateringOnly() {
+        // Appointments have no catering attribute => treated as non-catering => dropped from a catering-only feed
+        Reservation cateringReservation = createCateringReservation();
+        CalendarAppointment appointment = createSampleAppointment();
+        when(reservationRepository.findAll()).thenReturn(List.of(cateringReservation));
+        // Lenient: catering-only short-circuits before the appointment repo is queried — that
+        // early exit is precisely the behaviour under test (appointments never reach the feed).
+        lenient().when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
+
+        String ics = iCalendarService.generateCalendarFeed(null, null, true, false);
+
+        assertTrue(ics.contains("Catering Event"));
+        assertFalse(ics.contains("Staff Meeting"));
+    }
+
+    @Test
+    void generateCalendarFeed_shouldIncludeAppointmentsWhenNonCateringOnly() {
+        // Appointments count as non-catering, so they stay in a non-catering feed
+        Reservation cateringReservation = createCateringReservation();
+        CalendarAppointment appointment = createSampleAppointment();
+        when(reservationRepository.findAll()).thenReturn(Arrays.asList(sampleReservation, cateringReservation));
+        when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
+
+        String ics = iCalendarService.generateCalendarFeed(null, null, false, false);
+
+        assertTrue(ics.contains("Test Event"));
+        assertTrue(ics.contains("Staff Meeting"));
+        assertFalse(ics.contains("Catering Event"));
+    }
+
+    @Test
+    void generateCalendarFeed_shouldCombineLocationAndCateringFilters() {
+        // Hubble catering (should match), Meteor catering (wrong location), Hubble non-catering (wrong catering)
+        Reservation hubbleCatering = createCateringReservation();
+        hubbleCatering.setLocation(BarLocation.HUBBLE);
+
+        Reservation meteorCatering = createCateringReservation();
+        meteorCatering.setLocation(BarLocation.METEOR);
+        meteorCatering.setEventTitle("Meteor Catering Event");
+
+        Reservation hubbleNonCatering = createSampleReservation();
+        hubbleNonCatering.setLocation(BarLocation.HUBBLE);
+        hubbleNonCatering.setEventTitle("Hubble Plain Event");
+
+        when(reservationRepository.findAll()).thenReturn(Arrays.asList(hubbleCatering, meteorCatering, hubbleNonCatering));
+
+        String ics = iCalendarService.generateCalendarFeed(null, "HUBBLE", true, false);
+
+        assertTrue(ics.contains("Catering Event"));
+        assertFalse(ics.contains("Meteor Catering Event"));
+        assertFalse(ics.contains("Hubble Plain Event"));
+    }
+
+    @Test
+    void generateUpcomingCalendarFeed_shouldApplyCateringFilter() {
+        Reservation futureCatering = createCateringReservation();
+        futureCatering.setEventDate(LocalDate.now().plusDays(5));
+
+        Reservation futurePlain = createSampleReservation();
+        futurePlain.setEventDate(LocalDate.now().plusDays(5));
+        futurePlain.setEventTitle("Future Plain Event");
+
+        when(reservationRepository.findAll()).thenReturn(Arrays.asList(futureCatering, futurePlain));
+
+        String ics = iCalendarService.generateUpcomingCalendarFeed(null, null, true, false);
+
+        assertTrue(ics.contains("Catering Event"));
+        assertFalse(ics.contains("Future Plain Event"));
     }
 
     // ===== Calendar Appointment Tests =====
@@ -500,6 +608,14 @@ class ICalendarServiceTest {
         reservation.setExpectedGuests(20);
         reservation.setStatus(ReservationStatus.CONFIRMED);
         reservation.setConfirmationNumber("ABC123");
+        return reservation;
+    }
+
+    private Reservation createCateringReservation() {
+        Reservation reservation = createSampleReservation();
+        reservation.setId(2L);
+        reservation.setEventTitle("Catering Event");
+        reservation.setSpecialActivities(java.util.Set.of(SpecialActivity.EAT_CATERING));
         return reservation;
     }
 }
