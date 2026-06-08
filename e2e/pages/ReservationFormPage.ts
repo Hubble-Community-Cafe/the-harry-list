@@ -113,6 +113,12 @@ export class ReservationFormPage {
     await this.page.getByTestId('submit-reservation').click();
   }
 
+  // ---- Confirmation result ----
+  /** The "check your spam / sender address" notice shown on the confirmation screen. */
+  senderNotice(): Locator {
+    return this.page.getByTestId('sender-notice');
+  }
+
   /**
    * Drive every step of a clean booking (no blocks/constraints in the way).
    * Leaves the form on the confirmation result.
