@@ -5,6 +5,7 @@ declare global {
       API_URL?: string;
       RECAPTCHA_SITE_KEY?: string;
       SENTRY_DSN?: string;
+      SENDER_EMAIL?: string;
     };
   }
 }
@@ -29,6 +30,19 @@ export const getRecaptchaSiteKey = (): string | null => {
     return runtimeKey;
   }
   return import.meta.env.VITE_RECAPTCHA_SITE_KEY || null;
+};
+
+// Address that confirmation emails are sent from. Kept in sync with the backend's
+// app.mail.from via runtime config injection so the "check your spam" notice never
+// drifts from what guests actually receive. Falls back to the current sender domain.
+export const DEFAULT_SENDER_EMAIL = 'noreply@ducksandbears.cafe';
+
+export const getSenderEmail = (): string => {
+  const runtimeSender = window.__RUNTIME_CONFIG__?.SENDER_EMAIL;
+  if (runtimeSender && !runtimeSender.startsWith('__') && runtimeSender.length > 0) {
+    return runtimeSender;
+  }
+  return import.meta.env.VITE_SENDER_EMAIL || DEFAULT_SENDER_EMAIL;
 };
 
 const API_BASE_URL = getApiUrl();

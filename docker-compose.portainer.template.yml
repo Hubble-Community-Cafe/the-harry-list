@@ -88,6 +88,9 @@ services:
       # Sentry error monitoring
       # Get DSN from sentry.io > Projects > the-harry-list-public > Settings > Client Keys
       - SENTRY_DSN=__SENTRY_DSN_PUBLIC__
+      # Address shown in the "check your spam" confirmation notice.
+      # Reuses the backend's __EMAIL_FROM__ placeholder so they always match.
+      - SENDER_EMAIL=__EMAIL_FROM__
 
   # Admin Portal Frontend
   the-harry-list-admin:

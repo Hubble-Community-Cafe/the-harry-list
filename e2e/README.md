@@ -140,6 +140,7 @@ faster layers.
 | Area | Unit / component | Backend integration | E2E spec |
 |------|------------------|---------------------|----------|
 | Make a reservation (happy + many options) | form unit tests | `CreateReservationService*` | `public/happy-path`, `public/booking-options` |
+| Sender / spam-folder notice on confirmation (#310) | `SuccessMessage` test | — | `public/happy-path` |
 | Soft / hard blocked periods | `blockedPeriods` + form tests | `ConstraintValidationServiceTest` | `public/soft-block`, `public/hard-block`, `admin/blocked-periods` |
 | Form constraints (all types) | form tests | `ConstraintValidationServiceTest` | `public/constraints-blocking`, `public/constraints-dynamic`, `admin/constraints-roundtrip` |
 | Confirm a reservation (appears in admin) | `ReservationsPage`/detail tests | controller tests | `admin/reservation-lifecycle` #1 |

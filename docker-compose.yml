@@ -80,6 +80,9 @@ services:
       - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY:-}
       # Sentry error monitoring (leave empty to disable)
       - SENTRY_DSN=${SENTRY_DSN_PUBLIC:-}
+      # Address shown in the "check your spam" notice — keep in sync with the
+      # backend's APP_MAIL_FROM so the displayed sender matches what guests receive.
+      - SENDER_EMAIL=${APP_MAIL_FROM:-noreply@ducksandbears.cafe}
 
   # Admin Portal Frontend
   the-harry-list-admin:

@@ -60,6 +60,11 @@ test.describe('public: full booking happy path', () => {
     // Confirmation screen
     await expect(page.getByText('Reservation Submitted!')).toBeVisible();
     await expect(page.getByText(CONTACT.email)).toBeVisible();
+
+    // The guest is told which address the confirmation comes from and to check spam.
+    const senderNotice = form.senderNotice();
+    await expect(senderNotice).toBeVisible();
+    await expect(senderNotice).toContainText(/spam/i);
     await captureScreenshot(testInfo, page, '6-confirmation');
 
     // The guest actually receives the confirmation email.
