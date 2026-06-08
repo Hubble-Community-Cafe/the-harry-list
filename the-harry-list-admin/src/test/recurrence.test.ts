@@ -61,14 +61,7 @@ describe('expandOccurrences — interval frequencies', () => {
     expect(expandOccurrences(a, '2026-06-01', '2026-06-14')).toEqual(['2026-06-01', '2026-06-08']);
   });
 
-  it('BIWEEKLY (legacy every-2-weeks)', () => {
-    const a = appt({ date: '2026-06-01', recurrenceType: 'BIWEEKLY' });
-    expect(expandOccurrences(a, '2026-06-01', '2026-07-01')).toEqual([
-      '2026-06-01', '2026-06-15', '2026-06-29',
-    ]);
-  });
-
-  it('WEEKLY interval 2 matches BIWEEKLY semantics', () => {
+  it('WEEKLY interval 2 ("every 2 weeks")', () => {
     const a = appt({ date: '2026-06-01', recurrenceType: 'WEEKLY', recurrenceInterval: 2 });
     expect(expandOccurrences(a, '2026-06-01', '2026-07-01')).toEqual([
       '2026-06-01', '2026-06-15', '2026-06-29',
@@ -146,7 +139,7 @@ describe('recurrenceSummary', () => {
   it('labels simple frequencies', () => {
     expect(recurrenceSummary(appt({ recurrenceType: 'NONE' }))).toBe('');
     expect(recurrenceSummary(appt({ recurrenceType: 'WEEKLY' }))).toBe('Weekly');
-    expect(recurrenceSummary(appt({ recurrenceType: 'BIWEEKLY' }))).toBe('Bi-weekly');
+    expect(recurrenceSummary(appt({ recurrenceType: 'WEEKLY', recurrenceInterval: 2 }))).toBe('Every 2 weeks');
     expect(recurrenceSummary(appt({ recurrenceType: 'MONTHLY' }))).toBe('Monthly');
   });
 

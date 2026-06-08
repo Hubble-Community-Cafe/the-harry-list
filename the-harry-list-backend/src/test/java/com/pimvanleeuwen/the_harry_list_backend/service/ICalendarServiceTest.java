@@ -273,16 +273,18 @@ class ICalendarServiceTest {
     }
 
     @Test
-    void generateCalendarFeed_shouldIncludeRruleForBiweekly() {
+    void generateCalendarFeed_shouldIncludeRruleForEveryTwoWeeks() {
+        // "Every 2 weeks" is now expressed as WEEKLY with interval 2 (BIWEEKLY retired).
         CalendarAppointment appointment = CalendarAppointment.builder()
                 .id(4L)
-                .title("Biweekly Sync")
+                .title("Fortnightly Sync")
                 .date(LocalDate.of(2026, 6, 1))
                 .allDay(false)
                 .startTime(LocalTime.of(9, 0))
                 .endTime(LocalTime.of(10, 0))
                 .location(BarLocation.HUBBLE)
-                .recurrenceType(RecurrenceType.BIWEEKLY)
+                .recurrenceType(RecurrenceType.WEEKLY)
+                .recurrenceInterval(2)
                 .enabled(true)
                 .build();
         when(reservationRepository.findAll()).thenReturn(Collections.emptyList());

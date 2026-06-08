@@ -64,7 +64,6 @@ export type RecurrenceType =
   | 'NONE'
   | 'DAILY'
   | 'WEEKLY'
-  | 'BIWEEKLY'
   | 'MONTHLY'
   | 'YEARLY'
   | 'MONTHLY_NTH_WEEKDAY';

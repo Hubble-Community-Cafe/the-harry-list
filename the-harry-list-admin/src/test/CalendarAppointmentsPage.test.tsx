@@ -288,21 +288,17 @@ describe('CalendarAppointmentsPage', () => {
     expect(screen.getByText('Every 2nd Friday')).toBeInTheDocument();
   });
 
-  it('opens a legacy BIWEEKLY appointment as "Weekly, every 2 weeks" and saves it equivalently', async () => {
+  it('edits a Weekly appointment to "every 2 weeks" and saves the interval', async () => {
     mockFetch.mockResolvedValue([
-      { id: 8, title: 'Legacy Biweekly', date: '2026-06-01', allDay: true, location: 'HUBBLE', recurrenceType: 'BIWEEKLY', enabled: true },
+      { id: 8, title: 'Fortnightly Sync', date: '2026-06-01', allDay: true, location: 'HUBBLE', recurrenceType: 'WEEKLY', recurrenceInterval: 1, enabled: true },
     ]);
-    mockUpdate.mockResolvedValue({ id: 8, title: 'Legacy Biweekly', date: '2026-06-01', allDay: true, location: 'HUBBLE', recurrenceType: 'WEEKLY', recurrenceInterval: 2, enabled: true });
+    mockUpdate.mockResolvedValue({ id: 8, title: 'Fortnightly Sync', date: '2026-06-01', allDay: true, location: 'HUBBLE', recurrenceType: 'WEEKLY', recurrenceInterval: 2, enabled: true });
     renderPage();
-    await waitFor(() => expect(screen.getByText('Legacy Biweekly')).toBeInTheDocument());
-
-    // List badge still reads the legacy label
-    expect(screen.getByText('Bi-weekly')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Fortnightly Sync')).toBeInTheDocument());
 
     fireEvent.click(screen.getByTitle('Edit'));
-    // Presented as Weekly with interval 2
     expect(screen.getByDisplayValue('Weekly')).toBeInTheDocument();
-    expect(screen.getByLabelText('Repeat interval')).toHaveValue(2);
+    fireEvent.change(screen.getByLabelText('Repeat interval'), { target: { value: '2' } });
 
     fireEvent.click(screen.getByText('Save Changes'));
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled());

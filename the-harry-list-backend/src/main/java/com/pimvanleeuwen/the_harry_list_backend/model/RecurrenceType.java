@@ -14,9 +14,6 @@ public enum RecurrenceType {
     NONE,
     DAILY,
     WEEKLY,
-    /** Legacy shorthand for "every 2 weeks". Retained for backward compatibility;
-     *  new appointments express this as WEEKLY with {@code recurrenceInterval = 2}. */
-    BIWEEKLY,
     MONTHLY,
     YEARLY,
     /** Monthly on the Nth weekday, e.g. "every 2nd Friday" or "the last Monday".

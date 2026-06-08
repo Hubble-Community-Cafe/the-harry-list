@@ -38,8 +38,8 @@ export const WEEK_OF_MONTH_OPTIONS: { value: number; label: string; ordinal: str
   { value: -1, label: 'Last', ordinal: 'last' },
 ];
 
-// Frequency picker for the guided builder. Note BIWEEKLY is intentionally absent:
-// it is represented as WEEKLY with interval 2 (see normalizeForEditing).
+// Frequency picker for the guided builder. "Every 2 weeks" is expressed as
+// WEEKLY with interval 2 rather than a dedicated option.
 export const FREQUENCY_OPTIONS: { value: RecurrenceType; label: string; unitLabel: string }[] = [
   { value: 'NONE', label: 'Does not repeat', unitLabel: '' },
   { value: 'DAILY', label: 'Daily', unitLabel: 'day' },
@@ -151,13 +151,10 @@ function expandInterval(
   const interval = effectiveInterval(appointment);
   const type = appointment.recurrenceType;
 
-  // BIWEEKLY is the legacy shorthand for "every 2 weeks"; its 14-day step bakes
-  // that in, so a stored interval (typically 1) is not double-counted.
   const advance = (d: Date) => {
     switch (type) {
       case 'DAILY': d.setDate(d.getDate() + interval); break;
       case 'WEEKLY': d.setDate(d.getDate() + 7 * interval); break;
-      case 'BIWEEKLY': d.setDate(d.getDate() + 14 * interval); break;
       case 'MONTHLY': d.setMonth(d.getMonth() + interval); break;
       case 'YEARLY': d.setFullYear(d.getFullYear() + interval); break;
     }
@@ -225,7 +222,7 @@ function expandNthWeekday(
 
 /**
  * Human-readable summary of an appointment's recurrence, e.g. "Every 2nd Friday",
- * "Every 3 weeks", "Weekly", "Bi-weekly". Used for list/calendar badges.
+ * "Every 3 weeks", "Weekly". Used for list/calendar badges.
  */
 export function recurrenceSummary(appointment: CalendarAppointment): string {
   const type = appointment.recurrenceType;
@@ -239,8 +236,6 @@ export function recurrenceSummary(appointment: CalendarAppointment): string {
     const base = `${ordinalFor(week)} ${weekdayLabel(day)}`;
     return interval > 1 ? `Every ${interval} months on the ${base}` : `Every ${base}`;
   }
-
-  if (type === 'BIWEEKLY') return 'Bi-weekly';
 
   const unit = FREQUENCY_OPTIONS.find(o => o.value === type)?.unitLabel ?? '';
   if (interval > 1) return `Every ${interval} ${unit}s`;

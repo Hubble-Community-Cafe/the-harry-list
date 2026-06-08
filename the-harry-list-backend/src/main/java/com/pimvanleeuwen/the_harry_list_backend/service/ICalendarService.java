@@ -439,10 +439,6 @@ public class ICalendarService {
         switch (type) {
             case DAILY -> freq = "DAILY";
             case WEEKLY -> freq = "WEEKLY";
-            case BIWEEKLY -> {
-                freq = "WEEKLY";
-                interval = Math.max(interval, 2); // legacy shorthand for every 2 weeks
-            }
             case MONTHLY -> freq = "MONTHLY";
             case YEARLY -> freq = "YEARLY";
             case MONTHLY_NTH_WEEKDAY -> {

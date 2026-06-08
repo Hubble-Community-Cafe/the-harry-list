@@ -15,15 +15,14 @@ import {
   recurrenceSummary, nthWeekdayFromDate,
 } from '../lib/recurrence';
 
-/** The frequency family shown in the builder (BIWEEKLY/nth-weekday are derived detail). */
+/** The frequency family shown in the builder (the nth-weekday mode is derived detail). */
 type Frequency = 'NONE' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
 
 /** Maps a stored recurrence type to the frequency option the builder displays. */
 function frequencyOf(type: RecurrenceType): Frequency {
   switch (type) {
     case 'DAILY': return 'DAILY';
-    case 'WEEKLY':
-    case 'BIWEEKLY': return 'WEEKLY';
+    case 'WEEKLY': return 'WEEKLY';
     case 'MONTHLY':
     case 'MONTHLY_NTH_WEEKDAY': return 'MONTHLY';
     case 'YEARLY': return 'YEARLY';
@@ -36,15 +35,8 @@ function unitNoun(freq: Frequency): string {
   return FREQUENCY_OPTIONS.find(o => o.value === freq)?.unitLabel ?? '';
 }
 
-/**
- * Normalizes an appointment for editing in the guided builder. Legacy BIWEEKLY
- * records are presented as "Weekly, every 2 weeks" — an equivalent representation
- * that round-trips to the same RRULE — and the interval defaults to 1.
- */
+/** Normalizes an appointment for editing in the guided builder (interval defaults to 1). */
 function normalizeForEditing(a: CalendarAppointment): CalendarAppointment {
-  if (a.recurrenceType === 'BIWEEKLY') {
-    return { ...a, recurrenceType: 'WEEKLY', recurrenceInterval: 2 };
-  }
   return { ...a, recurrenceInterval: a.recurrenceInterval ?? 1 };
 }
 
@@ -190,6 +182,7 @@ export function CalendarAppointmentsPage() {
         <button
           onClick={() => setEditing({ ...emptyAppointment })}
           className="btn-primary flex items-center gap-2 shrink-0"
+          data-testid="add-appointment"
         >
           <Plus className="w-4 h-4" />
           Add Appointment
@@ -219,6 +212,7 @@ export function CalendarAppointmentsPage() {
           {appointments.map(appointment => (
             <div
               key={appointment.id}
+              data-testid="appointment-row"
               className={`bg-dark-900 border rounded-xl p-4 flex items-start gap-4 ${
                 appointment.enabled ? 'border-dark-800' : 'border-dark-800/50 opacity-60'
               }`}
@@ -248,7 +242,10 @@ export function CalendarAppointmentsPage() {
                   ) : null}
                   {/* Recurrence badge */}
                   {appointment.recurrenceType !== 'NONE' && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 flex items-center gap-1">
+                    <span
+                      data-testid="appointment-recurrence"
+                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 flex items-center gap-1"
+                    >
                       <Repeat className="w-3 h-3" />
                       {recurrenceSummary(appointment)}
                     </span>
@@ -320,6 +317,7 @@ export function CalendarAppointmentsPage() {
                   onChange={e => setEditing({ ...editing, title: e.target.value })}
                   className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
                   placeholder="e.g. Staff Meeting, Holiday Closure"
+                  data-testid="appointment-title"
                 />
               </div>
 
@@ -343,6 +341,7 @@ export function CalendarAppointmentsPage() {
                   value={editing.date}
                   onChange={e => setEditing({ ...editing, date: e.target.value })}
                   className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                  data-testid="appointment-date"
                 />
               </div>
 
@@ -352,6 +351,7 @@ export function CalendarAppointmentsPage() {
                   type="button"
                   onClick={() => setEditing({ ...editing, allDay: !editing.allDay })}
                   className="shrink-0"
+                  data-testid="appointment-allday-toggle"
                 >
                   {editing.allDay
                     ? <ToggleRight className="w-6 h-6 text-amber-400" />
@@ -405,6 +405,7 @@ export function CalendarAppointmentsPage() {
                   value={frequencyOf(editing.recurrenceType)}
                   onChange={e => handleFrequencyChange(e.target.value as Frequency)}
                   className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                  data-testid="appointment-frequency"
                 >
                   {FREQUENCY_OPTIONS.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -444,6 +445,7 @@ export function CalendarAppointmentsPage() {
                         <input
                           type="radio"
                           name="monthlyMode"
+                          data-testid="monthly-mode-day"
                           checked={editing.recurrenceType === 'MONTHLY'}
                           onChange={() => setMonthlyMode('dayOfMonth')}
                         />
@@ -453,6 +455,7 @@ export function CalendarAppointmentsPage() {
                         <input
                           type="radio"
                           name="monthlyMode"
+                          data-testid="monthly-mode-nth"
                           checked={editing.recurrenceType === 'MONTHLY_NTH_WEEKDAY'}
                           onChange={() => setMonthlyMode('nthWeekday')}
                         />
@@ -518,6 +521,7 @@ export function CalendarAppointmentsPage() {
                   onClick={handleSave}
                   disabled={saving || !editing.title || !editing.date || (!editing.allDay && (!editing.startTime || !editing.endTime))}
                   className="btn-primary flex items-center gap-2"
+                  data-testid="save-appointment"
                 >
                   {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                   {editing.id ? 'Save Changes' : 'Create Appointment'}
