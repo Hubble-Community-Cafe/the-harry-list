@@ -326,7 +326,7 @@ export function ReservationDetailPage() {
             Edit Details
           </button>
 
-          {hasCateringActivity && (
+          {hasCateringActivity && reservation.status !== 'REJECTED' && (
             <button
               onClick={openCateringEmailDialog}
               disabled={isUpdating}

@@ -180,6 +180,26 @@ describe('ReservationDetailPage — reopen rejected reservation', () => {
     expect(screen.queryByTestId('cancel-reservation')).not.toBeInTheDocument();
   });
 
+  it('hides the "Send Catering Options" action for rejected reservations', async () => {
+    const cateringActivities = ['EAT_CATERING'];
+    // A catering reservation that is still pending offers the catering email...
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, status: 'PENDING', specialActivities: cateringActivities,
+    });
+    const { unmount } = renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    expect(screen.getByRole('button', { name: /Send Catering Options/i })).toBeInTheDocument();
+    unmount();
+
+    // ...but once rejected, there's nothing left to cater, so the action is gone.
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, status: 'REJECTED', specialActivities: cateringActivities,
+    });
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    expect(screen.queryByRole('button', { name: /Send Catering Options/i })).not.toBeInTheDocument();
+  });
+
   it('does not show the reopen action for non-rejected reservations', async () => {
     // sampleReservation defaults to CONFIRMED.
     renderPage();
