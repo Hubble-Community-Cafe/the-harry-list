@@ -155,6 +155,30 @@ class AdminReservationControllerTest {
 
     @Test
     @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldReopenRejectedReservationToPending() throws Exception {
+        // Given a previously rejected reservation
+        sampleReservation.setStatus(ReservationStatus.REJECTED);
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        // When it is moved back to pending (e.g. to change date/location without re-submission)
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "PENDING")
+                .param("sendEmail", "false"))
+            .andExpect(status().isOk());
+
+        // Then the reservation is persisted as PENDING again...
+        verify(reservationRepository).save(argThat(res ->
+            res.getStatus() == ReservationStatus.PENDING
+        ));
+        // ...and no customer email is sent for this internal correction.
+        verify(emailNotificationService, never()).sendStatusChangeEmail(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldCancelReservation() throws Exception {
         // Given
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
