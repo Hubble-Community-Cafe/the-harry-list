@@ -60,7 +60,24 @@ export interface CateringEmailRequest {
   replyTo?: string;
 }
 
-export type RecurrenceType = 'NONE' | 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'YEARLY';
+export type RecurrenceType =
+  | 'NONE'
+  | 'DAILY'
+  | 'WEEKLY'
+  | 'BIWEEKLY'
+  | 'MONTHLY'
+  | 'YEARLY'
+  | 'MONTHLY_NTH_WEEKDAY';
+
+/** Weekday encoding shared with the backend (java.time.DayOfWeek names). */
+export type DayOfWeek =
+  | 'MONDAY'
+  | 'TUESDAY'
+  | 'WEDNESDAY'
+  | 'THURSDAY'
+  | 'FRIDAY'
+  | 'SATURDAY'
+  | 'SUNDAY';
 
 export interface CalendarAppointment {
   id?: number;
@@ -72,6 +89,12 @@ export interface CalendarAppointment {
   endTime?: string;
   location: string;
   recurrenceType: RecurrenceType;
+  /** "Every N" multiplier (RRULE INTERVAL). Null/1 means every period. */
+  recurrenceInterval?: number;
+  /** For MONTHLY_NTH_WEEKDAY: 1–4 for first–fourth, or -1 for last. */
+  recurrenceWeekOfMonth?: number;
+  /** For MONTHLY_NTH_WEEKDAY: which weekday, e.g. FRIDAY for "2nd Friday". */
+  recurrenceDayOfWeek?: DayOfWeek;
   recurrenceEndDate?: string;
   enabled: boolean;
   createdAt?: string;
