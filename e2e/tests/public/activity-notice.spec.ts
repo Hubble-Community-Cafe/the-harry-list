@@ -30,12 +30,12 @@ test.describe('public: activity notice', () => {
     // No notice until the triggering activity is chosen.
     await expect(form.activityNotices()).toHaveCount(0);
 
-    await form.toggleActivity('Private Event');
+    await form.toggleActivity('Private event');
     await expect(form.activityNotices()).toHaveText(NOTICE);
     await captureScreenshot(testInfo, page, '1-notice-shown');
 
     // Deselecting the activity removes the notice — it is purely advisory.
-    await form.toggleActivity('Private Event');
+    await form.toggleActivity('Private event');
     await expect(form.activityNotices()).toHaveCount(0);
   });
 });
