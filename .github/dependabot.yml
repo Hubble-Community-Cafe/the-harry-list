@@ -1,8 +1,24 @@
 version: 2
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Dependabot targets the long-lived `develop` integration branch, NOT `main`.
+#
+# Why: `main` requires the "Version Bump Check" (see .github/workflows/ci.yml),
+# which fails on any PR that doesn't bump the app version. `develop` is kept one
+# patch ahead of `main`, so Dependabot PRs inherit that bumped version and pass
+# the check automatically — letting them merge (and auto-merge) individually.
+# Releases then flow as a single `develop -> main` PR.
+#
+# Grouping keeps each ecosystem to at most two PRs per run:
+#   * one batched PR for minor/patch updates  -> auto-merged into develop
+#   * one isolated PR for major updates        -> reviewed manually
+# ──────────────────────────────────────────────────────────────────────────────
+
 updates:
   # ── Backend (Maven) ──────────────────────────────────────────────────────────
   - package-ecosystem: "maven"
     directory: "/the-harry-list-backend"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -15,20 +31,24 @@ updates:
       - "dependencies"
       - "backend"
     groups:
-      # Group all Spring Boot updates into one PR
-      spring-boot:
+      # Everything non-major in a single PR (auto-merged into develop)
+      backend-minor-patch:
         patterns:
-          - "org.springframework*"
-          - "spring-*"
-      # Group Microsoft/Azure updates into one PR
-      microsoft-azure:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Majors isolated for manual review
+      backend-major:
         patterns:
-          - "com.microsoft*"
-          - "com.azure*"
+          - "*"
+        update-types:
+          - "major"
 
   # ── Admin Frontend (npm) ──────────────────────────────────────────────────────
   - package-ecosystem: "npm"
     directory: "/the-harry-list-admin"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -42,35 +62,22 @@ updates:
       - "frontend"
       - "admin"
     groups:
-      # Group all React/UI related updates
-      react:
+      admin-minor-patch:
         patterns:
-          - "react*"
-          - "@types/react*"
-          - "react-*"
-      # Group Azure MSAL updates
-      msal:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      admin-major:
         patterns:
-          - "@azure/msal-*"
-      # Group Radix UI / shadcn
-      radix-ui:
-        patterns:
-          - "@radix-ui/*"
-      # Group build tooling
-      build-tools:
-        patterns:
-          - "vite*"
-          - "@vitejs/*"
-          - "typescript"
-          - "eslint*"
-          - "@typescript-eslint/*"
-          - "vitest*"
-          - "@vitest/*"
-          - "tailwindcss*"
+          - "*"
+        update-types:
+          - "major"
 
   # ── Public Frontend (npm) ─────────────────────────────────────────────────────
   - package-ecosystem: "npm"
     directory: "/the-harry-list-public"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -84,25 +91,22 @@ updates:
       - "frontend"
       - "public"
     groups:
-      react:
+      public-minor-patch:
         patterns:
-          - "react*"
-          - "@types/react*"
-          - "react-*"
-      build-tools:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      public-major:
         patterns:
-          - "vite*"
-          - "@vitejs/*"
-          - "typescript"
-          - "eslint*"
-          - "@typescript-eslint/*"
-          - "vitest*"
-          - "@vitest/*"
-          - "tailwindcss*"
+          - "*"
+        update-types:
+          - "major"
 
   # ── GitHub Actions ────────────────────────────────────────────────────────────
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -114,3 +118,15 @@ updates:
     labels:
       - "dependencies"
       - "ci"
+    groups:
+      actions-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      actions-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
