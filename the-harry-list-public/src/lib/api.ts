@@ -3,7 +3,6 @@ declare global {
   interface Window {
     __RUNTIME_CONFIG__?: {
       API_URL?: string;
-      RECAPTCHA_SITE_KEY?: string;
       SENTRY_DSN?: string;
       SENDER_EMAIL?: string;
     };
@@ -23,13 +22,14 @@ const getApiUrl = (): string => {
   return envUrl;
 };
 
-// Get reCAPTCHA site key from runtime config
-export const getRecaptchaSiteKey = (): string | null => {
-  const runtimeKey = window.__RUNTIME_CONFIG__?.RECAPTCHA_SITE_KEY;
-  if (runtimeKey && !runtimeKey.startsWith('__') && runtimeKey.length > 0) {
-    return runtimeKey;
+// Returns the ALTCHA challenge URL. Catches getApiUrl() errors and falls back to a
+// relative path so the widget never throws during render if the API URL is unconfigured.
+export const getAltchaChallengeUrl = (): string => {
+  try {
+    return `${getApiUrl()}/api/public/altcha/challenge`;
+  } catch {
+    return '/api/public/altcha/challenge';
   }
-  return import.meta.env.VITE_RECAPTCHA_SITE_KEY || null;
 };
 
 // Address that confirmation emails are sent from. Kept in sync with the backend's
@@ -73,20 +73,6 @@ export async function fetchFormOptions() {
   return response.json();
 }
 
-// Check if reCAPTCHA is enabled on the backend
-export async function checkRecaptchaStatus(): Promise<boolean> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/public/reservations/recaptcha-status`);
-    if (!response.ok) {
-      return false;
-    }
-    const data = await response.json();
-    return data.enabled === true;
-  } catch {
-    return false;
-  }
-}
-
 import type { ReservationFormData, FormConstraint, BlockedPeriod } from '../types/reservation';
 
 export async function fetchFormConstraints(): Promise<FormConstraint[]> {
@@ -105,7 +91,7 @@ export async function fetchBlockedPeriods(): Promise<BlockedPeriod[]> {
   return response.json();
 }
 
-export async function submitReservation(data: ReservationFormData, recaptchaToken?: string) {
+export async function submitReservation(data: ReservationFormData, altchaPayload?: string) {
   // Transform empty strings to null for optional fields
   const cleanedData = {
     ...data,
@@ -113,7 +99,7 @@ export async function submitReservation(data: ReservationFormData, recaptchaToke
     location: data.location || 'NO_PREFERENCE',
     invoiceType: data.invoiceType || null,
     seatingArea: data.seatingArea || null,
-    recaptchaToken: recaptchaToken || null,
+    altcha: altchaPayload || null,
   };
 
   const response = await fetch(`${API_BASE_URL}/api/public/reservations`, {

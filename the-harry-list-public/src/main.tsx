@@ -1,10 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3'
 import * as Sentry from '@sentry/react'
 import './index.css'
 import App from './App.tsx'
-import { getRecaptchaSiteKey } from './lib/api.ts'
 
 declare const __APP_VERSION__: string;
 
@@ -19,23 +17,8 @@ if (sentryDsn && !sentryDsn.startsWith('__')) {
   });
 }
 
-const recaptchaSiteKey = getRecaptchaSiteKey();
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {recaptchaSiteKey ? (
-      <GoogleReCaptchaProvider
-        reCaptchaKey={recaptchaSiteKey}
-        scriptProps={{
-          async: true,
-          defer: true,
-          appendTo: 'head',
-        }}
-      >
-        <App />
-      </GoogleReCaptchaProvider>
-    ) : (
-      <App />
-    )}
+    <App />
   </StrictMode>,
 )

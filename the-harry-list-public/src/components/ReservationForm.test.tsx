@@ -11,20 +11,13 @@ vi.mock('../lib/api', () => ({
   fetchFormConstraints: vi.fn(),
   fetchBlockedPeriods: vi.fn(),
   submitReservation: vi.fn(),
-  getRecaptchaSiteKey: vi.fn(() => null),
+  getAltchaChallengeUrl: vi.fn(() => 'http://localhost:8080/api/public/altcha/challenge'),
 }));
 
-// Mock reCAPTCHA - default: disabled (no site key)
-const mockExecuteRecaptcha = vi.fn();
-let recaptchaEnabled = false;
-vi.mock('react-google-recaptcha-v3', () => ({
-  useGoogleReCaptcha: () => ({
-    executeRecaptcha: recaptchaEnabled ? mockExecuteRecaptcha : null,
-  }),
-  GoogleReCaptchaProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
+// Prevent altcha custom element from registering web workers in jsdom
+vi.mock('altcha', () => ({}));
 
-import { fetchFormOptions, fetchFormConstraints, fetchBlockedPeriods, submitReservation, getRecaptchaSiteKey } from '../lib/api';
+import { fetchFormOptions, fetchFormConstraints, fetchBlockedPeriods, submitReservation } from '../lib/api';
 
 const mockOptions: FormOptions = {
   specialActivities: [
@@ -124,8 +117,6 @@ function setupMocks() {
   vi.mocked(fetchFormOptions).mockResolvedValue(mockOptions);
   vi.mocked(fetchFormConstraints).mockResolvedValue(mockConstraints);
   vi.mocked(fetchBlockedPeriods).mockResolvedValue(mockBlockedPeriods);
-  recaptchaEnabled = false;
-  mockExecuteRecaptcha.mockReset();
 }
 
 function renderForm(onSuccess = vi.fn()) {
@@ -827,149 +818,6 @@ describe('ReservationForm', () => {
       fireEvent.change(getSelectByName('endTime'), { target: { value: '17:00' } });
 
       expect(screen.queryByText(/Reason for Long Reservation/)).not.toBeInTheDocument();
-    });
-  });
-
-  // ==================== RECAPTCHA RETRY ====================
-
-  describe('reCAPTCHA retry logic', () => {
-    async function navigateToStep5(user: ReturnType<typeof userEvent.setup>) {
-      // Step 1
-      await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
-      await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
-      await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Activity Details')).toBeInTheDocument());
-
-      // Step 2
-      await fillStep2Fields(user);
-      await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Where would you like to host your event?')).toBeInTheDocument());
-
-      // Step 3
-      await user.click(screen.getByText('Inside'));
-      await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Payment Information')).toBeInTheDocument());
-
-      // Step 4
-      await user.click(screen.getByText('People pay individually'));
-      await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Review & Confirm')).toBeInTheDocument());
-    }
-
-    it('submits successfully when reCAPTCHA succeeds on first attempt', async () => {
-      recaptchaEnabled = true;
-      vi.mocked(getRecaptchaSiteKey).mockReturnValue('test-site-key');
-      mockExecuteRecaptcha.mockResolvedValue('valid-token');
-
-      const mockResult = {
-        confirmationNumber: 'ABC-123',
-        eventTitle: 'Test Event',
-        contactName: 'Jane Smith',
-        email: 'jane@example.com',
-      };
-      vi.mocked(submitReservation).mockResolvedValue(mockResult);
-
-      const onSuccess = vi.fn();
-      const { user } = renderForm(onSuccess);
-      await waitForFormLoaded();
-      await navigateToStep5(user);
-
-      await user.click(screen.getByRole('checkbox'));
-      await user.click(screen.getByRole('button', { name: 'Submit Reservation' }));
-
-      await waitFor(() => {
-        expect(mockExecuteRecaptcha).toHaveBeenCalledTimes(1);
-        expect(submitReservation).toHaveBeenCalledWith(expect.anything(), 'valid-token');
-        expect(onSuccess).toHaveBeenCalledWith(mockResult);
-      });
-    });
-
-    it('retries and succeeds when first reCAPTCHA attempt fails', async () => {
-      recaptchaEnabled = true;
-      vi.mocked(getRecaptchaSiteKey).mockReturnValue('test-site-key');
-      mockExecuteRecaptcha
-        .mockRejectedValueOnce(new Error('reCAPTCHA timeout'))
-        .mockResolvedValueOnce('valid-token');
-
-      const mockResult = {
-        confirmationNumber: 'ABC-456',
-        eventTitle: 'Test Event',
-        contactName: 'Jane Smith',
-        email: 'jane@example.com',
-      };
-      vi.mocked(submitReservation).mockResolvedValue(mockResult);
-
-      const onSuccess = vi.fn();
-      const { user } = renderForm(onSuccess);
-      await waitForFormLoaded();
-      await navigateToStep5(user);
-
-      await user.click(screen.getByRole('checkbox'));
-      await user.click(screen.getByRole('button', { name: 'Submit Reservation' }));
-
-      await waitFor(() => {
-        expect(mockExecuteRecaptcha).toHaveBeenCalledTimes(2);
-        expect(submitReservation).toHaveBeenCalledWith(expect.anything(), 'valid-token');
-        expect(onSuccess).toHaveBeenCalled();
-      }, { timeout: 5000 });
-    });
-
-    it('shows error after all reCAPTCHA retries fail', async () => {
-      recaptchaEnabled = true;
-      vi.mocked(getRecaptchaSiteKey).mockReturnValue('test-site-key');
-      mockExecuteRecaptcha.mockRejectedValue(new Error('reCAPTCHA unavailable'));
-
-      const { user } = renderForm();
-      await waitForFormLoaded();
-      await navigateToStep5(user);
-
-      await user.click(screen.getByRole('checkbox'));
-      await user.click(screen.getByRole('button', { name: 'Submit Reservation' }));
-
-      await waitFor(() => {
-        expect(mockExecuteRecaptcha).toHaveBeenCalledTimes(3);
-        expect(submitReservation).not.toHaveBeenCalled();
-        expect(screen.getByText('Security verification failed. Please try submitting again.')).toBeInTheDocument();
-      }, { timeout: 5000 });
-    });
-
-    it('allows resubmission after reCAPTCHA failure', async () => {
-      recaptchaEnabled = true;
-      vi.mocked(getRecaptchaSiteKey).mockReturnValue('test-site-key');
-
-      // First 3 attempts fail, then succeed on retry
-      mockExecuteRecaptcha
-        .mockRejectedValueOnce(new Error('fail'))
-        .mockRejectedValueOnce(new Error('fail'))
-        .mockRejectedValueOnce(new Error('fail'))
-        .mockResolvedValueOnce('valid-token');
-
-      const mockResult = {
-        confirmationNumber: 'ABC-789',
-        eventTitle: 'Test Event',
-        contactName: 'Jane Smith',
-        email: 'jane@example.com',
-      };
-      vi.mocked(submitReservation).mockResolvedValue(mockResult);
-
-      const onSuccess = vi.fn();
-      const { user } = renderForm(onSuccess);
-      await waitForFormLoaded();
-      await navigateToStep5(user);
-
-      await user.click(screen.getByRole('checkbox'));
-
-      // First submit — all 3 retries fail
-      await user.click(screen.getByRole('button', { name: 'Submit Reservation' }));
-      await waitFor(() => {
-        expect(screen.getByText('Security verification failed. Please try submitting again.')).toBeInTheDocument();
-      }, { timeout: 5000 });
-
-      // Second submit — succeeds
-      await user.click(screen.getByRole('button', { name: 'Submit Reservation' }));
-      await waitFor(() => {
-        expect(onSuccess).toHaveBeenCalledWith(mockResult);
-      }, { timeout: 5000 });
     });
   });
 
