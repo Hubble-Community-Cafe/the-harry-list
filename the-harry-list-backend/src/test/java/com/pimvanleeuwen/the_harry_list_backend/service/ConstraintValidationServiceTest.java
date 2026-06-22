@@ -418,4 +418,28 @@ class ConstraintValidationServiceTest {
 
         assertTrue(violations.isEmpty());
     }
+
+    @Test
+    void validate_shouldNotEnforceActivityNotice() {
+        // ACTIVITY_NOTICE is advisory only — the frontend shows the message, but it must
+        // never block a submission even when its trigger activity is selected.
+        FormConstraint notice = FormConstraint.builder()
+                .constraintType(FormConstraintType.ACTIVITY_NOTICE)
+                .triggerActivity("PRIVATE_EVENT")
+                .message("A private event at Meteor has an additional charge.")
+                .enabled(true)
+                .build();
+
+        when(constraintRepository.findByEnabledTrue()).thenReturn(List.of(notice));
+
+        List<String> violations = service.validate(
+                Set.of(SpecialActivity.PRIVATE_EVENT),
+                BarLocation.METEOR,
+                SeatingArea.INSIDE,
+                LocalDate.now().plusDays(10),
+                LocalTime.of(20, 0),
+                30);
+
+        assertTrue(violations.isEmpty());
+    }
 }
