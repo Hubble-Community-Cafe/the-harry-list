@@ -96,6 +96,13 @@ const mockConstraints: FormConstraint[] = [
     message: 'Catering requires 14 days advance booking.',
     enabled: true,
   },
+  {
+    id: 7,
+    constraintType: 'ACTIVITY_NOTICE',
+    triggerActivity: 'PRIVATE_EVENT',
+    message: 'A private event at Meteor has an additional charge.',
+    enabled: true,
+  },
 ];
 
 const mockBlockedPeriods: BlockedPeriod[] = [];
@@ -456,6 +463,35 @@ describe('ReservationForm', () => {
       // CATERING_CORONA_ROOM should now be disabled
       const coronaButton = screen.getByRole('checkbox', { name: 'Catering for Corona Room Event' });
       expect(coronaButton).toBeDisabled();
+    });
+
+    it('shows an advisory notice when an activity with an ACTIVITY_NOTICE is selected', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep2(user);
+
+      // No notice until the triggering activity is picked.
+      expect(screen.queryByTestId('activity-notice')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('checkbox', { name: 'Private Event' }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('activity-notice')).toHaveTextContent(
+          'A private event at Meteor has an additional charge.'
+        );
+      });
+    });
+
+    it('hides the advisory notice again when the activity is deselected', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep2(user);
+
+      await user.click(screen.getByRole('checkbox', { name: 'Private Event' }));
+      await waitFor(() => expect(screen.getByTestId('activity-notice')).toBeInTheDocument());
+
+      await user.click(screen.getByRole('checkbox', { name: 'Private Event' }));
+      await waitFor(() => expect(screen.queryByTestId('activity-notice')).not.toBeInTheDocument());
     });
 
     it('shows location conflict for small groups with incompatible activity', async () => {

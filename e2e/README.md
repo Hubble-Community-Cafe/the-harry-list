@@ -143,6 +143,7 @@ faster layers.
 | Sender / spam-folder notice on confirmation (#310) | `SuccessMessage` test | — | `public/happy-path` |
 | Soft / hard blocked periods | `blockedPeriods` + form tests | `ConstraintValidationServiceTest` | `public/soft-block`, `public/hard-block`, `admin/blocked-periods` |
 | Form constraints (all types) | form tests | `ConstraintValidationServiceTest` | `public/constraints-blocking`, `public/constraints-dynamic`, `admin/constraints-roundtrip` |
+| Activity notice (advisory, non-blocking) | `ReservationForm` + `FormSettingsPage` tests | `ConstraintValidationServiceTest` | `public/activity-notice` |
 | Confirm a reservation (appears in admin) | `ReservationsPage`/detail tests | controller tests | `admin/reservation-lifecycle` #1 |
 | Edit / remove a reservation | `ReservationDetailPage` test | `Update`/`DeleteReservationServiceTest` | `admin/reservation-lifecycle` #2 |
 | Seating area (inside/outside) shown in detail (#292) | `ReservationDetailPage` test | — | `admin/reservation-lifecycle` #2 |

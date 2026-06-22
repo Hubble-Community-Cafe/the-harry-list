@@ -26,6 +26,7 @@ const CONSTRAINT_TYPES = [
   { value: 'ADVANCE_BOOKING', label: 'Advance Booking' },
   { value: 'GUEST_LIMIT', label: 'Guest Limit' },
   { value: 'GUEST_MINIMUM', label: 'Guest Minimum' },
+  { value: 'ACTIVITY_NOTICE', label: 'Activity Notice' },
 ];
 
 const ACTIVITIES = [
@@ -466,26 +467,30 @@ export function SettingsPage() {
                   </div>
                 )}
 
-                <div>
-                  <label className="block text-sm text-dark-400 mb-1">Target Value</label>
-                  <input
-                    type="text"
-                    data-testid="constraint-target"
-                    value={editingConstraint.targetValue || ''}
-                    onChange={e => setEditingConstraint({ ...editingConstraint, targetValue: e.target.value })}
-                    placeholder="e.g. EAT_A_LA_CARTE, HUBBLE, INSIDE"
-                    className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
-                  />
-                  <p className="text-xs text-dark-500 mt-1">
-                    {editingConstraint.constraintType === 'ACTIVITY_CONFLICT' && 'The conflicting activity'}
-                    {editingConstraint.constraintType === 'LOCATION_LOCK' && 'The locked location (HUBBLE or METEOR)'}
-                    {editingConstraint.constraintType === 'SEATING_LOCK' && 'The locked seating (INSIDE or OUTSIDE)'}
-                    {editingConstraint.constraintType === 'TIME_RESTRICTION' && 'e.g. EARLY_ACCESS'}
-                    {editingConstraint.constraintType === 'ADVANCE_BOOKING' && 'Leave empty (use numeric value)'}
-                    {editingConstraint.constraintType === 'GUEST_LIMIT' && 'Leave empty (use numeric value)'}
-                    {editingConstraint.constraintType === 'GUEST_MINIMUM' && 'The location this minimum applies to (HUBBLE or METEOR), or leave empty for all locations'}
-                  </p>
-                </div>
+                {/* ACTIVITY_NOTICE is advisory only — it needs just a trigger activity and
+                    a message, so the target value field is hidden for it. */}
+                {editingConstraint.constraintType !== 'ACTIVITY_NOTICE' && (
+                  <div>
+                    <label className="block text-sm text-dark-400 mb-1">Target Value</label>
+                    <input
+                      type="text"
+                      data-testid="constraint-target"
+                      value={editingConstraint.targetValue || ''}
+                      onChange={e => setEditingConstraint({ ...editingConstraint, targetValue: e.target.value })}
+                      placeholder="e.g. EAT_A_LA_CARTE, HUBBLE, INSIDE"
+                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                    />
+                    <p className="text-xs text-dark-500 mt-1">
+                      {editingConstraint.constraintType === 'ACTIVITY_CONFLICT' && 'The conflicting activity'}
+                      {editingConstraint.constraintType === 'LOCATION_LOCK' && 'The locked location (HUBBLE or METEOR)'}
+                      {editingConstraint.constraintType === 'SEATING_LOCK' && 'The locked seating (INSIDE or OUTSIDE)'}
+                      {editingConstraint.constraintType === 'TIME_RESTRICTION' && 'e.g. EARLY_ACCESS'}
+                      {editingConstraint.constraintType === 'ADVANCE_BOOKING' && 'Leave empty (use numeric value)'}
+                      {editingConstraint.constraintType === 'GUEST_LIMIT' && 'Leave empty (use numeric value)'}
+                      {editingConstraint.constraintType === 'GUEST_MINIMUM' && 'The location this minimum applies to (HUBBLE or METEOR), or leave empty for all locations'}
+                    </p>
+                  </div>
+                )}
 
                 {(editingConstraint.constraintType === 'ADVANCE_BOOKING' ||
                   editingConstraint.constraintType === 'GUEST_LIMIT' ||
@@ -531,6 +536,12 @@ export function SettingsPage() {
                     rows={2}
                     className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
                   />
+                  {editingConstraint.constraintType === 'ACTIVITY_NOTICE' && (
+                    <p className="text-xs text-dark-500 mt-1">
+                      Shown as an informational note when the trigger activity is selected
+                      (e.g. "A private event at Meteor has an additional charge"). It does not block the booking.
+                    </p>
+                  )}
                 </div>
               </div>
 
