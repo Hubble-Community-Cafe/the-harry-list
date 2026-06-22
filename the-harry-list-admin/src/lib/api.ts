@@ -125,7 +125,7 @@ async function fetchJsonWithAuth(url: string, options: RequestInit = {}): Promis
   const response = await fetchWithAuth(url, options);
 
   if (!response.ok) {
-    let errorMessage = 'Request failed';
+    let errorMessage: string;
     try {
       const errorData = await response.json();
       // Handle Spring Boot validation errors
