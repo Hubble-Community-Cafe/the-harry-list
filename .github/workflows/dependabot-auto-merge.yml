@@ -1,0 +1,41 @@
+name: Dependabot auto-merge
+
+# Auto-merges Dependabot's minor/patch PRs into the `develop` integration branch
+# once all required checks pass. Major updates are left open for manual review.
+# Releases reach `main` separately via a single `develop -> main` PR.
+
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    # Only Dependabot PRs that target the develop integration branch
+    if: >-
+      github.actor == 'dependabot[bot]' &&
+      github.event.pull_request.base.ref == 'develop'
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+
+      - name: Approve and enable auto-merge for minor/patch updates
+        if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        run: |
+          gh pr review --approve "$PR_URL"
+          gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Flag major updates for manual review
+        if: steps.meta.outputs.update-type == 'version-update:semver-major'
+        run: |
+          gh pr comment "$PR_URL" --body \
+            "🚧 Major version update — leaving this open for manual review (not auto-merged)."
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

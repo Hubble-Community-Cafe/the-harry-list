@@ -70,6 +70,24 @@ docs: update calendar feed setup instructions
 - All PRs require review from @PimVanLeeuwen before merging
 - Keep PRs focused — one feature or fix per PR
 
+## Dependency Updates
+
+Dependency bumps are handled by Dependabot and do **not** follow the normal "open a PR against `main`" flow. They target a long-lived **`develop`** branch instead.
+
+**Why:** `main` requires the *Version Bump Check* (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)), which fails any PR that doesn't raise the app version across all three packages. Dependabot never bumps the app version, so its PRs can't merge to `main` directly. `develop` is kept one patch ahead of `main`, so Dependabot PRs inherit that bumped version, pass the check, and merge individually.
+
+**How it flows:**
+
+1. Every Monday, Dependabot opens grouped PRs against `develop`, at most one batched *minor/patch* PR and one isolated *major* PR per ecosystem (Maven, admin npm, public npm, GitHub Actions). See [`.github/dependabot.yml`](.github/dependabot.yml).
+2. Minor/patch PRs are **auto-merged** into `develop` once CI passes, via [`.github/workflows/dependabot-auto-merge.yml`](.github/workflows/dependabot-auto-merge.yml). Major updates are commented and left open for manual review.
+3. To release the accumulated updates, open a single **`develop → main`** PR. It already carries the version bump, so it passes the Version Bump Check.
+4. After the release merges, reset `develop` back onto `main` and open the next
+   patch cycle:
+   ```bash
+   ./scripts/release-reset-develop.sh
+   ```
+   (Pass an explicit version to override the auto-incremented patch, e.g. `./scripts/release-reset-develop.sh 1.8.0`.)
+
 ## Reporting Bugs
 
 Use the [bug report template](../../issues/new?template=bug_report.md). Include:
