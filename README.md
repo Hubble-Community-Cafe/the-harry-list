@@ -101,7 +101,7 @@ See [`e2e/README.md`](e2e/README.md) for the architecture, how to read the evide
 Before going live, verify these are in place:
 
 ### HTTPS
-All three services must be served over HTTPS. Terminate TLS at the reverse proxy (Traefik, nginx, Portainer proxy) — the containers themselves serve HTTP internally.
+All three services must be served over HTTPS. Terminate TLS at the reverse proxy (Traefik, nginx, Portainer proxy) the containers themselves serve HTTP internally.
 
 ### Versioning
 Use pinned version tags in your Portainer stack (e.g., `0.9.0`) rather than `latest`. This ensures rollbacks are reliable.
