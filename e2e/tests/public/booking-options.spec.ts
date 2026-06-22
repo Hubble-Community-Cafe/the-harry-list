@@ -48,6 +48,7 @@ test.describe('public: booking with many options', () => {
     await form.continue();
 
     // Step 5 — confirm.
+    await form.expectStep('Review & Confirm');
     await form.acceptTerms();
     await form.submit();
 
