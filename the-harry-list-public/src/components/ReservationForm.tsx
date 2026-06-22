@@ -620,7 +620,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
       </div>
 
       {/* Form Card */}
-      <form onSubmit={handleSubmit(onSubmit, (fieldErrors) => {
+      <form noValidate onSubmit={handleSubmit(onSubmit, (fieldErrors) => {
         if (import.meta.env.DEV) console.error('Form validation failed on submit:', fieldErrors);
         const stepFields: (keyof ReservationFormData)[][] = [
           ['contactName', 'email', 'phoneNumber'],
