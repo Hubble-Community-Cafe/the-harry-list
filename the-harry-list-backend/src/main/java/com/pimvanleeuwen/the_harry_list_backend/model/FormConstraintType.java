@@ -10,7 +10,9 @@ public enum FormConstraintType {
     TIME_RESTRICTION("Time Restriction"),
     ADVANCE_BOOKING("Advance Booking"),
     GUEST_LIMIT("Guest Limit"),
-    GUEST_MINIMUM("Guest Minimum");
+    GUEST_MINIMUM("Guest Minimum"),
+    /** Advisory only: shows a message when the trigger activity is selected (no enforcement). */
+    ACTIVITY_NOTICE("Activity Notice");
 
     private final String displayName;
 

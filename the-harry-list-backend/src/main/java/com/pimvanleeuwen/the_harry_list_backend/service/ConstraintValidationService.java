@@ -80,6 +80,11 @@ public class ConstraintValidationService {
                     // no server-side enforcement needed (early slots are allowed
                     // when the triggering activity is selected)
                     break;
+                case ACTIVITY_NOTICE:
+                    // Advisory only: the frontend shows the message (e.g. "this option
+                    // costs money") when the trigger activity is selected. Nothing to
+                    // enforce server-side.
+                    break;
                 default:
                     break;
             }

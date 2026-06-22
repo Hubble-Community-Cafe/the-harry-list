@@ -73,6 +73,11 @@ export class ReservationFormPage {
     await this.page.getByText(label, { exact: true }).click();
   }
 
+  /** Advisory notices (ACTIVITY_NOTICE) shown when a triggering activity is selected. */
+  activityNotices(): Locator {
+    return this.page.getByTestId('activity-notice');
+  }
+
   // ---- Blocked-period notice (soft or hard) ----
   blockedNotice(): Locator {
     return this.page.getByTestId('blocked-date-notice');

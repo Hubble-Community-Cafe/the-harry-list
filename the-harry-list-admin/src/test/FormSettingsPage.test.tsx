@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { FormSettingsPage } from '../pages/FormSettingsPage';
-import { fetchBlockedPeriods } from '../lib/api';
+import { fetchBlockedPeriods, createFormConstraint } from '../lib/api';
 
 vi.mock('../lib/usePermissions', () => ({
   usePermissions: () => ({
@@ -188,6 +188,41 @@ describe('FormSettingsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('New Constraint')).toBeInTheDocument();
+    });
+  });
+
+  it('hides the target value field and saves an Activity Notice constraint', async () => {
+    vi.mocked(createFormConstraint).mockResolvedValueOnce({
+      id: 9,
+      constraintType: 'ACTIVITY_NOTICE',
+      triggerActivity: 'PRIVATE_EVENT',
+      message: 'A private event at Meteor has an additional charge.',
+      enabled: true,
+    });
+
+    renderWithRouter(<FormSettingsPage />);
+    await waitFor(() => expect(screen.getByText('Add Constraint')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByText('Add Constraint'));
+    await waitFor(() => expect(screen.getByText('New Constraint')).toBeInTheDocument());
+
+    // Target Value is shown for the default (Activity Conflict) type.
+    expect(screen.getByTestId('constraint-target')).toBeInTheDocument();
+
+    // Switching to Activity Notice hides the target value field — only trigger + message remain.
+    fireEvent.change(screen.getByTestId('constraint-type'), { target: { value: 'ACTIVITY_NOTICE' } });
+    expect(screen.queryByTestId('constraint-target')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByTestId('constraint-trigger'), { target: { value: 'PRIVATE_EVENT' } });
+    fireEvent.change(screen.getByTestId('constraint-message'), {
+      target: { value: 'A private event at Meteor has an additional charge.' },
+    });
+    fireEvent.click(screen.getByTestId('save-constraint'));
+
+    await waitFor(() => expect(createFormConstraint).toHaveBeenCalled());
+    expect(vi.mocked(createFormConstraint).mock.calls[0][0]).toMatchObject({
+      constraintType: 'ACTIVITY_NOTICE',
+      triggerActivity: 'PRIVATE_EVENT',
+      message: 'A private event at Meteor has an additional charge.',
     });
   });
 

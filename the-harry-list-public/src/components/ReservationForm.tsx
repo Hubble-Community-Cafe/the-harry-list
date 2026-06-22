@@ -246,6 +246,14 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
     }
   }, [seatingLocked, setValue]);
 
+  // Advisory notices (e.g. "this option costs money") shown when a selected activity
+  // matches an ACTIVITY_NOTICE constraint. Purely informational — no enforcement.
+  const activityNotices = useMemo(() => {
+    return constraints
+      .filter(c => c.constraintType === 'ACTIVITY_NOTICE' && watchSpecialActivities.includes(c.triggerActivity))
+      .map(c => ({ id: c.id, message: c.message }));
+  }, [constraints, watchSpecialActivities]);
+
   // Calculate duration for long reservation warning
   const durationMinutes = useMemo(() => {
     if (!watchStartTime || !watchEndTime) return 0;
@@ -792,6 +800,20 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                     );
                   })}
                 </div>
+                {activityNotices.length > 0 && (
+                  <div className="mt-3 space-y-2" data-testid="activity-notices">
+                    {activityNotices.map(notice => (
+                      <div
+                        key={notice.id}
+                        data-testid="activity-notice"
+                        className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 flex items-start gap-2"
+                      >
+                        <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                        <span>{notice.message}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Expected Guests */}
