@@ -53,7 +53,7 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             // CSRF disabled: API uses JWT bearer tokens (not cookies), so CSRF attacks don't apply.
-            // Public endpoints are protected by reCAPTCHA + CORS instead.
+            // Public endpoints are protected by ALTCHA proof-of-work + CORS instead.
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 // Always allow CORS preflight requests (OPTIONS) - must come before any auth checks
@@ -63,7 +63,7 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/public/reservations").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/public/reservations/recaptcha-status").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/public/altcha/challenge").permitAll()
                 .requestMatchers("/api/options/**").permitAll()
                 .requestMatchers("/api/calendar/**").permitAll()  // Calendar feed uses token auth
 

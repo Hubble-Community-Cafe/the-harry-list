@@ -66,7 +66,7 @@ public class E2eSecurityConfig {
                 .requestMatchers("/test/**").permitAll()            // e2e seed/reset helpers
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/public/reservations").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/public/reservations/recaptcha-status").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/public/altcha/challenge").permitAll()
                 .requestMatchers("/api/options/**").permitAll()
                 .requestMatchers("/api/calendar/**").permitAll()
                 .anyRequest().authenticated()

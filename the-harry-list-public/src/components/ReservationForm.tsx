@@ -2,7 +2,6 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import {
   User, Mail, Phone, Building2, Calendar, MapPin,
   CreditCard, Send, Loader2,
@@ -10,7 +9,8 @@ import {
   ClipboardCheck, AlertTriangle
 } from 'lucide-react';
 import * as Sentry from '@sentry/react';
-import { submitReservation, fetchFormOptions, fetchFormConstraints, fetchBlockedPeriods, getRecaptchaSiteKey } from '../lib/api';
+import { submitReservation, fetchFormOptions, fetchFormConstraints, fetchBlockedPeriods, getAltchaChallengeUrl } from '../lib/api';
+import { AltchaWidget } from './AltchaWidget';
 import { checkBlockedDate } from '../lib/blockedPeriods';
 import type { ReservationFormData, FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
 
@@ -146,10 +146,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
   const [blockedPeriods, setBlockedPeriods] = useState<BlockedPeriod[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(true);
   const [optionsError, setOptionsError] = useState<string | null>(null);
-
-  // reCAPTCHA v3 hook - only available when site key is configured
-  const { executeRecaptcha } = useGoogleReCaptcha();
-  const recaptchaEnabled = Boolean(getRecaptchaSiteKey());
+  const [altchaPayload, setAltchaPayload] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadOptions() {
@@ -528,37 +525,14 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
     setSubmitError(null);
 
     try {
-      let recaptchaToken: string | undefined;
-
-      // Execute reCAPTCHA if enabled and available, with retries
-      if (recaptchaEnabled && executeRecaptcha) {
-        for (let attempt = 0; attempt < 3; attempt++) {
-          try {
-            recaptchaToken = await executeRecaptcha('submit_reservation');
-            break;
-          } catch (recaptchaError) {
-            if (import.meta.env.DEV) console.warn('reCAPTCHA attempt', attempt + 1, 'failed:', recaptchaError);
-            if (attempt < 2) {
-              await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-          }
-        }
-        // If all retries failed, block submission but let user try again
-        if (!recaptchaToken) {
-          setSubmitError('Security verification failed. Please try submitting again.');
-          setIsSubmitting(false);
-          return;
-        }
-      }
-
-      const result = await submitReservation(data, recaptchaToken);
+      const result = await submitReservation(data, altchaPayload ?? undefined);
       onSuccess(result);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Failed to submit reservation');
     } finally {
       setIsSubmitting(false);
     }
-  }, [executeRecaptcha, recaptchaEnabled, onSuccess]);
+  }, [altchaPayload, onSuccess]);
 
   // Summary helper for Step 5
   const getPaymentLabel = () => {
@@ -646,7 +620,7 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
       </div>
 
       {/* Form Card */}
-      <form onSubmit={handleSubmit(onSubmit, (fieldErrors) => {
+      <form noValidate onSubmit={handleSubmit(onSubmit, (fieldErrors) => {
         if (import.meta.env.DEV) console.error('Form validation failed on submit:', fieldErrors);
         const stepFields: (keyof ReservationFormData)[][] = [
           ['contactName', 'email', 'phoneNumber'],
@@ -1410,6 +1384,12 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
               </label>
               {errors.termsAccepted && <p className="error-text mt-2">{errors.termsAccepted.message}</p>}
             </div>
+
+            {/* ALTCHA proof-of-work widget */}
+            <AltchaWidget
+              challengeUrl={getAltchaChallengeUrl()}
+              onVerified={setAltchaPayload}
+            />
 
             {/* Submit Error */}
             {submitError && (

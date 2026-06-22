@@ -17,7 +17,7 @@ import java.util.Set;
 
 /**
  * DTO for public reservation submissions.
- * Includes reCAPTCHA token for bot protection.
+ * Includes ALTCHA proof-of-work payload for bot protection.
  */
 @Builder
 @Data
@@ -25,8 +25,8 @@ import java.util.Set;
 @NoArgsConstructor
 public class PublicReservationRequest {
 
-    // ===== reCAPTCHA Token =====
-    private String recaptchaToken;
+    // ===== ALTCHA proof-of-work payload =====
+    private String altcha;
 
     // ===== Contact Information =====
     @NotBlank(message = "Name is required")

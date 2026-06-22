@@ -139,6 +139,7 @@ export class ReservationFormPage {
     await this.continue();
     await this.selectPayment(opts.payment ?? 'People pay individually');
     await this.continue();
+    await this.expectStep('Review & Confirm');
     await this.acceptTerms();
     await this.submit();
   }
