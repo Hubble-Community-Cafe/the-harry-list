@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.pimvanleeuwen</groupId>
 	<artifactId>the-harry-list-backend</artifactId>
-	<version>1.9.0</version>
+	<version>1.9.1</version>
 	<name>the-harry-list-backend</name>
 	<description>The Harry List, reservation system for Stichting Bar Potential</description>
 	<url/>
@@ -28,6 +28,9 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<!-- Single clean @token@ for resource filtering; avoids the @@ delimiter
+		     collision that left the Sentry release literal/unversioned. -->
+		<sentry.release>the-harry-list-backend@${project.version}</sentry.release>
 	</properties>
 	<dependencies>
 		<dependency>

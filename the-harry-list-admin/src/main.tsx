@@ -6,10 +6,14 @@ import { BrowserRouter } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import { msalConfig } from './lib/authConfig';
 import { setMsalInstance } from './lib/api';
+import { installTranslationCrashGuard } from './lib/translationCrashGuard';
 import App from './App';
 import './index.css';
 
 declare const __APP_VERSION__: string;
+
+// Must run before React renders — see translationCrashGuard for details.
+installTranslationCrashGuard();
 
 const sentryDsn = window.__RUNTIME_CONFIG__?.SENTRY_DSN || import.meta.env.VITE_SENTRY_DSN;
 if (sentryDsn && !sentryDsn.startsWith('__')) {
@@ -19,6 +23,13 @@ if (sentryDsn && !sentryDsn.startsWith('__')) {
     release: `the-harry-list-admin@${__APP_VERSION__}`,
     integrations: [Sentry.browserTracingIntegration()],
     tracesSampleRate: 0.1,
+    // Transient client-side network blips (offline, flaky connection,
+    // navigation aborts) — not actionable server/app bugs.
+    ignoreErrors: [
+      'Failed to fetch',
+      'NetworkError when attempting to fetch resource',
+      'Load failed',
+    ],
   });
 }
 
