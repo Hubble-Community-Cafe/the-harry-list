@@ -38,6 +38,14 @@ public class SentryConfig {
             if (release != null && !release.isBlank()) {
                 options.setRelease(release);
             }
+            // Drop benign client-disconnect noise (broken pipe / aborted requests)
+            // so it doesn't drown out real server errors.
+            options.setBeforeSend((event, hint) -> {
+                if (SentryEventFilter.isClientDisconnect(event.getThrowable())) {
+                    return null;
+                }
+                return event;
+            });
         });
         log.info("Sentry initialized for environment: {}", environment);
     }
