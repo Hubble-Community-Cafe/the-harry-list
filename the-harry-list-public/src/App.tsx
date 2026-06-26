@@ -3,6 +3,7 @@ import { ReservationForm } from './components/ReservationForm';
 import { SuccessMessage } from './components/SuccessMessage';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { ThemeProvider } from './lib/ThemeContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -16,6 +17,7 @@ interface SubmissionResult {
 function App() {
   const [submitted, setSubmitted] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<SubmissionResult | null>(null);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   const handleSuccess = (result: SubmissionResult) => {
     setSubmissionResult(result);
@@ -58,7 +60,7 @@ function App() {
               </div>
 
               {/* Form */}
-              <ReservationForm onSuccess={handleSuccess} />
+              <ReservationForm onSuccess={handleSuccess} onOpenPrivacy={() => setShowPrivacy(true)} />
             </>
           ) : (
             <SuccessMessage
@@ -69,7 +71,8 @@ function App() {
         </div>
       </main>
 
-      <Footer />
+      <Footer onOpenPrivacy={() => setShowPrivacy(true)} />
+      <PrivacyPolicy open={showPrivacy} onClose={() => setShowPrivacy(false)} />
     </div>
     </ThemeProvider>
     </ErrorBoundary>

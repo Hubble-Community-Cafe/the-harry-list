@@ -126,11 +126,12 @@ function setupMocks() {
   vi.mocked(fetchBlockedPeriods).mockResolvedValue(mockBlockedPeriods);
 }
 
-function renderForm(onSuccess = vi.fn()) {
+function renderForm(onSuccess = vi.fn(), onOpenPrivacy = vi.fn()) {
   return {
     onSuccess,
+    onOpenPrivacy,
     user: userEvent.setup(),
-    ...render(<ReservationForm onSuccess={onSuccess} />),
+    ...render(<ReservationForm onSuccess={onSuccess} onOpenPrivacy={onOpenPrivacy} />),
   };
 }
 
@@ -807,6 +808,16 @@ describe('ReservationForm', () => {
       await waitFor(() => {
         expect(screen.getByText('Server error')).toBeInTheDocument();
       });
+    });
+
+    it('opens the privacy policy from the link by the terms checkbox', async () => {
+      const onOpenPrivacy = vi.fn();
+      const { user } = renderForm(vi.fn(), onOpenPrivacy);
+      await waitForFormLoaded();
+      await navigateToStep5(user);
+
+      await user.click(screen.getByTestId('form-privacy-link'));
+      expect(onOpenPrivacy).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -1,6 +1,10 @@
 import { ExternalLink } from 'lucide-react';
 
-export function Footer() {
+interface FooterProps {
+  onOpenPrivacy: () => void;
+}
+
+export function Footer({ onOpenPrivacy }: FooterProps) {
   return (
     <footer className="relative z-20 border-t border-dark-800/50 bg-dark-950/80 backdrop-blur-xl">
       <div className="container mx-auto px-4 py-8">
@@ -25,6 +29,14 @@ export function Footer() {
               Meteor Café
               <ExternalLink className="w-3 h-3" />
             </a>
+            <button
+              type="button"
+              onClick={onOpenPrivacy}
+              data-testid="footer-privacy-link"
+              className="text-dark-400 hover:text-hubble-400 transition-colors"
+            >
+              Privacy Policy
+            </button>
           </div>
 
           {/* Made with love */}
