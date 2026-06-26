@@ -1,14 +1,19 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.pimvanleeuwen.the_harry_list_backend.dto.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.*;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -45,10 +50,33 @@ class CreateReservationServiceTest {
     private Reservation sampleDto;
     private com.pimvanleeuwen.the_harry_list_backend.model.Reservation sampleEntity;
 
+    private ListAppender<ILoggingEvent> analyticsAppender;
+    private ListAppender<ILoggingEvent> serviceAppender;
+    private Logger analyticsLogger;
+    private Logger serviceLogger;
+
     @BeforeEach
     void setUp() {
         sampleDto = createSampleDto();
         sampleEntity = createSampleEntity();
+
+        analyticsLogger = (Logger) LoggerFactory.getLogger("analytics");
+        serviceLogger = (Logger) LoggerFactory.getLogger(CreateReservationService.class);
+        analyticsAppender = attachAppender(analyticsLogger);
+        serviceAppender = attachAppender(serviceLogger);
+    }
+
+    @AfterEach
+    void tearDown() {
+        analyticsLogger.detachAppender(analyticsAppender);
+        serviceLogger.detachAppender(serviceAppender);
+    }
+
+    private static ListAppender<ILoggingEvent> attachAppender(Logger logger) {
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        return appender;
     }
 
     @Test
@@ -68,6 +96,69 @@ class CreateReservationServiceTest {
         assertNotNull(response.getBody());
         verify(reservationRepository, times(1)).save(any());
         verify(auditService).recordCreate(eq(AuditEntityType.RESERVATION), eq(1L), any(), any(), any());
+    }
+
+    @Test
+    void execute_shouldEmitExactlyOnePrivacySafeAnalyticsLine() {
+        // Given
+        when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
+                .thenReturn(List.of());
+        when(reservationMapper.toEntity(any(Reservation.class))).thenReturn(sampleEntity);
+        when(reservationRepository.save(any())).thenReturn(sampleEntity);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        // When
+        createReservationService.execute(sampleDto);
+
+        // Then — exactly one line, in the agreed PII-free contract format.
+        List<ILoggingEvent> events = analyticsAppender.list;
+        assertEquals(1, events.size(), "Exactly one analytics line per reservation");
+        assertEquals("APP_ANALYTICS event=reservation_created bar=HUBBLE",
+                events.get(0).getFormattedMessage());
+    }
+
+    @Test
+    void execute_shouldFallBackToNoPreferenceWhenLocationNull() {
+        // Given a reservation persisted without a location.
+        sampleEntity.setLocation(null);
+        when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
+                .thenReturn(List.of());
+        when(reservationMapper.toEntity(any(Reservation.class))).thenReturn(sampleEntity);
+        when(reservationRepository.save(any())).thenReturn(sampleEntity);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        // When
+        createReservationService.execute(sampleDto);
+
+        // Then
+        assertEquals("APP_ANALYTICS event=reservation_created bar=NO_PREFERENCE",
+                analyticsAppender.list.get(0).getFormattedMessage());
+    }
+
+    @Test
+    void execute_shouldNeverLogGuestPii() {
+        // Given
+        when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
+                .thenReturn(List.of());
+        when(reservationMapper.toEntity(any(Reservation.class))).thenReturn(sampleEntity);
+        when(reservationRepository.save(any())).thenReturn(sampleEntity);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        // When
+        createReservationService.execute(sampleDto);
+
+        // Then — no name/email/phone in any analytics or service log line.
+        assertNoPii(analyticsAppender);
+        assertNoPii(serviceAppender);
+    }
+
+    private void assertNoPii(ListAppender<ILoggingEvent> appender) {
+        for (ILoggingEvent event : appender.list) {
+            String msg = event.getFormattedMessage();
+            assertFalse(msg.contains("John Doe"), "name leaked into log: " + msg);
+            assertFalse(msg.contains("john@example.com"), "email leaked into log: " + msg);
+            assertFalse(msg.contains("+31612345678"), "phone leaked into log: " + msg);
+        }
     }
 
     @Test
