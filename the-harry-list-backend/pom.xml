@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.pimvanleeuwen</groupId>
 	<artifactId>the-harry-list-backend</artifactId>
-	<version>1.9.2</version>
+	<version>1.9.3</version>
 	<name>the-harry-list-backend</name>
 	<description>The Harry List, reservation system for Stichting Bar Potential</description>
 	<url/>
@@ -32,6 +32,26 @@
 		     collision that left the Sentry release literal/unversioned. -->
 		<sentry.release>the-harry-list-backend@${project.version}</sentry.release>
 	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- Pull the Jackson 2.x line (used transitively by jjwt-jackson and others)
+			     ahead of the version Spring Boot manages, to pick up the fix for
+			     CVE-2026-54515 in jackson-databind. Spring Boot 4 itself uses Jackson 3;
+			     this only realigns the legacy 2.x artifacts.
+			     REMOVE this block once Spring Boot manages Jackson 2.x >= 2.22.0. Check with:
+			       ./mvnw dependency:tree -Dincludes=com.fasterxml.jackson.core:jackson-databind
+			     (with this block removed). If it resolves to >= 2.22.0, delete it. -->
+			<dependency>
+				<groupId>com.fasterxml.jackson</groupId>
+				<artifactId>jackson-bom</artifactId>
+				<version>2.22.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
