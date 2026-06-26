@@ -78,6 +78,19 @@ export class ReservationFormPage {
     return this.page.getByTestId('activity-notice');
   }
 
+  // ---- Privacy policy ----
+  privacyDialog(): Locator {
+    return this.page.getByTestId('privacy-policy');
+  }
+
+  async openPrivacyFromFooter(): Promise<void> {
+    await this.page.getByTestId('footer-privacy-link').click();
+  }
+
+  async closePrivacy(): Promise<void> {
+    await this.page.getByTestId('privacy-policy-close').click();
+  }
+
   // ---- Blocked-period notice (soft or hard) ----
   blockedNotice(): Locator {
     return this.page.getByTestId('blocked-date-notice');

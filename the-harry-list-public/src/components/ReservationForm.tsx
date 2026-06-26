@@ -111,6 +111,7 @@ interface ReservationResult {
 
 interface ReservationFormProps {
   onSuccess: (result: ReservationResult) => void;
+  onOpenPrivacy: () => void;
 }
 
 const steps = [
@@ -137,7 +138,7 @@ const SPECIAL_ACTIVITY_DESCRIPTIONS: Record<string, string> = {
   PRIVATE_EVENT: 'Private/closed event (Meteor only)',
 };
 
-export function ReservationForm({ onSuccess }: ReservationFormProps) {
+export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -1405,6 +1406,18 @@ export function ReservationForm({ onSuccess }: ReservationFormProps) {
                 </div>
               </label>
               {errors.termsAccepted && <p className="error-text mt-2">{errors.termsAccepted.message}</p>}
+              <p className="text-xs text-dark-500 mt-3">
+                We use the details you provide only to handle your reservation. See our{' '}
+                <button
+                  type="button"
+                  onClick={onOpenPrivacy}
+                  data-testid="form-privacy-link"
+                  className="underline text-hubble-400 hover:text-hubble-300 transition-colors"
+                >
+                  Privacy Policy
+                </button>
+                {' '}for how we handle your data.
+              </p>
             </div>
 
             {/* ALTCHA proof-of-work widget */}
