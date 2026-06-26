@@ -1,6 +1,7 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
+import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
@@ -17,6 +18,11 @@ import java.util.List;
 public class CreateReservationService implements Command<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation, com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> {
 
     private static final Logger log = LoggerFactory.getLogger(CreateReservationService.class);
+    /**
+     * Dedicated, PII-free analytics logger scraped into Loki (job=app-analytics).
+     * Only ever emit non-identifying, structured logfmt lines here never guest content.
+     */
+    private static final Logger analyticsLog = LoggerFactory.getLogger("analytics");
 
     private final ReservationRepository reservationRepository;
     private final ReservationMapper reservationMapper;
@@ -48,9 +54,10 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
      */
     public ResponseEntity<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> executeWithEmail(
             com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input, boolean sendEmail) {
-        log.info("LOGGING reservation.submitted contact='{}' email='{}' event='{}' date={} location={} guests={}",
-                input.getContactName(), input.getEmail(), input.getEventTitle(),
-                input.getEventDate(), input.getLocation(), input.getExpectedGuests());
+        // Note: never log name/email/phone here. These logs are centralized (Loki), so guest
+        // PII must not be written. Event/date/location/guests are operational context only.
+        log.info("LOGGING reservation.submitted event='{}' date={} location={} guests={}",
+                input.getEventTitle(), input.getEventDate(), input.getLocation(), input.getExpectedGuests());
 
         // Validate against dynamic constraints
         List<String> violations = constraintValidationService.validate(
@@ -78,6 +85,11 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
         log.info("LOGGING reservation.created id={} confirmation='{}' event='{}' date={} location={}",
                 savedEntity.getId(), savedEntity.getConfirmationNumber(),
                 savedEntity.getEventTitle(), savedEntity.getEventDate(), savedEntity.getLocation());
+
+        // Privacy-safe analytics line scraped into Loki (job=app-analytics). PII-free by
+        // contract: only the event name and the bar location. See observability data contract.
+        BarLocation bar = savedEntity.getLocation() != null ? savedEntity.getLocation() : BarLocation.NO_PREFERENCE;
+        analyticsLog.info("APP_ANALYTICS event=reservation_created bar={}", bar.name());
 
         auditService.recordCreate(AuditEntityType.RESERVATION, savedEntity.getId(),
                 savedEntity.getConfirmationNumber() + " - " + savedEntity.getEventTitle(),
