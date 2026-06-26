@@ -9,8 +9,12 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-# Install curl for health checks and create non-root user
+# Install curl for health checks and create non-root user.
+# Also remove the unused Canonical "pebble" service-manager binary that ships in the base
+# image: we never invoke it (our entrypoint is java -jar), and its bundled Go libraries
+# (golang.org/x/net etc.) trip image vulnerability scanners.
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
+    && rm -f /usr/bin/pebble \
     && addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
 COPY --from=build /app/target/the-harry-list-backend-*.jar app.jar
