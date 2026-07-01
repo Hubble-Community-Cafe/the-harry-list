@@ -14,6 +14,7 @@ import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository
 import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
+import com.pimvanleeuwen.the_harry_list_backend.service.ReservationAnalytics;
 import com.pimvanleeuwen.the_harry_list_backend.service.ReservationMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -43,6 +44,8 @@ import java.util.Map;
 public class AdminReservationController {
 
     private static final Logger log = LoggerFactory.getLogger(AdminReservationController.class);
+    /** Dedicated, PII-free analytics logger scraped into Loki (job=app-analytics). */
+    private static final Logger analyticsLog = LoggerFactory.getLogger("analytics");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -103,6 +106,12 @@ public class AdminReservationController {
                         reservation.setConfirmedBy(confirmedBy);
                     }
                     com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
+
+                    // Privacy-safe analytics: a coarse note that a status transition happened, for
+                    // the terminal/meaningful states only (PENDING re-opens are internal churn).
+                    if (status != ReservationStatus.PENDING) {
+                        analyticsLog.info(ReservationAnalytics.reservationStatusChangedLine(status, saved.getLocation()));
+                    }
 
                     log.info("AUDIT reservation.status_changed id={} confirmation='{}' event='{}' date={} status={}->{} user='{}'{}",
                             id, saved.getConfirmationNumber(), saved.getEventTitle(), saved.getEventDate(),

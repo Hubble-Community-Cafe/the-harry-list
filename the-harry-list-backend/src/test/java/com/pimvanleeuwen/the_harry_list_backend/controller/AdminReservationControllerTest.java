@@ -1,5 +1,8 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.pimvanleeuwen.the_harry_list_backend.dto.CateringEmailRequest;
@@ -11,8 +14,10 @@ import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
 import com.pimvanleeuwen.the_harry_list_backend.service.ReservationMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -25,6 +30,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -65,12 +71,25 @@ class AdminReservationControllerTest {
     private Reservation sampleReservation;
     private com.pimvanleeuwen.the_harry_list_backend.dto.Reservation sampleDto;
 
+    private Logger analyticsLogger;
+    private ListAppender<ILoggingEvent> analyticsAppender;
+
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         sampleReservation = createSampleReservation();
         sampleDto = createSampleDto();
+
+        analyticsLogger = (Logger) LoggerFactory.getLogger("analytics");
+        analyticsAppender = new ListAppender<>();
+        analyticsAppender.start();
+        analyticsLogger.addAppender(analyticsAppender);
+    }
+
+    @AfterEach
+    void tearDown() {
+        analyticsLogger.detachAppender(analyticsAppender);
     }
 
     @Test
@@ -214,6 +233,41 @@ class AdminReservationControllerTest {
         verify(reservationRepository).save(argThat(res ->
             res.getStatus() == ReservationStatus.COMPLETED
         ));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldEmitPrivacySafeAnalyticsLineOnConfirm() throws Exception {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "CONFIRMED"))
+            .andExpect(status().isOk());
+
+        assertEquals(1, analyticsAppender.list.size(), "One analytics line per terminal status change");
+        assertEquals("APP_ANALYTICS event=reservation_status_changed status=CONFIRMED bar=HUBBLE",
+                analyticsAppender.list.get(0).getFormattedMessage());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldNotEmitAnalyticsWhenReopenedToPending() throws Exception {
+        // A rejected reservation moved back to PENDING is internal churn — no analytics line.
+        sampleReservation.setStatus(ReservationStatus.REJECTED);
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "PENDING")
+                .param("sendEmail", "false"))
+            .andExpect(status().isOk());
+
+        assertTrue(analyticsAppender.list.isEmpty(), "PENDING transitions must not emit an analytics line");
     }
 
     @Test

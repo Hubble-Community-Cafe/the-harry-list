@@ -1,7 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
-import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
@@ -87,9 +86,8 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
                 savedEntity.getEventTitle(), savedEntity.getEventDate(), savedEntity.getLocation());
 
         // Privacy-safe analytics line scraped into Loki (job=app-analytics). PII-free by
-        // contract: only the event name and the bar location. See observability data contract.
-        BarLocation bar = savedEntity.getLocation() != null ? savedEntity.getLocation() : BarLocation.NO_PREFERENCE;
-        analyticsLog.info("APP_ANALYTICS event=reservation_created bar={}", bar.name());
+        // contract: only coarse buckets (bar, weekday, time slot, guest band, lead time).
+        analyticsLog.info(ReservationAnalytics.reservationCreatedLine(savedEntity));
 
         auditService.recordCreate(AuditEntityType.RESERVATION, savedEntity.getId(),
                 savedEntity.getConfirmationNumber() + " - " + savedEntity.getEventTitle(),
