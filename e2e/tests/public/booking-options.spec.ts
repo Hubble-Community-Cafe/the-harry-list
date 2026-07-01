@@ -27,19 +27,15 @@ test.describe('public: booking with many options', () => {
     await page.locator('input[name="organizationName"]').fill('Study Association E2E');
     await form.continue();
 
-    // Step 2 — activity + a special activity.
-    await form.expectStep('Activity Details');
+    // Step 2 — merged details: activity + special activity + location/seating (Hubble, outside).
+    await form.expectStep('Event Details');
     await form.fillActivity({ title: 'Graduation drinks', date: '2030-09-18', guests: 40 });
     await form.toggleActivity('Graduation / PhD Defense');
-    await form.continue();
-
-    // Step 3 — Hubble, outside.
-    await form.expectStep('Where would you like to host your event?');
     await form.selectLocation('HUBBLE');
     await form.selectSeating('OUTSIDE');
     await form.continue();
 
-    // Step 4 — invoice payment with type + cost centre.
+    // Step 3 — invoice payment with type + cost centre.
     await form.expectStep('Payment Information');
     await form.selectPayment('Invoice (>50 euros only)');
     await page.locator('select[name="invoiceType"]').selectOption('TUE');

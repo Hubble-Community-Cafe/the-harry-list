@@ -192,12 +192,11 @@ describe('ReservationForm', () => {
   // ==================== STEP NAVIGATION ====================
 
   describe('step navigation', () => {
-    it('shows 5 step buttons', async () => {
+    it('shows 4 step buttons', async () => {
       renderForm();
       await waitForFormLoaded();
       expect(screen.getByText('Contact')).toBeInTheDocument();
-      expect(screen.getByText('Activity')).toBeInTheDocument();
-      expect(screen.getByText('Location')).toBeInTheDocument();
+      expect(screen.getByText('Details')).toBeInTheDocument();
       expect(screen.getByText('Payment')).toBeInTheDocument();
       expect(screen.getByText('Confirm')).toBeInTheDocument();
     });
@@ -226,7 +225,7 @@ describe('ReservationForm', () => {
       await user.click(screen.getByRole('button', { name: 'Continue' }));
 
       await waitFor(() => {
-        expect(screen.getByText('Activity Details')).toBeInTheDocument();
+        expect(screen.getByText('Event Details')).toBeInTheDocument();
       });
     });
 
@@ -237,7 +236,7 @@ describe('ReservationForm', () => {
       await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
       await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
       await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Activity Details')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
 
       await user.click(screen.getByRole('button', { name: 'Go to previous step' }));
       expect(screen.getByText('Contact Information')).toBeInTheDocument();
@@ -304,7 +303,7 @@ describe('ReservationForm', () => {
       await user.click(screen.getByRole('button', { name: 'Continue' }));
 
       await waitFor(() => {
-        expect(screen.getByText('Activity Details')).toBeInTheDocument();
+        expect(screen.getByText('Event Details')).toBeInTheDocument();
       });
     });
   });
@@ -316,7 +315,7 @@ describe('ReservationForm', () => {
       await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
       await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
       await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Activity Details')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
     }
 
     it('shows activity toggle buttons', async () => {
@@ -438,7 +437,7 @@ describe('ReservationForm', () => {
       await user.type(screen.getByPlaceholderText('Tell us more about your event...'), 'A test event');
 
       await user.click(screen.getByRole('button', { name: 'Continue' }));
-      expect(screen.getByText('Activity Details')).toBeInTheDocument();
+      expect(screen.getByText('Event Details')).toBeInTheDocument();
     });
   });
 
@@ -449,7 +448,7 @@ describe('ReservationForm', () => {
       await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
       await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
       await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Activity Details')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
     }
 
     it('disables conflicting activities', async () => {
@@ -514,36 +513,32 @@ describe('ReservationForm', () => {
     });
   });
 
-  // ==================== STEP 3: LOCATION ====================
+  // ==================== LOCATION & SEATING (merged into step 2) ====================
 
-  describe('step 3 - location', () => {
-    async function goToStep3(user: ReturnType<typeof userEvent.setup>) {
-      // Step 1
+  describe('location & seating', () => {
+    // Location/seating now live on the merged "Event Details" step, below the time fields.
+    async function goToDetails(user: ReturnType<typeof userEvent.setup>) {
       await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
       await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
       await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Activity Details')).toBeInTheDocument());
-
-      // Step 2
-      await fillStep2Fields(user);
-      await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Where would you like to host your event?')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
     }
 
-    it('shows location options (Hubble, Meteor, No Preference)', async () => {
+    it('shows the location sub-section on the same step as the event details', async () => {
       const { user } = renderForm();
       await waitForFormLoaded();
-      await goToStep3(user);
+      await goToDetails(user);
 
+      expect(screen.getByText('Where would you like to host your event?')).toBeInTheDocument();
       expect(screen.getByText('Hubble')).toBeInTheDocument();
       expect(screen.getByText('Meteor')).toBeInTheDocument();
       expect(screen.getByText('No Preference')).toBeInTheDocument();
     });
 
-    it('shows seating area options', async () => {
+    it('shows seating area options on the same step', async () => {
       const { user } = renderForm();
       await waitForFormLoaded();
-      await goToStep3(user);
+      await goToDetails(user);
 
       expect(screen.getByText('Inside')).toBeInTheDocument();
       expect(screen.getByText('Outside')).toBeInTheDocument();
@@ -560,7 +555,7 @@ describe('ReservationForm', () => {
       await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
       await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
       await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Activity Details')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
     }
 
     it('lets the guest proceed past a soft block only after acknowledging it', async () => {
@@ -587,24 +582,20 @@ describe('ReservationForm', () => {
 
       // Cannot advance until acknowledged — and the form explains why
       await user.click(screen.getByRole('button', { name: 'Continue' }));
-      expect(screen.getByText('Activity Details')).toBeInTheDocument();
+      expect(screen.getByText('Event Details')).toBeInTheDocument();
       expect(screen.getByText(/tick the box above to confirm/i)).toBeInTheDocument();
 
       // Acknowledge, then advance succeeds (and the prompt disappears)
       await user.click(ack);
       expect(screen.queryByText(/tick the box above to confirm/i)).not.toBeInTheDocument();
+      await user.click(screen.getByText('Inside')); // seating is required to advance
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       await waitFor(() =>
-        expect(screen.getByText('Where would you like to host your event?')).toBeInTheDocument()
+        expect(screen.getByText('Payment Information')).toBeInTheDocument()
       );
-
-      // The global soft-block warning is not repeated under the location step
-      expect(screen.queryByText('The bar is closed by default this summer.')).not.toBeInTheDocument();
-      expect(screen.queryByRole('checkbox', { name: 'I understand the bar may be closed' }))
-        .not.toBeInTheDocument();
     });
 
-    it('shows a location-specific soft block on the location step with its own acknowledgement', async () => {
+    it('shows a location-specific soft block in the location section with its own acknowledgement', async () => {
       vi.mocked(fetchBlockedPeriods).mockResolvedValue([
         {
           id: 3,
@@ -623,14 +614,10 @@ describe('ReservationForm', () => {
       await goToStep2(user);
       await fillStep2Fields(user);
 
-      // No location chosen yet → location-specific block does not surface on the date step
+      // No location chosen yet → location-specific block does not surface
       expect(screen.queryByText('Hubble is closed by default this summer.')).not.toBeInTheDocument();
-      await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() =>
-        expect(screen.getByText('Where would you like to host your event?')).toBeInTheDocument()
-      );
 
-      // Choosing Hubble triggers the soft block here, with its acknowledgement
+      // Choosing Hubble (same step) triggers the soft block in the location section
       await user.click(screen.getByText('Hubble'));
       await user.click(screen.getByText('Inside')); // seating is required to advance
       expect(await screen.findByText('Hubble is closed by default this summer.')).toBeInTheDocument();
@@ -638,7 +625,7 @@ describe('ReservationForm', () => {
 
       // Still blocked until the soft block is acknowledged
       await user.click(screen.getByRole('button', { name: 'Continue' }));
-      expect(screen.getByText('Where would you like to host your event?')).toBeInTheDocument();
+      expect(screen.getByText('Event Details')).toBeInTheDocument();
 
       await user.click(ack);
       await user.click(screen.getByRole('button', { name: 'Continue' }));
@@ -666,7 +653,7 @@ describe('ReservationForm', () => {
       expect(screen.queryByRole('checkbox', { name: /understand/i })).not.toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: 'Continue' }));
-      expect(screen.getByText('Activity Details')).toBeInTheDocument();
+      expect(screen.getByText('Event Details')).toBeInTheDocument();
     });
   });
 
@@ -678,15 +665,11 @@ describe('ReservationForm', () => {
       await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
       await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
       await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Activity Details')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
 
-      // Step 2
+      // Step 2 — merged event + location/seating
       await fillStep2Fields(user);
-      await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Where would you like to host your event?')).toBeInTheDocument());
-
-      // Step 3
-      await user.click(screen.getByText('Inside'));
+      await user.click(screen.getByText('Inside')); // seating is required to advance
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       await waitFor(() => expect(screen.getByText('Payment Information')).toBeInTheDocument());
     }
@@ -749,23 +732,19 @@ describe('ReservationForm', () => {
 
   describe('form submission', () => {
     async function navigateToStep5(user: ReturnType<typeof userEvent.setup>) {
-      // Step 1
+      // Step 1 — contact
       await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
       await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
       await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Activity Details')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
 
-      // Step 2
+      // Step 2 — merged event + location/seating
       await fillStep2Fields(user);
-      await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Where would you like to host your event?')).toBeInTheDocument());
-
-      // Step 3
       await user.click(screen.getByText('Inside'));
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       await waitFor(() => expect(screen.getByText('Payment Information')).toBeInTheDocument());
 
-      // Step 4
+      // Step 3 — payment
       await user.click(screen.getByText('People pay individually'));
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       await waitFor(() => expect(screen.getByText('Review & Confirm')).toBeInTheDocument());
@@ -839,7 +818,7 @@ describe('ReservationForm', () => {
       await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
       await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
       await user.click(screen.getByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(screen.getByText('Activity Details')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
     }
 
     it('shows reason field when duration > 3 hours', async () => {

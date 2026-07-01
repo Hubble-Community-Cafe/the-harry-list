@@ -36,7 +36,7 @@ test.describe('admin: a constraint created in the UI is enforced on the public f
     await expect(page.getByText('Contact Information')).toBeVisible();
     await form.fillContact({ name: 'Jane Smith', email: 'jane@example.com' });
     await form.continue();
-    await form.expectStep('Activity Details');
+    await form.expectStep('Event Details');
     await form.fillActivity({ title: 'Big dinner', date: '2030-09-10', guests: 20 });
     await form.toggleActivity('Eat a la carte');
 
@@ -44,6 +44,6 @@ test.describe('admin: a constraint created in the UI is enforced on the public f
     await captureScreenshot(testInfo, page, '2-constraint-enforced-public');
 
     await form.continue();
-    await form.expectStep('Activity Details'); // blocked by the constraint
+    await form.expectStep('Event Details'); // blocked by the constraint
   });
 });

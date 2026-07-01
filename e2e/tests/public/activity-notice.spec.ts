@@ -25,7 +25,7 @@ test.describe('public: activity notice', () => {
     await form.goto();
     await form.fillContact({ name: 'Nora Notice', email: 'nora.notice@example.com' });
     await form.continue();
-    await form.expectStep('Activity Details');
+    await form.expectStep('Event Details');
 
     // No notice until the triggering activity is chosen.
     await expect(form.activityNotices()).toHaveCount(0);

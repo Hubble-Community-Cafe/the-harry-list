@@ -28,7 +28,7 @@ test.describe('public: hard-blocked period', () => {
 
     await form.fillContact({ name: 'Jane Smith', email: 'jane@example.com' });
     await form.continue();
-    await form.expectStep('Activity Details');
+    await form.expectStep('Event Details');
 
     await form.fillActivity({ title: 'Hard block test', date: DATE_IN_BLOCK });
 
@@ -41,6 +41,6 @@ test.describe('public: hard-blocked period', () => {
 
     // Continue does not advance.
     await form.continue();
-    await form.expectStep('Activity Details');
+    await form.expectStep('Event Details');
   });
 });
