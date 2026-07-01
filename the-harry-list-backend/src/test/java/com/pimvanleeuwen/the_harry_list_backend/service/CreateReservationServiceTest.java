@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
@@ -110,10 +111,11 @@ class CreateReservationServiceTest {
         // When
         createReservationService.execute(sampleDto);
 
-        // Then — exactly one line, in the agreed PII-free contract format.
+        // Then — exactly one line, in the enriched PII-free contract format.
         List<ILoggingEvent> events = analyticsAppender.list;
         assertEquals(1, events.size(), "Exactly one analytics line per reservation");
-        assertEquals("APP_ANALYTICS event=reservation_created bar=HUBBLE",
+        assertEquals(
+                "APP_ANALYTICS event=reservation_created bar=HUBBLE dow=7_Sun slot=2_afternoon guests=3_50_100 lead=3_wk3_4",
                 events.get(0).getFormattedMessage());
     }
 
@@ -130,8 +132,9 @@ class CreateReservationServiceTest {
         // When
         createReservationService.execute(sampleDto);
 
-        // Then
-        assertEquals("APP_ANALYTICS event=reservation_created bar=NO_PREFERENCE",
+        // Then — only the bar changes; the rest of the buckets stay as configured.
+        assertEquals(
+                "APP_ANALYTICS event=reservation_created bar=NO_PREFERENCE dow=7_Sun slot=2_afternoon guests=3_50_100 lead=3_wk3_4",
                 analyticsAppender.list.get(0).getFormattedMessage());
     }
 
@@ -178,6 +181,10 @@ class CreateReservationServiceTest {
 
         com.pimvanleeuwen.the_harry_list_backend.model.Reservation capturedEntity =
                 new com.pimvanleeuwen.the_harry_list_backend.model.Reservation();
+        // eventDate/startTime are non-null in the real flow (DB constraints); set them so the
+        // post-save analytics line can be built.
+        capturedEntity.setEventDate(LocalDate.of(2026, 3, 15));
+        capturedEntity.setStartTime(LocalTime.of(16, 0));
 
         when(reservationMapper.toEntity(any(Reservation.class))).thenReturn(capturedEntity);
         when(reservationRepository.save(any())).thenAnswer(invocation -> {
@@ -236,6 +243,12 @@ class CreateReservationServiceTest {
         entity.setLocation(BarLocation.HUBBLE);
         entity.setPaymentOption(PaymentOption.INDIVIDUAL);
         entity.setStatus(ReservationStatus.PENDING);
+        // Fixed date/time/guests/created-at so the derived analytics buckets are deterministic:
+        // Sunday, 16:00 (afternoon), 50 guests (50_100), booked 14 days ahead (wk3_4).
+        entity.setEventDate(LocalDate.of(2026, 3, 15));
+        entity.setStartTime(LocalTime.of(16, 0));
+        entity.setExpectedGuests(50);
+        entity.setCreatedAt(LocalDateTime.of(2026, 3, 1, 10, 0));
         return entity;
     }
 }
