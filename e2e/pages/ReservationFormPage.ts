@@ -108,7 +108,7 @@ export class ReservationFormPage {
     await this.softAckCheckbox().check();
   }
 
-  // ---- Step 3: Location & seating (radios are visually hidden -> force) ----
+  // ---- Location & seating (on the merged Details step; radios are visually hidden -> force) ----
   async selectLocation(location: Location): Promise<void> {
     await this.page.getByTestId(`location-${location}`).check({ force: true });
   }
@@ -150,8 +150,8 @@ export class ReservationFormPage {
   }): Promise<void> {
     await this.fillContact(opts.contact);
     await this.continue();
+    // Activity and location/seating now live on one merged "Details" step.
     await this.fillActivity(opts.activity);
-    await this.continue();
     await this.selectLocation(opts.location ?? 'NO_PREFERENCE');
     await this.selectSeating(opts.seating ?? 'INSIDE');
     await this.continue();

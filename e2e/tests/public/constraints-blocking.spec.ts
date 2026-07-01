@@ -25,7 +25,7 @@ test.describe('public: form constraints are enforced', () => {
 
     await form.fillContact({ name: 'Jane Smith', email: 'jane@example.com' });
     await form.continue();
-    await form.expectStep('Activity Details');
+    await form.expectStep('Event Details');
 
     await form.fillActivity({ title: 'Big dinner', date: '2030-09-10', guests: 20 });
     await form.toggleActivity('Eat a la carte');
@@ -36,6 +36,6 @@ test.describe('public: form constraints are enforced', () => {
 
     // ...and the form refuses to advance.
     await form.continue();
-    await form.expectStep('Activity Details');
+    await form.expectStep('Event Details');
   });
 });

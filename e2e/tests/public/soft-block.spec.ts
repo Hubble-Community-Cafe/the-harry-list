@@ -29,7 +29,7 @@ test.describe('public: soft-blocked period', () => {
 
     await form.fillContact({ name: 'Jane Smith', email: 'jane@example.com' });
     await form.continue();
-    await form.expectStep('Activity Details');
+    await form.expectStep('Event Details');
 
     await form.fillActivity({ title: 'Soft block test', date: DATE_IN_BLOCK });
 
@@ -41,18 +41,16 @@ test.describe('public: soft-blocked period', () => {
 
     // Pressing Continue without acknowledging keeps us on the step and explains why.
     await form.continue();
-    await form.expectStep('Activity Details');
+    await form.expectStep('Event Details');
     await expect(form.softAckError()).toBeVisible();
     await captureScreenshot(testInfo, page, '2-acknowledgement-required-prompt');
 
-    // After acknowledging, the prompt clears and the booking can proceed.
+    // After acknowledging, the prompt clears and the booking can proceed once seating is set.
     await form.acknowledgeSoftBlock();
     await expect(form.softAckError()).toHaveCount(0);
+    await form.selectSeating('INSIDE'); // seating is required to advance the merged step
     await form.continue();
-    await form.expectStep('Where would you like to host your event?');
-    await captureScreenshot(testInfo, page, '3-proceeded-to-location-step');
-
-    // The global soft-block warning is not repeated under the location step.
-    await expect(form.blockedNotice()).toHaveCount(0);
+    await form.expectStep('Payment Information');
+    await captureScreenshot(testInfo, page, '3-proceeded-to-payment');
   });
 });

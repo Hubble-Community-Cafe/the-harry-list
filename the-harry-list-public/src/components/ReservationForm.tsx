@@ -5,7 +5,7 @@ import { z } from 'zod';
 import {
   User, Mail, Phone, Building2, Calendar, MapPin,
   CreditCard, Send, Loader2,
-  ChevronRight, ChevronLeft, Sparkles, Plus, Minus, CalendarDays,
+  ChevronRight, ChevronLeft, Plus, Minus, CalendarDays,
   ClipboardCheck, AlertTriangle
 } from 'lucide-react';
 import * as Sentry from '@sentry/react';
@@ -116,10 +116,9 @@ interface ReservationFormProps {
 
 const steps = [
   { id: 1, title: 'Contact', icon: User },
-  { id: 2, title: 'Activity', icon: Calendar },
-  { id: 3, title: 'Location', icon: MapPin },
-  { id: 4, title: 'Payment', icon: CreditCard },
-  { id: 5, title: 'Confirm', icon: ClipboardCheck },
+  { id: 2, title: 'Details', icon: Calendar },
+  { id: 3, title: 'Payment', icon: CreditCard },
+  { id: 4, title: 'Confirm', icon: ClipboardCheck },
 ];
 
 const SPECIAL_ACTIVITY_LABELS: Record<string, string> = {
@@ -439,22 +438,23 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
   }, [watchStartTime, watchSpecialActivities]);
 
   const validateStep = async (step: number) => {
-    const step4Fields: (keyof ReservationFormData)[] = ['paymentOption'];
+    const paymentFields: (keyof ReservationFormData)[] = ['paymentOption'];
     if (watchPaymentOption === 'INVOICE') {
-      step4Fields.push('invoiceType');
+      paymentFields.push('invoiceType');
       if (watchInvoiceType === 'TUE' || watchInvoiceType === 'FONTYS') {
-        step4Fields.push('costCenter');
+        paymentFields.push('costCenter');
       } else if (watchInvoiceType === 'EXTERNAL') {
-        step4Fields.push('invoiceName', 'invoiceAddress');
+        paymentFields.push('invoiceName', 'invoiceAddress');
       }
     }
 
+    // Step 2 now merges the former Activity and Location steps, so it validates both the
+    // event fields and the (required) seating area in one go. Location stays optional.
     const fieldsToValidate: (keyof ReservationFormData)[][] = [
-      ['contactName', 'email', 'phoneNumber'], // Step 1
-      ['eventTitle', 'description', 'expectedGuests', 'eventDate', 'startTime', 'endTime', 'longReservationReason'], // Step 2
-      ['seatingArea'], // Step 3 (location is optional/NO_PREFERENCE)
-      step4Fields, // Step 4
-      ['termsAccepted'], // Step 5
+      ['contactName', 'email', 'phoneNumber'], // Step 1: Contact
+      ['eventTitle', 'description', 'expectedGuests', 'eventDate', 'startTime', 'endTime', 'longReservationReason', 'seatingArea'], // Step 2: Details
+      paymentFields, // Step 3: Payment
+      ['termsAccepted'], // Step 4: Confirm
     ];
 
     // Block step 2 advance if guest limit constraint violated
@@ -467,9 +467,9 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       return false;
     }
 
-    // Block advance if date is in a blocked period (step 2 for global blocks, step 3 for location-specific).
+    // Block advance if date/location is in a blocked period (all on the merged step 2 now).
     // Hard blocks always prevent advancing; soft blocks only until the guest acknowledges the warning.
-    if ((step === 2 || step === 3) && blockedDateInfo) {
+    if (step === 2 && blockedDateInfo) {
       if (!blockedDateInfo.soft) {
         return false;
       }
@@ -633,8 +633,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
         if (import.meta.env.DEV) console.error('Form validation failed on submit:', fieldErrors);
         const stepFields: (keyof ReservationFormData)[][] = [
           ['contactName', 'email', 'phoneNumber'],
-          ['eventTitle', 'description', 'expectedGuests', 'eventDate', 'startTime', 'endTime', 'longReservationReason'],
-          ['location', 'seatingArea'],
+          ['eventTitle', 'description', 'expectedGuests', 'eventDate', 'startTime', 'endTime', 'longReservationReason', 'location', 'seatingArea'],
           ['paymentOption', 'invoiceType', 'costCenter', 'invoiceName', 'invoiceAddress'],
           ['termsAccepted'],
         ];
@@ -732,8 +731,8 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 <Calendar className="w-5 h-5 text-meteor-400" />
               </div>
               <div>
-                <h2 className="text-xl font-title font-semibold text-white">Activity Details</h2>
-                <p className="text-sm text-dark-400 font-light">Tell us about your event</p>
+                <h2 className="text-xl font-title font-semibold text-white">Event Details</h2>
+                <p className="text-sm text-dark-400 font-light">Tell us about your event and where to host it</p>
               </div>
             </div>
 
@@ -756,7 +755,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
               <div className="form-group md:col-span-2">
                 <label className="label">Special Activities</label>
                 <p className="text-xs text-dark-400 mb-3">Select any special activities for your event (optional, if you want a regular drink/borrel you can leave this empty)</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {(formOptions?.specialActivities ?? Object.entries(SPECIAL_ACTIVITY_LABELS).map(([value, displayName]) => ({ value, displayName, description: undefined }))).map((option) => {
                     const selected = watchSpecialActivities.includes(option.value);
                     const blocked = !selected && isActivityBlocked(option.value, watchSpecialActivities);
@@ -771,7 +770,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                         disabled={blocked}
                         title={blocked ? 'Not compatible with another selected activity' : undefined}
                         className={`
-                          relative flex items-start gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left w-full
+                          relative flex items-start gap-2.5 p-3 rounded-lg border-2 transition-all duration-200 text-left w-full
                           ${selected
                             ? 'border-hubble-500 bg-hubble-500/10'
                             : blocked
@@ -780,20 +779,20 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                           }
                         `}
                       >
-                        <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
+                        <div className={`mt-0.5 w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
                           selected ? 'border-hubble-500 bg-hubble-500' : 'border-dark-600 bg-dark-800'
                         }`}>
                           {selected && (
-                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
                           )}
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <span className={`text-sm font-medium ${selected ? 'text-hubble-300' : 'text-white'}`}>
                             {option.displayName}
                           </span>
-                          <p className="text-xs text-dark-400 mt-0.5">
+                          <p className="text-[11px] leading-snug text-dark-400 mt-0.5">
                             {option.description ?? SPECIAL_ACTIVITY_DESCRIPTIONS[option.value]}
                           </p>
                         </div>
@@ -896,7 +895,9 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   />
                 </div>
                 {errors.eventDate && <p id="eventDate-error" className="error-text">{errors.eventDate.message}</p>}
-                {blockedDateNotice}
+                {/* Global / time-window blocks surface here by the date; location-specific
+                    blocks surface in the location section below. */}
+                {!blockedDateInfo?.locationSpecific && blockedDateNotice}
               </div>
 
               {/* Start Time */}
@@ -923,77 +924,32 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 </select>
                 {errors.endTime && <p className="error-text">{errors.endTime.message}</p>}
               </div>
-
-              {/* Long reservation reason */}
-              {durationMinutes > 180 && (
-                <div className="form-group md:col-span-2">
-                  <label className="label flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-400" />
-                    Reason for Long Reservation *
-                  </label>
-                  <p className="text-xs text-amber-400/80 mb-2">
-                    Your reservation is {Math.floor(durationMinutes / 60)}h{durationMinutes % 60 > 0 ? ` ${durationMinutes % 60}m` : ''} long.
-                    Reservations over 3 hours require a reason.
-                  </p>
-                  <textarea
-                    {...register('longReservationReason')}
-                    className="input-field min-h-[80px] resize-none"
-                    placeholder="Please explain why you need more than 3 hours..."
-                  />
-                  {errors.longReservationReason && <p className="error-text">{errors.longReservationReason.message}</p>}
-                </div>
-              )}
-
-              {/* Catering dietary notes */}
-              {hasCateringActivity && (
-                <div className="form-group md:col-span-2">
-                  <label htmlFor="cateringDietaryNotes" className="label">Catering Dietary Notes</label>
-                  <textarea
-                    {...register('cateringDietaryNotes')}
-                    className="input-field min-h-[80px] resize-none"
-                    placeholder="Allergies, dietary requirements, or other catering notes..."
-                  />
-                </div>
-              )}
-
-              {/* Event Description */}
-              <div className="form-group md:col-span-2">
-                <label htmlFor="description" className="label">Event Description *</label>
-                <textarea
-                  {...register('description')}
-                  className="input-field min-h-[100px] resize-none"
-                  placeholder="Tell us more about your event..."
-                />
-                {errors.description && <p id="description-error" className="error-text">{errors.description.message}</p>}
-              </div>
             </div>
-          </div>
-        )}
 
-        {/* Step 3: Location */}
-        {currentStep === 3 && (
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 mb-6">
+            {/* Location, seating & remarks — merged in from the former Location step so all
+                date/activity/time/location constraints live on one page. */}
+            <div className="space-y-6 pt-6 border-t border-dark-800">
+            <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-hubble-500/20">
                 <MapPin className="w-5 h-5 text-hubble-400" />
               </div>
               <div>
-                <h2 className="text-xl font-title font-semibold text-white">Location</h2>
+                <h3 className="text-lg font-title font-semibold text-white">Location &amp; Seating</h3>
                 <p className="text-sm text-dark-400 font-light">Where would you like to host your event?</p>
               </div>
             </div>
 
-            {/* Location constraint message */}
+            {/* Location lock explanation. Only for activity-based locks here — the guest-count
+                (<8 → Meteor) case is already explained next to the guest field above, so we don't
+                repeat it now that both sit on the same step. */}
             {locationLocked && (() => {
               const lockConstraint = constraints.find(c =>
                 c.constraintType === 'LOCATION_LOCK' && watchSpecialActivities.includes(c.triggerActivity));
-              const guestBased = !lockConstraint && watchExpectedGuests < 8;
-              return (
+              return lockConstraint ? (
                 <div className="text-xs text-blue-400/80 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
-                  {lockConstraint?.message
-                    || (guestBased ? `Reservations under 8 guests are only available at Meteor.` : `Location is set to ${locationLocked}.`)}
+                  {lockConstraint.message}
                 </div>
-              );
+              ) : null;
             })()}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1015,9 +971,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   disabled={!!locationLocked && locationLocked !== 'HUBBLE'}
                 />
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-hubble-600 to-hubble-400 flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-white" />
-                  </div>
+                  <img src="/logo-hubble.webp" alt="Hubble logo" className="w-10 h-10 rounded-lg object-contain bg-white p-1" />
                   <div>
                     <div className="font-semibold text-white">Hubble</div>
                     <div className="text-xs text-dark-400">Community Cafe</div>
@@ -1053,9 +1007,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   disabled={!!locationLocked && locationLocked !== 'METEOR'}
                 />
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-meteor-600 to-meteor-400 flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-white" />
-                  </div>
+                  <img src="/logo-meteor.png" alt="Meteor logo" className="w-10 h-10 rounded-lg object-contain bg-white p-1" />
                   <div>
                     <div className="font-semibold text-white">Meteor</div>
                     <div className="text-xs text-dark-400">Community Cafe</div>
@@ -1189,11 +1141,55 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 placeholder="e.g., Near the window, quiet corner..."
               />
             </div>
+            </div>
+
+            {/* Long reservation reason */}
+            {durationMinutes > 180 && (
+              <div className="form-group">
+                <label className="label flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-400" />
+                  Reason for Long Reservation *
+                </label>
+                <p className="text-xs text-amber-400/80 mb-2">
+                  Your reservation is {Math.floor(durationMinutes / 60)}h{durationMinutes % 60 > 0 ? ` ${durationMinutes % 60}m` : ''} long.
+                  Reservations over 3 hours require a reason.
+                </p>
+                <textarea
+                  {...register('longReservationReason')}
+                  className="input-field min-h-[80px] resize-none"
+                  placeholder="Please explain why you need more than 3 hours..."
+                />
+                {errors.longReservationReason && <p className="error-text">{errors.longReservationReason.message}</p>}
+              </div>
+            )}
+
+            {/* Catering dietary notes */}
+            {hasCateringActivity && (
+              <div className="form-group">
+                <label htmlFor="cateringDietaryNotes" className="label">Catering Dietary Notes</label>
+                <textarea
+                  {...register('cateringDietaryNotes')}
+                  className="input-field min-h-[80px] resize-none"
+                  placeholder="Allergies, dietary requirements, or other catering notes..."
+                />
+              </div>
+            )}
+
+            {/* Event Description */}
+            <div className="form-group">
+              <label htmlFor="description" className="label">Event Description *</label>
+              <textarea
+                {...register('description')}
+                className="input-field min-h-[100px] resize-none"
+                placeholder="Tell us more about your event..."
+              />
+              {errors.description && <p id="description-error" className="error-text">{errors.description.message}</p>}
+            </div>
           </div>
         )}
 
-        {/* Step 4: Payment */}
-        {currentStep === 4 && (
+        {/* Step 3: Payment */}
+        {currentStep === 3 && (
           <div className="space-y-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 rounded-lg bg-meteor-500/20">
@@ -1318,8 +1314,8 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
           </div>
         )}
 
-        {/* Step 5: Summary & Confirmation */}
-        {currentStep === 5 && (
+        {/* Step 4: Summary & Confirmation */}
+        {currentStep === 4 && (
           <div className="space-y-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 rounded-lg bg-hubble-500/20">

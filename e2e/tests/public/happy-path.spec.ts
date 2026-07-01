@@ -33,26 +33,22 @@ test.describe('public: full booking happy path', () => {
     await captureScreenshot(testInfo, page, '1-contact');
     await form.continue();
 
-    // Step 2 — Activity
-    await form.expectStep('Activity Details');
+    // Step 2 — Details (activity + location & seating, now merged)
+    await form.expectStep('Event Details');
     await form.fillActivity(ACTIVITY);
-    await captureScreenshot(testInfo, page, '2-activity');
-    await form.continue();
-
-    // Step 3 — Location & seating
     await form.expectStep('Where would you like to host your event?');
     await form.selectLocation('NO_PREFERENCE');
     await form.selectSeating('INSIDE');
-    await captureScreenshot(testInfo, page, '3-location');
+    await captureScreenshot(testInfo, page, '2-details');
     await form.continue();
 
-    // Step 4 — Payment
+    // Step 3 — Payment
     await form.expectStep('Payment Information');
     await form.selectPayment('People pay individually');
-    await captureScreenshot(testInfo, page, '4-payment');
+    await captureScreenshot(testInfo, page, '3-payment');
     await form.continue();
 
-    // Step 5 — Confirm
+    // Step 4 — Confirm
     await form.acceptTerms();
     await captureScreenshot(testInfo, page, '5-review');
     await form.submit();

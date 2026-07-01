@@ -32,7 +32,7 @@ test.describe('public: activity-conflict constraint disables the conflicting opt
     await form.goto();
     await form.fillContact({ name: 'Jane Smith', email: 'jane@example.com' });
     await form.continue();
-    await form.expectStep('Activity Details');
+    await form.expectStep('Event Details');
 
     const alaCarte = page.getByRole('checkbox', { name: 'Eat a la carte' });
     await expect(alaCarte).toBeEnabled();
