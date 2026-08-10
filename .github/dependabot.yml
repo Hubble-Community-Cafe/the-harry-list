@@ -73,6 +73,15 @@ updates:
           - "*"
         update-types:
           - "major"
+    ignore:
+      # TypeScript majors are unusable until typescript-eslint supports them: its
+      # typescript-estree caps the supported range (currently <6.1.0) and the
+      # "overrides" block in package.json pins typescript-eslint to the project's
+      # TypeScript, so a TS major makes `eslint .` crash on startup. Grouped major
+      # PRs would drag other, perfectly fine majors down with it.
+      # Remove this once typescript-eslint announces support for the next TS major.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   # ── Public Frontend (npm) ─────────────────────────────────────────────────────
   - package-ecosystem: "npm"
@@ -102,6 +111,12 @@ updates:
           - "*"
         update-types:
           - "major"
+    ignore:
+      # Same as the admin app: TypeScript majors break `eslint .` until
+      # typescript-eslint raises its supported TypeScript range. See the comment
+      # in the admin section above.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   # ── GitHub Actions ────────────────────────────────────────────────────────────
   - package-ecosystem: "github-actions"
