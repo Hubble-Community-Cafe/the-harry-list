@@ -198,7 +198,7 @@ export function SettingsPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white">Settings</h1>
+          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Settings</h1>
           <p className="text-dark-400 font-light">Manage constraints, blocked periods, and admin settings</p>
         </div>
         <HelpGuide title="Settings Guide" sections={formSettingsGuide} />

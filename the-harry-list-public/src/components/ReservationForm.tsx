@@ -686,7 +686,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 <User className="w-5 h-5 text-hubble-400" />
               </div>
               <div>
-                <h2 className="text-xl font-title font-semibold text-white">Contact Information</h2>
+                <h2 className="text-xl font-title font-semibold text-white tracking-tight">Contact Information</h2>
                 <p className="text-sm text-dark-400 font-light">Tell us how to reach you</p>
               </div>
             </div>
@@ -763,7 +763,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 <Calendar className="w-5 h-5 text-meteor-400" />
               </div>
               <div>
-                <h2 className="text-xl font-title font-semibold text-white">Event Details</h2>
+                <h2 className="text-xl font-title font-semibold text-white tracking-tight">Event Details</h2>
                 <p className="text-sm text-dark-400 font-light">Tell us about your event and where to host it</p>
               </div>
             </div>
@@ -966,7 +966,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 <MapPin className="w-5 h-5 text-hubble-400" />
               </div>
               <div>
-                <h3 className="text-lg font-title font-semibold text-white">Location &amp; Seating</h3>
+                <h3 className="text-lg font-title font-semibold text-white tracking-tight">Location &amp; Seating</h3>
                 <p className="text-sm text-dark-400 font-light">Where would you like to host your event?</p>
               </div>
             </div>
@@ -1228,7 +1228,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 <CreditCard className="w-5 h-5 text-meteor-400" />
               </div>
               <div>
-                <h2 className="text-xl font-title font-semibold text-white">Payment Information</h2>
+                <h2 className="text-xl font-title font-semibold text-white tracking-tight">Payment Information</h2>
                 <p className="text-sm text-dark-400 font-light">How will you be paying?</p>
               </div>
             </div>
@@ -1354,7 +1354,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 <ClipboardCheck className="w-5 h-5 text-hubble-400" />
               </div>
               <div>
-                <h2 className="text-xl font-title font-semibold text-white">Review & Confirm</h2>
+                <h2 className="text-xl font-title font-semibold text-white tracking-tight">Review & Confirm</h2>
                 <p className="text-sm text-dark-400 font-light">Please review your reservation details</p>
               </div>
             </div>

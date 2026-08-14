@@ -24,7 +24,7 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
         </div>
 
         {/* Title */}
-        <h2 className="text-2xl md:text-3xl font-title font-bold text-white mb-2">
+        <h2 className="text-2xl md:text-3xl font-title font-bold text-white mb-2 tracking-tight">
           Reservation Submitted!
         </h2>
         <p className="text-dark-400 font-light mb-8">

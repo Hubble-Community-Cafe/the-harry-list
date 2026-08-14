@@ -93,7 +93,7 @@ export function ReservationsPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white">Reservations</h1>
+          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Reservations</h1>
           <p className="text-dark-400 font-light">Manage all reservation requests</p>
         </div>
         <HelpGuide title="Reservations Guide" sections={reservationsGuide} />
