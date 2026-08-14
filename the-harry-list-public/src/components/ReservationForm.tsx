@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -175,10 +175,14 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
     watch,
     trigger,
     setValue,
+    setFocus,
     getValues,
     formState: { errors },
   } = useForm<ReservationFormData>({
     resolver: zodResolver(formSchema),
+    // Validate a field once the guest has left it (and on every change after),
+    // so problems surface before they press Continue rather than only after.
+    mode: 'onTouched',
     defaultValues: {
       termsAccepted: false,
       expectedGuests: 8,
@@ -326,6 +330,23 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
     setSoftBlockAcknowledged(false);
     setSoftBlockAckError(false);
   }, [blockedDateInfo?.message, blockedDateInfo?.soft]);
+
+  // Bring the new step into view. The merged details step is long, so without
+  // this a guest pressing Continue near the bottom lands mid-way down the next
+  // step with its heading off-screen.
+  const formRef = useRef<HTMLFormElement>(null);
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    formRef.current?.scrollIntoView({
+      behavior: prefersReduced ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  }, [currentStep]);
 
   // Notice rendered wherever a blocked period applies. Hard blocks show a red,
   // blocking error; soft blocks show an amber warning with an acknowledgement checkbox.
@@ -495,6 +516,13 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
     if (isValid && currentStep < steps.length) {
       setSubmitError(null);
       setCurrentStep(currentStep + 1);
+      return;
+    }
+    // Validation failed: move focus to the first field with an error so
+    // keyboard and screen-reader users are told what needs fixing.
+    const firstError = Object.keys(errors)[0] as keyof ReservationFormData | undefined;
+    if (firstError) {
+      setFocus(firstError);
     }
   };
 
@@ -629,7 +657,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       </div>
 
       {/* Form Card */}
-      <form noValidate onSubmit={handleSubmit(onSubmit, (fieldErrors) => {
+      <form ref={formRef} noValidate onSubmit={handleSubmit(onSubmit, (fieldErrors) => {
         if (import.meta.env.DEV) console.error('Form validation failed on submit:', fieldErrors);
         const stepFields: (keyof ReservationFormData)[][] = [
           ['contactName', 'email', 'phoneNumber'],
@@ -645,7 +673,11 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
         } else {
           setSubmitError(`Some required fields are invalid (${failingFields}). Please review all steps.`);
         }
-      })} className="card animate-fade-in">
+      })} className="card">
+        {/* Keyed on currentStep so React remounts this wrapper on every step
+            change, replaying the entrance animation. The navigation buttons
+            sit outside it deliberately — they are persistent chrome. */}
+        <div key={currentStep} className="animate-step">
         {/* Step 1: Contact Information */}
         {currentStep === 1 && (
           <div className="space-y-6">
@@ -1430,6 +1462,8 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
             )}
           </div>
         )}
+
+        </div>
 
         {/* Navigation Buttons */}
         <div className="flex items-center justify-between mt-8 pt-6 border-t border-dark-800">

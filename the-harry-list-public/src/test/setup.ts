@@ -7,6 +7,10 @@ afterEach(() => {
   cleanup();
 });
 
+// jsdom does not implement scrollIntoView. Every real browser does, so stub it
+// rather than guarding the call site in product code.
+Element.prototype.scrollIntoView = vi.fn();
+
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
