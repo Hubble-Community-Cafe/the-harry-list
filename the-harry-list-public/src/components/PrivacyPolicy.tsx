@@ -34,7 +34,7 @@ export function PrivacyPolicy({ open, onClose }: PrivacyPolicyProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-overlay"
       onClick={onClose}
       data-testid="privacy-policy-backdrop"
     >
@@ -44,7 +44,7 @@ export function PrivacyPolicy({ open, onClose }: PrivacyPolicyProps) {
         aria-labelledby="privacy-policy-title"
         data-testid="privacy-policy"
         onClick={e => e.stopPropagation()}
-        className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border border-dark-700 bg-dark-900 p-6 md:p-8 shadow-2xl"
+        className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border border-dark-700 bg-dark-900 p-6 md:p-8 shadow-2xl animate-modal"
       >
         <button
           ref={closeRef}
