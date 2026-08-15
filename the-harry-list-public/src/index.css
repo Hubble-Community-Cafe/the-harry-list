@@ -58,6 +58,24 @@
   --font-title: 'AXIS', 'Lato', system-ui, sans-serif;
   --font-body: 'Lato', system-ui, sans-serif;
   --font-light: 'Lato', system-ui, sans-serif;
+
+  /* Motion. Strong curves: the CSS built-ins are too weak to read as
+     intentional. Durations stay under 300ms so UI never feels sluggish. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+}
+
+/* Suppress the default grey/blue flash browsers paint on tap; press feedback
+   is provided by the :active scale on interactive elements instead. */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background-color: rgb(15 77 100 / 0.35); /* hubble teal #0f4d64 */
+  color: #ffffff;
 }
 
 :root {
@@ -515,11 +533,25 @@ body.dark {
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-hubble-600 to-hubble-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-hubble-500/25 transition-all duration-200 hover:from-hubble-500 hover:to-hubble-400 hover:shadow-xl hover:shadow-hubble-500/30 focus:outline-none focus:ring-2 focus:ring-hubble-500 focus:ring-offset-2 focus:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-hubble-600 to-hubble-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-hubble-500/25 transition-all duration-200 hover:from-hubble-500 hover:to-hubble-400 hover:shadow-xl hover:shadow-hubble-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-hubble-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-meteor-600 to-meteor-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-meteor-500/25 transition-all duration-200 hover:from-meteor-500 hover:to-meteor-400 hover:shadow-xl hover:shadow-meteor-500/30 focus:outline-none focus:ring-2 focus:ring-meteor-500 focus:ring-offset-2 focus:ring-offset-dark-950;
+    @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-meteor-600 to-meteor-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-meteor-500/25 transition-all duration-200 hover:from-meteor-500 hover:to-meteor-400 hover:shadow-xl hover:shadow-meteor-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-meteor-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950;
+  }
+
+  /* Instant press feedback: the button visibly acknowledges the press before
+     any work happens. Scale is subtle by design (0.97, not a squash). */
+  .btn-primary,
+  .btn-secondary {
+    transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+                background-color 200ms ease,
+                box-shadow 200ms ease;
+  }
+
+  .btn-primary:active:not(:disabled),
+  .btn-secondary:active:not(:disabled) {
+    transform: scale(0.97);
   }
 
   .input-field {
@@ -628,34 +660,84 @@ body.dark {
   }
 }
 
-@keyframes slideIn {
+/* Modal entrance. The backdrop fades slightly faster than the panel so the
+   dim lands first and the panel arrives into an already-settled ground. */
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalIn {
   from {
     opacity: 0;
-    transform: translateX(-20px);
+    transform: scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(139, 92, 246, 0.5);
+    transform: scale(1);
   }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn var(--duration-base) var(--ease-out) forwards;
 }
 
-.animate-slide-in {
-  animation: slideIn 0.5s ease-out forwards;
+.animate-overlay {
+  animation: overlayIn var(--duration-fast) var(--ease-out) forwards;
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+.animate-modal {
+  animation: modalIn var(--duration-base) var(--ease-out) forwards;
+  transform-origin: center; /* modals are not anchored to a trigger */
+}
+
+/* Step transition for the multi-step reservation form. Applied to a wrapper
+   keyed on the current step so React remounts it (and replays the animation)
+   on every step change. */
+@keyframes stepIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-step {
+  animation: stepIn var(--duration-base) var(--ease-out) forwards;
+}
+
+/* Reduced motion: strip movement everywhere, but keep opacity/colour changes
+   that carry meaning. Also covers .animate-step above. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Reduced transparency: make translucent surfaces solid rather than frosted,
+   so text never has to compete with whatever sits behind it. */
+@media (prefers-reduced-transparency: reduce) {
+  .card,
+  header,
+  footer {
+    backdrop-filter: none !important;
+    background-color: var(--color-dark-950) !important;
+  }
+}
+
+/* Increased contrast: solid surfaces with a clearly visible boundary. */
+@media (prefers-contrast: more) {
+  .card {
+    backdrop-filter: none !important;
+    background-color: var(--color-dark-950) !important;
+    border-color: var(--color-dark-400) !important;
+  }
 }

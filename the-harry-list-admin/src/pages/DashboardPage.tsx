@@ -69,7 +69,7 @@ export function DashboardPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white">Dashboard</h1>
+          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Dashboard</h1>
           <p className="text-dark-400 font-light">Overview of reservation activity</p>
         </div>
         <HelpGuide title="Dashboard Guide" sections={dashboardGuide} />

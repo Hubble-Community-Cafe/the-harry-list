@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -175,10 +175,14 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
     watch,
     trigger,
     setValue,
+    setFocus,
     getValues,
     formState: { errors },
   } = useForm<ReservationFormData>({
     resolver: zodResolver(formSchema),
+    // Validate a field once the guest has left it (and on every change after),
+    // so problems surface before they press Continue rather than only after.
+    mode: 'onTouched',
     defaultValues: {
       termsAccepted: false,
       expectedGuests: 8,
@@ -326,6 +330,23 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
     setSoftBlockAcknowledged(false);
     setSoftBlockAckError(false);
   }, [blockedDateInfo?.message, blockedDateInfo?.soft]);
+
+  // Bring the new step into view. The merged details step is long, so without
+  // this a guest pressing Continue near the bottom lands mid-way down the next
+  // step with its heading off-screen.
+  const formRef = useRef<HTMLFormElement>(null);
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    formRef.current?.scrollIntoView({
+      behavior: prefersReduced ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  }, [currentStep]);
 
   // Notice rendered wherever a blocked period applies. Hard blocks show a red,
   // blocking error; soft blocks show an amber warning with an acknowledgement checkbox.
@@ -495,6 +516,13 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
     if (isValid && currentStep < steps.length) {
       setSubmitError(null);
       setCurrentStep(currentStep + 1);
+      return;
+    }
+    // Validation failed: move focus to the first field with an error so
+    // keyboard and screen-reader users are told what needs fixing.
+    const firstError = Object.keys(errors)[0] as keyof ReservationFormData | undefined;
+    if (firstError) {
+      setFocus(firstError);
     }
   };
 
@@ -629,7 +657,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       </div>
 
       {/* Form Card */}
-      <form noValidate onSubmit={handleSubmit(onSubmit, (fieldErrors) => {
+      <form ref={formRef} noValidate onSubmit={handleSubmit(onSubmit, (fieldErrors) => {
         if (import.meta.env.DEV) console.error('Form validation failed on submit:', fieldErrors);
         const stepFields: (keyof ReservationFormData)[][] = [
           ['contactName', 'email', 'phoneNumber'],
@@ -645,7 +673,11 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
         } else {
           setSubmitError(`Some required fields are invalid (${failingFields}). Please review all steps.`);
         }
-      })} className="card animate-fade-in">
+      })} className="card">
+        {/* Keyed on currentStep so React remounts this wrapper on every step
+            change, replaying the entrance animation. The navigation buttons
+            sit outside it deliberately — they are persistent chrome. */}
+        <div key={currentStep} className="animate-step">
         {/* Step 1: Contact Information */}
         {currentStep === 1 && (
           <div className="space-y-6">
@@ -654,7 +686,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 <User className="w-5 h-5 text-hubble-400" />
               </div>
               <div>
-                <h2 className="text-xl font-title font-semibold text-white">Contact Information</h2>
+                <h2 className="text-xl font-title font-semibold text-white tracking-tight">Contact Information</h2>
                 <p className="text-sm text-dark-400 font-light">Tell us how to reach you</p>
               </div>
             </div>
@@ -731,7 +763,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 <Calendar className="w-5 h-5 text-meteor-400" />
               </div>
               <div>
-                <h2 className="text-xl font-title font-semibold text-white">Event Details</h2>
+                <h2 className="text-xl font-title font-semibold text-white tracking-tight">Event Details</h2>
                 <p className="text-sm text-dark-400 font-light">Tell us about your event and where to host it</p>
               </div>
             </div>
@@ -770,7 +802,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                         disabled={blocked}
                         title={blocked ? 'Not compatible with another selected activity' : undefined}
                         className={`
-                          relative flex items-start gap-2.5 p-3 rounded-lg border-2 transition-all duration-200 text-left w-full
+                          relative flex items-start gap-2.5 p-3 rounded-lg border-2 transition-[background-color,border-color,box-shadow,opacity] duration-200 text-left w-full
                           ${selected
                             ? 'border-hubble-500 bg-hubble-500/10'
                             : blocked
@@ -934,7 +966,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 <MapPin className="w-5 h-5 text-hubble-400" />
               </div>
               <div>
-                <h3 className="text-lg font-title font-semibold text-white">Location &amp; Seating</h3>
+                <h3 className="text-lg font-title font-semibold text-white tracking-tight">Location &amp; Seating</h3>
                 <p className="text-sm text-dark-400 font-light">Where would you like to host your event?</p>
               </div>
             </div>
@@ -955,7 +987,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Hubble */}
               <label className={`
-                relative flex flex-col p-6 rounded-xl border-2 transition-all duration-200
+                relative flex flex-col p-6 rounded-xl border-2 transition-[background-color,border-color,box-shadow,opacity] duration-200
                 ${locationLocked && locationLocked !== 'HUBBLE' ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
                 ${watchLocation === 'HUBBLE'
                   ? 'border-hubble-500 bg-hubble-500/10'
@@ -991,7 +1023,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
 
               {/* Meteor */}
               <label className={`
-                relative flex flex-col p-6 rounded-xl border-2 transition-all duration-200
+                relative flex flex-col p-6 rounded-xl border-2 transition-[background-color,border-color,box-shadow,opacity] duration-200
                 ${locationLocked && locationLocked !== 'METEOR' ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
                 ${watchLocation === 'METEOR'
                   ? 'border-meteor-500 bg-meteor-500/10'
@@ -1027,7 +1059,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
 
               {/* No Preference */}
               <label className={`
-                relative flex flex-col p-6 rounded-xl border-2 transition-all duration-200
+                relative flex flex-col p-6 rounded-xl border-2 transition-[background-color,border-color,box-shadow,opacity] duration-200
                 ${locationLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
                 ${!watchLocation || watchLocation === 'NO_PREFERENCE'
                   ? 'border-dark-400 bg-dark-700/50'
@@ -1081,7 +1113,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   <label
                     key={area}
                     className={`
-                      relative flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200
+                      relative flex flex-col items-center p-4 rounded-xl border-2 transition-[background-color,border-color,box-shadow,opacity] duration-200
                       ${seatingLocked && area !== seatingLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
                       ${watch('seatingArea') === area
                         ? 'border-hubble-500 bg-hubble-500/10'
@@ -1196,7 +1228,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 <CreditCard className="w-5 h-5 text-meteor-400" />
               </div>
               <div>
-                <h2 className="text-xl font-title font-semibold text-white">Payment Information</h2>
+                <h2 className="text-xl font-title font-semibold text-white tracking-tight">Payment Information</h2>
                 <p className="text-sm text-dark-400 font-light">How will you be paying?</p>
               </div>
             </div>
@@ -1214,7 +1246,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                     <label
                       key={option.value}
                       className={`
-                        flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
+                        flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-[background-color,border-color,box-shadow,opacity] duration-200
                         ${selected
                           ? 'border-meteor-500 bg-meteor-500/10'
                           : 'border-dark-700 bg-dark-800/50 hover:border-dark-600'
@@ -1322,7 +1354,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 <ClipboardCheck className="w-5 h-5 text-hubble-400" />
               </div>
               <div>
-                <h2 className="text-xl font-title font-semibold text-white">Review & Confirm</h2>
+                <h2 className="text-xl font-title font-semibold text-white tracking-tight">Review & Confirm</h2>
                 <p className="text-sm text-dark-400 font-light">Please review your reservation details</p>
               </div>
             </div>
@@ -1430,6 +1462,8 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
             )}
           </div>
         )}
+
+        </div>
 
         {/* Navigation Buttons */}
         <div className="flex items-center justify-between mt-8 pt-6 border-t border-dark-800">

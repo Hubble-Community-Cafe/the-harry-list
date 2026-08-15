@@ -48,7 +48,7 @@ function App() {
             <>
               {/* Hero Section */}
               <div className="text-center mb-12 animate-fade-in">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-tight leading-tight">
                   <span className="bg-gradient-to-r from-hubble-400 via-hubble-300 to-meteor-400 bg-clip-text text-transparent">
                     Reserve Your Spot at Hubble & Meteor
                   </span>

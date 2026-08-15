@@ -51,7 +51,7 @@ export function LoginPage() {
               alt="The Harry List Logo"
               className="w-16 h-16 mx-auto mb-4 rounded-2xl"
             />
-            <h1 className="text-2xl font-title font-bold text-white">The Harry List</h1>
+            <h1 className="text-2xl font-title font-bold text-white tracking-tight">The Harry List</h1>
             <p className="text-dark-400 font-light mt-1">Staff Administration Portal</p>
           </div>
           {/* Login Card */}

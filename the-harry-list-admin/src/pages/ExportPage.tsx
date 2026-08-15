@@ -52,7 +52,7 @@ export function ExportPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white">Export Reservations</h1>
+          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Export Reservations</h1>
           <p className="text-dark-400 mt-1">Generate PDF reports for daily reservation overviews</p>
         </div>
         <HelpGuide title="Export Guide" sections={exportGuide} />
