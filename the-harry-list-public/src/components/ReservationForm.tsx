@@ -802,7 +802,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                         disabled={blocked}
                         title={blocked ? 'Not compatible with another selected activity' : undefined}
                         className={`
-                          relative flex items-start gap-2.5 p-3 rounded-lg border-2 transition-all duration-200 text-left w-full
+                          relative flex items-start gap-2.5 p-3 rounded-lg border-2 transition-[background-color,border-color,box-shadow,opacity] duration-200 text-left w-full
                           ${selected
                             ? 'border-hubble-500 bg-hubble-500/10'
                             : blocked
@@ -987,7 +987,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Hubble */}
               <label className={`
-                relative flex flex-col p-6 rounded-xl border-2 transition-all duration-200
+                relative flex flex-col p-6 rounded-xl border-2 transition-[background-color,border-color,box-shadow,opacity] duration-200
                 ${locationLocked && locationLocked !== 'HUBBLE' ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
                 ${watchLocation === 'HUBBLE'
                   ? 'border-hubble-500 bg-hubble-500/10'
@@ -1023,7 +1023,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
 
               {/* Meteor */}
               <label className={`
-                relative flex flex-col p-6 rounded-xl border-2 transition-all duration-200
+                relative flex flex-col p-6 rounded-xl border-2 transition-[background-color,border-color,box-shadow,opacity] duration-200
                 ${locationLocked && locationLocked !== 'METEOR' ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
                 ${watchLocation === 'METEOR'
                   ? 'border-meteor-500 bg-meteor-500/10'
@@ -1059,7 +1059,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
 
               {/* No Preference */}
               <label className={`
-                relative flex flex-col p-6 rounded-xl border-2 transition-all duration-200
+                relative flex flex-col p-6 rounded-xl border-2 transition-[background-color,border-color,box-shadow,opacity] duration-200
                 ${locationLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
                 ${!watchLocation || watchLocation === 'NO_PREFERENCE'
                   ? 'border-dark-400 bg-dark-700/50'
@@ -1113,7 +1113,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   <label
                     key={area}
                     className={`
-                      relative flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200
+                      relative flex flex-col items-center p-4 rounded-xl border-2 transition-[background-color,border-color,box-shadow,opacity] duration-200
                       ${seatingLocked && area !== seatingLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
                       ${watch('seatingArea') === area
                         ? 'border-hubble-500 bg-hubble-500/10'
@@ -1246,7 +1246,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                     <label
                       key={option.value}
                       className={`
-                        flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
+                        flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-[background-color,border-color,box-shadow,opacity] duration-200
                         ${selected
                           ? 'border-meteor-500 bg-meteor-500/10'
                           : 'border-dark-700 bg-dark-800/50 hover:border-dark-600'

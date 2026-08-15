@@ -1,9 +1,12 @@
 import { Sparkles } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 
+// Solid, not translucent: the header is not sticky, so nothing ever scrolls
+// beneath it. A backdrop-blur here would only frost the fixed decorative
+// background — a static effect for the cost of a full-width filter.
 export function Header() {
   return (
-    <header className="relative z-20 border-b border-dark-800/50 bg-dark-950/80 backdrop-blur-xl">
+    <header className="relative z-20 border-b border-dark-800/50 bg-dark-950">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}

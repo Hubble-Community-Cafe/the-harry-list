@@ -721,3 +721,23 @@ body.dark {
     scroll-behavior: auto !important;
   }
 }
+
+/* Reduced transparency: make translucent surfaces solid rather than frosted,
+   so text never has to compete with whatever sits behind it. */
+@media (prefers-reduced-transparency: reduce) {
+  .card,
+  header,
+  footer {
+    backdrop-filter: none !important;
+    background-color: var(--color-dark-950) !important;
+  }
+}
+
+/* Increased contrast: solid surfaces with a clearly visible boundary. */
+@media (prefers-contrast: more) {
+  .card {
+    backdrop-filter: none !important;
+    background-color: var(--color-dark-950) !important;
+    border-color: var(--color-dark-400) !important;
+  }
+}
