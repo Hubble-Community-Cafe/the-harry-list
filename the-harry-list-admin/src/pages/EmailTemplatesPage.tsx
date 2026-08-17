@@ -210,7 +210,7 @@ export function EmailTemplatesPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white">Email Templates</h1>
+          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Email Templates</h1>
           <p className="text-dark-400 font-light">
             {canEditEmailTemplates
               ? 'Customise the emails sent to customers and staff'
@@ -392,7 +392,7 @@ export function EmailTemplatesPage() {
       {/* PDF Attachments section */}
       {canManageAttachments && (
       <div>
-        <h2 className="text-xl font-title font-bold text-white mb-1">PDF Attachments</h2>
+        <h2 className="text-xl font-title font-bold text-white mb-1 tracking-tight">PDF Attachments</h2>
         <p className="text-dark-400 font-light text-sm mb-4">Manage PDF files that can be attached to catering option emails</p>
 
         {/* Upload form */}

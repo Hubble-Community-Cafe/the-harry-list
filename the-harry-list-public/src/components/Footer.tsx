@@ -4,9 +4,11 @@ interface FooterProps {
   onOpenPrivacy: () => void;
 }
 
+// Solid: the footer sits at the end of the document, so content can never pass
+// under it. Same reasoning as the header.
 export function Footer({ onOpenPrivacy }: FooterProps) {
   return (
-    <footer className="relative z-20 border-t border-dark-800/50 bg-dark-950/80 backdrop-blur-xl">
+    <footer className="relative z-20 border-t border-dark-800/50 bg-dark-950">
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Links */}

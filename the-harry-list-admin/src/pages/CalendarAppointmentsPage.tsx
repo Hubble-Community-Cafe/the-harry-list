@@ -175,7 +175,7 @@ export function CalendarAppointmentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white">Calendar Appointments</h1>
+          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Calendar Appointments</h1>
           <p className="text-dark-400 font-light">Custom calendar entries that appear in the ICS feeds alongside reservations</p>
         </div>
         {canManageAppointments && (

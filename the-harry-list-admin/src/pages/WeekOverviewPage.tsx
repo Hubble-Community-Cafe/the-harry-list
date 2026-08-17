@@ -162,7 +162,7 @@ export function WeekOverviewPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
           <div>
-            <h1 className="text-2xl font-title font-bold text-white">Week Overview</h1>
+            <h1 className="text-2xl font-title font-bold text-white tracking-tight">Week Overview</h1>
             <p className="text-dark-400 font-light">Quick overview of the week's reservations</p>
           </div>
           <HelpGuide title="Week Overview Guide" sections={weekOverviewGuide} />

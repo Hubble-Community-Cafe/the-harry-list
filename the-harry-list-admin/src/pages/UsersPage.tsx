@@ -163,7 +163,7 @@ export function UsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-title font-bold text-white">User Management</h1>
+        <h1 className="text-2xl font-title font-bold text-white tracking-tight">User Management</h1>
         <p className="text-dark-400 font-light">Manage admin panel access and roles</p>
       </div>
       <UsersTab />

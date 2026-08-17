@@ -205,7 +205,7 @@ export function CalendarPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white">Calendar Feeds</h1>
+          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Calendar Feeds</h1>
           <p className="text-dark-400 mt-1">Subscribe to reservation calendars from any calendar app</p>
         </div>
         <HelpGuide title="Calendar Feeds Guide" sections={calendarGuide} />
