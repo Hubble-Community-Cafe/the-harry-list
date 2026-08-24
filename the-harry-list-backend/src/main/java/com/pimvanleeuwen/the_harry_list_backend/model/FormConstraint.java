@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
  * - TIME_RESTRICTION: CATERING_CORONA_ROOM allows early times (09:00-10:45)
  * - ADVANCE_BOOKING: EAT_CATERING requires 7 days advance
  * - GUEST_LIMIT: EAT_A_LA_CARTE max 15 guests
+ * - ACTIVITY_NOTICE: PRIVATE_EVENT shows an advisory message (never blocks)
  */
 @Entity
 @Table(name = "form_constraints")
@@ -25,6 +26,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FormConstraint {
+
+    /**
+     * {@code targetValue} marker on an ACTIVITY_NOTICE constraint that opts it into a
+     * blocking confirmation dialog on the public form instead of a passive banner.
+     * Mirrors how TIME_RESTRICTION uses {@code targetValue} as a mode key.
+     */
+    public static final String ACTIVITY_NOTICE_CONFIRM = "CONFIRM";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,6 +53,9 @@ public class FormConstraint {
      *  TIME_RESTRICTION: "EARLY_ACCESS" or similar key
      *  ADVANCE_BOOKING: unused (days in numericValue)
      *  GUEST_LIMIT: unused (limit in numericValue)
+     *  ACTIVITY_NOTICE: {@link #ACTIVITY_NOTICE_CONFIRM} to make the public form
+     *      demand an explicit acknowledgement in a dialog before the activity can
+     *      be selected; empty/null shows the message as an inline banner only.
      */
     @Column(name = "target_value", length = 50)
     private String targetValue;
