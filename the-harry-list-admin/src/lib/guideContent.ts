@@ -346,7 +346,7 @@ Constraints are rules that enforce business logic on the reservation form. Each 
 - **Advance Booking** — requires a minimum number of days between booking and event date
 - **Time Restriction** — limits available time slots for certain activities
 - **Guest Minimum** — sets a minimum guest count for a specific location (e.g. Meteor minimum 1 person)
-- **Activity Notice** — shows an advisory message when an activity is selected, without blocking the booking (e.g. "A private event at Meteor has an additional charge")
+- **Activity Notice** — shows an advisory message when an activity is selected, without blocking the booking (e.g. "A private event at Meteor has an additional charge"). Tick **Require confirmation popup** to make guests acknowledge it in a dialog (with the option to deselect the activity instead) rather than just showing a banner they can scroll past. Use that sparingly, for notices that are genuinely easy to miss.
 
 ### Adding a Constraint
 

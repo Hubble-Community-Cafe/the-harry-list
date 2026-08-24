@@ -33,6 +33,13 @@ const ACTIVITIES = [
   'GRADUATION', 'EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM', 'PRIVATE_EVENT',
 ];
 
+/**
+ * targetValue marker that opts an ACTIVITY_NOTICE into a blocking confirmation dialog on
+ * the public form. Must match FormConstraint.ACTIVITY_NOTICE_CONFIRM in the backend and
+ * the constant in the public app's ReservationForm.
+ */
+const ACTIVITY_NOTICE_CONFIRM = 'CONFIRM';
+
 const LOCATIONS = ['HUBBLE', 'METEOR'];
 
 const emptyConstraint: FormConstraint = {
@@ -467,8 +474,32 @@ export function SettingsPage() {
                   </div>
                 )}
 
-                {/* ACTIVITY_NOTICE is advisory only — it needs just a trigger activity and
-                    a message, so the target value field is hidden for it. */}
+                {/* ACTIVITY_NOTICE reuses targetValue as a mode key (like TIME_RESTRICTION),
+                    so it gets a checkbox instead of the free-text target field. */}
+                {editingConstraint.constraintType === 'ACTIVITY_NOTICE' && (
+                  <div>
+                    <label className="flex items-start gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        data-testid="constraint-require-confirmation"
+                        checked={editingConstraint.targetValue === ACTIVITY_NOTICE_CONFIRM}
+                        onChange={e => setEditingConstraint({
+                          ...editingConstraint,
+                          targetValue: e.target.checked ? ACTIVITY_NOTICE_CONFIRM : '',
+                        })}
+                        className="mt-0.5 shrink-0"
+                      />
+                      <span className="text-sm text-white">Require confirmation popup</span>
+                    </label>
+                    <p className="text-xs text-dark-500 mt-1">
+                      Off: the message appears as a banner under the activity list. On: guests
+                      must acknowledge it in a dialog titled "Please Note" before the activity
+                      is selected, and can choose to deselect instead. Use sparingly — reserve
+                      it for notices that are genuinely easy to miss.
+                    </p>
+                  </div>
+                )}
+
                 {editingConstraint.constraintType !== 'ACTIVITY_NOTICE' && (
                   <div>
                     <label className="block text-sm text-dark-400 mb-1">Target Value</label>
