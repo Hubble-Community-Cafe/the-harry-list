@@ -78,6 +78,19 @@ export class ReservationFormPage {
     return this.page.getByTestId('activity-notice');
   }
 
+  /** The acknowledgement dialog shown for notices configured with targetValue=CONFIRM. */
+  activityNoticeDialog(): Locator {
+    return this.page.getByTestId('activity-notice-dialog');
+  }
+
+  async confirmActivityNotice(): Promise<void> {
+    await this.page.getByTestId('activity-notice-confirm').click();
+  }
+
+  async declineActivityNotice(): Promise<void> {
+    await this.page.getByTestId('activity-notice-decline').click();
+  }
+
   // ---- Privacy policy ----
   privacyDialog(): Locator {
     return this.page.getByTestId('privacy-policy');

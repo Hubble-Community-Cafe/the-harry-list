@@ -226,6 +226,42 @@ describe('FormSettingsPage', () => {
     });
   });
 
+  it('saves an Activity Notice with the confirmation popup enabled', async () => {
+    vi.mocked(createFormConstraint).mockResolvedValueOnce({
+      id: 10,
+      constraintType: 'ACTIVITY_NOTICE',
+      triggerActivity: 'PRIVATE_EVENT',
+      targetValue: 'CONFIRM',
+      message: 'A private event at Meteor has an additional charge.',
+      enabled: true,
+    });
+
+    renderWithRouter(<FormSettingsPage />);
+    await waitFor(() => expect(screen.getByText('Add Constraint')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByText('Add Constraint'));
+    await waitFor(() => expect(screen.getByText('New Constraint')).toBeInTheDocument());
+
+    fireEvent.change(screen.getByTestId('constraint-type'), { target: { value: 'ACTIVITY_NOTICE' } });
+
+    // The free-text target field is replaced by the confirmation checkbox, unticked by default.
+    expect(screen.queryByTestId('constraint-target')).not.toBeInTheDocument();
+    const confirmBox = screen.getByTestId('constraint-require-confirmation');
+    expect(confirmBox).not.toBeChecked();
+
+    fireEvent.click(confirmBox);
+    fireEvent.change(screen.getByTestId('constraint-trigger'), { target: { value: 'PRIVATE_EVENT' } });
+    fireEvent.change(screen.getByTestId('constraint-message'), {
+      target: { value: 'A private event at Meteor has an additional charge.' },
+    });
+    fireEvent.click(screen.getByTestId('save-constraint'));
+
+    await waitFor(() => expect(createFormConstraint).toHaveBeenCalled());
+    expect(vi.mocked(createFormConstraint).mock.calls[0][0]).toMatchObject({
+      constraintType: 'ACTIVITY_NOTICE',
+      targetValue: 'CONFIRM',
+    });
+  });
+
   it('opens new blocked period modal when Add Blocked Period is clicked', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {

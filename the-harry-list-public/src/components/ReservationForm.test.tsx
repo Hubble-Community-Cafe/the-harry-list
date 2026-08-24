@@ -103,6 +103,15 @@ const mockConstraints: FormConstraint[] = [
     message: 'A private event at Meteor has an additional charge.',
     enabled: true,
   },
+  {
+    // targetValue=CONFIRM opts this notice into a blocking acknowledgement dialog.
+    id: 8,
+    constraintType: 'ACTIVITY_NOTICE',
+    triggerActivity: 'GRADUATION',
+    targetValue: 'CONFIRM',
+    message: 'Graduations require a deposit paid in advance.',
+    enabled: true,
+  },
 ];
 
 const mockBlockedPeriods: BlockedPeriod[] = [];
@@ -333,14 +342,16 @@ describe('ReservationForm', () => {
       await waitForFormLoaded();
       await goToStep2(user);
 
-      const graduation = screen.getByRole('checkbox', { name: 'Graduation / PhD Defense' });
-      expect(graduation).toHaveAttribute('aria-checked', 'false');
+      // Uses an activity with no confirmation-required notice, so this stays a test of
+      // plain toggling (see the notice-dialog tests for the confirmation path).
+      const alaCarte = screen.getByRole('checkbox', { name: 'Eat a la Carte' });
+      expect(alaCarte).toHaveAttribute('aria-checked', 'false');
 
-      await user.click(graduation);
-      expect(graduation).toHaveAttribute('aria-checked', 'true');
+      await user.click(alaCarte);
+      expect(alaCarte).toHaveAttribute('aria-checked', 'true');
 
-      await user.click(graduation);
-      expect(graduation).toHaveAttribute('aria-checked', 'false');
+      await user.click(alaCarte);
+      expect(alaCarte).toHaveAttribute('aria-checked', 'false');
     });
 
     it('shows guest limit warning when exceeded', async () => {
@@ -475,6 +486,95 @@ describe('ReservationForm', () => {
 
       await user.click(screen.getByRole('checkbox', { name: 'Private Event' }));
 
+      await waitFor(() => {
+        expect(screen.getByTestId('activity-notice')).toHaveTextContent(
+          'A private event at Meteor has an additional charge.'
+        );
+      });
+    });
+
+    it('asks for confirmation before selecting an activity whose notice requires it', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep2(user);
+
+      const graduation = screen.getByRole('checkbox', { name: 'Graduation / PhD Defense' });
+      await user.click(graduation);
+
+      // The activity is NOT selected yet — the dialog decides.
+      expect(await screen.findByTestId('activity-notice-dialog')).toHaveTextContent(
+        'Graduations require a deposit paid in advance.'
+      );
+      expect(screen.getByText('Please Note')).toBeInTheDocument();
+      expect(graduation).toHaveAttribute('aria-checked', 'false');
+
+      await user.click(screen.getByTestId('activity-notice-confirm'));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('activity-notice-dialog')).not.toBeInTheDocument();
+        expect(graduation).toHaveAttribute('aria-checked', 'true');
+      });
+    });
+
+    it('leaves the activity unselected when the notice is declined', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep2(user);
+
+      const graduation = screen.getByRole('checkbox', { name: 'Graduation / PhD Defense' });
+      await user.click(graduation);
+      await screen.findByTestId('activity-notice-dialog');
+
+      await user.click(screen.getByTestId('activity-notice-decline'));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('activity-notice-dialog')).not.toBeInTheDocument();
+      });
+      expect(graduation).toHaveAttribute('aria-checked', 'false');
+    });
+
+    it('treats dismissing the notice dialog with Escape as declining', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep2(user);
+
+      const graduation = screen.getByRole('checkbox', { name: 'Graduation / PhD Defense' });
+      await user.click(graduation);
+      await screen.findByTestId('activity-notice-dialog');
+
+      fireEvent.keyDown(document, { key: 'Escape' });
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('activity-notice-dialog')).not.toBeInTheDocument();
+      });
+      expect(graduation).toHaveAttribute('aria-checked', 'false');
+    });
+
+    it('does not prompt when deselecting a confirmed activity', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep2(user);
+
+      const graduation = screen.getByRole('checkbox', { name: 'Graduation / PhD Defense' });
+      await user.click(graduation);
+      await user.click(await screen.findByTestId('activity-notice-confirm'));
+      await waitFor(() => expect(graduation).toHaveAttribute('aria-checked', 'true'));
+
+      await user.click(graduation);
+
+      expect(screen.queryByTestId('activity-notice-dialog')).not.toBeInTheDocument();
+      expect(graduation).toHaveAttribute('aria-checked', 'false');
+    });
+
+    it('shows a banner without a dialog when the notice does not require confirmation', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep2(user);
+
+      // PRIVATE_EVENT's notice has no targetValue, so it stays a passive banner.
+      await user.click(screen.getByRole('checkbox', { name: 'Private Event' }));
+
+      expect(screen.queryByTestId('activity-notice-dialog')).not.toBeInTheDocument();
       await waitFor(() => {
         expect(screen.getByTestId('activity-notice')).toHaveTextContent(
           'A private event at Meteor has an additional charge.'

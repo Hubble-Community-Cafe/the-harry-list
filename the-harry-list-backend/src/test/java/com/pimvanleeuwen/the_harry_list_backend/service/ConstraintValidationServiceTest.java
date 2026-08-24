@@ -420,6 +420,31 @@ class ConstraintValidationServiceTest {
     }
 
     @Test
+    void validate_shouldNotEnforceActivityNoticeEvenWhenConfirmationRequired() {
+        // targetValue=CONFIRM only changes how the public form surfaces the message
+        // (dialog instead of banner). It must never make the notice blocking server-side.
+        FormConstraint notice = FormConstraint.builder()
+                .constraintType(FormConstraintType.ACTIVITY_NOTICE)
+                .triggerActivity("PRIVATE_EVENT")
+                .targetValue(FormConstraint.ACTIVITY_NOTICE_CONFIRM)
+                .message("A private event at Meteor has an additional charge.")
+                .enabled(true)
+                .build();
+
+        when(constraintRepository.findByEnabledTrue()).thenReturn(List.of(notice));
+
+        List<String> violations = service.validate(
+                Set.of(SpecialActivity.PRIVATE_EVENT),
+                BarLocation.METEOR,
+                SeatingArea.INSIDE,
+                LocalDate.now().plusDays(10),
+                LocalTime.of(20, 0),
+                30);
+
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
     void validate_shouldNotEnforceActivityNotice() {
         // ACTIVITY_NOTICE is advisory only — the frontend shows the message, but it must
         // never block a submission even when its trigger activity is selected.
