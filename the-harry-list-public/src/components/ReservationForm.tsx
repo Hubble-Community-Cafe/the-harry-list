@@ -11,6 +11,7 @@ import {
 import * as Sentry from '@sentry/react';
 import { submitReservation, fetchFormOptions, fetchFormConstraints, fetchBlockedPeriods, getAltchaChallengeUrl } from '../lib/api';
 import { AltchaWidget } from './AltchaWidget';
+import { ActivityNoticeDialog } from './ActivityNoticeDialog';
 import { checkBlockedDate } from '../lib/blockedPeriods';
 import type { ReservationFormData, FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
 
@@ -120,6 +121,13 @@ const steps = [
   { id: 3, title: 'Payment', icon: CreditCard },
   { id: 4, title: 'Confirm', icon: ClipboardCheck },
 ];
+
+/**
+ * targetValue marker that opts an ACTIVITY_NOTICE into a confirmation dialog rather than
+ * a passive banner. Must match FormConstraint.ACTIVITY_NOTICE_CONFIRM in the backend and
+ * the constant in the admin's FormSettingsPage.
+ */
+const ACTIVITY_NOTICE_CONFIRM = 'CONFIRM';
 
 const SPECIAL_ACTIVITY_LABELS: Record<string, string> = {
   GRADUATION: 'Graduation / PhD Defense',
@@ -257,6 +265,18 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       .filter(c => c.constraintType === 'ACTIVITY_NOTICE' && watchSpecialActivities.includes(c.triggerActivity))
       .map(c => ({ id: c.id, message: c.message }));
   }, [constraints, watchSpecialActivities]);
+
+  // A notice staff marked as requiring acknowledgement opens a dialog before the activity
+  // is actually selected. Holds the pending activity + its message while the guest decides.
+  const [pendingNotice, setPendingNotice] = useState<{ activity: string; message: string } | null>(null);
+
+  /** The confirm-required notice for an activity, or undefined when it has none. */
+  const confirmNoticeFor = useCallback((activity: string) => {
+    return constraints.find(c =>
+      c.constraintType === 'ACTIVITY_NOTICE'
+      && c.triggerActivity === activity
+      && c.targetValue === ACTIVITY_NOTICE_CONFIRM);
+  }, [constraints]);
 
   // Calculate duration for long reservation warning
   const durationMinutes = useMemo(() => {
@@ -548,13 +568,35 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
   const isActivityBlocked = (activity: string, current: string[]): boolean =>
     (activityConflicts[activity] || []).some(conflict => current.includes(conflict));
 
+  const selectActivity = (activity: string) => {
+    const current = getValues('specialActivities') || [];
+    if (!current.includes(activity)) {
+      setValue('specialActivities', [...current, activity]);
+    }
+  };
+
+  const deselectActivity = (activity: string) => {
+    const current = getValues('specialActivities') || [];
+    setValue('specialActivities', current.filter(a => a !== activity));
+  };
+
   const toggleActivity = (activity: string) => {
     const current = getValues('specialActivities') || [];
     if (current.includes(activity)) {
-      setValue('specialActivities', current.filter(a => a !== activity));
-    } else if (!isActivityBlocked(activity, current)) {
-      setValue('specialActivities', [...current, activity]);
+      // Deselecting never prompts; any locks this activity triggered unwind with it.
+      deselectActivity(activity);
+      return;
     }
+    if (isActivityBlocked(activity, current)) return;
+
+    // Selecting an activity whose notice demands acknowledgement defers the change until
+    // the guest answers the dialog, so declining leaves the form exactly as it was.
+    const notice = confirmNoticeFor(activity);
+    if (notice) {
+      setPendingNotice({ activity, message: notice.message });
+      return;
+    }
+    selectActivity(activity);
   };
 
   const onSubmit = useCallback(async (data: ReservationFormData) => {
@@ -1388,6 +1430,22 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                       </span>
                     </div>
                   )}
+                  {/* Repeat any activity notices here so they are still in front of the
+                      guest at the point of submitting, not just when they picked the activity. */}
+                  {activityNotices.length > 0 && (
+                    <div className="md:col-span-2 space-y-2 mt-1" data-testid="summary-activity-notices">
+                      {activityNotices.map(notice => (
+                        <div
+                          key={notice.id}
+                          data-testid="summary-activity-notice"
+                          className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 flex items-start gap-2"
+                        >
+                          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                          <span>{notice.message}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {getValues('description') && (
                     <div className="md:col-span-2">
                       <span className="text-dark-400">Description:</span>{' '}
@@ -1515,6 +1573,17 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
           )}
         </div>
       </form>
+
+      {/* Acknowledgement dialog for notices staff marked as confirmation-required.
+          Declining (or dismissing) leaves the activity unselected. */}
+      <ActivityNoticeDialog
+        message={pendingNotice?.message ?? null}
+        onConfirm={() => {
+          if (pendingNotice) selectActivity(pendingNotice.activity);
+          setPendingNotice(null);
+        }}
+        onDecline={() => setPendingNotice(null)}
+      />
     </div>
   );
 }
