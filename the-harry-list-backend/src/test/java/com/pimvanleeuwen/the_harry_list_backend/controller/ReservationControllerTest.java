@@ -27,6 +27,8 @@ import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -139,6 +141,39 @@ class ReservationControllerTest {
                         .content(objectMapper.writeValueAsString(sampleReservation)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.contactName").value("Updated Name"));
+    }
+
+    @Test
+    @WithMockUser
+    void updateReservation_shouldRejectNullGuestCount() throws Exception {
+        // A client sending expectedGuests=null used to be accepted, because @Positive
+        // only rejects non-null values <= 0. The row was then persisted with a null
+        // guest count, which crashed the admin detail page on render.
+        sampleReservation.setId(1L);
+        sampleReservation.setExpectedGuests(null);
+
+        mockMvc.perform(put("/api/reservations/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sampleReservation)))
+                .andExpect(status().isBadRequest());
+
+        verify(updateReservationService, never()).executeWithEmail(any(), anyBoolean(), any());
+    }
+
+    @Test
+    @WithMockUser
+    void updateReservation_shouldRejectZeroOrNegativeGuestCount() throws Exception {
+        sampleReservation.setId(1L);
+        sampleReservation.setExpectedGuests(0);
+
+        mockMvc.perform(put("/api/reservations/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sampleReservation)))
+                .andExpect(status().isBadRequest());
+
+        verify(updateReservationService, never()).executeWithEmail(any(), anyBoolean(), any());
     }
 
     @Test
