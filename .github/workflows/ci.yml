@@ -276,6 +276,12 @@ jobs:
     needs: [backend-test, public-frontend-test, admin-frontend-test]
     # Only build and push on main branch, not on PRs
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Publishing waits for a maintainer. Portainer pulls these images, so a push
+    # to GHCR is effectively a deploy. The `production` environment's required
+    # reviewers turn that into a deliberate step rather than a side effect of
+    # merging. sentry-release and github-release both `needs:` this job, so they
+    # inherit the gate.
+    environment: production
     permissions:
       contents: read
       packages: write
