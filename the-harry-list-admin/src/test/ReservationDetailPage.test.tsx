@@ -313,4 +313,52 @@ describe('ReservationDetailPage — edit email default', () => {
     await waitFor(() =>
       expect(updateReservation).toHaveBeenCalledWith(1, expect.any(Object), false, undefined));
   });
+
+  // ==================== GUEST COUNT (regression) ====================
+
+  it('renders a reservation whose guest count is missing instead of crashing', async () => {
+    // A row saved before the guest count was mandatory. An unguarded
+    // expectedGuests.toString() used to throw here and take the whole page down,
+    // leaving no way to open the reservation and repair it.
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, expectedGuests: null });
+
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText('Birthday Party')).toBeInTheDocument(), { timeout: 3000 });
+    expect(screen.getByText('Not specified')).toBeInTheDocument();
+  });
+
+  it('never puts NaN in the guest count when the field is cleared', async () => {
+    vi.mocked(updateReservation).mockResolvedValueOnce(sampleReservation);
+
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('edit-reservation')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('edit-reservation'));
+
+    const guests = await screen.findByTestId('edit-guests');
+    fireEvent.change(guests, { target: { value: '' } });
+    fireEvent.click(screen.getByTestId('edit-save'));
+
+    // NaN would serialise to null over the wire and silently blank the field.
+    await waitFor(() => expect(updateReservation).toHaveBeenCalled());
+    const payload = vi.mocked(updateReservation).mock.calls[0][1] as { expectedGuests?: number };
+    expect(payload.expectedGuests).toBeUndefined();
+    expect(Number.isNaN(payload.expectedGuests as number)).toBe(false);
+  });
+
+  it('keeps a valid guest count as an integer', async () => {
+    vi.mocked(updateReservation).mockResolvedValueOnce(sampleReservation);
+
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('edit-reservation')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('edit-reservation'));
+
+    const guests = await screen.findByTestId('edit-guests');
+    fireEvent.change(guests, { target: { value: '137' } });
+    fireEvent.click(screen.getByTestId('edit-save'));
+
+    await waitFor(() => expect(updateReservation).toHaveBeenCalled());
+    const payload = vi.mocked(updateReservation).mock.calls[0][1] as { expectedGuests?: number };
+    expect(payload.expectedGuests).toBe(137);
+  });
 });

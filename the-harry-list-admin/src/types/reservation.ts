@@ -12,7 +12,9 @@ export interface Reservation {
   location: string;
   seatingArea?: string;
   status: string;
-  expectedGuests: number;
+  /** Nullable: the column allows NULL and rows created before the guest count
+   *  became mandatory can still hold it. Guard before calling number methods. */
+  expectedGuests: number | null;
   description?: string;
   paymentOption?: string;
   costCenter?: string;
