@@ -629,7 +629,10 @@ export function ReservationDetailPage() {
                 </div>
               </div>
             )}
-            <InfoRow icon={Users} label="Expected Guests" value={reservation.expectedGuests.toString()} />
+            {/* Optional chain on purpose: rows persisted before guest count was mandatory
+                may hold null, and an unguarded toString() takes the whole page down,
+                leaving no way to open the reservation and repair it. */}
+            <InfoRow icon={Users} label="Expected Guests" value={reservation.expectedGuests?.toString() ?? 'Not specified'} />
             <div className="flex items-start gap-3">
               <div className="pl-7">
                 <div className="text-xs text-dark-500">Special Activities</div>
@@ -1042,9 +1045,20 @@ export function ReservationDetailPage() {
                     <label className="label">Expected Guests</label>
                     <input
                       type="number"
+                      min={1}
+                      step={1}
                       data-testid="edit-guests"
-                      value={editData.expectedGuests || ''}
-                      onChange={(e) => setEditData({ ...editData, expectedGuests: parseInt(e.target.value) })}
+                      value={editData.expectedGuests ?? ''}
+                      onChange={(e) => {
+                        // Never store NaN: JSON.stringify(NaN) is "null", which used to
+                        // blank the guest count server-side and then crash this page on
+                        // render. undefined omits the field so the backend rejects it.
+                        const parsed = Number.parseInt(e.target.value, 10);
+                        setEditData({
+                          ...editData,
+                          expectedGuests: Number.isFinite(parsed) ? parsed : undefined,
+                        });
+                      }}
                       className="input-field"
                     />
                   </div>

@@ -49,6 +49,9 @@ public class PublicReservationRequest {
 
     private Set<SpecialActivity> specialActivities;
 
+    // @Positive alone permits null, so guard it explicitly. The public form's zod schema
+    // already requires a number, but the endpoint must not depend on the client for this.
+    @NotNull(message = "Number of guests is required")
     @Positive(message = "Number of guests must be positive")
     @Max(value = 500, message = "Please contact us directly for groups over 500 people")
     private Integer expectedGuests;

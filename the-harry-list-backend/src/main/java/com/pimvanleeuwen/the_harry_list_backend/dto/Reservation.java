@@ -50,6 +50,10 @@ public class Reservation {
 
     private Set<SpecialActivity> specialActivities;
 
+    // @Positive alone permits null (Bean Validation only rejects non-null values <= 0),
+    // so a client sending null would silently blank the field. The admin edit form used
+    // to do exactly that via parseInt("") -> NaN -> JSON null.
+    @NotNull(message = "Number of guests is required")
     @Positive(message = "Number of guests must be positive")
     private Integer expectedGuests;
 

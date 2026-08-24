@@ -129,7 +129,7 @@ export function WeekOverviewPage() {
   const pendingCount = weekReservations.filter(r => r.status === 'PENDING').length;
   const confirmedCount = weekReservations.filter(r => r.status === 'CONFIRMED').length;
   const cateringNeeded = weekReservations.filter(r => hasCatering(r.specialActivities) && !r.cateringArranged && r.status !== 'REJECTED' && r.status !== 'CANCELLED').length;
-  const totalGuests = weekReservations.filter(r => r.status !== 'REJECTED' && r.status !== 'CANCELLED').reduce((sum, r) => sum + r.expectedGuests, 0);
+  const totalGuests = weekReservations.filter(r => r.status !== 'REJECTED' && r.status !== 'CANCELLED').reduce((sum, r) => sum + (r.expectedGuests ?? 0), 0);
 
   const todayStr = toLocalDateString(new Date());
 
