@@ -12,6 +12,11 @@ version: 2
 # Grouping keeps each ecosystem to at most two PRs per run:
 #   * one batched PR for minor/patch updates  -> auto-merged into develop
 #   * one isolated PR for major updates        -> reviewed manually
+#
+# `cooldown` holds back freshly published releases for a few days. Since the
+# minor/patch group auto-merges, that window is what stops a compromised release
+# reaching `develop` unreviewed. Cooldown applies to version updates only —
+# Dependabot *security* updates bypass it, so genuine fixes are never delayed.
 # ──────────────────────────────────────────────────────────────────────────────
 
 updates:
@@ -24,6 +29,11 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Europe/Amsterdam"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
     open-pull-requests-limit: 5
     reviewers:
       - "PimVanLeeuwen"
@@ -54,6 +64,11 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Europe/Amsterdam"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
     open-pull-requests-limit: 5
     reviewers:
       - "PimVanLeeuwen"
@@ -92,6 +107,11 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Europe/Amsterdam"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
     open-pull-requests-limit: 5
     reviewers:
       - "PimVanLeeuwen"
@@ -127,6 +147,10 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Europe/Amsterdam"
+    # github-actions supports only `default-days` — the per-SemVer-bump keys are
+    # not available for this ecosystem.
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     reviewers:
       - "PimVanLeeuwen"

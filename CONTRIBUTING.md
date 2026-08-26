@@ -79,6 +79,7 @@ Dependency bumps are handled by Dependabot and do **not** follow the normal "ope
 **How it flows:**
 
 1. Every Monday, Dependabot opens grouped PRs against `develop`, at most one batched *minor/patch* PR and one isolated *major* PR per ecosystem (Maven, admin npm, public npm, GitHub Actions). See [`.github/dependabot.yml`](.github/dependabot.yml).
+   A **cooldown** holds back releases that are only days old (7 days by default, 3 for patches, 30 for majors), so a compromised publish can't auto-merge into `develop` before it's been noticed. Cooldown applies to version updates only — Dependabot *security* updates bypass it.
 2. Minor/patch PRs are **auto-merged** into `develop` once CI passes, via [`.github/workflows/dependabot-auto-merge.yml`](.github/workflows/dependabot-auto-merge.yml). Major updates are commented and left open for manual review.
 3. To release the accumulated updates, open a single **`develop → main`** PR. It already carries the version bump, so it passes the Version Bump Check.
 4. After the release merges, reset `develop` back onto `main` and open the next
