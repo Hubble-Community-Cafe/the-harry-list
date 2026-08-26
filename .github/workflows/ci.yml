@@ -20,7 +20,7 @@ jobs:
     name: Frontend Sync Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Check shared files are in sync
         run: |
@@ -124,7 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
@@ -172,10 +172,10 @@ jobs:
       run:
         working-directory: the-harry-list-backend
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin
           java-version: 21
@@ -185,7 +185,7 @@ jobs:
         run: mvn test -B
 
       - name: Upload test results
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
           name: backend-test-results
@@ -199,10 +199,10 @@ jobs:
       run:
         working-directory: the-harry-list-backend
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin
           java-version: 21
@@ -219,10 +219,10 @@ jobs:
       run:
         working-directory: the-harry-list-public
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
           cache: npm
@@ -248,10 +248,10 @@ jobs:
       run:
         working-directory: the-harry-list-admin
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
           cache: npm
@@ -287,7 +287,7 @@ jobs:
       packages: write
       security-events: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Compute lowercase owner
         id: vars
@@ -298,10 +298,10 @@ jobs:
         run: echo "version=$(node -p "require('./the-harry-list-public/package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -310,7 +310,7 @@ jobs:
       # ========== BACKEND ==========
       - name: Extract metadata for Backend
         id: meta-backend
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
           images: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-backend
           tags: |
@@ -321,7 +321,7 @@ jobs:
 
       - name: Build and push Backend Docker image
         id: push-backend
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: ./the-harry-list-backend
           file: ./the-harry-list-backend/Dockerfile
@@ -332,7 +332,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Scan Backend image (Trivy)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-backend@${{ steps.push-backend.outputs.digest }}
           format: sarif
@@ -341,7 +341,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Backend Trivy results
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4
         if: always()
         with:
           sarif_file: trivy-backend.sarif
@@ -350,7 +350,7 @@ jobs:
       # ========== PUBLIC FRONTEND ==========
       - name: Extract metadata for Public Frontend
         id: meta-public
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
           images: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-public
           tags: |
@@ -361,7 +361,7 @@ jobs:
 
       - name: Build and push Public Frontend Docker image
         id: push-public
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: ./the-harry-list-public
           file: ./the-harry-list-public/Dockerfile
@@ -374,7 +374,7 @@ jobs:
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Scan Public Frontend image (Trivy)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-public@${{ steps.push-public.outputs.digest }}
           format: sarif
@@ -383,7 +383,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Public Frontend Trivy results
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4
         if: always()
         with:
           sarif_file: trivy-public.sarif
@@ -392,7 +392,7 @@ jobs:
       # ========== ADMIN FRONTEND ==========
       - name: Extract metadata for Admin Frontend
         id: meta-admin
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
           images: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-admin
           tags: |
@@ -403,7 +403,7 @@ jobs:
 
       - name: Build and push Admin Frontend Docker image
         id: push-admin
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: ./the-harry-list-admin
           file: ./the-harry-list-admin/Dockerfile
@@ -416,7 +416,7 @@ jobs:
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Scan Admin Frontend image (Trivy)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-admin@${{ steps.push-admin.outputs.digest }}
           format: sarif
@@ -425,7 +425,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Admin Frontend Trivy results
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4
         if: always()
         with:
           sarif_file: trivy-admin.sarif
@@ -438,7 +438,7 @@ jobs:
     needs: [docker-build-push]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
@@ -447,7 +447,7 @@ jobs:
         run: echo "version=$(node -p "require('./the-harry-list-public/package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Create Sentry release
-        uses: getsentry/action-release@v3
+        uses: getsentry/action-release@ff07929a6537bac57790c3451cf4d364aca38528 # v3
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: stichting-bar-potential
@@ -465,7 +465,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Extract version
         id: version
