@@ -58,6 +58,10 @@ public class EmailTemplateService {
                 "contactName", "confirmationNumber", "eventTitle", "eventDate",
                 "startTime", "endTime", "location", "expectedGuests", "barName", "staffEmail"));
 
+        AVAILABLE_VARIABLES.put(EmailTemplateType.COBO_OPTIONS, List.of(
+                "contactName", "confirmationNumber", "eventTitle", "eventDate",
+                "startTime", "endTime", "location", "expectedGuests", "barName", "staffEmail"));
+
         DEFAULT_SUBJECTS.put(EmailTemplateType.SUBMITTED,
                 "Reservation Request Received - {{eventTitle}}");
         DEFAULT_SUBJECTS.put(EmailTemplateType.STATUS_CHANGED,
@@ -70,6 +74,8 @@ public class EmailTemplateService {
                 "[New Reservation] {{eventTitle}} - {{contactName}}");
         DEFAULT_SUBJECTS.put(EmailTemplateType.CATERING_OPTIONS,
                 "Catering Options for {{eventTitle}} on {{eventDate}}");
+        DEFAULT_SUBJECTS.put(EmailTemplateType.COBO_OPTIONS,
+                "Your CoBo at {{location}} on {{eventDate}}");
 
         DEFAULT_BODIES.put(EmailTemplateType.SUBMITTED, """
                 <!DOCTYPE html>
@@ -281,6 +287,42 @@ public class EmailTemplateService {
                 </body>
                 </html>
                 """);
+
+        // Placeholder copy: the board edits this in the admin (Email Templates > CoBo Information).
+        // Kept structurally identical to the other templates so the layout already matches.
+        DEFAULT_BODIES.put(EmailTemplateType.COBO_OPTIONS, """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background-color: #7E57C2; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background-color: #f9f9f9; }
+                        .details { background-color: white; padding: 15px; margin: 15px 0; border-left: 4px solid #7E57C2; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header"><h1>Your CoBo</h1></div>
+                        <div class="content">
+                            <p>Dear {{contactName}},</p>
+                            <p>Thank you for booking your CoBo (constitution drink) with us. Please find the details of your reservation below, along with any attached documents.</p>
+                            <div class="details">
+                                <p><strong>Confirmation Number:</strong> {{confirmationNumber}}</p>
+                                <p><strong>Event:</strong> {{eventTitle}}</p>
+                                <p><strong>Date:</strong> {{eventDate}}</p>
+                                <p><strong>Time:</strong> {{startTime}} - {{endTime}}</p>
+                                <p><strong>Location:</strong> {{location}}</p>
+                                <p><strong>Guests:</strong> {{expectedGuests}}</p>
+                            </div>
+                            <p>Please reply to this email with any questions, or contact us at {{staffEmail}}.</p>
+                            <p>Best regards,<br>{{barName}}</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """);
     }
 
     public EmailTemplateService(EmailTemplateRepository repository) {
@@ -375,7 +417,7 @@ public class EmailTemplateService {
             vars.put("statusMessage", "We're pleased to confirm your reservation!");
             vars.put("statusSubject", "Reservation Confirmed");
         }
-        if (type == EmailTemplateType.CATERING_OPTIONS) {
+        if (type == EmailTemplateType.CATERING_OPTIONS || type == EmailTemplateType.COBO_OPTIONS) {
             vars.put("staffEmail", "events@hubble.cafe");
         }
         if (type == EmailTemplateType.STAFF_NOTIFICATION) {
