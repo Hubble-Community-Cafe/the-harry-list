@@ -176,8 +176,14 @@ public class Reservation {
 
     // ===== Internal Fields =====
 
-    /** Current status of the reservation */
-    @Column(name = "status", nullable = false)
+    /**
+     * Current status of the reservation.
+     *
+     * <p>The length is pinned explicitly: without it Hibernate sizes the column to the longest
+     * enum constant, so adding a longer status would silently require a wider column in an
+     * already-deployed database. 32 leaves room for future values without another migration.
+     */
+    @Column(name = "status", nullable = false, length = 32)
     @Enumerated(EnumType.STRING)
     private ReservationStatus status = ReservationStatus.PENDING;
 

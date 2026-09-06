@@ -272,6 +272,106 @@ class AdminReservationControllerTest {
 
     @Test
     @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldMovePendingToInProgress() throws Exception {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "IN_PROGRESS"))
+            .andExpect(status().isOk());
+
+        verify(reservationRepository).save(argThat(res -> res.getStatus() == ReservationStatus.IN_PROGRESS));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldConfirmFromInProgress() throws Exception {
+        sampleReservation.setStatus(ReservationStatus.IN_PROGRESS);
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "CONFIRMED")
+                .param("confirmedBy", "Admin User"))
+            .andExpect(status().isOk());
+
+        verify(reservationRepository).save(argThat(res ->
+            res.getStatus() == ReservationStatus.CONFIRMED &&
+            "Admin User".equals(res.getConfirmedBy())
+        ));
+    }
+
+    /**
+     * IN_PROGRESS is internal bookkeeping — the customer is never told. The flag is ignored
+     * server-side rather than only hidden in the admin UI.
+     */
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldNeverEmailTheCustomerForInProgress() throws Exception {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "IN_PROGRESS")
+                .param("sendEmail", "true"))
+            .andExpect(status().isOk());
+
+        verify(emailNotificationService, never()).sendStatusChangeEmail(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldNotEmitAnalyticsForInProgress() throws Exception {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "IN_PROGRESS"))
+            .andExpect(status().isOk());
+
+        assertTrue(analyticsAppender.list.isEmpty(),
+                "IN_PROGRESS is internal churn and must not emit an analytics line");
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldRejectTransitionOutOfCompleted() throws Exception {
+        sampleReservation.setStatus(ReservationStatus.COMPLETED);
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "IN_PROGRESS"))
+            .andExpect(status().isBadRequest());
+
+        verify(reservationRepository, never()).save(any());
+        verify(emailNotificationService, never()).sendStatusChangeEmail(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldRejectMovingConfirmedBackToPending() throws Exception {
+        sampleReservation.setStatus(ReservationStatus.CONFIRMED);
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "PENDING"))
+            .andExpect(status().isBadRequest());
+
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldReturnNotFoundWhenReservationDoesNotExist() throws Exception {
         // Given
         when(reservationRepository.findById(999L)).thenReturn(Optional.empty());

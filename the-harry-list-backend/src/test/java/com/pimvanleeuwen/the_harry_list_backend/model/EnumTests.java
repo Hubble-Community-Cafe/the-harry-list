@@ -78,6 +78,7 @@ class EnumTests {
     @Test
     void reservationStatus_shouldHaveCorrectDisplayNames() {
         assertEquals("Pending Review", ReservationStatus.PENDING.getDisplayName());
+        assertEquals("In Progress", ReservationStatus.IN_PROGRESS.getDisplayName());
         assertEquals("Confirmed", ReservationStatus.CONFIRMED.getDisplayName());
         assertEquals("Rejected", ReservationStatus.REJECTED.getDisplayName());
         assertEquals("Cancelled", ReservationStatus.CANCELLED.getDisplayName());
@@ -87,6 +88,26 @@ class EnumTests {
     @Test
     void reservationStatus_shouldHaveAllExpectedValues() {
         ReservationStatus[] values = ReservationStatus.values();
-        assertEquals(5, values.length);
+        assertEquals(6, values.length);
+    }
+
+    @Test
+    void reservationStatus_onlyInProgressSkipsTheCustomerEmail() {
+        for (ReservationStatus status : ReservationStatus.values()) {
+            assertEquals(status != ReservationStatus.IN_PROGRESS, status.notifiesCustomer(),
+                    "notifiesCustomer() for " + status);
+        }
+    }
+
+    /**
+     * The status column is pinned to VARCHAR(32) in the entity. Guards against a future status
+     * name outgrowing the deployed column, which production (ddl-auto=validate) would not catch.
+     */
+    @Test
+    void reservationStatus_namesFitThePersistedColumn() {
+        for (ReservationStatus status : ReservationStatus.values()) {
+            assertTrue(status.name().length() <= 32,
+                    "Status name too long for the status column: " + status.name());
+        }
     }
 }

@@ -9,6 +9,7 @@ import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailAttachment;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
+import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatusTransitions;
 import com.pimvanleeuwen.the_harry_list_backend.repository.EmailAttachmentRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
@@ -82,7 +83,10 @@ public class AdminReservationController {
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('EDITOR')")
-    @Operation(summary = "Update reservation status", description = "Update the status of a reservation (confirm, reject, cancel)")
+    @Operation(summary = "Update reservation status",
+            description = "Move a reservation to another status. Only transitions allowed by the "
+                    + "workflow are accepted (see ReservationStatusTransitions); anything else is "
+                    + "rejected with 400. IN_PROGRESS never emails the customer, whatever sendEmail says.")
     public ResponseEntity<?> updateStatus(
             @PathVariable Long id,
             @RequestParam ReservationStatus status,
@@ -101,6 +105,15 @@ public class AdminReservationController {
                     }
 
                     ReservationStatus oldStatus = reservation.getStatus();
+
+                    // Reject moves the workflow does not allow (see ReservationStatusTransitions).
+                    // Enforced here and not only in the admin UI, so the API cannot be driven into
+                    // a state the rest of the system does not expect.
+                    if (!ReservationStatusTransitions.isAllowed(oldStatus, status)) {
+                        return ResponseEntity.badRequest().body(Map.of("message",
+                                "Cannot change status from " + oldStatus + " to " + status));
+                    }
+
                     reservation.setStatus(status);
                     if (confirmedBy != null && status == ReservationStatus.CONFIRMED) {
                         reservation.setConfirmedBy(confirmedBy);
@@ -108,8 +121,9 @@ public class AdminReservationController {
                     com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
 
                     // Privacy-safe analytics: a coarse note that a status transition happened, for
-                    // the terminal/meaningful states only (PENDING re-opens are internal churn).
-                    if (status != ReservationStatus.PENDING) {
+                    // the terminal/meaningful states only (PENDING re-opens and IN_PROGRESS pickups
+                    // are internal churn).
+                    if (status != ReservationStatus.PENDING && status != ReservationStatus.IN_PROGRESS) {
                         analyticsLog.info(ReservationAnalytics.reservationStatusChangedLine(status, saved.getLocation()));
                     }
 
@@ -128,8 +142,9 @@ public class AdminReservationController {
                                     + (confirmedBy != null ? " (confirmed by " + confirmedBy + ")" : "")
                                     + (hasCustomMessage ? " (with message)" : ""));
 
-                    // Send email notification if enabled
-                    if (sendEmail && emailService != null) {
+                    // Send email notification if enabled. Statuses that never notify the customer
+                    // (IN_PROGRESS) ignore the flag entirely rather than trusting the caller.
+                    if (sendEmail && status.notifiesCustomer() && emailService != null) {
                         try {
                             emailService.sendStatusChangeEmail(saved, customMessage);
                         } catch (Exception e) {
