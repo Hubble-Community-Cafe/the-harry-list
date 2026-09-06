@@ -6,12 +6,12 @@ import {
   Building2, CreditCard, UtensilsCrossed, MessageSquare,
   CheckCircle, XCircle, Loader2, AlertCircle, Trash2,
   Send, Edit, X, FileText, Paperclip, History, RotateCcw,
-  Home, Sun, PlayCircle, ChevronDown
+  Home, Sun, PlayCircle, ChevronDown, FileSignature
 } from 'lucide-react';
 import {
   fetchReservation, updateReservationStatus, deleteReservation, updateReservation,
-  updateCateringArranged, fetchEmailAttachments, fetchCateringEmailPreview, sendCateringEmail,
-  fetchReservationAuditLog
+  updateCateringArranged, updateCoboContractSigned, fetchEmailAttachments,
+  fetchMailPreview, sendReservationMail, fetchReservationAuditLog
 } from '../lib/api';
 import type { Reservation, EmailAttachment } from '../types/reservation';
 import type { AuditLogEntry } from '../types/audit';
@@ -21,6 +21,9 @@ import { reservationDetailGuide } from '../lib/guideContent';
 import {
   allowedTransitionsFrom, statusNotifiesCustomer, STATUS_ACTIONS, STATUS_LABELS,
 } from '../lib/reservationStatus';
+import { availableMailTypes, MAIL_TYPES } from '../lib/reservationMail';
+import type { ReservationMailTypeValue } from '../lib/reservationMail';
+import { useDismissOnOutside } from '../lib/useDismissOnOutside';
 
 /** Icon shown next to each status, in the Change Status menu and on the badge. */
 const STATUS_ICONS: Record<string, typeof Users> = {
@@ -88,42 +91,30 @@ export function ReservationDetailPage() {
   // Optional free-text message added to the "reservation updated" email.
   const [editMessage, setEditMessage] = useState('');
 
-  // Catering email state
-  const [showCateringEmail, setShowCateringEmail] = useState(false);
-  const [cateringAttachments, setCateringAttachments] = useState<EmailAttachment[]>([]);
+  // Templated mail state. One dialog serves every mail type; `activeMailType` is both the
+  // "which mail" selector and the open/closed flag.
+  const [showMailMenu, setShowMailMenu] = useState(false);
+  const [activeMailType, setActiveMailType] = useState<ReservationMailTypeValue | null>(null);
+  const [mailAttachments, setMailAttachments] = useState<EmailAttachment[]>([]);
   const [selectedAttachmentIds, setSelectedAttachmentIds] = useState<number[]>([]);
-  const [cateringSubject, setCateringSubject] = useState('');
-  const [cateringBody, setCateringBody] = useState('');
-  const [cateringReplyTo, setCateringReplyTo] = useState('');
-  const [loadingCateringPreview, setLoadingCateringPreview] = useState(false);
-  const [sendingCateringEmail, setSendingCateringEmail] = useState(false);
-  const [cateringEmailStatus, setCateringEmailStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [mailSubject, setMailSubject] = useState('');
+  const [mailBody, setMailBody] = useState('');
+  const [mailReplyTo, setMailReplyTo] = useState('');
+  const [loadingMailPreview, setLoadingMailPreview] = useState(false);
+  const [sendingMail, setSendingMail] = useState(false);
+  const [mailStatus, setMailStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const { canUpdateReservations } = usePermissions();
   const userName = accounts[0]?.name || 'Staff';
 
-  // Dismiss the status menu on an outside click or Escape, so it can't be left hanging open
+  // Dismiss the dropdowns on an outside click or Escape, so neither can be left hanging open
   // over the rest of the page.
   const statusMenuRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!showStatusMenu) return;
-
-    const onPointerDown = (event: MouseEvent) => {
-      if (!statusMenuRef.current?.contains(event.target as Node)) {
-        setShowStatusMenu(false);
-      }
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setShowStatusMenu(false);
-    };
-
-    document.addEventListener('mousedown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [showStatusMenu]);
+  const mailMenuRef = useRef<HTMLDivElement>(null);
+  const closeStatusMenu = useCallback(() => setShowStatusMenu(false), []);
+  const closeMailMenu = useCallback(() => setShowMailMenu(false), []);
+  useDismissOnOutside(statusMenuRef, showStatusMenu, closeStatusMenu);
+  useDismissOnOutside(mailMenuRef, showMailMenu, closeMailMenu);
 
   // Loading the audit history must never break the page — failures fall back to empty.
   const loadAuditLog = useCallback(() => {
@@ -254,53 +245,59 @@ export function ReservationDetailPage() {
     }
   };
 
-  const hasCateringActivity = reservation?.specialActivities?.some(a =>
-    ['EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM'].includes(a)
-  );
+  const mailTypes = availableMailTypes(reservation);
+  const hasCoboActivity = reservation?.specialActivities?.includes('COBO');
 
-  const openCateringEmailDialog = async () => {
+  const openMailDialog = async (mailType: ReservationMailTypeValue) => {
     if (!reservation) return;
-    setShowCateringEmail(true);
-    setLoadingCateringPreview(true);
-    setCateringEmailStatus(null);
+    setShowMailMenu(false);
+    setActiveMailType(mailType);
+    setLoadingMailPreview(true);
+    setMailStatus(null);
     setSelectedAttachmentIds([]);
-    setCateringReplyTo('');
+    setMailReplyTo('');
 
     try {
       const [preview, attachments] = await Promise.all([
-        fetchCateringEmailPreview(reservation.id),
+        fetchMailPreview(reservation.id, mailType),
         fetchEmailAttachments(),
       ]);
-      setCateringSubject(preview.subject);
-      setCateringBody(preview.body);
-      if (preview.defaultReplyTo) setCateringReplyTo(preview.defaultReplyTo);
+      setMailSubject(preview.subject);
+      setMailBody(preview.body);
+      if (preview.defaultReplyTo) setMailReplyTo(preview.defaultReplyTo);
       const activeAttachments = attachments.filter(a => a.active);
-      setCateringAttachments(activeAttachments);
-      setSelectedAttachmentIds(activeAttachments.map(a => a.id));
+      setMailAttachments(activeAttachments);
+      // Attachments are one shared pool, so only pre-tick them where sending all of them is the
+      // norm (catering menus). A CoBo mail starts empty rather than attaching catering PDFs.
+      setSelectedAttachmentIds(
+        MAIL_TYPES[mailType].preselectAllAttachments ? activeAttachments.map(a => a.id) : []);
     } catch (err) {
-      setCateringEmailStatus({ type: 'error', message: err instanceof Error ? err.message : 'Failed to load preview' });
+      setMailStatus({ type: 'error', message: err instanceof Error ? err.message : 'Failed to load preview' });
     } finally {
-      setLoadingCateringPreview(false);
+      setLoadingMailPreview(false);
     }
   };
 
-  const handleSendCateringEmail = async () => {
-    if (!reservation) return;
-    setSendingCateringEmail(true);
-    setCateringEmailStatus(null);
+  const handleSendMail = async () => {
+    if (!reservation || !activeMailType) return;
+    setSendingMail(true);
+    setMailStatus(null);
 
     try {
-      await sendCateringEmail(reservation.id, {
+      await sendReservationMail(reservation.id, activeMailType, {
         attachmentIds: selectedAttachmentIds,
-        subject: cateringSubject,
-        body: cateringBody,
-        replyTo: cateringReplyTo || undefined,
+        subject: mailSubject,
+        body: mailBody,
+        replyTo: mailReplyTo || undefined,
       });
-      setCateringEmailStatus({ type: 'success', message: 'Catering email sent successfully!' });
+      setMailStatus({
+        type: 'success',
+        message: `${MAIL_TYPES[activeMailType].label} email sent successfully!`,
+      });
     } catch (err) {
-      setCateringEmailStatus({ type: 'error', message: err instanceof Error ? err.message : 'Failed to send email' });
+      setMailStatus({ type: 'error', message: err instanceof Error ? err.message : 'Failed to send email' });
     } finally {
-      setSendingCateringEmail(false);
+      setSendingMail(false);
     }
   };
 
@@ -386,15 +383,47 @@ export function ReservationDetailPage() {
             Edit Details
           </button>
 
-          {hasCateringActivity && reservation.status !== 'REJECTED' && (
-            <button
-              onClick={openCateringEmailDialog}
-              disabled={isUpdating}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 transition-colors"
-            >
-              <UtensilsCrossed className="w-4 h-4" />
-              Send Catering Options
-            </button>
+          {/* One entry point for every templated mail. Only the mails that apply to this
+              reservation's activities are listed, matching the backend's own guard. */}
+          {mailTypes.length > 0 && (
+            <div className="relative" ref={mailMenuRef}>
+              <button
+                onClick={() => setShowMailMenu(!showMailMenu)}
+                data-testid="send-mail"
+                disabled={isUpdating}
+                aria-haspopup="menu"
+                aria-expanded={showMailMenu}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 transition-colors"
+              >
+                <Send className="w-4 h-4" />
+                Send Mail
+                <ChevronDown className="w-4 h-4" />
+              </button>
+
+              {showMailMenu && (
+                <div
+                  role="menu"
+                  data-testid="mail-menu"
+                  className="absolute left-0 top-full mt-2 z-20 min-w-[15rem] rounded-xl border border-dark-700 bg-dark-900 shadow-xl overflow-hidden"
+                >
+                  {mailTypes.map((type) => {
+                    const Icon = type === 'CATERING' ? UtensilsCrossed : FileSignature;
+                    return (
+                      <button
+                        key={type}
+                        role="menuitem"
+                        data-testid={`mail-option-${type}`}
+                        onClick={() => openMailDialog(type)}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-dark-200 hover:bg-dark-800 transition-colors"
+                      >
+                        <Icon className="w-4 h-4 text-orange-400" />
+                        {MAIL_TYPES[type].label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )}
 
           {/* One entry point for every status move. The menu lists exactly the transitions the
@@ -655,6 +684,45 @@ export function ReservationDetailPage() {
                 )}
               </div>
             )}
+
+            {/* CoBo follow-up. Informational only — it gates nothing, exactly like the
+                catering-arranged flag above. */}
+            {hasCoboActivity && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-dark-400">CoBo Contract Signed</span>
+                {canUpdateReservations ? (
+                <button
+                  type="button"
+                  data-testid="cobo-contract-toggle"
+                  onClick={async () => {
+                    const newValue = !reservation.coboContractSigned;
+                    try {
+                      const updated = await updateCoboContractSigned(reservation.id, newValue);
+                      setReservation({ ...reservation, coboContractSigned: updated.coboContractSigned });
+                      loadAuditLog();
+                    } catch (error) { console.error('Failed to update CoBo contract status:', error); }
+                  }}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    reservation.coboContractSigned
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
+                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/30 hover:bg-orange-500/30'
+                  }`}
+                >
+                  <FileSignature className="w-3 h-3" />
+                  {reservation.coboContractSigned ? 'Signed ✓ (click to undo)' : 'Not signed yet (click to mark done)'}
+                </button>
+                ) : (
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
+                    reservation.coboContractSigned
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                  }`}>
+                  <FileSignature className="w-3 h-3" />
+                  {reservation.coboContractSigned ? 'Signed ✓' : 'Not signed yet'}
+                </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -737,34 +805,34 @@ export function ReservationDetailPage() {
         {reservation.confirmedBy && <span>Confirmed by: {reservation.confirmedBy}</span>}
       </div>
 
-      {/* Catering Email Modal */}
-      {showCateringEmail && (
+      {/* Templated Mail Modal - one dialog for every mail type */}
+      {activeMailType && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-dark-700">
               <h2 className="text-xl font-title font-semibold text-white flex items-center gap-2">
-                <UtensilsCrossed className="w-5 h-5 text-orange-400" />
-                Send Catering Options
+                <Send className="w-5 h-5 text-orange-400" />
+                Send {MAIL_TYPES[activeMailType].label}
               </h2>
-              <button onClick={() => setShowCateringEmail(false)} className="text-dark-400 hover:text-white">
+              <button onClick={() => setActiveMailType(null)} className="text-dark-400 hover:text-white">
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            {loadingCateringPreview ? (
+            {loadingMailPreview ? (
               <div className="flex items-center justify-center p-12">
                 <Loader2 className="w-8 h-8 text-hubble-400 animate-spin" />
               </div>
             ) : (
               <div className="p-6 space-y-5">
                 {/* Status message */}
-                {cateringEmailStatus && (
+                {mailStatus && (
                   <div className={`p-3 rounded-lg border ${
-                    cateringEmailStatus.type === 'success'
+                    mailStatus.type === 'success'
                       ? 'bg-green-500/10 border-green-500/50 text-green-400'
                       : 'bg-red-500/10 border-red-500/50 text-red-400'
                   }`}>
-                    {cateringEmailStatus.message}
+                    {mailStatus.message}
                   </div>
                 )}
 
@@ -778,8 +846,8 @@ export function ReservationDetailPage() {
                   <label className="label">Reply-To Email (optional)</label>
                   <input
                     type="email"
-                    value={cateringReplyTo}
-                    onChange={(e) => setCateringReplyTo(e.target.value)}
+                    value={mailReplyTo}
+                    onChange={(e) => setMailReplyTo(e.target.value)}
                     placeholder="e.g. events@hubble.cafe"
                     className="input-field"
                   />
@@ -790,12 +858,19 @@ export function ReservationDetailPage() {
                   <label className="label flex items-center gap-2 mb-2">
                     <Paperclip className="w-4 h-4" />
                     PDF Attachments
+                    {/* The pool is shared across mail types, so say so where nothing is
+                        pre-selected — otherwise an empty list looks like a loading bug. */}
+                    {!MAIL_TYPES[activeMailType].preselectAllAttachments && (
+                      <span className="text-xs font-normal text-dark-500">
+                        (none selected by default — tick what applies)
+                      </span>
+                    )}
                   </label>
-                  {cateringAttachments.length === 0 ? (
+                  {mailAttachments.length === 0 ? (
                     <p className="text-sm text-dark-500">No active attachments available. Upload PDFs in Email Templates &gt; PDF Attachments.</p>
                   ) : (
                     <div className="space-y-2">
-                      {cateringAttachments.map((att) => (
+                      {mailAttachments.map((att) => (
                         <label key={att.id} className="flex items-center gap-3 p-2 rounded-lg bg-dark-800 hover:bg-dark-750 cursor-pointer">
                           <input
                             type="checkbox"
@@ -823,8 +898,8 @@ export function ReservationDetailPage() {
                   <label className="label">Subject</label>
                   <input
                     type="text"
-                    value={cateringSubject}
-                    onChange={(e) => setCateringSubject(e.target.value)}
+                    value={mailSubject}
+                    onChange={(e) => setMailSubject(e.target.value)}
                     className="input-field"
                   />
                 </div>
@@ -833,8 +908,8 @@ export function ReservationDetailPage() {
                 <div className="form-group">
                   <label className="label">Email Body (HTML)</label>
                   <textarea
-                    value={cateringBody}
-                    onChange={(e) => setCateringBody(e.target.value)}
+                    value={mailBody}
+                    onChange={(e) => setMailBody(e.target.value)}
                     className="input-field min-h-[200px] font-mono text-xs"
                   />
                 </div>
@@ -843,17 +918,17 @@ export function ReservationDetailPage() {
 
             <div className="flex justify-end gap-3 p-6 border-t border-dark-700">
               <button
-                onClick={() => setShowCateringEmail(false)}
+                onClick={() => setActiveMailType(null)}
                 className="px-4 py-2 rounded-xl border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
               >
                 Cancel
               </button>
               <button
-                onClick={handleSendCateringEmail}
-                disabled={sendingCateringEmail || loadingCateringPreview}
+                onClick={handleSendMail}
+                disabled={sendingMail || loadingMailPreview}
                 className="btn-primary flex items-center gap-2"
               >
-                {sendingCateringEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {sendingMail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Send Email
               </button>
             </div>
@@ -947,13 +1022,14 @@ export function ReservationDetailPage() {
                   <div className="form-group md:col-span-2">
                     <label className="label">Special Activities</label>
                     <div className="flex flex-wrap gap-2">
-                      {['GRADUATION', 'EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM', 'PRIVATE_EVENT'].map((activity) => {
+                      {['GRADUATION', 'EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM', 'PRIVATE_EVENT', 'COBO'].map((activity) => {
                         const labels: Record<string, string> = {
                           GRADUATION: 'Graduation / PhD Defense',
                           EAT_A_LA_CARTE: 'Eat a la Carte',
                           EAT_CATERING: 'Eat Catering',
                           CATERING_CORONA_ROOM: 'Catering Corona Room',
                           PRIVATE_EVENT: 'Private Event',
+                          COBO: 'CoBo (Constitution Drink)',
                         };
                         const selected = (editData.specialActivities || []).includes(activity);
                         return (

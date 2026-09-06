@@ -1,6 +1,8 @@
 package com.pimvanleeuwen.the_harry_list_backend.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -72,11 +74,19 @@ public class Reservation {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    /** Special activities selected for this reservation */
+    /**
+     * Special activities selected for this reservation.
+     *
+     * <p>{@code @JdbcTypeCode(VARCHAR)} is deliberate: without it Hibernate maps a string enum to
+     * a native MariaDB {@code ENUM(...)} column, and adding a new activity then fails at runtime
+     * with "Data truncated" until someone remembers to ALTER the column. As varchar, new
+     * activities need no schema change at all.
+     */
     @ElementCollection(targetClass = SpecialActivity.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "reservation_special_activities", joinColumns = @JoinColumn(name = "reservation_id"))
-    @Column(name = "special_activity")
+    @Column(name = "special_activity", length = 50)
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private Set<SpecialActivity> specialActivities = new HashSet<>();
 
     /** Expected number of guests */
@@ -189,12 +199,13 @@ public class Reservation {
     /**
      * Current status of the reservation.
      *
-     * <p>The length is pinned explicitly: without it Hibernate sizes the column to the longest
-     * enum constant, so adding a longer status would silently require a wider column in an
-     * already-deployed database. 32 leaves room for future values without another migration.
+     * <p>{@code @JdbcTypeCode(VARCHAR)} keeps this a plain varchar rather than a native MariaDB
+     * {@code ENUM(...)}, so a new status needs no schema change. The explicit length leaves room
+     * for future values; {@code EnumTests} asserts every name still fits.
      */
     @Column(name = "status", nullable = false, length = 32)
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private ReservationStatus status = ReservationStatus.PENDING;
 
     /** Internal notes (only visible to staff) */

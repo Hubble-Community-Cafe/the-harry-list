@@ -7,7 +7,9 @@ This migration covers two related changes:
 1. A new **`IN_PROGRESS`** reservation status, so staff can mark a request as picked up. It is internal only — the customer is never emailed about it.
 2. A new **`COBO`** special activity (CoBo / constitution drink), its own **CoBo mail**, and a **"CoBo Contract Signed"** bookkeeping flag.
 
-The change is **additive and backwards compatible**: one new nullable-with-default column, and  two enum values that widen existing string columns' value sets. No existing table, row or API  contract changes. Existing reservations keep their status and behaviour.
+The change is **additive and backwards compatible** at the data level: one new column with a default, two new enum values, and three columns converted from native `ENUM` to `VARCHAR` without altering any stored value. No existing row or API contract changes, and existing reservations keep their status and behaviour.
+
+**Do not skip step 1b.** The enum-to-varchar conversion is what makes the new status and activity writable at all; without it they fail at runtime, not at startup.
 
 ## Step 1: Run SQL migration
 
@@ -22,31 +24,39 @@ ALTER TABLE reservation
 
 `false` for every existing row, which is correct, no reservation has a signed CoBo contract yet. This mirrors the existing `catering_arranged` column.
 
-### 1b. Check the status column is wide enough (verify, then act)
+### 1b. Convert the three enum columns to VARCHAR (required)
 
-The new `IN_PROGRESS` value is **11 characters**. Until now the longest status was `CONFIRMED` / `CANCELLED` / `COMPLETED` at **9**, and Hibernate sizes an unannotated `@Enumerated(STRING)` column to the longest constant. If the deployed column is narrower than 11, writing the new status fails or silently truncates.
+**This is the step that breaks things if skipped.** Hibernate 6.2+ maps `@Enumerated(EnumType.STRING)` to a **native MariaDB `ENUM(...)` column**, not a varchar. Writing a value that is not in the column's value list fails at runtime with `Data truncated for column '...' at row 1` — not at startup, so `validate` will not warn you.
 
-Check first:
-
-```sql
-SHOW CREATE TABLE reservation;
-```
-
-Look at the `status` line. If it is anything narrower than `varchar(32)`, widen it:
+Three columns are affected by this release, and all three are converted to plain varchar so that future statuses, activities and template types never need a schema change again:
 
 ```sql
-ALTER TABLE reservation MODIFY COLUMN status VARCHAR(32) NOT NULL;
+ALTER TABLE reservation
+  MODIFY COLUMN status VARCHAR(32) NOT NULL;
+
+ALTER TABLE reservation_special_activities
+  MODIFY COLUMN special_activity VARCHAR(50);
+
+ALTER TABLE email_templates
+  MODIFY COLUMN template_type VARCHAR(50) NOT NULL;
 ```
 
-The entity now pins `length = 32` explicitly, so this cannot creep up on us again, a future  status name longer than 32 characters is caught by a unit test instead (`EnumTests#reservationStatus_namesFitThePersistedColumn`).
+The conversion is **data-preserving**: MariaDB stores the enum labels as the same strings, so every existing row keeps its exact value. Check what you have first if you want to confirm the starting state:
 
-If the `SHOW CREATE TABLE` output contains a `CHECK` constraint enumerating the status values, drop and recreate it to include `IN_PROGRESS`, or drop it entirely, the application enforces the allowed values and transitions itself.
+```sql
+SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = DATABASE()
+  AND COLUMN_NAME IN ('status', 'special_activity', 'template_type');
+```
 
-### 1c. No change needed for the new activity
+The entities now carry `@JdbcTypeCode(SqlTypes.VARCHAR)`, so Hibernate generates varchar for these columns from here on. This was verified by generating the schema from the entities against a scratch database: all three come out as `varchar`.
 
-`COBO` is written to `reservation_special_activities.special_activity`, which is sized for `CATERING_CORONA_ROOM` (20 characters). `COBO` is 4, so it fits. Likewise the new `COBO_OPTIONS` email template type fits the existing `email_templates.template_type` `VARCHAR(50)`.
+If `SHOW CREATE TABLE` reveals a `CHECK` constraint enumerating the values, drop it — the application enforces the allowed values and transitions itself.
 
-Dev and E2E create everything automatically (`ddl-auto=update`), so no manual step is needed there.
+**Note:** the other enum columns in the schema (audit log, form constraints, calendar appointments, blocked periods, admin roles, seating area, payment option, invoice type, location) are still native `ENUM`s. They are untouched by this release, but adding a value to any of them will hit the same failure. Worth converting them the same way when one of them next changes.
+
+Dev and E2E create everything automatically (`ddl-auto=update`), so no manual step is needed there — with one caveat: `ddl-auto=update` does **not** add values to the enum column of an `@ElementCollection` table, so an existing dev database created before this release needs the `special_activity` statement above run by hand.
 
 ## Step 2: Deploy
 
@@ -69,7 +79,7 @@ The column is additive and unused by older code. To roll back, redeploy the prev
 ALTER TABLE reservation DROP COLUMN cobo_contract_signed;
 ```
 
-The widened `status` column needs no rollback — it is compatible with the old code.
+The three varchar columns need no rollback — the old code reads and writes the same strings, and a varchar accepts everything the old `ENUM` did.
 
 **Before rolling back**, note that any reservation left in `IN_PROGRESS` or holding the `COBO` activity will fail to load on the older backend, which cannot deserialize those values. Move  them out first:
 

@@ -52,12 +52,16 @@ vi.mock('../lib/api', () => ({
   deleteReservation: vi.fn(),
   updateReservation: vi.fn(),
   updateCateringArranged: vi.fn(),
+  updateCoboContractSigned: vi.fn(),
   fetchEmailAttachments: vi.fn().mockResolvedValue([]),
-  fetchCateringEmailPreview: vi.fn(),
-  sendCateringEmail: vi.fn(),
+  fetchMailPreview: vi.fn().mockResolvedValue({ subject: 'S', body: 'B' }),
+  sendReservationMail: vi.fn(),
 }));
 
-import { fetchReservationAuditLog, fetchReservation, updateReservationStatus, updateReservation } from '../lib/api';
+import {
+  fetchReservationAuditLog, fetchReservation, updateReservationStatus, updateReservation,
+  fetchEmailAttachments, fetchMailPreview, sendReservationMail, updateCoboContractSigned,
+} from '../lib/api';
 
 const DEFAULT_REJECTION_MESSAGE =
   'Unfortunately we cannot host you since we do not have any places left at this time';
@@ -338,24 +342,24 @@ describe('ReservationDetailPage — reopen rejected reservation', () => {
     expect(screen.queryByTestId('status-option-CANCELLED')).not.toBeInTheDocument();
   });
 
-  it('hides the "Send Catering Options" action for rejected reservations', async () => {
+  it('hides the "Send Mail" action for rejected reservations', async () => {
     const cateringActivities = ['EAT_CATERING'];
-    // A catering reservation that is still pending offers the catering email...
+    // A catering reservation that is still pending offers the mail menu...
     vi.mocked(fetchReservation).mockResolvedValueOnce({
       ...sampleReservation, status: 'PENDING', specialActivities: cateringActivities,
     });
     const { unmount } = renderPage();
     await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
-    expect(screen.getByRole('button', { name: /Send Catering Options/i })).toBeInTheDocument();
+    expect(screen.getByTestId('send-mail')).toBeInTheDocument();
     unmount();
 
-    // ...but once rejected, there's nothing left to cater, so the action is gone.
+    // ...but once rejected, there's nothing left to follow up on, so the action is gone.
     vi.mocked(fetchReservation).mockResolvedValueOnce({
       ...sampleReservation, status: 'REJECTED', specialActivities: cateringActivities,
     });
     renderPage();
     await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
-    expect(screen.queryByRole('button', { name: /Send Catering Options/i })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('send-mail')).not.toBeInTheDocument();
   });
 
   it('does not offer a move back to pending for confirmed reservations', async () => {
@@ -420,6 +424,221 @@ describe('ReservationDetailPage — reopen rejected reservation', () => {
     await waitFor(() =>
       expect(updateReservationStatus).toHaveBeenCalledWith(
         1, 'PENDING', 'Staff Member', true, 'Good news — a slot opened up!'));
+  });
+});
+
+describe('ReservationDetailPage — send mail menu', () => {
+  const attachments = [
+    { id: 1, name: 'Menu', filename: 'menu.pdf', contentType: 'application/pdf', active: true, createdAt: '' },
+    { id: 2, name: 'Contract', filename: 'cobo.pdf', contentType: 'application/pdf', active: true, createdAt: '' },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(fetchEmailAttachments).mockResolvedValue(attachments);
+    vi.mocked(fetchMailPreview).mockResolvedValue({ subject: 'Subject', body: 'Body' });
+  });
+
+  it('is hidden entirely when no mail applies to the reservation', async () => {
+    // sampleReservation has no special activities.
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    expect(screen.queryByTestId('send-mail')).not.toBeInTheDocument();
+  });
+
+  it('offers only catering for a catering reservation', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, specialActivities: ['EAT_CATERING'],
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('send-mail'));
+
+    expect(screen.getByTestId('mail-option-CATERING')).toBeInTheDocument();
+    expect(screen.queryByTestId('mail-option-COBO')).not.toBeInTheDocument();
+  });
+
+  it('offers only CoBo for a CoBo reservation', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, specialActivities: ['COBO'],
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('send-mail'));
+
+    expect(screen.getByTestId('mail-option-COBO')).toBeInTheDocument();
+    expect(screen.queryByTestId('mail-option-CATERING')).not.toBeInTheDocument();
+  });
+
+  it('offers both when the reservation is catering and CoBo', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, specialActivities: ['EAT_CATERING', 'COBO'],
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('send-mail'));
+
+    expect(screen.getByTestId('mail-option-CATERING')).toBeInTheDocument();
+    expect(screen.getByTestId('mail-option-COBO')).toBeInTheDocument();
+  });
+
+  it('pre-ticks every attachment for a catering mail', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, specialActivities: ['EAT_CATERING'],
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('send-mail'));
+    fireEvent.click(screen.getByTestId('mail-option-CATERING'));
+
+    await screen.findByText('Send Catering Options');
+    const boxes = screen.getAllByRole('checkbox').filter(b => b.closest('label')?.textContent?.includes('.pdf'));
+    expect(boxes).toHaveLength(2);
+    boxes.forEach(b => expect(b).toBeChecked());
+  });
+
+  /** The attachment pool is shared, so a CoBo mail must not pre-tick the catering PDFs. */
+  it('pre-ticks nothing for a CoBo mail', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, specialActivities: ['COBO'],
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('send-mail'));
+    fireEvent.click(screen.getByTestId('mail-option-COBO'));
+
+    await screen.findByText('Send CoBo Information');
+    const boxes = screen.getAllByRole('checkbox').filter(b => b.closest('label')?.textContent?.includes('.pdf'));
+    expect(boxes).toHaveLength(2);
+    boxes.forEach(b => expect(b).not.toBeChecked());
+  });
+
+  it('sends the CoBo mail with the chosen attachments and the CoBo mail type', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, specialActivities: ['COBO'],
+    });
+    vi.mocked(sendReservationMail).mockResolvedValueOnce({ status: 'sent', message: 'ok' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('send-mail'));
+    fireEvent.click(screen.getByTestId('mail-option-COBO'));
+
+    await screen.findByText('Send CoBo Information');
+    // Tick just the contract.
+    const contractBox = screen.getAllByRole('checkbox')
+      .find(b => b.closest('label')?.textContent?.includes('cobo.pdf'))!;
+    fireEvent.click(contractBox);
+
+    fireEvent.click(screen.getByRole('button', { name: /Send Email/i }));
+
+    await waitFor(() => expect(sendReservationMail).toHaveBeenCalledWith(
+      1, 'COBO', expect.objectContaining({ attachmentIds: [2] })));
+  });
+
+  it('requests the preview for the chosen mail type', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, specialActivities: ['COBO'],
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('send-mail'));
+    fireEvent.click(screen.getByTestId('mail-option-COBO'));
+
+    await waitFor(() => expect(fetchMailPreview).toHaveBeenCalledWith(1, 'COBO'));
+  });
+
+  it('closes the mail menu on Escape', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, specialActivities: ['COBO'],
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    fireEvent.click(screen.getByTestId('send-mail'));
+    expect(screen.getByTestId('mail-menu')).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(screen.queryByTestId('mail-menu')).not.toBeInTheDocument();
+  });
+});
+
+describe('ReservationDetailPage — CoBo contract signed', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('is hidden for a reservation without the CoBo activity', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, specialActivities: ['EAT_CATERING'],
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    expect(screen.queryByTestId('cobo-contract-toggle')).not.toBeInTheDocument();
+  });
+
+  it('shows an unsigned CoBo contract and marks it signed', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, specialActivities: ['COBO'], coboContractSigned: false,
+    });
+    vi.mocked(updateCoboContractSigned).mockResolvedValueOnce({
+      ...sampleReservation, coboContractSigned: true,
+    });
+
+    renderPage();
+    const toggle = await screen.findByTestId('cobo-contract-toggle', {}, { timeout: 3000 });
+    expect(toggle).toHaveTextContent('Not signed yet');
+
+    fireEvent.click(toggle);
+
+    await waitFor(() => expect(updateCoboContractSigned).toHaveBeenCalledWith(1, true));
+    await waitFor(() => expect(screen.getByTestId('cobo-contract-toggle')).toHaveTextContent('Signed ✓'));
+  });
+
+  it('unsets a signed contract', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, specialActivities: ['COBO'], coboContractSigned: true,
+    });
+    vi.mocked(updateCoboContractSigned).mockResolvedValueOnce({
+      ...sampleReservation, coboContractSigned: false,
+    });
+
+    renderPage();
+    const toggle = await screen.findByTestId('cobo-contract-toggle', {}, { timeout: 3000 });
+    expect(toggle).toHaveTextContent('Signed ✓');
+
+    fireEvent.click(toggle);
+
+    await waitFor(() => expect(updateCoboContractSigned).toHaveBeenCalledWith(1, false));
+  });
+
+  /** Informational only: it must not be tangled up with the reservation's status. */
+  it('does not change the reservation status', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, specialActivities: ['COBO'], coboContractSigned: false,
+    });
+    vi.mocked(updateCoboContractSigned).mockResolvedValueOnce({
+      ...sampleReservation, coboContractSigned: true,
+    });
+
+    renderPage();
+    const toggle = await screen.findByTestId('cobo-contract-toggle', {}, { timeout: 3000 });
+    fireEvent.click(toggle);
+
+    await waitFor(() => expect(updateCoboContractSigned).toHaveBeenCalled());
+    expect(updateReservationStatus).not.toHaveBeenCalled();
+    expect(screen.getByTestId('reservation-status')).toHaveTextContent('CONFIRMED');
   });
 });
 

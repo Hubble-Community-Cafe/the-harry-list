@@ -124,4 +124,26 @@ class EnumTests {
                     "Status name too long for the status column: " + status.name());
         }
     }
+
+    /**
+     * Without {@code @JdbcTypeCode(VARCHAR)}, Hibernate maps a string enum to a native MariaDB
+     * {@code ENUM(...)} column, and adding a value then fails at runtime with "Data truncated"
+     * until someone remembers to ALTER the column — a failure production's ddl-auto=validate
+     * does not catch. These columns must stay varchar-mapped.
+     */
+    @Test
+    void enumColumns_areMappedToVarcharNotNativeEnum() throws Exception {
+        assertVarcharMapped(Reservation.class.getDeclaredField("status"));
+        assertVarcharMapped(Reservation.class.getDeclaredField("specialActivities"));
+        assertVarcharMapped(EmailTemplate.class.getDeclaredField("templateType"));
+    }
+
+    private static void assertVarcharMapped(java.lang.reflect.Field field) {
+        org.hibernate.annotations.JdbcTypeCode annotation =
+                field.getAnnotation(org.hibernate.annotations.JdbcTypeCode.class);
+        assertNotNull(annotation,
+                field.getName() + " must carry @JdbcTypeCode(VARCHAR) to avoid a native ENUM column");
+        assertEquals(org.hibernate.type.SqlTypes.VARCHAR, annotation.value(),
+                field.getName() + " must be mapped to VARCHAR");
+    }
 }

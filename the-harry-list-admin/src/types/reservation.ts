@@ -32,6 +32,8 @@ export interface Reservation {
   longReservationReason?: string;
   cateringDietaryNotes?: string;
   cateringArranged?: boolean;
+  /** Informational follow-up flag for CoBo reservations; gates nothing. */
+  coboContractSigned?: boolean;
 }
 
 export interface FormConstraint {
@@ -55,7 +57,8 @@ export interface EmailAttachment {
   createdAt: string;
 }
 
-export interface CateringEmailRequest {
+/** Body of a staff-triggered templated mail (catering options, CoBo information). */
+export interface ReservationEmailRequest {
   attachmentIds: number[];
   subject?: string;
   body?: string;
