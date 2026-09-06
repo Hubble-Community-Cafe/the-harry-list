@@ -30,7 +30,7 @@ export function DashboardPage() {
   }, []);
 
   // In-progress reservations are still awaiting a decision, so they count as pending
-  // throughout the dashboard — otherwise picking one up would hide it from the queue.
+  // throughout the dashboard; otherwise picking one up would hide it from the queue.
   const isOpen = (status: string) => status === 'PENDING' || status === 'IN_PROGRESS';
 
   const stats: Stats = {

@@ -3,7 +3,7 @@
  *
  * Mirrors `ReservationMailType` in the backend, which is the authority: sending a mail that does
  * not apply is rejected with 400 regardless of what this file says. This copy exists so the menu
- * only offers mails that will actually send. Keep the two in sync —
+ * only offers mails that will actually send. Keep the two in sync:
  * `reservationMail.test.ts` pins the expected shape.
  */
 
@@ -38,8 +38,8 @@ export const MAIL_TYPES: Record<ReservationMailTypeValue, MailTypeConfig> = {
 export const MAIL_TYPE_VALUES = Object.keys(MAIL_TYPES) as ReservationMailTypeValue[];
 
 /**
- * Which mails apply to a reservation. A rejected reservation gets none — there is nothing left
- * to follow up on — matching the backend's `ReservationMailType#isAvailableFor`.
+ * Which mails apply to a reservation. A rejected reservation gets none, as there is nothing
+ * left to follow up on, matching the backend's `ReservationMailType#isAvailableFor`.
  */
 export function availableMailTypes(
   reservation: { status?: string; specialActivities?: string[] } | null | undefined,

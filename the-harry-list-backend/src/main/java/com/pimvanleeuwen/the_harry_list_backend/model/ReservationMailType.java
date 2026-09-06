@@ -42,7 +42,7 @@ public enum ReservationMailType {
 
     /**
      * Whether this mail makes sense for the given reservation, i.e. it has the matching special
-     * activity. A rejected reservation is excluded regardless — there is nothing to follow up on.
+     * activity. A rejected reservation is excluded regardless, as there is nothing to follow up on.
      */
     public boolean isAvailableFor(Reservation reservation) {
         if (reservation == null || reservation.getStatus() == ReservationStatus.REJECTED) {

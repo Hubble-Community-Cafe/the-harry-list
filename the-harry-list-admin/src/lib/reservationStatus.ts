@@ -4,7 +4,7 @@
  * The transition map mirrors `ReservationStatusTransitions` in the backend, which is the
  * authority: the API rejects an illegal move with 400 regardless of what this file says. This
  * copy exists so the "Change Status" menu only offers moves that will actually succeed.
- * Keep the two in sync — `reservationStatus.test.ts` pins the expected shape.
+ * Keep the two in sync: `reservationStatus.test.ts` pins the expected shape.
  */
 
 export type ReservationStatusValue =
@@ -49,7 +49,7 @@ export const STATUS_TRANSITIONS: Record<string, ReservationStatusValue[]> = {
 
 /**
  * Statuses that do not notify the customer. IN_PROGRESS is internal bookkeeping, so the
- * "send email" controls are hidden for it — the backend ignores the flag either way.
+ * "send email" controls are hidden for it. The backend ignores the flag either way.
  */
 export function statusNotifiesCustomer(status: string): boolean {
   return status !== 'IN_PROGRESS';
@@ -131,7 +131,7 @@ export const STATUS_ACTIONS: Record<string, StatusActionCopy> = {
   },
   // Reopening: a rejected or cancelled event is often only blocked by a date or location that
   // can still be changed, so staff can edit the existing details instead of asking the customer
-  // to submit everything again. Emailing about it is opt-in — the customer usually hears about
+  // to submit everything again. Emailing about it is opt-in, since the customer usually hears about
   // the outcome, not the fact that staff reopened the request internally.
   PENDING: {
     confirmLabel: 'Yes, Move to Pending',

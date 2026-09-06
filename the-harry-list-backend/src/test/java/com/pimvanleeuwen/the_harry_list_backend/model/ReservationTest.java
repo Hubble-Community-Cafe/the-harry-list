@@ -253,7 +253,7 @@ class ReservationTest {
 
     @Test
     void hasCoboActivity_shouldNotDependOnContractSignedFlag() {
-        // Requested but the contract is not signed yet — still a CoBo event.
+        // Requested but the contract is not signed yet, but still a CoBo event.
         reservation.setSpecialActivities(Set.of(SpecialActivity.COBO));
         reservation.setCoboContractSigned(false);
 

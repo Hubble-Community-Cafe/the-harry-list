@@ -135,6 +135,7 @@ const SPECIAL_ACTIVITY_LABELS: Record<string, string> = {
   EAT_CATERING: 'Catering',
   CATERING_CORONA_ROOM: 'Catering for Corona Room Event',
   PRIVATE_EVENT: 'Private Event',
+  COBO: 'CoBo (Constitution Drink)',
 };
 
 const SPECIAL_ACTIVITY_DESCRIPTIONS: Record<string, string> = {
@@ -143,6 +144,7 @@ const SPECIAL_ACTIVITY_DESCRIPTIONS: Record<string, string> = {
   EAT_CATERING: 'Catered food for your event',
   CATERING_CORONA_ROOM: 'Catering for a Corona Room event (Hubble only)',
   PRIVATE_EVENT: 'Private/closed event (Meteor only)',
+  COBO: 'Select this if you want to host your CoBo at one of our bars. After placing the reservation the board will reach out for further steps',
 };
 
 export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormProps) {

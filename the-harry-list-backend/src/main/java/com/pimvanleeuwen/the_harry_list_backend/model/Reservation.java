@@ -176,7 +176,7 @@ public class Reservation {
     // ===== CoBo =====
 
     /**
-     * Whether the CoBo contract has been signed. Purely informational bookkeeping for staff —
+     * Whether the CoBo contract has been signed. Purely informational bookkeeping for staff:
      * it gates nothing, mirroring {@link #cateringArranged}. Only meaningful when
      * {@link SpecialActivity#COBO} is among the {@link #specialActivities}.
      */

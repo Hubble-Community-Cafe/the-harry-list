@@ -12,7 +12,7 @@ public enum SpecialActivity {
     PRIVATE_EVENT("Private event"),
     /**
      * A constitution drink ("constitutieborrel"). Deliberately not one of the catering
-     * activities — see {@link Reservation#hasCateringActivity()} — since it is followed up by
+     * activities (see {@link Reservation#hasCateringActivity()}), since it is followed up by
      * the board with its own mail and contract rather than by the kitchen.
      */
     COBO("CoBo (Constitution Drink)");

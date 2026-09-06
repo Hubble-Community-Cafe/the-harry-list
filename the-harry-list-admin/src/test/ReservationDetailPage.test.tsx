@@ -81,7 +81,7 @@ const chooseStatus = (target: string) => {
   fireEvent.click(screen.getByTestId(`status-option-${target}`));
 };
 
-describe('ReservationDetailPage — change history', () => {
+describe('ReservationDetailPage: change history', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -116,7 +116,7 @@ describe('ReservationDetailPage — change history', () => {
   });
 });
 
-describe('ReservationDetailPage — custom email message', () => {
+describe('ReservationDetailPage: custom email message', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -173,7 +173,7 @@ describe('ReservationDetailPage — custom email message', () => {
   });
 });
 
-describe('ReservationDetailPage — change status menu', () => {
+describe('ReservationDetailPage: change status menu', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -294,7 +294,7 @@ describe('ReservationDetailPage — change status menu', () => {
   });
 
   /**
-   * .card applies backdrop-blur, which creates a stacking context — a z-index on the menu alone
+   * .card applies backdrop-blur, which creates a stacking context, so a z-index on the menu alone
    * cannot lift it above the cards below, so the Actions card itself must be raised.
    */
   it('raises the actions card so the open menu is not painted over', async () => {
@@ -324,7 +324,7 @@ describe('ReservationDetailPage — change status menu', () => {
   });
 });
 
-describe('ReservationDetailPage — reopen rejected reservation', () => {
+describe('ReservationDetailPage: reopen rejected reservation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -417,17 +417,17 @@ describe('ReservationDetailPage — reopen rejected reservation', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: /send email notification to customer/i }));
 
     const textarea = await screen.findByPlaceholderText(/shaded spot/i);
-    fireEvent.change(textarea, { target: { value: 'Good news — a slot opened up!' } });
+    fireEvent.change(textarea, { target: { value: 'Good news, a slot opened up!' } });
 
     fireEvent.click(screen.getByTestId('status-dialog-submit'));
 
     await waitFor(() =>
       expect(updateReservationStatus).toHaveBeenCalledWith(
-        1, 'PENDING', 'Staff Member', true, 'Good news — a slot opened up!'));
+        1, 'PENDING', 'Staff Member', true, 'Good news, a slot opened up!'));
   });
 });
 
-describe('ReservationDetailPage — send mail menu', () => {
+describe('ReservationDetailPage: send mail menu', () => {
   const attachments = [
     { id: 1, name: 'Menu', filename: 'menu.pdf', contentType: 'application/pdf', active: true, createdAt: '' },
     { id: 2, name: 'Contract', filename: 'cobo.pdf', contentType: 'application/pdf', active: true, createdAt: '' },
@@ -572,7 +572,7 @@ describe('ReservationDetailPage — send mail menu', () => {
   });
 });
 
-describe('ReservationDetailPage — CoBo contract signed', () => {
+describe('ReservationDetailPage: CoBo contract signed', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -642,7 +642,7 @@ describe('ReservationDetailPage — CoBo contract signed', () => {
   });
 });
 
-describe('ReservationDetailPage — seating area indicator', () => {
+describe('ReservationDetailPage: seating area indicator', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -675,7 +675,7 @@ describe('ReservationDetailPage — seating area indicator', () => {
   });
 });
 
-describe('ReservationDetailPage — edit email default', () => {
+describe('ReservationDetailPage: edit email default', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

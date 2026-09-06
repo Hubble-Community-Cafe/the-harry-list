@@ -137,7 +137,7 @@ class ReservationMapperTest {
 
     /**
      * The admin edit form does not send the follow-up flags, so a null must leave the entity at
-     * its default rather than being mapped to false — the update service then restores the
+     * its default rather than being mapped to false; the update service then restores the
      * stored value.
      */
     @Test

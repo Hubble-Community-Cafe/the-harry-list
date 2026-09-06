@@ -685,7 +685,7 @@ export function ReservationDetailPage() {
               </div>
             )}
 
-            {/* CoBo follow-up. Informational only — it gates nothing, exactly like the
+            {/* CoBo follow-up. Informational only: it gates nothing, exactly like the
                 catering-arranged flag above. */}
             {hasCoboActivity && (
               <div className="flex items-center justify-between">
@@ -859,10 +859,10 @@ export function ReservationDetailPage() {
                     <Paperclip className="w-4 h-4" />
                     PDF Attachments
                     {/* The pool is shared across mail types, so say so where nothing is
-                        pre-selected — otherwise an empty list looks like a loading bug. */}
+                        pre-selected, otherwise an empty list looks like a loading bug. */}
                     {!MAIL_TYPES[activeMailType].preselectAllAttachments && (
                       <span className="text-xs font-normal text-dark-500">
-                        (none selected by default — tick what applies)
+                        (none selected by default, tick what applies)
                       </span>
                     )}
                   </label>

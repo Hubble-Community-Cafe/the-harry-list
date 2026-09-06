@@ -188,7 +188,7 @@ public class AdminReservationController {
     @PatchMapping("/{id}/cobo-contract-signed")
     @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Toggle CoBo contract signed",
-            description = "Mark the CoBo contract as signed (or undo) for a reservation. Informational only — it gates nothing.")
+            description = "Mark the CoBo contract as signed (or undo) for a reservation. Informational only; it gates nothing.")
     public ResponseEntity<Reservation> updateCoboContractSigned(
             @PathVariable Long id,
             @RequestParam boolean signed,

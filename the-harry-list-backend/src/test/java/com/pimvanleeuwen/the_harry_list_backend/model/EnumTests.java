@@ -128,7 +128,7 @@ class EnumTests {
     /**
      * Without {@code @JdbcTypeCode(VARCHAR)}, Hibernate maps a string enum to a native MariaDB
      * {@code ENUM(...)} column, and adding a value then fails at runtime with "Data truncated"
-     * until someone remembers to ALTER the column — a failure production's ddl-auto=validate
+     * until someone remembers to ALTER the column, a failure production's ddl-auto=validate
      * does not catch. These columns must stay varchar-mapped.
      */
     @Test

@@ -32,7 +32,7 @@ public enum ReservationStatus {
 
     /**
      * Whether reaching this status notifies the customer by email. {@link #IN_PROGRESS} is an
-     * internal bookkeeping state, so it never does — enforced server-side rather than only in
+     * internal bookkeeping state, so it never does. This is enforced server-side rather than only in
      * the admin UI, so a hand-crafted API call cannot mail a customer either.
      */
     public boolean notifiesCustomer() {
