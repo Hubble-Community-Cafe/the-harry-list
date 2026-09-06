@@ -71,6 +71,12 @@ const renderPage = () =>
     </MemoryRouter>
   );
 
+/** Open the Change Status menu and pick a target, reaching the confirmation step. */
+const chooseStatus = (target: string) => {
+  fireEvent.click(screen.getByTestId('change-status'));
+  fireEvent.click(screen.getByTestId(`status-option-${target}`));
+};
+
 describe('ReservationDetailPage — change history', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -118,12 +124,12 @@ describe('ReservationDetailPage — custom email message', () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
 
-    fireEvent.click(screen.getByRole('button', { name: /^Reject$/ }));
+    chooseStatus('REJECTED');
 
     const textarea = await screen.findByPlaceholderText(/shaded spot/i);
     expect(textarea).toHaveValue(DEFAULT_REJECTION_MESSAGE);
 
-    fireEvent.click(screen.getByRole('button', { name: /Yes, Reject Reservation/ }));
+    fireEvent.click(screen.getByTestId('status-dialog-submit'));
 
     await waitFor(() =>
       expect(updateReservationStatus).toHaveBeenCalledWith(
@@ -137,13 +143,13 @@ describe('ReservationDetailPage — custom email message', () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
 
-    fireEvent.click(screen.getByRole('button', { name: /^Confirm$/ }));
+    chooseStatus('CONFIRMED');
 
     const textarea = await screen.findByPlaceholderText(/shaded spot/i);
     expect(textarea).toHaveValue(''); // no default for confirmations
     fireEvent.change(textarea, { target: { value: 'We saved you a spot in the shade!' } });
 
-    fireEvent.click(screen.getByRole('button', { name: /Yes, Confirm Reservation/ }));
+    fireEvent.click(screen.getByTestId('status-dialog-submit'));
 
     await waitFor(() =>
       expect(updateReservationStatus).toHaveBeenCalledWith(
@@ -157,9 +163,160 @@ describe('ReservationDetailPage — custom email message', () => {
     await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
 
     fireEvent.click(screen.getByRole('checkbox')); // turn off "send email notification"
-    fireEvent.click(screen.getByRole('button', { name: /^Reject$/ }));
+    chooseStatus('REJECTED');
 
     expect(screen.queryByPlaceholderText(/shaded spot/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('ReservationDetailPage — change status menu', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('offers exactly the transitions allowed from PENDING', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('change-status'));
+
+    expect(screen.getByTestId('status-option-IN_PROGRESS')).toBeInTheDocument();
+    expect(screen.getByTestId('status-option-CONFIRMED')).toBeInTheDocument();
+    expect(screen.getByTestId('status-option-REJECTED')).toBeInTheDocument();
+    expect(screen.getByTestId('status-option-CANCELLED')).toBeInTheDocument();
+    // COMPLETED is only reachable from CONFIRMED.
+    expect(screen.queryByTestId('status-option-COMPLETED')).not.toBeInTheDocument();
+  });
+
+  it('offers only completion and cancellation from CONFIRMED', async () => {
+    // sampleReservation defaults to CONFIRMED.
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('change-status'));
+
+    expect(screen.getByTestId('status-option-COMPLETED')).toBeInTheDocument();
+    expect(screen.getByTestId('status-option-CANCELLED')).toBeInTheDocument();
+    // A confirmed reservation cannot go back to pending or in-progress.
+    expect(screen.queryByTestId('status-option-PENDING')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('status-option-IN_PROGRESS')).not.toBeInTheDocument();
+  });
+
+  it('hides the Change Status button entirely for a completed reservation', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'COMPLETED' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    // COMPLETED is terminal, so there is nothing to offer.
+    expect(screen.queryByTestId('change-status')).not.toBeInTheDocument();
+  });
+
+  it('moves a pending reservation to IN_PROGRESS without ever emailing the customer', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+    vi.mocked(updateReservationStatus).mockResolvedValueOnce({ ...sampleReservation, status: 'IN_PROGRESS' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    chooseStatus('IN_PROGRESS');
+
+    // No email controls at all for an internal-only status.
+    expect(screen.queryByPlaceholderText(/shaded spot/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /send email notification to customer/i }))
+      .not.toBeInTheDocument();
+    expect(screen.getByTestId('status-dialog')).toHaveTextContent('No email is sent for this status.');
+
+    fireEvent.click(screen.getByTestId('status-dialog-submit'));
+
+    await waitFor(() =>
+      expect(updateReservationStatus).toHaveBeenCalledWith(
+        1, 'IN_PROGRESS', 'Staff Member', false, undefined));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('reservation-status')).toHaveTextContent('IN_PROGRESS'));
+  });
+
+  it('confirms from IN_PROGRESS and emails the customer', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'IN_PROGRESS' });
+    vi.mocked(updateReservationStatus).mockResolvedValueOnce({ ...sampleReservation, status: 'CONFIRMED' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    chooseStatus('CONFIRMED');
+    fireEvent.click(screen.getByTestId('status-dialog-submit'));
+
+    await waitFor(() =>
+      expect(updateReservationStatus).toHaveBeenCalledWith(1, 'CONFIRMED', 'Staff Member', true, ''));
+  });
+
+  it('closes the menu on an outside click', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    fireEvent.click(screen.getByTestId('change-status'));
+    expect(screen.getByTestId('status-menu')).toBeInTheDocument();
+
+    fireEvent.mouseDown(document.body);
+
+    expect(screen.queryByTestId('status-menu')).not.toBeInTheDocument();
+  });
+
+  it('closes the menu on Escape', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    fireEvent.click(screen.getByTestId('change-status'));
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(screen.queryByTestId('status-menu')).not.toBeInTheDocument();
+  });
+
+  it('keeps the menu open when clicking inside it', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    fireEvent.click(screen.getByTestId('change-status'));
+    fireEvent.mouseDown(screen.getByTestId('status-menu'));
+
+    expect(screen.getByTestId('status-menu')).toBeInTheDocument();
+  });
+
+  /**
+   * .card applies backdrop-blur, which creates a stacking context — a z-index on the menu alone
+   * cannot lift it above the cards below, so the Actions card itself must be raised.
+   */
+  it('raises the actions card so the open menu is not painted over', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    const actionsCard = screen.getByText('Actions').closest('.card');
+    expect(actionsCard?.className).toMatch(/\brelative\b/);
+    expect(actionsCard?.className).toMatch(/\bz-30\b/);
+  });
+
+  it('lets the editor back out without changing anything', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    chooseStatus('CANCELLED');
+    expect(screen.getByTestId('status-dialog')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('status-dialog-cancel'));
+
+    expect(screen.queryByTestId('status-dialog')).not.toBeInTheDocument();
+    expect(updateReservationStatus).not.toHaveBeenCalled();
   });
 });
 
@@ -168,16 +325,17 @@ describe('ReservationDetailPage — reopen rejected reservation', () => {
     vi.clearAllMocks();
   });
 
-  it('shows a "Move back to Pending" action only for rejected reservations', async () => {
+  it('offers only "Pending" as a transition for rejected reservations', async () => {
     vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'REJECTED' });
 
     renderPage();
     await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('change-status'));
 
-    expect(screen.getByTestId('reopen-reservation')).toBeInTheDocument();
-    // A rejected reservation has no confirm/reject/cancel actions.
-    expect(screen.queryByTestId('confirm-reservation')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('cancel-reservation')).not.toBeInTheDocument();
+    expect(screen.getByTestId('status-option-PENDING')).toBeInTheDocument();
+    // A rejected reservation cannot be confirmed or cancelled directly.
+    expect(screen.queryByTestId('status-option-CONFIRMED')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('status-option-CANCELLED')).not.toBeInTheDocument();
   });
 
   it('hides the "Send Catering Options" action for rejected reservations', async () => {
@@ -200,12 +358,13 @@ describe('ReservationDetailPage — reopen rejected reservation', () => {
     expect(screen.queryByRole('button', { name: /Send Catering Options/i })).not.toBeInTheDocument();
   });
 
-  it('does not show the reopen action for non-rejected reservations', async () => {
+  it('does not offer a move back to pending for confirmed reservations', async () => {
     // sampleReservation defaults to CONFIRMED.
     renderPage();
     await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('change-status'));
 
-    expect(screen.queryByTestId('reopen-reservation')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('status-option-PENDING')).not.toBeInTheDocument();
   });
 
   it('moves a rejected reservation back to PENDING without emailing by default', async () => {
@@ -215,17 +374,31 @@ describe('ReservationDetailPage — reopen rejected reservation', () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
 
-    fireEvent.click(screen.getByTestId('reopen-reservation'));
+    chooseStatus('PENDING');
     // Email is opt-in for this action, so the message field stays hidden.
     expect(screen.queryByPlaceholderText(/shaded spot/i)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId('reopen-dialog-submit'));
+    fireEvent.click(screen.getByTestId('status-dialog-submit'));
 
     await waitFor(() =>
       expect(updateReservationStatus).toHaveBeenCalledWith(1, 'PENDING', 'Staff Member', false, undefined));
 
     // The badge reflects the new status.
     await waitFor(() => expect(screen.getByTestId('reservation-status')).toHaveTextContent('PENDING'));
+  });
+
+  it('also defaults to no email when reopening a cancelled reservation', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'CANCELLED' });
+    vi.mocked(updateReservationStatus).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    chooseStatus('PENDING');
+    fireEvent.click(screen.getByTestId('status-dialog-submit'));
+
+    await waitFor(() =>
+      expect(updateReservationStatus).toHaveBeenCalledWith(1, 'PENDING', 'Staff Member', false, undefined));
   });
 
   it('sends a status email and message when the editor opts in', async () => {
@@ -235,14 +408,14 @@ describe('ReservationDetailPage — reopen rejected reservation', () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
 
-    fireEvent.click(screen.getByTestId('reopen-reservation'));
+    chooseStatus('PENDING');
     // Opt back in to the email.
     fireEvent.click(screen.getByRole('checkbox', { name: /send email notification to customer/i }));
 
     const textarea = await screen.findByPlaceholderText(/shaded spot/i);
     fireEvent.change(textarea, { target: { value: 'Good news — a slot opened up!' } });
 
-    fireEvent.click(screen.getByTestId('reopen-dialog-submit'));
+    fireEvent.click(screen.getByTestId('status-dialog-submit'));
 
     await waitFor(() =>
       expect(updateReservationStatus).toHaveBeenCalledWith(

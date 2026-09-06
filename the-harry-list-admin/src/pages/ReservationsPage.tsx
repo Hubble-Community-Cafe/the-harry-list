@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import {
   Search, Filter, Calendar, Users, MapPin,
   CheckCircle, XCircle, Clock, Loader2, AlertCircle,
-  ChevronRight, UtensilsCrossed
+  ChevronRight, UtensilsCrossed, PlayCircle
 } from 'lucide-react';
 import { fetchReservations, updateCateringArranged } from '../lib/api';
 import type { Reservation } from '../types/reservation';
@@ -11,7 +11,7 @@ import { usePermissions } from '../lib/usePermissions';
 import { HelpGuide } from '../components/HelpGuide';
 import { reservationsGuide } from '../lib/guideContent';
 
-const statusOptions = ['ALL', 'PENDING', 'CONFIRMED', 'REJECTED', 'CANCELLED', 'COMPLETED'];
+const statusOptions = ['ALL', 'PENDING', 'IN_PROGRESS', 'CONFIRMED', 'REJECTED', 'CANCELLED', 'COMPLETED'];
 const locationOptions = ['ALL', 'HUBBLE', 'METEOR'];
 
 function toLocalDateString(date: Date): string {
@@ -291,6 +291,7 @@ function hasCatering(activities?: string[]): boolean {
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { color: string; icon: typeof CheckCircle }> = {
     PENDING: { color: 'bg-yellow-500/20 text-yellow-400', icon: Clock },
+    IN_PROGRESS: { color: 'bg-indigo-500/20 text-indigo-400', icon: PlayCircle },
     CONFIRMED: { color: 'bg-green-500/20 text-green-400', icon: CheckCircle },
     REJECTED: { color: 'bg-red-500/20 text-red-400', icon: XCircle },
     CANCELLED: { color: 'bg-dark-500/20 text-dark-400', icon: XCircle },

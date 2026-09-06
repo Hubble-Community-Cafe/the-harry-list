@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
@@ -6,7 +6,7 @@ import {
   Building2, CreditCard, UtensilsCrossed, MessageSquare,
   CheckCircle, XCircle, Loader2, AlertCircle, Trash2,
   Send, Edit, X, FileText, Paperclip, History, RotateCcw,
-  Home, Sun
+  Home, Sun, PlayCircle, ChevronDown
 } from 'lucide-react';
 import {
   fetchReservation, updateReservationStatus, deleteReservation, updateReservation,
@@ -18,10 +18,19 @@ import type { AuditLogEntry } from '../types/audit';
 import { usePermissions } from '../lib/usePermissions';
 import { HelpGuide } from '../components/HelpGuide';
 import { reservationDetailGuide } from '../lib/guideContent';
+import {
+  allowedTransitionsFrom, statusNotifiesCustomer, STATUS_ACTIONS, STATUS_LABELS,
+} from '../lib/reservationStatus';
 
-// Pre-filled (editable) default shown when rejecting a reservation. Staff can edit or clear it.
-const DEFAULT_REJECTION_MESSAGE =
-  'Unfortunately we cannot host you since we do not have any places left at this time';
+/** Icon shown next to each status, in the Change Status menu and on the badge. */
+const STATUS_ICONS: Record<string, typeof Users> = {
+  PENDING: Clock,
+  IN_PROGRESS: PlayCircle,
+  CONFIRMED: CheckCircle,
+  REJECTED: XCircle,
+  CANCELLED: XCircle,
+  COMPLETED: CheckCircle,
+};
 
 /**
  * Optional free-text message added to the notification email for a reservation action.
@@ -64,11 +73,10 @@ export function ReservationDetailPage() {
   const [loadingAudit, setLoadingAudit] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showReopenDialog, setShowReopenDialog] = useState(false);
+  // The single "Change Status" flow: the menu of legal targets, and the target awaiting
+  // confirmation. Replaces the five separate per-action dialogs.
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [sendEmail, setSendEmail] = useState(true);
   // Optional free-text message added to the status-change email (pre-filled for rejections).
   const [actionMessage, setActionMessage] = useState('');
@@ -94,6 +102,29 @@ export function ReservationDetailPage() {
   const { canUpdateReservations } = usePermissions();
   const userName = accounts[0]?.name || 'Staff';
 
+  // Dismiss the status menu on an outside click or Escape, so it can't be left hanging open
+  // over the rest of the page.
+  const statusMenuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!showStatusMenu) return;
+
+    const onPointerDown = (event: MouseEvent) => {
+      if (!statusMenuRef.current?.contains(event.target as Node)) {
+        setShowStatusMenu(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowStatusMenu(false);
+    };
+
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [showStatusMenu]);
+
   // Loading the audit history must never break the page — failures fall back to empty.
   const loadAuditLog = useCallback(() => {
     if (!id) return;
@@ -118,19 +149,40 @@ export function ReservationDetailPage() {
       .finally(() => setLoadingAudit(false));
   }, [id]);
 
+  /**
+   * Open the confirmation step for a chosen target status, pre-filling the optional message and
+   * defaulting the email checkbox. Statuses that never notify the customer force it off so the
+   * dialog cannot imply an email will be sent.
+   */
+  const startStatusChange = (target: string) => {
+    const action = STATUS_ACTIONS[target];
+    setShowStatusMenu(false);
+    setActionMessage(action?.defaultMessage ?? '');
+    if (!statusNotifiesCustomer(target) || action?.defaultSendEmail === false) {
+      setSendEmail(false);
+    }
+    setPendingStatus(target);
+  };
+
   const handleStatusChange = async (newStatus: string) => {
     if (!reservation) return;
+
+    // Guard the internal-only statuses here as well as in the UI, so the request can never
+    // carry a sendEmail the backend would have to override.
+    const notifies = statusNotifiesCustomer(newStatus);
+    const willSendEmail = sendEmail && notifies;
 
     setIsUpdating(true);
     try {
       await updateReservationStatus(
-        reservation.id, newStatus, userName, sendEmail, sendEmail ? actionMessage : undefined);
+        reservation.id, newStatus, userName, willSendEmail, willSendEmail ? actionMessage : undefined);
       setReservation({ ...reservation, status: newStatus });
       loadAuditLog();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update status');
     } finally {
       setIsUpdating(false);
+      setPendingStatus(null);
     }
   };
 
@@ -296,24 +348,31 @@ export function ReservationDetailPage() {
       </div>
 
       {/* Actions */}
+      {/* `relative z-30`: .card applies backdrop-blur, which creates a stacking context, so a
+          z-index inside this card cannot lift the status menu above the cards that follow it.
+          Raising the card itself is what puts the open menu over them. */}
       {canUpdateReservations && (
-      <div className="card">
+      <div className="card relative z-30">
         <h2 className="text-lg font-title font-semibold text-white mb-4">Actions</h2>
 
-        <div className="flex items-center gap-3 mb-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={sendEmail}
-              onChange={(e) => setSendEmail(e.target.checked)}
-              className="w-4 h-4 rounded border-dark-600 bg-dark-700 text-hubble-500"
-            />
-            <span className="text-sm text-dark-300">
-              <Send className="w-4 h-4 inline mr-1" />
-              Send email notification to customer
-            </span>
-          </label>
-        </div>
+        {/* Hidden while an internal-only status is awaiting confirmation: no email is sent for
+            those, so offering the choice would misrepresent what happens. */}
+        {(!pendingStatus || statusNotifiesCustomer(pendingStatus)) && (
+          <div className="flex items-center gap-3 mb-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={sendEmail}
+                onChange={(e) => setSendEmail(e.target.checked)}
+                className="w-4 h-4 rounded border-dark-600 bg-dark-700 text-hubble-500"
+              />
+              <span className="text-sm text-dark-300">
+                <Send className="w-4 h-4 inline mr-1" />
+                Send email notification to customer
+              </span>
+            </label>
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-3">
           {/* Edit Details Button */}
@@ -338,65 +397,50 @@ export function ReservationDetailPage() {
             </button>
           )}
 
-          {reservation.status === 'PENDING' && (
-            <>
+          {/* One entry point for every status move. The menu lists exactly the transitions the
+              backend allows from the current status, so it can't offer something that 400s. */}
+          {allowedTransitionsFrom(reservation.status).length > 0 && (
+            <div className="relative" ref={statusMenuRef}>
               <button
-                onClick={() => { setActionMessage(''); setShowConfirmDialog(true); }}
-                data-testid="confirm-reservation"
+                onClick={() => setShowStatusMenu(!showStatusMenu)}
+                data-testid="change-status"
                 disabled={isUpdating}
+                aria-haspopup="menu"
+                aria-expanded={showStatusMenu}
                 className="btn-primary flex items-center gap-2"
               >
-                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                Confirm
+                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+                Change Status
+                <ChevronDown className="w-4 h-4" />
               </button>
-              <button
-                onClick={() => { setActionMessage(DEFAULT_REJECTION_MESSAGE); setShowRejectDialog(true); }}
-                data-testid="reject-reservation"
-                disabled={isUpdating}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
-              >
-                <XCircle className="w-4 h-4" />
-                Reject
-              </button>
-            </>
-          )}
 
-          {reservation.status === 'CONFIRMED' && (
-            <button
-              onClick={() => { setActionMessage(''); setShowCompleteDialog(true); }}
-              disabled={isUpdating}
-              className="btn-secondary flex items-center gap-2"
-            >
-              {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-              Mark Completed
-            </button>
-          )}
-
-          {reservation.status === 'CONFIRMED' && (
-            <button
-              onClick={() => { setActionMessage(''); setShowCancelDialog(true); }}
-              data-testid="cancel-reservation"
-              disabled={isUpdating}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors ml-auto"
-            >
-              <XCircle className="w-4 h-4" />
-              Cancel
-            </button>
-          )}
-
-          {/* A rejected event is often only rejected because the date or location needs to
-              change. Reopening it puts it back to PENDING so staff can edit the existing
-              details instead of asking the customer to submit everything again. */}
-          {reservation.status === 'REJECTED' && (
-            <button
-              onClick={() => { setActionMessage(''); setSendEmail(false); setShowReopenDialog(true); }}
-              data-testid="reopen-reservation"
-              disabled={isUpdating}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-colors"
-            >
-              <RotateCcw className="w-4 h-4" />
-              Move back to Pending
-            </button>
+              {showStatusMenu && (
+                <div
+                  role="menu"
+                  data-testid="status-menu"
+                  className="absolute left-0 top-full mt-2 z-20 min-w-[15rem] rounded-xl border border-dark-700 bg-dark-900 shadow-xl overflow-hidden"
+                >
+                  {allowedTransitionsFrom(reservation.status).map((target) => {
+                    const Icon = STATUS_ICONS[target] ?? Clock;
+                    return (
+                      <button
+                        key={target}
+                        role="menuitem"
+                        data-testid={`status-option-${target}`}
+                        onClick={() => startStatusChange(target)}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-dark-200 hover:bg-dark-800 transition-colors"
+                      >
+                        <Icon className={`w-4 h-4 ${STATUS_ACTIONS[target]?.accent.text ?? ''}`} />
+                        {STATUS_LABELS[target] ?? target}
+                        {!statusNotifiesCustomer(target) && (
+                          <span className="ml-auto text-xs text-dark-500">internal</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )}
 
           {(reservation.status === 'CANCELLED' || reservation.status === 'REJECTED') && (
@@ -435,148 +479,44 @@ export function ReservationDetailPage() {
           </div>
         )}
 
-        {/* Confirm Reservation Dialog */}
-        {showConfirmDialog && (
-          <div className="mt-4 p-4 rounded-xl bg-green-500/10 border border-green-500/50">
-            <p className="text-green-400 mb-3">Are you sure you want to confirm this reservation? {sendEmail && 'A confirmation email will be sent to the customer.'}</p>
-            <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
-            <div className="flex gap-3 mt-3">
-              <button
-                onClick={() => {
-                  handleStatusChange('CONFIRMED');
-                  setShowConfirmDialog(false);
-                }}
-                data-testid="confirm-dialog-submit"
-                disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors flex items-center gap-2"
-              >
-                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                Yes, Confirm Reservation
-              </button>
-              <button
-                onClick={() => setShowConfirmDialog(false)}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
-              >
-                Cancel
-              </button>
+        {/* One confirmation step, parameterised by the chosen target status. */}
+        {pendingStatus && (() => {
+          const action = STATUS_ACTIONS[pendingStatus];
+          const notifies = statusNotifiesCustomer(pendingStatus);
+          const willSendEmail = sendEmail && notifies;
+          const Icon = STATUS_ICONS[pendingStatus] ?? CheckCircle;
+          return (
+            <div
+              data-testid="status-dialog"
+              className={`mt-4 p-4 rounded-xl border ${action.accent.panel}`}
+            >
+              <p className={`${action.accent.text} mb-3`}>
+                {action.prompt}
+                {willSendEmail && ' A status-update email will be sent to the customer.'}
+                {!notifies && ' No email is sent for this status.'}
+              </p>
+              <EmailMessageField value={actionMessage} onChange={setActionMessage} show={willSendEmail} />
+              <div className="flex gap-3 mt-3">
+                <button
+                  onClick={() => handleStatusChange(pendingStatus)}
+                  data-testid="status-dialog-submit"
+                  disabled={isUpdating}
+                  className={`px-4 py-2 rounded-lg text-white transition-colors flex items-center gap-2 ${action.accent.button}`}
+                >
+                  {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" />}
+                  {action.confirmLabel}
+                </button>
+                <button
+                  onClick={() => setPendingStatus(null)}
+                  data-testid="status-dialog-cancel"
+                  className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+                >
+                  Go Back
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Reject Reservation Dialog */}
-        {showRejectDialog && (
-          <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/50">
-            <p className="text-red-400 mb-3">Are you sure you want to reject this reservation? {sendEmail && 'A rejection email will be sent to the customer.'}</p>
-            <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
-            <div className="flex gap-3 mt-3">
-              <button
-                onClick={() => {
-                  handleStatusChange('REJECTED');
-                  setShowRejectDialog(false);
-                }}
-                data-testid="reject-dialog-submit"
-                disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors flex items-center gap-2"
-              >
-                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
-                Yes, Reject Reservation
-              </button>
-              <button
-                onClick={() => setShowRejectDialog(false)}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Complete Reservation Dialog */}
-        {showCompleteDialog && (
-          <div className="mt-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/50">
-            <p className="text-blue-400 mb-3">Are you sure you want to mark this reservation as completed?</p>
-            <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
-            <div className="flex gap-3 mt-3">
-              <button
-                onClick={() => {
-                  handleStatusChange('COMPLETED');
-                  setShowCompleteDialog(false);
-                }}
-                disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors flex items-center gap-2"
-              >
-                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                Yes, Mark Completed
-              </button>
-              <button
-                onClick={() => setShowCompleteDialog(false)}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Cancel Reservation Dialog */}
-        {showCancelDialog && (
-          <div className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/50">
-            <p className="text-amber-400 mb-3">Are you sure you want to cancel this reservation? {sendEmail && 'A cancellation email will be sent to the customer.'}</p>
-            <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
-            <div className="flex gap-3 mt-3">
-              <button
-                onClick={() => {
-                  handleStatusChange('CANCELLED');
-                  setShowCancelDialog(false);
-                }}
-                data-testid="cancel-dialog-submit"
-                disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors flex items-center gap-2"
-              >
-                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
-                Yes, Cancel Reservation
-              </button>
-              <button
-                onClick={() => setShowCancelDialog(false)}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
-              >
-                Go Back
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Reopen (Reject -> Pending) Dialog */}
-        {showReopenDialog && (
-          <div className="mt-4 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/50">
-            <p className="text-yellow-400 mb-3">
-              Move this rejected reservation back to <strong>Pending</strong>? You'll be able to
-              edit the date, location and other details, then confirm or reject it again.
-              {sendEmail && ' A status-update email will be sent to the customer.'}
-            </p>
-            <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
-            <div className="flex gap-3 mt-3">
-              <button
-                onClick={() => {
-                  handleStatusChange('PENDING');
-                  setShowReopenDialog(false);
-                }}
-                data-testid="reopen-dialog-submit"
-                disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 transition-colors flex items-center gap-2"
-              >
-                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
-                Yes, Move to Pending
-              </button>
-              <button
-                onClick={() => setShowReopenDialog(false)}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
-              >
-                Go Back
-              </button>
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
       )}
 
@@ -1333,6 +1273,7 @@ function AuditActionBadge({ action }: { action: string }) {
 function StatusBadge({ status, large }: { status: string; large?: boolean }) {
   const config: Record<string, { color: string; bg: string }> = {
     PENDING: { color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
+    IN_PROGRESS: { color: 'text-indigo-400', bg: 'bg-indigo-500/20' },
     CONFIRMED: { color: 'text-green-400', bg: 'bg-green-500/20' },
     REJECTED: { color: 'text-red-400', bg: 'bg-red-500/20' },
     CANCELLED: { color: 'text-dark-400', bg: 'bg-dark-500/20' },
@@ -1340,6 +1281,7 @@ function StatusBadge({ status, large }: { status: string; large?: boolean }) {
   };
 
   const { color, bg } = config[status] || config.PENDING;
+  const Icon = STATUS_ICONS[status] ?? Clock;
 
   return (
     <span
@@ -1349,11 +1291,7 @@ function StatusBadge({ status, large }: { status: string; large?: boolean }) {
       ${bg} ${color}
       ${large ? 'text-sm' : 'text-xs'}
     `}>
-      {status === 'PENDING' && <Clock className="w-4 h-4" />}
-      {status === 'CONFIRMED' && <CheckCircle className="w-4 h-4" />}
-      {status === 'REJECTED' && <XCircle className="w-4 h-4" />}
-      {status === 'CANCELLED' && <XCircle className="w-4 h-4" />}
-      {status === 'COMPLETED' && <CheckCircle className="w-4 h-4" />}
+      <Icon className="w-4 h-4" />
       {status}
     </span>
   );
