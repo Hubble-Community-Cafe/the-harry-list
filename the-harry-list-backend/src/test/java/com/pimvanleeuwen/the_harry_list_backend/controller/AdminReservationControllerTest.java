@@ -372,6 +372,78 @@ class AdminReservationControllerTest {
 
     @Test
     @WithMockUser(roles = "EDITOR")
+    void updateCoboContractSigned_shouldMarkAsSigned() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.COBO));
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/cobo-contract-signed")
+                .with(csrf())
+                .param("signed", "true"))
+            .andExpect(status().isOk());
+
+        verify(reservationRepository).save(argThat(Reservation::isCoboContractSigned));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateCoboContractSigned_shouldUndoAndAuditTheChange() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.COBO));
+        sampleReservation.setCoboContractSigned(true);
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/cobo-contract-signed")
+                .with(csrf())
+                .param("signed", "false"))
+            .andExpect(status().isOk());
+
+        verify(reservationRepository).save(argThat(res -> !res.isCoboContractSigned()));
+        verify(auditService).recordAction(
+            eq(AuditEntityType.RESERVATION),
+            eq(1L),
+            anyString(),
+            eq(AuditAction.COBO_CONTRACT_SIGNED),
+            argThat(changes -> changes.size() == 1
+                    && "coboContractSigned".equals(changes.get(0).field())
+                    && "true".equals(changes.get(0).oldValue())
+                    && "false".equals(changes.get(0).newValue())),
+            anyString());
+    }
+
+    /** Informational only: toggling it must never touch the reservation's status. */
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateCoboContractSigned_shouldNotChangeStatusOrEmailAnyone() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.COBO));
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/cobo-contract-signed")
+                .with(csrf())
+                .param("signed", "true"))
+            .andExpect(status().isOk());
+
+        verify(reservationRepository).save(argThat(res -> res.getStatus() == ReservationStatus.PENDING));
+        verifyNoInteractions(emailNotificationService);
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateCoboContractSigned_shouldReturnNotFoundWhenReservationDoesNotExist() throws Exception {
+        when(reservationRepository.findById(999L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(patch("/api/admin/reservations/999/cobo-contract-signed")
+                .with(csrf())
+                .param("signed", "true"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldReturnNotFoundWhenReservationDoesNotExist() throws Exception {
         // Given
         when(reservationRepository.findById(999L)).thenReturn(Optional.empty());

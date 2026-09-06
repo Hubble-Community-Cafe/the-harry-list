@@ -94,6 +94,9 @@ public class Reservation {
 
     private Boolean cateringArranged;
 
+    // ===== CoBo =====
+    private Boolean coboContractSigned;
+
     // ===== Additional Information =====
     private String comments;
 

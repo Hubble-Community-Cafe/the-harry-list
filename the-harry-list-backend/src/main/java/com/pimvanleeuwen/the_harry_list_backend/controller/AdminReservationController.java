@@ -184,6 +184,34 @@ public class AdminReservationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PatchMapping("/{id}/cobo-contract-signed")
+    @PreAuthorize("hasRole('EDITOR')")
+    @Operation(summary = "Toggle CoBo contract signed",
+            description = "Mark the CoBo contract as signed (or undo) for a reservation. Informational only — it gates nothing.")
+    public ResponseEntity<Reservation> updateCoboContractSigned(
+            @PathVariable Long id,
+            @RequestParam boolean signed,
+            Principal principal) {
+
+        log.info("AUDIT reservation.cobo_contract_signed id={} signed={} user='{}'",
+                id, signed, principal != null ? principal.getName() : "unknown");
+
+        return reservationRepository.findById(id)
+                .map(reservation -> {
+                    boolean previous = reservation.isCoboContractSigned();
+                    reservation.setCoboContractSigned(signed);
+                    com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
+
+                    auditService.recordAction(AuditEntityType.RESERVATION, id, label(saved),
+                            AuditAction.COBO_CONTRACT_SIGNED,
+                            List.of(new FieldChange("coboContractSigned", String.valueOf(previous), String.valueOf(signed))),
+                            signed ? "CoBo contract marked as signed" : "CoBo contract signed unset");
+
+                    return ResponseEntity.ok(reservationMapper.toDto(saved));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PatchMapping("/{id}/notes")
     @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Update internal notes", description = "Add or update internal notes for a reservation")

@@ -163,6 +163,16 @@ public class Reservation {
     @Column(name = "catering_arranged", nullable = false)
     private boolean cateringArranged = false;
 
+    // ===== CoBo =====
+
+    /**
+     * Whether the CoBo contract has been signed. Purely informational bookkeeping for staff —
+     * it gates nothing, mirroring {@link #cateringArranged}. Only meaningful when
+     * {@link SpecialActivity#COBO} is among the {@link #specialActivities}.
+     */
+    @Column(name = "cobo_contract_signed", nullable = false)
+    private boolean coboContractSigned = false;
+
     // ===== Additional Information =====
 
     /** Location/seating remarks */
@@ -236,6 +246,18 @@ public class Reservation {
                 .anyMatch(a -> a == SpecialActivity.EAT_A_LA_CARTE
                         || a == SpecialActivity.EAT_CATERING
                         || a == SpecialActivity.CATERING_CORONA_ROOM);
+    }
+
+    /**
+     * Whether this reservation is a CoBo (constitution drink), i.e. it has the
+     * {@link SpecialActivity#COBO} activity.
+     *
+     * <p>Deliberately separate from {@link #hasCateringActivity()}: a CoBo is followed up by the
+     * board with its own mail and contract, and must not appear in the catering day report or
+     * count towards the "catering needed" figures.
+     */
+    public boolean hasCoboActivity() {
+        return specialActivities != null && specialActivities.contains(SpecialActivity.COBO);
     }
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();

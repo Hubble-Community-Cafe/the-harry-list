@@ -16,12 +16,26 @@ class EnumTests {
         assertEquals("Eat catering", SpecialActivity.EAT_CATERING.getDisplayName());
         assertEquals("Catering Corona Room", SpecialActivity.CATERING_CORONA_ROOM.getDisplayName());
         assertEquals("Private event", SpecialActivity.PRIVATE_EVENT.getDisplayName());
+        assertEquals("CoBo (Constitution Drink)", SpecialActivity.COBO.getDisplayName());
     }
 
     @Test
     void specialActivity_shouldHaveAllExpectedValues() {
         SpecialActivity[] values = SpecialActivity.values();
-        assertEquals(5, values.length);
+        assertEquals(6, values.length);
+    }
+
+    /**
+     * Activity names are persisted into reservation_special_activities.special_activity, sized
+     * for CATERING_CORONA_ROOM. A longer name would need a schema change production cannot make
+     * itself (ddl-auto=validate).
+     */
+    @Test
+    void specialActivity_namesFitThePersistedColumn() {
+        for (SpecialActivity activity : SpecialActivity.values()) {
+            assertTrue(activity.name().length() <= 20,
+                    "Activity name too long for the special_activity column: " + activity.name());
+        }
     }
 
     @Test

@@ -113,6 +113,44 @@ class ReservationMapperTest {
     }
 
     @Test
+    void toDto_shouldIncludeCoboContractSigned() {
+        com.pimvanleeuwen.the_harry_list_backend.model.Reservation entity = createSampleEntity();
+        entity.setSpecialActivities(Set.of(SpecialActivity.COBO));
+        entity.setCoboContractSigned(true);
+
+        Reservation dto = mapper.toDto(entity);
+
+        assertEquals(Boolean.TRUE, dto.getCoboContractSigned());
+        assertEquals(Set.of(SpecialActivity.COBO), dto.getSpecialActivities());
+    }
+
+    @Test
+    void toEntity_shouldMapCoboContractSignedWhenPresent() {
+        Reservation dto = createSampleDto();
+        dto.setSpecialActivities(Set.of(SpecialActivity.COBO));
+        dto.setCoboContractSigned(true);
+
+        com.pimvanleeuwen.the_harry_list_backend.model.Reservation entity = mapper.toEntity(dto);
+
+        assertTrue(entity.isCoboContractSigned());
+    }
+
+    /**
+     * The admin edit form does not send the follow-up flags, so a null must leave the entity at
+     * its default rather than being mapped to false — the update service then restores the
+     * stored value.
+     */
+    @Test
+    void toEntity_shouldLeaveCoboContractSignedAtDefaultWhenNull() {
+        Reservation dto = createSampleDto();
+        dto.setCoboContractSigned(null);
+
+        com.pimvanleeuwen.the_harry_list_backend.model.Reservation entity = mapper.toEntity(dto);
+
+        assertFalse(entity.isCoboContractSigned());
+    }
+
+    @Test
     void toDto_shouldIncludeStatusAndTimestamps() {
         // Given
         com.pimvanleeuwen.the_harry_list_backend.model.Reservation entity = createSampleEntity();

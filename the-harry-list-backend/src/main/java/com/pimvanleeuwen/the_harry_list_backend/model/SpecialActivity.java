@@ -9,7 +9,13 @@ public enum SpecialActivity {
     EAT_A_LA_CARTE("Eat a la carte"),
     EAT_CATERING("Eat catering"),
     CATERING_CORONA_ROOM("Catering Corona Room"),
-    PRIVATE_EVENT("Private event");
+    PRIVATE_EVENT("Private event"),
+    /**
+     * A constitution drink ("constitutieborrel"). Deliberately not one of the catering
+     * activities — see {@link Reservation#hasCateringActivity()} — since it is followed up by
+     * the board with its own mail and contract rather than by the kitchen.
+     */
+    COBO("CoBo (Constitution Drink)");
 
     private final String displayName;
 
