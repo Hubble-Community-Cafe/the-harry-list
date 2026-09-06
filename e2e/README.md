@@ -149,6 +149,11 @@ faster layers.
 | Edit / remove a reservation | `ReservationDetailPage` test | `Update`/`DeleteReservationServiceTest` | `admin/reservation-lifecycle` #2 |
 | Seating area (inside/outside) shown in detail (#292) | `ReservationDetailPage` test | — | `admin/reservation-lifecycle` #2 |
 | Reopen a rejected reservation to pending | `ReservationDetailPage` test | `AdminReservationControllerTest` | `admin/reservation-lifecycle` #3 |
+| Change Status menu + enforced transitions | `reservationStatus` + `ReservationDetailPage` tests | `ReservationStatusTransitionsTest`, `AdminReservationControllerTest` | `admin/in-progress-status` |
+| Internal IN_PROGRESS status (never emails the guest) | `ReservationDetailPage` test | `AdminReservationControllerTest` | `admin/in-progress-status` #1 |
+| CoBo activity on the public form (selectable, stored) | `ReservationForm` test | `EnumTests`, `ReservationTest` | `public/cobo-activity` |
+| Send Mail menu (catering / CoBo) + CoBo mail | `reservationMail` + `ReservationDetailPage` tests | `AdminReservationControllerTest` | `admin/cobo-mail` |
+| CoBo contract signed flag | `ReservationDetailPage` test | `AdminReservationControllerTest` | `admin/cobo-mail` #4 |
 | Status-change email + custom message | — | `AdminReservationControllerTest` | `admin/status-email` |
 | Editable email templates | — | `EmailTemplateServiceTest` | `admin/email-template` |
 | RBAC (viewer/editor/admin) | `usePermissions` | filter tests | `admin/rbac` |
