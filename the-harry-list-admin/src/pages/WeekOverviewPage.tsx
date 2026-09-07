@@ -40,6 +40,7 @@ const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: 'border-l-yellow-400',
+  IN_PROGRESS: 'border-l-indigo-400',
   CONFIRMED: 'border-l-green-400',
   REJECTED: 'border-l-red-400',
   CANCELLED: 'border-l-dark-500',
@@ -48,6 +49,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 const STATUS_BADGE: Record<string, string> = {
   PENDING: 'bg-yellow-500/20 text-yellow-400',
+  IN_PROGRESS: 'bg-indigo-500/20 text-indigo-400',
   CONFIRMED: 'bg-green-500/20 text-green-400',
   REJECTED: 'bg-red-500/20 text-red-400',
   CANCELLED: 'bg-dark-500/20 text-dark-400',
@@ -126,7 +128,10 @@ export function WeekOverviewPage() {
   }
 
   // Week summary stats
-  const pendingCount = weekReservations.filter(r => r.status === 'PENDING').length;
+  // In-progress reservations still need a decision, so they count as outstanding here. Without
+  // this, picking one up would silently drop it out of the week's "needs attention" figure.
+  const pendingCount = weekReservations.filter(
+    r => r.status === 'PENDING' || r.status === 'IN_PROGRESS').length;
   const confirmedCount = weekReservations.filter(r => r.status === 'CONFIRMED').length;
   const cateringNeeded = weekReservations.filter(r => hasCatering(r.specialActivities) && !r.cateringArranged && r.status !== 'REJECTED' && r.status !== 'CANCELLED').length;
   const totalGuests = weekReservations.filter(r => r.status !== 'REJECTED' && r.status !== 'CANCELLED').reduce((sum, r) => sum + (r.expectedGuests ?? 0), 0);
@@ -177,6 +182,7 @@ export function WeekOverviewPage() {
             >
               <option value="ALL">All Statuses</option>
               <option value="PENDING">Pending</option>
+              <option value="IN_PROGRESS">In Progress</option>
               <option value="CONFIRMED">Confirmed</option>
               <option value="REJECTED">Rejected</option>
               <option value="CANCELLED">Cancelled</option>
@@ -234,7 +240,7 @@ export function WeekOverviewPage() {
         </div>
         <div className="card !p-4">
           <div className="text-2xl font-bold text-yellow-400">{pendingCount}</div>
-          <div className="text-xs text-dark-400">Pending</div>
+          <div className="text-xs text-dark-400">Open</div>
         </div>
         <div className="card !p-4">
           <div className="text-2xl font-bold text-green-400">{confirmedCount}</div>

@@ -78,9 +78,10 @@ public class UpdateReservationService implements Command<com.pimvanleeuwen.the_h
         entity.setConfirmedBy(existing.getConfirmedBy());
         // These are not part of the edit form and must not be wiped on update:
         // - termsAccepted is set by the customer at submission time
-        // - cateringArranged is managed via its own dedicated endpoint
+        // - cateringArranged and coboContractSigned are managed via their own dedicated endpoints
         entity.setTermsAccepted(existing.getTermsAccepted());
         entity.setCateringArranged(existing.isCateringArranged());
+        entity.setCoboContractSigned(existing.isCoboContractSigned());
         // Internal notes can be updated by staff; fall back to existing if not provided
         entity.setInternalNotes(input.getInternalNotes() != null ? input.getInternalNotes() : existing.getInternalNotes());
 

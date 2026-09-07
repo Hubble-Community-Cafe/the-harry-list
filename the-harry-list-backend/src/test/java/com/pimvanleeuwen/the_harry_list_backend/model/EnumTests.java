@@ -16,12 +16,26 @@ class EnumTests {
         assertEquals("Eat catering", SpecialActivity.EAT_CATERING.getDisplayName());
         assertEquals("Catering Corona Room", SpecialActivity.CATERING_CORONA_ROOM.getDisplayName());
         assertEquals("Private event", SpecialActivity.PRIVATE_EVENT.getDisplayName());
+        assertEquals("CoBo (Constitution Drink)", SpecialActivity.COBO.getDisplayName());
     }
 
     @Test
     void specialActivity_shouldHaveAllExpectedValues() {
         SpecialActivity[] values = SpecialActivity.values();
-        assertEquals(5, values.length);
+        assertEquals(6, values.length);
+    }
+
+    /**
+     * Activity names are persisted into reservation_special_activities.special_activity, sized
+     * for CATERING_CORONA_ROOM. A longer name would need a schema change production cannot make
+     * itself (ddl-auto=validate).
+     */
+    @Test
+    void specialActivity_namesFitThePersistedColumn() {
+        for (SpecialActivity activity : SpecialActivity.values()) {
+            assertTrue(activity.name().length() <= 20,
+                    "Activity name too long for the special_activity column: " + activity.name());
+        }
     }
 
     @Test
@@ -78,6 +92,7 @@ class EnumTests {
     @Test
     void reservationStatus_shouldHaveCorrectDisplayNames() {
         assertEquals("Pending Review", ReservationStatus.PENDING.getDisplayName());
+        assertEquals("In Progress", ReservationStatus.IN_PROGRESS.getDisplayName());
         assertEquals("Confirmed", ReservationStatus.CONFIRMED.getDisplayName());
         assertEquals("Rejected", ReservationStatus.REJECTED.getDisplayName());
         assertEquals("Cancelled", ReservationStatus.CANCELLED.getDisplayName());
@@ -87,6 +102,48 @@ class EnumTests {
     @Test
     void reservationStatus_shouldHaveAllExpectedValues() {
         ReservationStatus[] values = ReservationStatus.values();
-        assertEquals(5, values.length);
+        assertEquals(6, values.length);
+    }
+
+    @Test
+    void reservationStatus_onlyInProgressSkipsTheCustomerEmail() {
+        for (ReservationStatus status : ReservationStatus.values()) {
+            assertEquals(status != ReservationStatus.IN_PROGRESS, status.notifiesCustomer(),
+                    "notifiesCustomer() for " + status);
+        }
+    }
+
+    /**
+     * The status column is pinned to VARCHAR(32) in the entity. Guards against a future status
+     * name outgrowing the deployed column, which production (ddl-auto=validate) would not catch.
+     */
+    @Test
+    void reservationStatus_namesFitThePersistedColumn() {
+        for (ReservationStatus status : ReservationStatus.values()) {
+            assertTrue(status.name().length() <= 32,
+                    "Status name too long for the status column: " + status.name());
+        }
+    }
+
+    /**
+     * Without {@code @JdbcTypeCode(VARCHAR)}, Hibernate maps a string enum to a native MariaDB
+     * {@code ENUM(...)} column, and adding a value then fails at runtime with "Data truncated"
+     * until someone remembers to ALTER the column, a failure production's ddl-auto=validate
+     * does not catch. These columns must stay varchar-mapped.
+     */
+    @Test
+    void enumColumns_areMappedToVarcharNotNativeEnum() throws Exception {
+        assertVarcharMapped(Reservation.class.getDeclaredField("status"));
+        assertVarcharMapped(Reservation.class.getDeclaredField("specialActivities"));
+        assertVarcharMapped(EmailTemplate.class.getDeclaredField("templateType"));
+    }
+
+    private static void assertVarcharMapped(java.lang.reflect.Field field) {
+        org.hibernate.annotations.JdbcTypeCode annotation =
+                field.getAnnotation(org.hibernate.annotations.JdbcTypeCode.class);
+        assertNotNull(annotation,
+                field.getName() + " must carry @JdbcTypeCode(VARCHAR) to avoid a native ENUM column");
+        assertEquals(org.hibernate.type.SqlTypes.VARCHAR, annotation.value(),
+                field.getName() + " must be mapped to VARCHAR");
     }
 }

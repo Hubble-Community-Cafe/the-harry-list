@@ -109,7 +109,8 @@ Use pinned version tags in your Portainer stack (e.g., `0.9.0`) rather than `lat
 ### Database
 - Set `SPRING_JPA_HIBERNATE_DDL_AUTO=validate` (already set in the Portainer template) — never `update` in production
 - Take regular MariaDB backups before deploying new versions
-- Run schema migrations manually before updating the backend image
+- Run schema migrations manually before updating the backend image. Each release that needs one ships a guide in [`docs/`](docs/) (`migration-*.md`) with the exact SQL, verification steps and rollback
+- Note that Hibernate maps `@Enumerated(STRING)` columns to native MariaDB `ENUM(...)` types unless the entity overrides it with `@JdbcTypeCode(SqlTypes.VARCHAR)`. Adding a value to a native `ENUM` column fails at **runtime** with `Data truncated`, which `validate` does not catch at startup, so check the column type before shipping a new enum value
 
 ### Rate Limiting
 The public reservation endpoint is rate-limited to 10 requests/minute per IP. If deploying behind a reverse proxy, ensure `X-Real-IP` is forwarded:
@@ -211,7 +212,7 @@ Subscribe to reservations from any calendar app (Google Calendar, Outlook, Apple
 
 | Parameter | Description |
 |-----------|-------------|
-| `status` | Filter by status: `PENDING`, `CONFIRMED`, `REJECTED`, `CANCELLED` (comma-separated) |
+| `status` | Filter by status: `PENDING`, `IN_PROGRESS`, `CONFIRMED`, `REJECTED`, `CANCELLED`, `COMPLETED` (comma-separated) |
 | `location` | Filter by location: `HUBBLE` or `METEOR` |
 | `catering` | `true` for catering events only, `false` for non-catering only (omit for all). Custom calendar appointments count as non-catering |
 | `upcomingOnly` | Set to `true` for future events only |

@@ -4,6 +4,7 @@ import { resetBackend, seedUser, seedReservation } from '../../fixtures/backend'
 import { clearMailbox, waitForEmailTo } from '../../fixtures/mailpit';
 import { captureScreenshot, attachHtml } from '../../fixtures/evidence';
 import { PUBLIC_BASE_URL } from '../../playwright.config';
+import { changeStatus } from '../../fixtures/adminActions';
 
 /**
  * Full reservation lifecycle through the real admin UI:
@@ -46,8 +47,7 @@ test.describe('admin: reservation lifecycle', () => {
     // 3) Open it and confirm via the UI.
     await row.click();
     await expect(page.getByTestId('reservation-status')).toContainText('PENDING');
-    await page.getByTestId('confirm-reservation').click();
-    await page.getByTestId('confirm-dialog-submit').click();
+    await changeStatus(page, 'CONFIRMED');
     await expect(page.getByTestId('reservation-status')).toContainText('CONFIRMED');
     await captureScreenshot(testInfo, page, '2-confirmed-in-admin');
 
@@ -101,8 +101,7 @@ test.describe('admin: reservation lifecycle', () => {
     await captureScreenshot(testInfo, page, '1-edited-guests');
 
     // Remove it: reject (PENDING -> REJECTED), then delete.
-    await page.getByTestId('reject-reservation').click();
-    await page.getByTestId('reject-dialog-submit').click();
+    await changeStatus(page, 'REJECTED');
     await expect(page.getByTestId('reservation-status')).toContainText('REJECTED');
     await page.getByTestId('remove-reservation').click();
     await page.getByTestId('delete-dialog-submit').click();
@@ -140,14 +139,12 @@ test.describe('admin: reservation lifecycle', () => {
     await captureScreenshot(testInfo, page, '1-rejected');
 
     // Move it back to pending (email stays off — internal correction).
-    await page.getByTestId('reopen-reservation').click();
-    await page.getByTestId('reopen-dialog-submit').click();
+    await changeStatus(page, 'PENDING');
     await expect(page.getByTestId('reservation-status')).toContainText('PENDING');
     await captureScreenshot(testInfo, page, '2-back-to-pending');
 
     // Now pending, it offers confirm/reject again and can be confirmed straight away.
-    await page.getByTestId('confirm-reservation').click();
-    await page.getByTestId('confirm-dialog-submit').click();
+    await changeStatus(page, 'CONFIRMED');
     await expect(page.getByTestId('reservation-status')).toContainText('CONFIRMED');
     await captureScreenshot(testInfo, page, '3-confirmed-after-reopen');
   });

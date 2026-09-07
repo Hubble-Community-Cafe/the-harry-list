@@ -1,6 +1,8 @@
 package com.pimvanleeuwen.the_harry_list_backend.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -72,11 +74,19 @@ public class Reservation {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    /** Special activities selected for this reservation */
+    /**
+     * Special activities selected for this reservation.
+     *
+     * <p>{@code @JdbcTypeCode(VARCHAR)} is deliberate: without it Hibernate maps a string enum to
+     * a native MariaDB {@code ENUM(...)} column, and adding a new activity then fails at runtime
+     * with "Data truncated" until someone remembers to ALTER the column. As varchar, new
+     * activities need no schema change at all.
+     */
     @ElementCollection(targetClass = SpecialActivity.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "reservation_special_activities", joinColumns = @JoinColumn(name = "reservation_id"))
-    @Column(name = "special_activity")
+    @Column(name = "special_activity", length = 50)
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private Set<SpecialActivity> specialActivities = new HashSet<>();
 
     /** Expected number of guests */
@@ -163,6 +173,16 @@ public class Reservation {
     @Column(name = "catering_arranged", nullable = false)
     private boolean cateringArranged = false;
 
+    // ===== CoBo =====
+
+    /**
+     * Whether the CoBo contract has been signed. Purely informational bookkeeping for staff:
+     * it gates nothing, mirroring {@link #cateringArranged}. Only meaningful when
+     * {@link SpecialActivity#COBO} is among the {@link #specialActivities}.
+     */
+    @Column(name = "cobo_contract_signed", nullable = false)
+    private boolean coboContractSigned = false;
+
     // ===== Additional Information =====
 
     /** Location/seating remarks */
@@ -176,9 +196,16 @@ public class Reservation {
 
     // ===== Internal Fields =====
 
-    /** Current status of the reservation */
-    @Column(name = "status", nullable = false)
+    /**
+     * Current status of the reservation.
+     *
+     * <p>{@code @JdbcTypeCode(VARCHAR)} keeps this a plain varchar rather than a native MariaDB
+     * {@code ENUM(...)}, so a new status needs no schema change. The explicit length leaves room
+     * for future values; {@code EnumTests} asserts every name still fits.
+     */
+    @Column(name = "status", nullable = false, length = 32)
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private ReservationStatus status = ReservationStatus.PENDING;
 
     /** Internal notes (only visible to staff) */
@@ -230,6 +257,18 @@ public class Reservation {
                 .anyMatch(a -> a == SpecialActivity.EAT_A_LA_CARTE
                         || a == SpecialActivity.EAT_CATERING
                         || a == SpecialActivity.CATERING_CORONA_ROOM);
+    }
+
+    /**
+     * Whether this reservation is a CoBo (constitution drink), i.e. it has the
+     * {@link SpecialActivity#COBO} activity.
+     *
+     * <p>Deliberately separate from {@link #hasCateringActivity()}: a CoBo is followed up by the
+     * board with its own mail and contract, and must not appear in the catering day report or
+     * count towards the "catering needed" figures.
+     */
+    public boolean hasCoboActivity() {
+        return specialActivities != null && specialActivities.contains(SpecialActivity.COBO);
     }
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();

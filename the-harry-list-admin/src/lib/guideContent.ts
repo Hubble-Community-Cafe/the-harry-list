@@ -440,51 +440,66 @@ export const reservationDetailGuide: GuideSection[] = [
     screenshotAlt: 'Action buttons for confirming, rejecting, and managing reservations',
     content: `## Status Actions
 
-The available actions depend on the current status:
+All status changes go through one **Change Status** button. It lists only the moves that are valid from the reservation's current status, so you can't reach a state the system doesn't allow.
 
-### Pending Reservations
-- **Confirm** — approve the reservation. Optionally sends a confirmation email
-- **Reject** — decline the reservation. The rejection email is pre-filled with a default reason you can edit or replace
+### What each status can become
 
-### Confirmed Reservations
-- **Complete** — mark as completed after the event has taken place
-- **Cancel** — cancel the reservation (e.g. customer called to cancel)
+| Current status | Can move to |
+|----------------|-------------|
+| Pending | In Progress, Confirmed, Rejected, Cancelled |
+| In Progress | Confirmed, Rejected, Cancelled, back to Pending |
+| Confirmed | Completed, Cancelled |
+| Rejected | back to Pending |
+| Cancelled | back to Pending |
+| Completed | nothing, this is the final state |
 
-### Rejected Reservations
-- **Move back to Pending** — reopen a rejected reservation. Use this when the event is going ahead after all (e.g. a different date or location frees up) so you can edit the existing details instead of asking the customer to fill everything in again. The reservation returns to **Pending**, ready to confirm or reject. The customer email is **off** by default for this action — tick the box only if you want to let them know it's being reconsidered.
-- **Remove** — permanently delete the rejected reservation (with confirmation dialog)
+### In Progress (internal)
+**In Progress** marks a request you've picked up but haven't decided on yet, for example while you're checking availability or waiting on the customer. It is purely for your own bookkeeping: **the customer is never emailed about it**, and the dialog shows no email options at all. In-progress reservations still count as open on the dashboard and the week overview, so picking one up doesn't hide it from the queue.
 
-### All Reservations
-- **Edit** — open the edit form to change any field
-- **Delete** — permanently remove (with confirmation dialog)
+### Move back to Pending
+Use this when a rejected or cancelled event is going ahead after all (e.g. a different date or location frees up) so you can edit the existing details instead of asking the customer to fill everything in again. The customer email is **off** by default for this action, tick the box only if you want to let them know it's being reconsidered.
+
+### Other actions
+- **Edit** opens the edit form to change any field
+- **Remove** permanently deletes a rejected or cancelled reservation (with a confirmation dialog)
 
 ### Email Notifications
-Each status change dialog (and the edit form) has a **"Send email notification"** checkbox. For most status changes it is **on** by default — uncheck it only if you've already communicated with the customer directly. For the **edit form** and the **Move back to Pending** action it is **off** by default, since those are usually internal corrections; tick it when the change is worth notifying the customer about.
+The **"Send email notification"** checkbox applies to the status change you're about to make. For most changes it is **on** by default, uncheck it only if you've already spoken to the customer directly. For the **edit form** and **Move back to Pending** it is **off** by default, since those are usually internal corrections. For **In Progress** there is no checkbox at all, because no email is ever sent for it.
 
 ### Adding a Message to the Email
-When the email notification is on, every status dialog and the edit form shows an optional **"Add a message to the email"** box. Anything you type here appears as a highlighted note in that email — use it to clarify things the standard template doesn't cover, e.g. *"We read your special request and will keep a shaded spot for you."* For **Reject**, this box is pre-filled with a default reason that you can edit, replace, or clear before sending.`,
+When the email notification is on, the status dialog and the edit form show an optional **"Add a message to the email"** box. Anything you type here appears as a highlighted note in that email, use it to clarify things the standard template doesn't cover, e.g. *"We read your special request and will keep a shaded spot for you."* For **Reject**, this box is pre-filled with a default reason that you can edit, replace, or clear before sending.`,
   },
   {
-    title: 'Catering Email',
+    title: 'Sending Mail',
     screenshot: '/screenshots/reservation-catering-email.png',
-    screenshotAlt: 'Catering email dialog with attachment checkboxes',
-    content: `## Sending Catering Options
+    screenshotAlt: 'Send Mail dialog with attachment checkboxes',
+    content: `## Sending Mail
 
-For reservations that include catering activities, you'll see a **"Send Catering Options"** button.
+The **Send Mail** button covers the templated emails you send by hand. It only appears when at least one of them applies to the reservation, and the menu lists only those:
+
+- **Catering Options** for reservations with a catering activity (catering, à la carte, Corona Room)
+- **CoBo Information** for reservations with the **CoBo (Constitution Drink)** activity
+
+Rejected reservations show no Send Mail button, since there's nothing left to follow up on.
 
 ### How It Works
 
-1. Click **"Send Catering Options"**
+1. Click **Send Mail** and pick which email to send
 2. The dialog shows a pre-filled email with:
-   - **Recipient** — the customer's email
-   - **Reply-to** — where the customer's reply will go (fill in your own email or the staff inbox)
-   - **Attachments** — all active PDF menus (pre-checked, uncheck any you don't want to include)
-   - **Subject** — pre-filled from the template
-   - **Body** — pre-filled HTML email body
+   - **Recipient**, the customer's email
+   - **Reply-to**, where the customer's reply will go (fill in your own email or the staff inbox)
+   - **Attachments**, the active PDFs from the Email Templates page
+   - **Subject** and **Body**, pre-filled from that email's template
 3. Optionally edit the subject or body for this specific email
 4. Click **Send**
 
+### Attachments
+All PDFs live in one shared pool on the Email Templates page. For a **catering** email every active PDF is ticked for you, since the menus normally go out together. For a **CoBo** email nothing is ticked by default, so you attach only what that booking needs rather than sending the catering menus by accident.
+
+### CoBo Contract Signed
+CoBo reservations also show a **CoBo Contract Signed** toggle in the Additional Information panel, next to Catering Arranged. It's a note for your own tracking: it doesn't block anything and the customer never sees it. Every change is recorded in the reservation's change history.
+
 ### Tip
-Make sure you have **PDF attachments uploaded** on the Email Templates page before sending catering emails. The email can be sent without attachments, but it's most useful when menus are attached.`,
+Make sure you have **PDF attachments uploaded** on the Email Templates page first. An email can be sent without attachments, but it's most useful with the right documents attached.`,
   },
 ];

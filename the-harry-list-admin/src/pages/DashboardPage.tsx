@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Calendar, Clock, Users, CheckCircle, XCircle,
-  AlertCircle, Loader2, TrendingUp
+  AlertCircle, Loader2, TrendingUp, PlayCircle
 } from 'lucide-react';
 import { fetchReservations } from '../lib/api';
 import type { Reservation } from '../types/reservation';
@@ -29,9 +29,13 @@ export function DashboardPage() {
       .finally(() => setIsLoading(false));
   }, []);
 
+  // In-progress reservations are still awaiting a decision, so they count as pending
+  // throughout the dashboard; otherwise picking one up would hide it from the queue.
+  const isOpen = (status: string) => status === 'PENDING' || status === 'IN_PROGRESS';
+
   const stats: Stats = {
     total: reservations.length,
-    pending: reservations.filter(r => r.status === 'PENDING').length,
+    pending: reservations.filter(r => isOpen(r.status)).length,
     confirmed: reservations.filter(r => r.status === 'CONFIRMED').length,
     rejected: reservations.filter(r => r.status === 'REJECTED').length,
     upcoming: reservations.filter(r => {
@@ -45,7 +49,7 @@ export function DashboardPage() {
     .sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime())
     .slice(0, 5);
 
-  const pendingReservations = reservations.filter(r => r.status === 'PENDING').slice(0, 5);
+  const pendingReservations = reservations.filter(r => isOpen(r.status)).slice(0, 5);
 
   if (isLoading) {
     return (
@@ -207,6 +211,7 @@ export function DashboardPage() {
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { color: string; icon: typeof CheckCircle }> = {
     PENDING: { color: 'bg-yellow-500/20 text-yellow-400', icon: Clock },
+    IN_PROGRESS: { color: 'bg-indigo-500/20 text-indigo-400', icon: PlayCircle },
     CONFIRMED: { color: 'bg-green-500/20 text-green-400', icon: CheckCircle },
     REJECTED: { color: 'bg-red-500/20 text-red-400', icon: XCircle },
     CANCELLED: { color: 'bg-dark-500/20 text-dark-400', icon: XCircle },

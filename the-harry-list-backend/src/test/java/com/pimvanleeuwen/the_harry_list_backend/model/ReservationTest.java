@@ -208,4 +208,60 @@ class ReservationTest {
         // Then - still counts as a catering event (reflects requested activities)
         assertTrue(reservation.hasCateringActivity());
     }
+
+    /**
+     * A CoBo is followed up by the board, not the kitchen. If it ever started counting as
+     * catering it would silently appear in the catering day report and the "catering needed"
+     * figures, so this is asserted explicitly.
+     */
+    @Test
+    void hasCateringActivity_shouldBeFalseForCobo() {
+        reservation.setSpecialActivities(Set.of(SpecialActivity.COBO));
+
+        assertFalse(reservation.hasCateringActivity());
+    }
+
+    @Test
+    void hasCoboActivity_shouldBeFalseWhenNoActivities() {
+        assertFalse(reservation.hasCoboActivity());
+
+        reservation.setSpecialActivities(Set.of());
+        assertFalse(reservation.hasCoboActivity());
+    }
+
+    @Test
+    void hasCoboActivity_shouldBeTrueWhenCoboSelected() {
+        reservation.setSpecialActivities(Set.of(SpecialActivity.COBO));
+
+        assertTrue(reservation.hasCoboActivity());
+    }
+
+    @Test
+    void hasCoboActivity_shouldBeTrueWhenMixedWithOtherActivities() {
+        reservation.setSpecialActivities(Set.of(SpecialActivity.GRADUATION, SpecialActivity.COBO));
+
+        assertTrue(reservation.hasCoboActivity());
+        assertFalse(reservation.hasCateringActivity());
+    }
+
+    @Test
+    void hasCoboActivity_shouldBeFalseForCateringActivities() {
+        reservation.setSpecialActivities(Set.of(SpecialActivity.EAT_CATERING));
+
+        assertFalse(reservation.hasCoboActivity());
+    }
+
+    @Test
+    void hasCoboActivity_shouldNotDependOnContractSignedFlag() {
+        // Requested but the contract is not signed yet, but still a CoBo event.
+        reservation.setSpecialActivities(Set.of(SpecialActivity.COBO));
+        reservation.setCoboContractSigned(false);
+
+        assertTrue(reservation.hasCoboActivity());
+    }
+
+    @Test
+    void coboContractSigned_shouldDefaultToFalse() {
+        assertFalse(new Reservation().isCoboContractSigned());
+    }
 }

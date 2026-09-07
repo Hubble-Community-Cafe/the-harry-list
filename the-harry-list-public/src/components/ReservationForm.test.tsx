@@ -26,6 +26,7 @@ const mockOptions: FormOptions = {
     { value: 'EAT_CATERING', displayName: 'Catering' },
     { value: 'CATERING_CORONA_ROOM', displayName: 'Catering for Corona Room Event' },
     { value: 'PRIVATE_EVENT', displayName: 'Private Event' },
+    { value: 'COBO', displayName: 'CoBo (Constitution Drink)' },
   ],
   invoiceTypes: [
     { value: 'TUE', displayName: 'TU/e' },
@@ -335,6 +336,42 @@ describe('ReservationForm', () => {
       expect(screen.getByRole('checkbox', { name: 'Graduation / PhD Defense' })).toBeInTheDocument();
       expect(screen.getByRole('checkbox', { name: 'Eat a la Carte' })).toBeInTheDocument();
       expect(screen.getByRole('checkbox', { name: 'Private Event' })).toBeInTheDocument();
+    });
+
+    it('offers CoBo with its guest-facing description', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep2(user);
+
+      const cobo = screen.getByRole('checkbox', { name: 'CoBo (Constitution Drink)' });
+      expect(cobo).toBeInTheDocument();
+      expect(cobo).toHaveTextContent(/the board will reach out for further steps/);
+    });
+
+    it('toggles CoBo like any other activity', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep2(user);
+
+      const cobo = screen.getByRole('checkbox', { name: 'CoBo (Constitution Drink)' });
+      expect(cobo).toHaveAttribute('aria-checked', 'false');
+
+      await user.click(cobo);
+      expect(cobo).toHaveAttribute('aria-checked', 'true');
+
+      await user.click(cobo);
+      expect(cobo).toHaveAttribute('aria-checked', 'false');
+    });
+
+    /** CoBo is followed up by the board, not the kitchen, so it must not trigger catering fields. */
+    it('does not treat CoBo as a catering activity', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep2(user);
+
+      await user.click(screen.getByRole('checkbox', { name: 'CoBo (Constitution Drink)' }));
+
+      expect(screen.queryByPlaceholderText(/allerg/i)).not.toBeInTheDocument();
     });
 
     it('toggles activity selection', async () => {

@@ -154,7 +154,8 @@ async function fetchJsonWithAuth(url: string, options: RequestInit = {}): Promis
 }
 
 // Import types for proper typing
-import type { Reservation, FormConstraint, BlockedPeriod, EmailAttachment, CateringEmailRequest, CalendarAppointment } from '../types/reservation';
+import type { Reservation, FormConstraint, BlockedPeriod, EmailAttachment, ReservationEmailRequest, CalendarAppointment } from '../types/reservation';
+import type { ReservationMailTypeValue } from './reservationMail';
 import type { AuditLogEntry, AuditLogPageResponse, AuditLogFilters } from '../types/audit';
 
 // API Functions
@@ -216,6 +217,12 @@ export async function updateReservationStatus(
 
 export async function updateCateringArranged(id: number, arranged: boolean): Promise<Reservation> {
   return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/reservations/${id}/catering-arranged?arranged=${arranged}`, {
+    method: 'PATCH',
+  }) as Promise<Reservation>;
+}
+
+export async function updateCoboContractSigned(id: number, signed: boolean): Promise<Reservation> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/reservations/${id}/cobo-contract-signed?signed=${signed}`, {
     method: 'PATCH',
   }) as Promise<Reservation>;
 }
@@ -341,13 +348,22 @@ export async function toggleEmailAttachmentActive(id: number, active: boolean): 
   }) as Promise<EmailAttachment>;
 }
 
-// ===== Catering Email =====
-export async function fetchCateringEmailPreview(reservationId: number): Promise<{ subject: string; body: string; defaultReplyTo?: string }> {
-  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/reservations/${reservationId}/catering-email/preview`) as Promise<{ subject: string; body: string; defaultReplyTo?: string }>;
+// ===== Templated reservation mail (catering options, CoBo information) =====
+export async function fetchMailPreview(
+  reservationId: number,
+  mailType: ReservationMailTypeValue,
+): Promise<{ subject: string; body: string; defaultReplyTo?: string }> {
+  return fetchJsonWithAuth(
+    `${API_BASE_URL}/api/admin/reservations/${reservationId}/mail/${mailType}/preview`,
+  ) as Promise<{ subject: string; body: string; defaultReplyTo?: string }>;
 }
 
-export async function sendCateringEmail(reservationId: number, request: CateringEmailRequest): Promise<{ status: string; message: string }> {
-  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/reservations/${reservationId}/catering-email`, {
+export async function sendReservationMail(
+  reservationId: number,
+  mailType: ReservationMailTypeValue,
+  request: ReservationEmailRequest,
+): Promise<{ status: string; message: string }> {
+  return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/reservations/${reservationId}/mail/${mailType}`, {
     method: 'POST',
     body: JSON.stringify(request),
   }) as Promise<{ status: string; message: string }>;

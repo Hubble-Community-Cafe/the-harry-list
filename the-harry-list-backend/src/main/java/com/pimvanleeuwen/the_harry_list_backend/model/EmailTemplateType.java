@@ -7,7 +7,8 @@ public enum EmailTemplateType {
     UPDATED("Reservation Updated", "Sent to the customer when their reservation details are modified by staff."),
     CANCELLED("Reservation Cancelled", "Sent to the customer when their reservation is cancelled."),
     STAFF_NOTIFICATION("Staff Notification", "Sent to staff when a new reservation request is submitted."),
-    CATERING_OPTIONS("Catering Options", "Sent to the customer with catering menu options and PDF attachments.");
+    CATERING_OPTIONS("Catering Options", "Sent to the customer with catering menu options and PDF attachments."),
+    COBO_OPTIONS("CoBo Information", "Sent to the customer of a CoBo (constitution drink) reservation, with optional PDF attachments.");
 
     private final String displayName;
     private final String description;

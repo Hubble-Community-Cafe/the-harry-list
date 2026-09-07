@@ -5,7 +5,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.pimvanleeuwen.the_harry_list_backend.dto.CateringEmailRequest;
+import com.pimvanleeuwen.the_harry_list_backend.dto.ReservationEmailRequest;
 import com.pimvanleeuwen.the_harry_list_backend.model.*;
 import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import com.pimvanleeuwen.the_harry_list_backend.repository.EmailAttachmentRepository;
@@ -255,7 +255,7 @@ class AdminReservationControllerTest {
     @Test
     @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldNotEmitAnalyticsWhenReopenedToPending() throws Exception {
-        // A rejected reservation moved back to PENDING is internal churn — no analytics line.
+        // A rejected reservation moved back to PENDING is internal churn, so no analytics line.
         sampleReservation.setStatus(ReservationStatus.REJECTED);
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
         when(reservationRepository.save(any())).thenReturn(sampleReservation);
@@ -268,6 +268,178 @@ class AdminReservationControllerTest {
             .andExpect(status().isOk());
 
         assertTrue(analyticsAppender.list.isEmpty(), "PENDING transitions must not emit an analytics line");
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldMovePendingToInProgress() throws Exception {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "IN_PROGRESS"))
+            .andExpect(status().isOk());
+
+        verify(reservationRepository).save(argThat(res -> res.getStatus() == ReservationStatus.IN_PROGRESS));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldConfirmFromInProgress() throws Exception {
+        sampleReservation.setStatus(ReservationStatus.IN_PROGRESS);
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "CONFIRMED")
+                .param("confirmedBy", "Admin User"))
+            .andExpect(status().isOk());
+
+        verify(reservationRepository).save(argThat(res ->
+            res.getStatus() == ReservationStatus.CONFIRMED &&
+            "Admin User".equals(res.getConfirmedBy())
+        ));
+    }
+
+    /**
+     * IN_PROGRESS is internal bookkeeping, so the customer is never told. The flag is ignored
+     * server-side rather than only hidden in the admin UI.
+     */
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldNeverEmailTheCustomerForInProgress() throws Exception {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "IN_PROGRESS")
+                .param("sendEmail", "true"))
+            .andExpect(status().isOk());
+
+        verify(emailNotificationService, never()).sendStatusChangeEmail(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldNotEmitAnalyticsForInProgress() throws Exception {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "IN_PROGRESS"))
+            .andExpect(status().isOk());
+
+        assertTrue(analyticsAppender.list.isEmpty(),
+                "IN_PROGRESS is internal churn and must not emit an analytics line");
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldRejectTransitionOutOfCompleted() throws Exception {
+        sampleReservation.setStatus(ReservationStatus.COMPLETED);
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "IN_PROGRESS"))
+            .andExpect(status().isBadRequest());
+
+        verify(reservationRepository, never()).save(any());
+        verify(emailNotificationService, never()).sendStatusChangeEmail(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldRejectMovingConfirmedBackToPending() throws Exception {
+        sampleReservation.setStatus(ReservationStatus.CONFIRMED);
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "PENDING"))
+            .andExpect(status().isBadRequest());
+
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateCoboContractSigned_shouldMarkAsSigned() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.COBO));
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/cobo-contract-signed")
+                .with(csrf())
+                .param("signed", "true"))
+            .andExpect(status().isOk());
+
+        verify(reservationRepository).save(argThat(Reservation::isCoboContractSigned));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateCoboContractSigned_shouldUndoAndAuditTheChange() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.COBO));
+        sampleReservation.setCoboContractSigned(true);
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/cobo-contract-signed")
+                .with(csrf())
+                .param("signed", "false"))
+            .andExpect(status().isOk());
+
+        verify(reservationRepository).save(argThat(res -> !res.isCoboContractSigned()));
+        verify(auditService).recordAction(
+            eq(AuditEntityType.RESERVATION),
+            eq(1L),
+            anyString(),
+            eq(AuditAction.COBO_CONTRACT_SIGNED),
+            argThat(changes -> changes.size() == 1
+                    && "coboContractSigned".equals(changes.get(0).field())
+                    && "true".equals(changes.get(0).oldValue())
+                    && "false".equals(changes.get(0).newValue())),
+            anyString());
+    }
+
+    /** Informational only: toggling it must never touch the reservation's status. */
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateCoboContractSigned_shouldNotChangeStatusOrEmailAnyone() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.COBO));
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/cobo-contract-signed")
+                .with(csrf())
+                .param("signed", "true"))
+            .andExpect(status().isOk());
+
+        verify(reservationRepository).save(argThat(res -> res.getStatus() == ReservationStatus.PENDING));
+        verifyNoInteractions(emailNotificationService);
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateCoboContractSigned_shouldReturnNotFoundWhenReservationDoesNotExist() throws Exception {
+        when(reservationRepository.findById(999L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(patch("/api/admin/reservations/999/cobo-contract-signed")
+                .with(csrf())
+                .param("signed", "true"))
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -429,6 +601,7 @@ class AdminReservationControllerTest {
     @Test
     @WithMockUser(roles = "EDITOR")
     void sendCateringEmail_shouldSendWithAttachments() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.EAT_CATERING));
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
         when(emailTemplateService.getRenderedSubject(eq(EmailTemplateType.CATERING_OPTIONS), any()))
                 .thenReturn("Catering Subject");
@@ -441,7 +614,7 @@ class AdminReservationControllerTest {
         when(emailAttachmentRepository.findAllById(List.of(1L))).thenReturn(List.of(attachment));
 
         String requestBody = objectMapper.writeValueAsString(
-                new CateringEmailRequest() {{ setAttachmentIds(List.of(1L)); }});
+                new ReservationEmailRequest() {{ setAttachmentIds(List.of(1L)); }});
 
         mockMvc.perform(post("/api/admin/reservations/1/catering-email")
                 .with(csrf())
@@ -457,10 +630,11 @@ class AdminReservationControllerTest {
     @Test
     @WithMockUser(roles = "EDITOR")
     void sendCateringEmail_shouldUseCustomSubjectAndBody() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.EAT_CATERING));
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
         when(emailAttachmentRepository.findAllById(any())).thenReturn(List.of());
 
-        CateringEmailRequest request = new CateringEmailRequest();
+        ReservationEmailRequest request = new ReservationEmailRequest();
         request.setAttachmentIds(List.of());
         request.setSubject("Custom Subject");
         request.setBody("<p>Custom body</p>");
@@ -483,7 +657,7 @@ class AdminReservationControllerTest {
     void sendCateringEmail_shouldReturn404WhenNotFound() throws Exception {
         when(reservationRepository.findById(999L)).thenReturn(Optional.empty());
 
-        CateringEmailRequest request = new CateringEmailRequest();
+        ReservationEmailRequest request = new ReservationEmailRequest();
         request.setAttachmentIds(List.of());
 
         mockMvc.perform(post("/api/admin/reservations/999/catering-email")
@@ -491,6 +665,177 @@ class AdminReservationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isNotFound());
+    }
+
+    // ===== Generalised mail endpoints =====
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void sendMail_shouldSendCoboMailWithAttachments() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.COBO));
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(emailTemplateService.getRenderedSubject(eq(EmailTemplateType.COBO_OPTIONS), any()))
+                .thenReturn("CoBo Subject");
+        when(emailTemplateService.getRenderedBody(eq(EmailTemplateType.COBO_OPTIONS), any()))
+                .thenReturn("<p>CoBo body</p>");
+
+        EmailAttachment attachment = EmailAttachment.builder()
+                .id(2L).name("CoBo contract").filename("cobo.pdf")
+                .contentType("application/pdf").data(new byte[]{1}).active(true).build();
+        when(emailAttachmentRepository.findAllById(List.of(2L))).thenReturn(List.of(attachment));
+
+        ReservationEmailRequest request = new ReservationEmailRequest();
+        request.setAttachmentIds(List.of(2L));
+
+        mockMvc.perform(post("/api/admin/reservations/1/mail/COBO")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("sent"));
+
+        verify(emailNotificationService).sendEmailWithAttachments(
+                eq("john@example.com"), eq("CoBo Subject"), eq("<p>CoBo body</p>"),
+                eq(List.of(attachment)), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void sendMail_shouldSendCoboMailWithNoAttachments() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.COBO));
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(emailTemplateService.getRenderedSubject(eq(EmailTemplateType.COBO_OPTIONS), any()))
+                .thenReturn("CoBo Subject");
+        when(emailTemplateService.getRenderedBody(eq(EmailTemplateType.COBO_OPTIONS), any()))
+                .thenReturn("<p>CoBo body</p>");
+
+        ReservationEmailRequest request = new ReservationEmailRequest();
+        request.setAttachmentIds(List.of());
+
+        mockMvc.perform(post("/api/admin/reservations/1/mail/COBO")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk());
+
+        verify(emailNotificationService).sendEmailWithAttachments(
+                eq("john@example.com"), eq("CoBo Subject"), eq("<p>CoBo body</p>"), eq(List.of()), any());
+        // An empty selection must not hit the repository at all.
+        verify(emailAttachmentRepository, never()).findAllById(any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void sendMail_shouldRejectCoboMailForNonCoboReservation() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.EAT_CATERING));
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+
+        ReservationEmailRequest request = new ReservationEmailRequest();
+        request.setAttachmentIds(List.of());
+
+        mockMvc.perform(post("/api/admin/reservations/1/mail/COBO")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(emailNotificationService);
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void sendMail_shouldRejectCateringMailForNonCateringReservation() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.COBO));
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+
+        ReservationEmailRequest request = new ReservationEmailRequest();
+        request.setAttachmentIds(List.of());
+
+        mockMvc.perform(post("/api/admin/reservations/1/mail/CATERING")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(emailNotificationService);
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void sendMail_shouldRejectMailForRejectedReservation() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.COBO));
+        sampleReservation.setStatus(ReservationStatus.REJECTED);
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+
+        ReservationEmailRequest request = new ReservationEmailRequest();
+        request.setAttachmentIds(List.of());
+
+        mockMvc.perform(post("/api/admin/reservations/1/mail/COBO")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(emailNotificationService);
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void sendMail_shouldAuditWithTheMailTypeName() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.COBO));
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+
+        ReservationEmailRequest request = new ReservationEmailRequest();
+        request.setAttachmentIds(List.of());
+
+        mockMvc.perform(post("/api/admin/reservations/1/mail/COBO")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk());
+
+        verify(auditService).recordAction(
+            eq(AuditEntityType.RESERVATION), eq(1L), anyString(),
+            eq(AuditAction.EMAIL_SENT), any(),
+            argThat(summary -> summary.startsWith("CoBo information email sent")));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void previewMail_shouldRenderTheCoboTemplate() throws Exception {
+        sampleReservation.setSpecialActivities(java.util.Set.of(SpecialActivity.COBO));
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(emailTemplateService.getRenderedSubject(eq(EmailTemplateType.COBO_OPTIONS), any()))
+                .thenReturn("CoBo Subject");
+        when(emailTemplateService.getRenderedBody(eq(EmailTemplateType.COBO_OPTIONS), any()))
+                .thenReturn("<p>CoBo body</p>");
+
+        mockMvc.perform(get("/api/admin/reservations/1/mail/COBO/preview"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.subject").value("CoBo Subject"))
+            .andExpect(jsonPath("$.body").value("<p>CoBo body</p>"));
+    }
+
+    /** Preview is read-only, so it renders regardless of whether the mail applies. */
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void previewMail_shouldReturn404WhenReservationNotFound() throws Exception {
+        when(reservationRepository.findById(999L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/admin/reservations/999/mail/CATERING/preview"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void sendMail_shouldRejectAnUnknownMailType() throws Exception {
+        mockMvc.perform(post("/api/admin/reservations/1/mail/STAFF_NOTIFICATION")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"attachmentIds\":[]}"))
+            .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(emailNotificationService);
     }
 
     private Reservation createSampleReservation() {

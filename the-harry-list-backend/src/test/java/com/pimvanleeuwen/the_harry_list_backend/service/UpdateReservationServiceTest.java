@@ -199,16 +199,18 @@ class UpdateReservationServiceTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void execute_shouldPreserveTermsAcceptedAndCateringArranged() {
-        // Existing reservation has terms accepted and catering arranged...
+    void execute_shouldPreserveTermsAcceptedAndFollowUpFlags() {
+        // Existing reservation has terms accepted, catering arranged and the CoBo contract signed...
         sampleDto.setId(1L);
         existingEntity.setTermsAccepted(true);
         existingEntity.setCateringArranged(true);
+        existingEntity.setCoboContractSigned(true);
 
-        // ...but the incoming edit payload (mapped) carries neither (form doesn't send them).
+        // ...but the incoming edit payload (mapped) carries none of them (form doesn't send them).
         com.pimvanleeuwen.the_harry_list_backend.model.Reservation incoming = createExistingEntity();
         incoming.setTermsAccepted(null);
         incoming.setCateringArranged(false);
+        incoming.setCoboContractSigned(false);
         incoming.setContactName("Updated Name"); // one real change so an audit entry is recorded
 
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(existingEntity));
@@ -220,14 +222,18 @@ class UpdateReservationServiceTest {
 
         // The saved entity keeps the preserved values...
         verify(reservationRepository).save(argThat(saved ->
-                Boolean.TRUE.equals(saved.getTermsAccepted()) && saved.isCateringArranged()));
+                Boolean.TRUE.equals(saved.getTermsAccepted())
+                        && saved.isCateringArranged()
+                        && saved.isCoboContractSigned()));
 
-        // ...and neither shows up as a spurious audit change.
+        // ...and none of them shows up as a spurious audit change.
         ArgumentCaptor<java.util.List<com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange>> captor =
                 ArgumentCaptor.forClass(java.util.List.class);
         verify(auditService).recordUpdate(any(), any(), any(), captor.capture(), any());
         assertTrue(captor.getValue().stream().noneMatch(c ->
-                c.field().equals("termsAccepted") || c.field().equals("cateringArranged")));
+                c.field().equals("termsAccepted")
+                        || c.field().equals("cateringArranged")
+                        || c.field().equals("coboContractSigned")));
     }
 
     private Reservation createSampleDto() {

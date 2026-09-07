@@ -1,6 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
-import com.pimvanleeuwen.the_harry_list_backend.dto.CateringEmailRequest;
+import com.pimvanleeuwen.the_harry_list_backend.dto.ReservationEmailRequest;
 import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
 import com.pimvanleeuwen.the_harry_list_backend.dto.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditAction;
@@ -8,7 +8,9 @@ import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailAttachment;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
+import com.pimvanleeuwen.the_harry_list_backend.model.ReservationMailType;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
+import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatusTransitions;
 import com.pimvanleeuwen.the_harry_list_backend.repository.EmailAttachmentRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
@@ -82,7 +84,10 @@ public class AdminReservationController {
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('EDITOR')")
-    @Operation(summary = "Update reservation status", description = "Update the status of a reservation (confirm, reject, cancel)")
+    @Operation(summary = "Update reservation status",
+            description = "Move a reservation to another status. Only transitions allowed by the "
+                    + "workflow are accepted (see ReservationStatusTransitions); anything else is "
+                    + "rejected with 400. IN_PROGRESS never emails the customer, whatever sendEmail says.")
     public ResponseEntity<?> updateStatus(
             @PathVariable Long id,
             @RequestParam ReservationStatus status,
@@ -101,6 +106,15 @@ public class AdminReservationController {
                     }
 
                     ReservationStatus oldStatus = reservation.getStatus();
+
+                    // Reject moves the workflow does not allow (see ReservationStatusTransitions).
+                    // Enforced here and not only in the admin UI, so the API cannot be driven into
+                    // a state the rest of the system does not expect.
+                    if (!ReservationStatusTransitions.isAllowed(oldStatus, status)) {
+                        return ResponseEntity.badRequest().body(Map.of("message",
+                                "Cannot change status from " + oldStatus + " to " + status));
+                    }
+
                     reservation.setStatus(status);
                     if (confirmedBy != null && status == ReservationStatus.CONFIRMED) {
                         reservation.setConfirmedBy(confirmedBy);
@@ -108,8 +122,9 @@ public class AdminReservationController {
                     com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
 
                     // Privacy-safe analytics: a coarse note that a status transition happened, for
-                    // the terminal/meaningful states only (PENDING re-opens are internal churn).
-                    if (status != ReservationStatus.PENDING) {
+                    // the terminal/meaningful states only (PENDING re-opens and IN_PROGRESS pickups
+                    // are internal churn).
+                    if (status != ReservationStatus.PENDING && status != ReservationStatus.IN_PROGRESS) {
                         analyticsLog.info(ReservationAnalytics.reservationStatusChangedLine(status, saved.getLocation()));
                     }
 
@@ -128,8 +143,9 @@ public class AdminReservationController {
                                     + (confirmedBy != null ? " (confirmed by " + confirmedBy + ")" : "")
                                     + (hasCustomMessage ? " (with message)" : ""));
 
-                    // Send email notification if enabled
-                    if (sendEmail && emailService != null) {
+                    // Send email notification if enabled. Statuses that never notify the customer
+                    // (IN_PROGRESS) ignore the flag entirely rather than trusting the caller.
+                    if (sendEmail && status.notifiesCustomer() && emailService != null) {
                         try {
                             emailService.sendStatusChangeEmail(saved, customMessage);
                         } catch (Exception e) {
@@ -163,6 +179,34 @@ public class AdminReservationController {
                             AuditAction.CATERING_ARRANGED,
                             List.of(new FieldChange("cateringArranged", String.valueOf(previous), String.valueOf(arranged))),
                             arranged ? "Catering marked as arranged" : "Catering arranged unset");
+
+                    return ResponseEntity.ok(reservationMapper.toDto(saved));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PatchMapping("/{id}/cobo-contract-signed")
+    @PreAuthorize("hasRole('EDITOR')")
+    @Operation(summary = "Toggle CoBo contract signed",
+            description = "Mark the CoBo contract as signed (or undo) for a reservation. Informational only; it gates nothing.")
+    public ResponseEntity<Reservation> updateCoboContractSigned(
+            @PathVariable Long id,
+            @RequestParam boolean signed,
+            Principal principal) {
+
+        log.info("AUDIT reservation.cobo_contract_signed id={} signed={} user='{}'",
+                id, signed, principal != null ? principal.getName() : "unknown");
+
+        return reservationRepository.findById(id)
+                .map(reservation -> {
+                    boolean previous = reservation.isCoboContractSigned();
+                    reservation.setCoboContractSigned(signed);
+                    com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
+
+                    auditService.recordAction(AuditEntityType.RESERVATION, id, label(saved),
+                            AuditAction.COBO_CONTRACT_SIGNED,
+                            List.of(new FieldChange("coboContractSigned", String.valueOf(previous), String.valueOf(signed))),
+                            signed ? "CoBo contract marked as signed" : "CoBo contract signed unset");
 
                     return ResponseEntity.ok(reservationMapper.toDto(saved));
                 })
@@ -229,45 +273,56 @@ public class AdminReservationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/{id}/catering-email/preview")
-    @Operation(summary = "Preview catering email", description = "Get rendered catering email template for a reservation")
-    public ResponseEntity<?> previewCateringEmail(@PathVariable Long id) {
+    @GetMapping("/{id}/mail/{mailType}/preview")
+    @Operation(summary = "Preview a templated mail",
+            description = "Get the rendered subject and body of a staff-triggered mail (CATERING, COBO) for a reservation")
+    public ResponseEntity<?> previewMail(@PathVariable Long id, @PathVariable ReservationMailType mailType) {
         return reservationRepository.findById(id)
                 .map(reservation -> {
-                    Map<String, String> vars = buildCateringVars(reservation);
-                    String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.CATERING_OPTIONS, vars);
-                    String body = emailTemplateService.getRenderedBody(EmailTemplateType.CATERING_OPTIONS, vars);
+                    Map<String, String> vars = buildMailVars(reservation);
+                    String subject = emailTemplateService.getRenderedSubject(mailType.getTemplateType(), vars);
+                    String body = emailTemplateService.getRenderedBody(mailType.getTemplateType(), vars);
                     return ResponseEntity.ok(Map.of("subject", subject, "body", body, "defaultReplyTo", staffEmail));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/{id}/catering-email")
+    @PostMapping("/{id}/mail/{mailType}")
     @PreAuthorize("hasRole('EDITOR')")
-    @Operation(summary = "Send catering options email", description = "Send catering email with PDF attachments to reservation contact")
-    public ResponseEntity<Map<String, String>> sendCateringEmail(
+    @Operation(summary = "Send a templated mail",
+            description = "Send a staff-triggered mail (CATERING, COBO) with optional PDF attachments to the reservation contact. "
+                    + "Rejected with 400 when the reservation does not have the matching special activity.")
+    public ResponseEntity<Map<String, String>> sendMail(
             @PathVariable Long id,
-            @RequestBody CateringEmailRequest request,
+            @PathVariable ReservationMailType mailType,
+            @RequestBody ReservationEmailRequest request,
             Principal principal) {
 
-        log.info("AUDIT email.catering_sent id={} user='{}'",
-                id, principal != null ? principal.getName() : "unknown");
+        log.info("AUDIT email.{}_sent id={} user='{}'",
+                mailType.name().toLowerCase(), id, principal != null ? principal.getName() : "unknown");
 
         return reservationRepository.findById(id)
                 .map(reservation -> {
+                    // The admin UI only offers applicable mails; enforce it here too so the API
+                    // cannot mail catering menus to a reservation that never asked for catering.
+                    if (!mailType.isAvailableFor(reservation)) {
+                        return ResponseEntity.badRequest().body(Map.of("status", "error", "message",
+                                mailType.getDisplayName() + " does not apply to this reservation"));
+                    }
+
                     if (emailService == null) {
                         return ResponseEntity.ok(Map.of("status", "disabled", "message", "Email service is disabled"));
                     }
 
                     try {
                         // Render subject/body from template or use overrides
-                        Map<String, String> vars = buildCateringVars(reservation);
+                        Map<String, String> vars = buildMailVars(reservation);
                         String subject = (request.getSubject() != null && !request.getSubject().isBlank())
                                 ? request.getSubject()
-                                : emailTemplateService.getRenderedSubject(EmailTemplateType.CATERING_OPTIONS, vars);
+                                : emailTemplateService.getRenderedSubject(mailType.getTemplateType(), vars);
                         String body = (request.getBody() != null && !request.getBody().isBlank())
                                 ? request.getBody()
-                                : emailTemplateService.getRenderedBody(EmailTemplateType.CATERING_OPTIONS, vars);
+                                : emailTemplateService.getRenderedBody(mailType.getTemplateType(), vars);
 
                         // Load attachments
                         List<EmailAttachment> attachments = List.of();
@@ -278,17 +333,19 @@ public class AdminReservationController {
                         emailService.sendEmailWithAttachments(
                                 reservation.getEmail(), subject, body, attachments, request.getReplyTo());
 
-                        log.info("AUDIT email.catering_delivered confirmation='{}' to='{}' attachments={} user='{}'",
+                        log.info("AUDIT email.{}_delivered confirmation='{}' to='{}' attachments={} user='{}'",
+                                mailType.name().toLowerCase(),
                                 reservation.getConfirmationNumber(), reservation.getEmail(), attachments.size(),
                                 principal != null ? principal.getName() : "unknown");
 
                         auditService.recordAction(AuditEntityType.RESERVATION, id, label(reservation),
                                 AuditAction.EMAIL_SENT, List.of(),
-                                "Catering email sent (" + attachments.size() + " attachment(s))");
+                                mailType.getDisplayName() + " email sent (" + attachments.size() + " attachment(s))");
 
-                        return ResponseEntity.ok(Map.of("status", "sent", "message", "Catering email sent successfully"));
+                        return ResponseEntity.ok(Map.of("status", "sent",
+                                "message", mailType.getDisplayName() + " email sent successfully"));
                     } catch (Exception e) {
-                        log.error("Failed to send catering email", e);
+                        log.error("Failed to send {} email", mailType, e);
                         return ResponseEntity.internalServerError()
                                 .body(Map.of("status", "error", "message", "Failed to send email: " + e.getMessage()));
                     }
@@ -296,7 +353,31 @@ public class AdminReservationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    private Map<String, String> buildCateringVars(com.pimvanleeuwen.the_harry_list_backend.model.Reservation reservation) {
+    /**
+     * Legacy catering-mail routes, kept so anything still pointing at them keeps working.
+     * Delegates to the generalised endpoints above.
+     */
+    @GetMapping("/{id}/catering-email/preview")
+    @Operation(summary = "Preview catering email (deprecated)",
+            description = "Deprecated: use /{id}/mail/CATERING/preview instead.")
+    @Deprecated
+    public ResponseEntity<?> previewCateringEmail(@PathVariable Long id) {
+        return previewMail(id, ReservationMailType.CATERING);
+    }
+
+    @PostMapping("/{id}/catering-email")
+    @PreAuthorize("hasRole('EDITOR')")
+    @Operation(summary = "Send catering options email (deprecated)",
+            description = "Deprecated: use POST /{id}/mail/CATERING instead.")
+    @Deprecated
+    public ResponseEntity<Map<String, String>> sendCateringEmail(
+            @PathVariable Long id,
+            @RequestBody ReservationEmailRequest request,
+            Principal principal) {
+        return sendMail(id, ReservationMailType.CATERING, request, principal);
+    }
+
+    private Map<String, String> buildMailVars(com.pimvanleeuwen.the_harry_list_backend.model.Reservation reservation) {
         Map<String, String> vars = new HashMap<>();
         vars.put("contactName", reservation.getContactName());
         vars.put("confirmationNumber", reservation.getConfirmationNumber());

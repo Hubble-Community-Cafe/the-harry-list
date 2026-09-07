@@ -62,6 +62,11 @@ public class ReservationMapper {
             entity.setCateringArranged(dto.getCateringArranged());
         }
 
+        // CoBo
+        if (dto.getCoboContractSigned() != null) {
+            entity.setCoboContractSigned(dto.getCoboContractSigned());
+        }
+
         // Additional
         entity.setComments(dto.getComments());
         entity.setTermsAccepted(dto.getTermsAccepted());
@@ -114,6 +119,8 @@ public class ReservationMapper {
                 // Catering
                 .cateringDietaryNotes(entity.getCateringDietaryNotes())
                 .cateringArranged(entity.isCateringArranged())
+                // CoBo
+                .coboContractSigned(entity.isCoboContractSigned())
                 // Additional
                 .comments(entity.getComments())
                 .termsAccepted(entity.getTermsAccepted())
