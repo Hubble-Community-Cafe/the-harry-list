@@ -4,6 +4,7 @@ import com.pimvanleeuwen.the_harry_list_backend.model.AdminRole;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminUser;
 import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import jakarta.servlet.FilterChain;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,6 +45,18 @@ class RoleAuthorizationFilterTest {
         filter = new RoleAuthorizationFilter(adminUserService);
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
+        SecurityContextHolder.clearContext();
+    }
+
+    /**
+     * The SecurityContextHolder is thread-local and survives the end of a test class, so a JWT
+     * left behind here leaks into whatever runs next on the same thread. That made
+     * AdminCalendarControllerTest's unauthenticated case fail with an NPE whenever the run order
+     * put this class first: its unstubbed AdminUserService mock returns null, and the filter then
+     * dereferenced it. Clearing on the way out as well as on the way in keeps the leak contained.
+     */
+    @AfterEach
+    void tearDown() {
         SecurityContextHolder.clearContext();
     }
 
