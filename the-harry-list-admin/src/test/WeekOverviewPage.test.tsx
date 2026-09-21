@@ -77,7 +77,7 @@ const { mockFetchReservations, mockUpdateCateringArranged, mockFetchCalendarAppo
       eventTitle: 'Last Week Event',
       contactName: 'Past Person',
       email: 'past@example.com',
-      status: 'COMPLETED',
+      status: 'CONFIRMED',
       eventDate: _fmt(lastWeek),
       startTime: '10:00:00',
       endTime: '12:00:00',

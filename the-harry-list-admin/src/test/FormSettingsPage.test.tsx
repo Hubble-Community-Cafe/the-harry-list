@@ -195,8 +195,8 @@ describe('FormSettingsPage', () => {
     vi.mocked(createFormConstraint).mockResolvedValueOnce({
       id: 9,
       constraintType: 'ACTIVITY_NOTICE',
-      triggerActivity: 'PRIVATE_EVENT',
-      message: 'A private event at Meteor has an additional charge.',
+      triggerActivity: 'GRADUATION',
+      message: 'A graduation at Meteor has an additional charge.',
       enabled: true,
     });
 
@@ -212,17 +212,17 @@ describe('FormSettingsPage', () => {
     fireEvent.change(screen.getByTestId('constraint-type'), { target: { value: 'ACTIVITY_NOTICE' } });
     expect(screen.queryByTestId('constraint-target')).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByTestId('constraint-trigger'), { target: { value: 'PRIVATE_EVENT' } });
+    fireEvent.change(screen.getByTestId('constraint-trigger'), { target: { value: 'GRADUATION' } });
     fireEvent.change(screen.getByTestId('constraint-message'), {
-      target: { value: 'A private event at Meteor has an additional charge.' },
+      target: { value: 'A graduation at Meteor has an additional charge.' },
     });
     fireEvent.click(screen.getByTestId('save-constraint'));
 
     await waitFor(() => expect(createFormConstraint).toHaveBeenCalled());
     expect(vi.mocked(createFormConstraint).mock.calls[0][0]).toMatchObject({
       constraintType: 'ACTIVITY_NOTICE',
-      triggerActivity: 'PRIVATE_EVENT',
-      message: 'A private event at Meteor has an additional charge.',
+      triggerActivity: 'GRADUATION',
+      message: 'A graduation at Meteor has an additional charge.',
     });
   });
 
@@ -230,9 +230,9 @@ describe('FormSettingsPage', () => {
     vi.mocked(createFormConstraint).mockResolvedValueOnce({
       id: 10,
       constraintType: 'ACTIVITY_NOTICE',
-      triggerActivity: 'PRIVATE_EVENT',
+      triggerActivity: 'GRADUATION',
       targetValue: 'CONFIRM',
-      message: 'A private event at Meteor has an additional charge.',
+      message: 'A graduation at Meteor has an additional charge.',
       enabled: true,
     });
 
@@ -249,9 +249,9 @@ describe('FormSettingsPage', () => {
     expect(confirmBox).not.toBeChecked();
 
     fireEvent.click(confirmBox);
-    fireEvent.change(screen.getByTestId('constraint-trigger'), { target: { value: 'PRIVATE_EVENT' } });
+    fireEvent.change(screen.getByTestId('constraint-trigger'), { target: { value: 'GRADUATION' } });
     fireEvent.change(screen.getByTestId('constraint-message'), {
-      target: { value: 'A private event at Meteor has an additional charge.' },
+      target: { value: 'A graduation at Meteor has an additional charge.' },
     });
     fireEvent.click(screen.getByTestId('save-constraint'));
 
