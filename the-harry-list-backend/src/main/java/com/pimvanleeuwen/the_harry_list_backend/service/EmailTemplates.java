@@ -105,8 +105,6 @@ public class EmailTemplates {
             statusMessage = "Unfortunately, we're unable to accommodate your reservation request at this time.";
         } else if (reservation.getStatus() == ReservationStatus.CANCELLED) {
             statusMessage = "Your reservation has been cancelled as requested.";
-        } else if (reservation.getStatus() == ReservationStatus.COMPLETED) {
-            statusMessage = "Thank you for choosing us! We hope you had a great event.";
         } else {
             statusMessage = "Your reservation status has been updated.";
         }
@@ -116,8 +114,6 @@ public class EmailTemplates {
             statusColor = "#4CAF50";
         } else if (reservation.getStatus() == ReservationStatus.REJECTED || reservation.getStatus() == ReservationStatus.CANCELLED) {
             statusColor = "#f44336";
-        } else if (reservation.getStatus() == ReservationStatus.COMPLETED) {
-            statusColor = "#2196F3";
         } else {
             statusColor = "#FF9800";
         }
@@ -366,8 +362,6 @@ public class EmailTemplates {
             return "Reservation Request - " + reservation.getEventTitle();
         } else if (reservation.getStatus() == ReservationStatus.CANCELLED) {
             return "Reservation Cancelled - " + reservation.getEventTitle();
-        } else if (reservation.getStatus() == ReservationStatus.COMPLETED) {
-            return "Thank You - " + reservation.getEventTitle();
         } else {
             return "Reservation Update - " + reservation.getEventTitle();
         }

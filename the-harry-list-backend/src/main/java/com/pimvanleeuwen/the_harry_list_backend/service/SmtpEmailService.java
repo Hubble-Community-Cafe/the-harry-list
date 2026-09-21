@@ -201,7 +201,6 @@ public class SmtpEmailService implements EmailNotificationService {
             case CONFIRMED -> "We're pleased to confirm your reservation!";
             case REJECTED -> "Unfortunately, we're unable to accommodate your reservation request at this time.";
             case CANCELLED -> "Your reservation has been cancelled as requested.";
-            case COMPLETED -> "Thank you for choosing us! We hope you had a great event.";
             default -> "Your reservation status has been updated.";
         };
     }
@@ -210,7 +209,6 @@ public class SmtpEmailService implements EmailNotificationService {
         return switch (status) {
             case CONFIRMED -> "#4CAF50";
             case REJECTED, CANCELLED -> "#f44336";
-            case COMPLETED -> "#2196F3";
             default -> "#FF9800";
         };
     }
@@ -220,7 +218,6 @@ public class SmtpEmailService implements EmailNotificationService {
             case CONFIRMED -> "Reservation Confirmed";
             case REJECTED -> "Reservation Request Update";
             case CANCELLED -> "Reservation Cancelled";
-            case COMPLETED -> "Thank You";
             default -> "Reservation Update";
         };
     }
