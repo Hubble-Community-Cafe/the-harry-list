@@ -202,6 +202,38 @@ class CreateReservationServiceTest {
     }
 
     @Test
+    void execute_shouldRejectRetiredActivity() {
+        // PRIVATE_EVENT is no longer offered by the form, so a submission carrying it
+        // bypassed the form. It must fail before anything is persisted, and before the
+        // constraint check, since no constraint references the retired activity any more.
+        sampleDto.setSpecialActivities(Set.of(SpecialActivity.PRIVATE_EVENT));
+
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+                () -> createReservationService.execute(sampleDto));
+
+        assertEquals("Private event is no longer available", thrown.getMessage());
+        verify(reservationRepository, never()).save(any());
+        verifyNoInteractions(auditService);
+        verifyNoInteractions(constraintValidationService);
+    }
+
+    @Test
+    void execute_shouldAcceptSelectableActivities() {
+        // The guard must not get in the way of the activities that are still offered.
+        sampleDto.setSpecialActivities(Set.of(SpecialActivity.EAT_CATERING));
+        when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
+                .thenReturn(List.of());
+        when(reservationMapper.toEntity(any(Reservation.class))).thenReturn(sampleEntity);
+        when(reservationRepository.save(any())).thenReturn(sampleEntity);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        ResponseEntity<Reservation> response = createReservationService.execute(sampleDto);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        verify(reservationRepository, times(1)).save(any());
+    }
+
+    @Test
     void execute_shouldRejectWhenConstraintViolation() {
         // Given
         when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
