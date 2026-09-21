@@ -48,33 +48,12 @@ public class DefaultConstraintSeeder implements CommandLineRunner {
                 .message("À la carte and catering cannot be combined")
                 .build());
 
-        formConstraintRepository.save(FormConstraint.builder()
-                .constraintType(FormConstraintType.ACTIVITY_CONFLICT)
-                .triggerActivity("PRIVATE_EVENT")
-                .targetValue("CATERING_CORONA_ROOM")
-                .message("Private events cannot be combined with Corona Room catering")
-                .build());
-
-        formConstraintRepository.save(FormConstraint.builder()
-                .constraintType(FormConstraintType.ACTIVITY_CONFLICT)
-                .triggerActivity("CATERING_CORONA_ROOM")
-                .targetValue("PRIVATE_EVENT")
-                .message("Corona Room catering cannot be combined with a private event")
-                .build());
-
         // Location locks
         formConstraintRepository.save(FormConstraint.builder()
                 .constraintType(FormConstraintType.LOCATION_LOCK)
                 .triggerActivity("CATERING_CORONA_ROOM")
                 .targetValue("HUBBLE")
                 .message("Corona Room catering is only available at Hubble")
-                .build());
-
-        formConstraintRepository.save(FormConstraint.builder()
-                .constraintType(FormConstraintType.LOCATION_LOCK)
-                .triggerActivity("PRIVATE_EVENT")
-                .targetValue("METEOR")
-                .message("Private events are only available at Meteor")
                 .build());
 
         // Seating locks
@@ -109,13 +88,6 @@ public class DefaultConstraintSeeder implements CommandLineRunner {
                 .message("Corona Room catering requires at least 7 days advance booking")
                 .build());
 
-        formConstraintRepository.save(FormConstraint.builder()
-                .constraintType(FormConstraintType.ADVANCE_BOOKING)
-                .triggerActivity("PRIVATE_EVENT")
-                .numericValue(7)
-                .message("Private events require at least 7 days advance booking")
-                .build());
-
         // Guest limits
         formConstraintRepository.save(FormConstraint.builder()
                 .constraintType(FormConstraintType.GUEST_LIMIT)
@@ -133,6 +105,6 @@ public class DefaultConstraintSeeder implements CommandLineRunner {
                 .message("Meteor reservations require at least 1 person")
                 .build());
 
-        logger.info("Seeded 13 default form constraints");
+        logger.info("Seeded 9 default form constraints");
     }
 }
