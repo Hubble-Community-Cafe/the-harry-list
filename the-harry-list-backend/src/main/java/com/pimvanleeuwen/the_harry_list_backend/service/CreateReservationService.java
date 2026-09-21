@@ -58,6 +58,21 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
         log.info("LOGGING reservation.submitted event='{}' date={} location={} guests={}",
                 input.getEventTitle(), input.getEventDate(), input.getLocation(), input.getExpectedGuests());
 
+        // Retired activities are filtered out of the form options, so a submission carrying
+        // one bypassed the form. Reject it rather than dropping it silently, which would
+        // create a reservation the requester did not ask for. Updates deliberately skip this
+        // check, so staff can still edit reservations booked before the activity was retired.
+        List<String> retired = input.getSpecialActivities() == null ? List.of()
+                : input.getSpecialActivities().stream()
+                        .filter(activity -> !activity.isSelectable())
+                        .map(activity -> activity.getDisplayName() + " is no longer available")
+                        .toList();
+
+        if (!retired.isEmpty()) {
+            log.warn("Reservation rejected due to retired activities: {}", retired);
+            throw new IllegalArgumentException(String.join("; ", retired));
+        }
+
         // Validate against dynamic constraints
         List<String> violations = constraintValidationService.validate(
                 input.getSpecialActivities(),

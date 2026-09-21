@@ -118,8 +118,15 @@ Authorization: Basic admin:admin
 ### Dietary Preferences
 - NONE, VEGETARIAN, VEGAN, HALAL, GLUTEN_FREE, LACTOSE_FREE, NUT_ALLERGY, OTHER
 
+### Special Activities
+- GRADUATION, EAT_A_LA_CARTE, EAT_CATERING, CATERING_CORONA_ROOM
+- `PRIVATE_EVENT` was retired in 1.12.0. It is no longer returned by `/api/options/*` and is
+  rejected with a 400 on submission, but stays readable on reservations booked before then.
+
 ### Reservation Status
-- PENDING, CONFIRMED, REJECTED, CANCELLED, COMPLETED
+- PENDING, CONFIRMED, REJECTED, CANCELLED
+- `COMPLETED` was removed in 1.12.0. `PATCH /api/admin/reservations/{id}/status?status=COMPLETED`
+  now returns 400.
 
 ## Date/Time Formats
 - **Date**: `YYYY-MM-DD` (e.g., "2026-03-15")

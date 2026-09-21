@@ -7,8 +7,7 @@ public enum ReservationStatus {
     PENDING("Pending Review"),
     CONFIRMED("Confirmed"),
     REJECTED("Rejected"),
-    CANCELLED("Cancelled"),
-    COMPLETED("Completed");
+    CANCELLED("Cancelled");
 
     private final String displayName;
 

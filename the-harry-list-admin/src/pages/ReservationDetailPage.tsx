@@ -23,6 +23,26 @@ import { reservationDetailGuide } from '../lib/guideContent';
 const DEFAULT_REJECTION_MESSAGE =
   'Unfortunately we cannot host you since we do not have any places left at this time';
 
+/** Activities that can still be added to a reservation. Mirrors SpecialActivity.selectableValues(). */
+const SELECTABLE_ACTIVITIES = ['GRADUATION', 'EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM'];
+
+const ACTIVITY_LABELS: Record<string, string> = {
+  GRADUATION: 'Graduation / PhD Defense',
+  EAT_A_LA_CARTE: 'Eat a la Carte',
+  EAT_CATERING: 'Eat Catering',
+  CATERING_CORONA_ROOM: 'Catering Corona Room',
+  PRIVATE_EVENT: 'Private Event (retired)',
+};
+
+/**
+ * Activity toggles to render while editing: the selectable ones, plus any retired activity
+ * this reservation was booked with. Retired ones stay visible so staff can see and remove
+ * them, rather than carrying an invisible value through every save.
+ */
+function editableActivities(selected: string[]): string[] {
+  return [...SELECTABLE_ACTIVITIES, ...selected.filter((a) => !SELECTABLE_ACTIVITIES.includes(a))];
+}
+
 /**
  * Optional free-text message added to the notification email for a reservation action.
  * Only rendered when an email will actually be sent.
@@ -66,7 +86,6 @@ export function ReservationDetailPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showReopenDialog, setShowReopenDialog] = useState(false);
   const [sendEmail, setSendEmail] = useState(true);
@@ -363,17 +382,6 @@ export function ReservationDetailPage() {
 
           {reservation.status === 'CONFIRMED' && (
             <button
-              onClick={() => { setActionMessage(''); setShowCompleteDialog(true); }}
-              disabled={isUpdating}
-              className="btn-secondary flex items-center gap-2"
-            >
-              {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-              Mark Completed
-            </button>
-          )}
-
-          {reservation.status === 'CONFIRMED' && (
-            <button
               onClick={() => { setActionMessage(''); setShowCancelDialog(true); }}
               data-testid="cancel-reservation"
               disabled={isUpdating}
@@ -483,33 +491,6 @@ export function ReservationDetailPage() {
               </button>
               <button
                 onClick={() => setShowRejectDialog(false)}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Complete Reservation Dialog */}
-        {showCompleteDialog && (
-          <div className="mt-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/50">
-            <p className="text-blue-400 mb-3">Are you sure you want to mark this reservation as completed?</p>
-            <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
-            <div className="flex gap-3 mt-3">
-              <button
-                onClick={() => {
-                  handleStatusChange('COMPLETED');
-                  setShowCompleteDialog(false);
-                }}
-                disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors flex items-center gap-2"
-              >
-                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                Yes, Mark Completed
-              </button>
-              <button
-                onClick={() => setShowCompleteDialog(false)}
                 className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
               >
                 Cancel
@@ -1007,14 +988,7 @@ export function ReservationDetailPage() {
                   <div className="form-group md:col-span-2">
                     <label className="label">Special Activities</label>
                     <div className="flex flex-wrap gap-2">
-                      {['GRADUATION', 'EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM', 'PRIVATE_EVENT'].map((activity) => {
-                        const labels: Record<string, string> = {
-                          GRADUATION: 'Graduation / PhD Defense',
-                          EAT_A_LA_CARTE: 'Eat a la Carte',
-                          EAT_CATERING: 'Eat Catering',
-                          CATERING_CORONA_ROOM: 'Catering Corona Room',
-                          PRIVATE_EVENT: 'Private Event',
-                        };
+                      {editableActivities(editData.specialActivities || []).map((activity) => {
                         const selected = (editData.specialActivities || []).includes(activity);
                         return (
                           <button
@@ -1035,7 +1009,7 @@ export function ReservationDetailPage() {
                                 : 'bg-dark-800 text-dark-400 border border-dark-700 hover:border-dark-600'
                             }`}
                           >
-                            {labels[activity]}
+                            {ACTIVITY_LABELS[activity] ?? activity.replace(/_/g, ' ')}
                           </button>
                         );
                       })}
@@ -1336,7 +1310,6 @@ function StatusBadge({ status, large }: { status: string; large?: boolean }) {
     CONFIRMED: { color: 'text-green-400', bg: 'bg-green-500/20' },
     REJECTED: { color: 'text-red-400', bg: 'bg-red-500/20' },
     CANCELLED: { color: 'text-dark-400', bg: 'bg-dark-500/20' },
-    COMPLETED: { color: 'text-blue-400', bg: 'bg-blue-500/20' },
   };
 
   const { color, bg } = config[status] || config.PENDING;
@@ -1353,7 +1326,6 @@ function StatusBadge({ status, large }: { status: string; large?: boolean }) {
       {status === 'CONFIRMED' && <CheckCircle className="w-4 h-4" />}
       {status === 'REJECTED' && <XCircle className="w-4 h-4" />}
       {status === 'CANCELLED' && <XCircle className="w-4 h-4" />}
-      {status === 'COMPLETED' && <CheckCircle className="w-4 h-4" />}
       {status}
     </span>
   );

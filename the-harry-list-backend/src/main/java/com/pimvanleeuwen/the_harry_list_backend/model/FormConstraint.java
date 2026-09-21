@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
  * - TIME_RESTRICTION: CATERING_CORONA_ROOM allows early times (09:00-10:45)
  * - ADVANCE_BOOKING: EAT_CATERING requires 7 days advance
  * - GUEST_LIMIT: EAT_A_LA_CARTE max 15 guests
- * - ACTIVITY_NOTICE: PRIVATE_EVENT shows an advisory message (never blocks)
+ * - ACTIVITY_NOTICE: GRADUATION shows an advisory message (never blocks)
  */
 @Entity
 @Table(name = "form_constraints")

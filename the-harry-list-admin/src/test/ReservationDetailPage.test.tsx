@@ -283,6 +283,48 @@ describe('ReservationDetailPage — seating area indicator', () => {
   });
 });
 
+describe('ReservationDetailPage — retired status and activity', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('offers no "Mark Completed" action on a confirmed reservation', async () => {
+    // COMPLETED was removed in 1.12.0; the backend now rejects it with a 400.
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    expect(screen.queryByRole('button', { name: /Mark Completed/i })).not.toBeInTheDocument();
+    // The other confirmed-state action is still there, so this is not a rendering accident.
+    expect(screen.getByTestId('cancel-reservation')).toBeInTheDocument();
+  });
+
+  it('does not offer the retired private-event activity when editing', async () => {
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('edit-reservation')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('edit-reservation'));
+    await screen.findByTestId('edit-save');
+
+    expect(screen.queryByRole('button', { name: /Private Event/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Graduation/i })).toBeInTheDocument();
+  });
+
+  it('still shows the retired activity when the reservation was booked with it', async () => {
+    // A private event booked before the retirement must stay visible and removable,
+    // otherwise staff would carry an invisible value through every save.
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation,
+      specialActivities: ['PRIVATE_EVENT'],
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('edit-reservation')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('edit-reservation'));
+    await screen.findByTestId('edit-save');
+
+    expect(screen.getByRole('button', { name: /Private Event \(retired\)/i })).toBeInTheDocument();
+  });
+});
+
 describe('ReservationDetailPage — edit email default', () => {
   beforeEach(() => {
     vi.clearAllMocks();

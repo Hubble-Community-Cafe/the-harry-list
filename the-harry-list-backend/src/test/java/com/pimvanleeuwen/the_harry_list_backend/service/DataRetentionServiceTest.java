@@ -31,7 +31,7 @@ class DataRetentionServiceTest {
         r.setEmail("john@example.com");
         r.setEventDate(eventDate);
         r.setLocation(BarLocation.HUBBLE);
-        r.setStatus(ReservationStatus.COMPLETED);
+        r.setStatus(ReservationStatus.CONFIRMED);
         return r;
     }
 

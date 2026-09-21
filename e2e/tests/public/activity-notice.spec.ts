@@ -5,17 +5,17 @@ import { captureScreenshot } from '../../fixtures/evidence';
 
 /**
  * An ACTIVITY_NOTICE constraint shows an advisory message when its trigger activity is
- * selected (e.g. "a private event at Meteor costs money"), without blocking the booking.
+ * selected (e.g. "a la carte at Meteor costs money"), without blocking the booking.
  * Representative of the form surfacing configured, non-enforcing notices.
  */
 test.describe('public: activity notice', () => {
-  const NOTICE = 'A private event at Meteor has an additional charge.';
+  const NOTICE = 'A la carte dining at Meteor has an additional charge.';
 
   test.beforeEach(async ({ request }) => {
     await resetBackend(request);
     await seedConstraint(request, {
       constraintType: 'ACTIVITY_NOTICE',
-      triggerActivity: 'PRIVATE_EVENT',
+      triggerActivity: 'EAT_A_LA_CARTE',
       message: NOTICE,
     });
   });
@@ -30,12 +30,12 @@ test.describe('public: activity notice', () => {
     // No notice until the triggering activity is chosen.
     await expect(form.activityNotices()).toHaveCount(0);
 
-    await form.toggleActivity('Private event');
+    await form.toggleActivity('Eat a la carte');
     await expect(form.activityNotices()).toHaveText(NOTICE);
     await captureScreenshot(testInfo, page, '1-notice-shown');
 
-    // Deselecting the activity removes the notice — it is purely advisory.
-    await form.toggleActivity('Private event');
+    // Deselecting the activity removes the notice, it is purely advisory.
+    await form.toggleActivity('Eat a la carte');
     await expect(form.activityNotices()).toHaveCount(0);
   });
 });

@@ -25,7 +25,6 @@ const mockOptions: FormOptions = {
     { value: 'EAT_A_LA_CARTE', displayName: 'Eat a la Carte' },
     { value: 'EAT_CATERING', displayName: 'Catering' },
     { value: 'CATERING_CORONA_ROOM', displayName: 'Catering for Corona Room Event' },
-    { value: 'PRIVATE_EVENT', displayName: 'Private Event' },
   ],
   invoiceTypes: [
     { value: 'TUE', displayName: 'TU/e' },
@@ -51,9 +50,9 @@ const mockConstraints: FormConstraint[] = [
   {
     id: 1,
     constraintType: 'LOCATION_LOCK',
-    triggerActivity: 'PRIVATE_EVENT',
+    triggerActivity: 'EAT_CATERING',
     targetValue: 'METEOR',
-    message: 'Private events are only available at Meteor.',
+    message: 'Catering is only available at Meteor.',
     enabled: true,
   },
   {
@@ -67,17 +66,17 @@ const mockConstraints: FormConstraint[] = [
   {
     id: 3,
     constraintType: 'ACTIVITY_CONFLICT',
-    triggerActivity: 'PRIVATE_EVENT',
+    triggerActivity: 'EAT_A_LA_CARTE',
     targetValue: 'CATERING_CORONA_ROOM',
-    message: 'Cannot combine Private Event with Corona Room catering.',
+    message: 'Cannot combine A la Carte with Corona Room catering.',
     enabled: true,
   },
   {
     id: 4,
     constraintType: 'ACTIVITY_CONFLICT',
     triggerActivity: 'CATERING_CORONA_ROOM',
-    targetValue: 'PRIVATE_EVENT',
-    message: 'Cannot combine Corona Room catering with Private Event.',
+    targetValue: 'EAT_A_LA_CARTE',
+    message: 'Cannot combine Corona Room catering with A la Carte.',
     enabled: true,
   },
   {
@@ -99,8 +98,8 @@ const mockConstraints: FormConstraint[] = [
   {
     id: 7,
     constraintType: 'ACTIVITY_NOTICE',
-    triggerActivity: 'PRIVATE_EVENT',
-    message: 'A private event at Meteor has an additional charge.',
+    triggerActivity: 'EAT_A_LA_CARTE',
+    message: 'A la carte dining at Meteor has an additional charge.',
     enabled: true,
   },
   {
@@ -195,6 +194,25 @@ describe('ReservationForm', () => {
       await waitFor(() => {
         expect(screen.getByText('Failed to load form options. Please refresh the page.')).toBeInTheDocument();
       });
+    });
+
+    it('never offers the retired private event, not even from the offline fallback list', async () => {
+      // With the options request down, the form falls back to its own hardcoded labels.
+      // That list must not resurrect an activity the backend no longer offers.
+      const user = userEvent.setup();
+      vi.mocked(fetchFormOptions).mockRejectedValue(new Error('Network error'));
+      renderForm();
+      await waitFor(() => {
+        expect(screen.getByText('Failed to load form options. Please refresh the page.')).toBeInTheDocument();
+      });
+
+      await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
+      await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
+
+      expect(screen.queryByRole('checkbox', { name: /Private Event/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: 'Graduation / PhD Defense' })).toBeInTheDocument();
     });
   });
 
@@ -334,7 +352,7 @@ describe('ReservationForm', () => {
 
       expect(screen.getByRole('checkbox', { name: 'Graduation / PhD Defense' })).toBeInTheDocument();
       expect(screen.getByRole('checkbox', { name: 'Eat a la Carte' })).toBeInTheDocument();
-      expect(screen.getByRole('checkbox', { name: 'Private Event' })).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: 'Catering for Corona Room Event' })).toBeInTheDocument();
     });
 
     it('toggles activity selection', async () => {
@@ -467,9 +485,9 @@ describe('ReservationForm', () => {
       await waitForFormLoaded();
       await goToStep2(user);
 
-      // Select PRIVATE_EVENT first
-      await user.click(screen.getByRole('checkbox', { name: 'Private Event' }));
-      expect(screen.getByRole('checkbox', { name: 'Private Event' })).toHaveAttribute('aria-checked', 'true');
+      // Select EAT_A_LA_CARTE first
+      await user.click(screen.getByRole('checkbox', { name: 'Eat a la Carte' }));
+      expect(screen.getByRole('checkbox', { name: 'Eat a la Carte' })).toHaveAttribute('aria-checked', 'true');
 
       // CATERING_CORONA_ROOM should now be disabled
       const coronaButton = screen.getByRole('checkbox', { name: 'Catering for Corona Room Event' });
@@ -484,11 +502,11 @@ describe('ReservationForm', () => {
       // No notice until the triggering activity is picked.
       expect(screen.queryByTestId('activity-notice')).not.toBeInTheDocument();
 
-      await user.click(screen.getByRole('checkbox', { name: 'Private Event' }));
+      await user.click(screen.getByRole('checkbox', { name: 'Eat a la Carte' }));
 
       await waitFor(() => {
         expect(screen.getByTestId('activity-notice')).toHaveTextContent(
-          'A private event at Meteor has an additional charge.'
+          'A la carte dining at Meteor has an additional charge.'
         );
       });
     });
@@ -571,13 +589,13 @@ describe('ReservationForm', () => {
       await waitForFormLoaded();
       await goToStep2(user);
 
-      // PRIVATE_EVENT's notice has no targetValue, so it stays a passive banner.
-      await user.click(screen.getByRole('checkbox', { name: 'Private Event' }));
+      // EAT_A_LA_CARTE's notice has no targetValue, so it stays a passive banner.
+      await user.click(screen.getByRole('checkbox', { name: 'Eat a la Carte' }));
 
       expect(screen.queryByTestId('activity-notice-dialog')).not.toBeInTheDocument();
       await waitFor(() => {
         expect(screen.getByTestId('activity-notice')).toHaveTextContent(
-          'A private event at Meteor has an additional charge.'
+          'A la carte dining at Meteor has an additional charge.'
         );
       });
     });
@@ -587,10 +605,10 @@ describe('ReservationForm', () => {
       await waitForFormLoaded();
       await goToStep2(user);
 
-      await user.click(screen.getByRole('checkbox', { name: 'Private Event' }));
+      await user.click(screen.getByRole('checkbox', { name: 'Eat a la Carte' }));
       await waitFor(() => expect(screen.getByTestId('activity-notice')).toBeInTheDocument());
 
-      await user.click(screen.getByRole('checkbox', { name: 'Private Event' }));
+      await user.click(screen.getByRole('checkbox', { name: 'Eat a la Carte' }));
       await waitFor(() => expect(screen.queryByTestId('activity-notice')).not.toBeInTheDocument());
     });
 

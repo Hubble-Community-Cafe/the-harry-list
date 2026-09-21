@@ -56,14 +56,13 @@ public class DataSeeder implements CommandLineRunner {
         r1.setTermsAccepted(true);
         reservationRepository.save(r1);
 
-        // 2. Private event at Meteor, ONE_PERSON payment, 30 guests
+        // 2. Evening booking at Meteor, ONE_PERSON payment, 30 guests
         Reservation r2 = new Reservation();
         r2.setContactName("Sophie van den Berg");
         r2.setEmail("sophie.vdb@test.example.com");
         r2.setPhoneNumber("+31698765432");
         r2.setEventTitle("Birthday Party");
         r2.setDescription("Surprise birthday party for a friend turning 30.");
-        r2.setSpecialActivities(Set.of(SpecialActivity.PRIVATE_EVENT));
         r2.setExpectedGuests(30);
         r2.setEventDate(today.plusDays(5));
         r2.setStartTime(LocalTime.of(19, 0));
@@ -215,7 +214,10 @@ public class DataSeeder implements CommandLineRunner {
         r9.setTermsAccepted(true);
         reservationRepository.save(r9);
 
-        // 10. CONFIRMED private event at Meteor, 45 guests
+        // 10. CONFIRMED private event at Meteor, 45 guests.
+        // Deliberately keeps the retired PRIVATE_EVENT activity: it stands in for a booking
+        // made before the activity was retired, so the dev environment shows how those keep
+        // rendering in the admin panel, PDF day reports and calendar feeds.
         Reservation r10 = new Reservation();
         r10.setContactName("Anna Willemsen");
         r10.setEmail("anna.willemsen@test.example.com");

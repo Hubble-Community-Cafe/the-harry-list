@@ -34,12 +34,9 @@ public class FormOptionsController {
     }
 
     @GetMapping("/special-activities")
-    @Operation(summary = "Get special activities", description = "Get all available special activities for the reservation form")
+    @Operation(summary = "Get special activities", description = "Get all selectable special activities for the reservation form")
     public ResponseEntity<List<Map<String, String>>> getSpecialActivities() {
-        List<Map<String, String>> options = Arrays.stream(SpecialActivity.values())
-                .map(e -> Map.of("value", e.name(), "displayName", e.getDisplayName()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(options);
+        return ResponseEntity.ok(specialActivityOptions());
     }
 
     @GetMapping("/payment-options")
@@ -82,9 +79,7 @@ public class FormOptionsController {
     @Operation(summary = "Get all form options", description = "Get all form options in a single request")
     public ResponseEntity<Map<String, List<Map<String, String>>>> getAllOptions() {
         Map<String, List<Map<String, String>>> allOptions = Map.of(
-                "specialActivities", Arrays.stream(SpecialActivity.values())
-                        .map(e -> Map.of("value", e.name(), "displayName", e.getDisplayName()))
-                        .collect(Collectors.toList()),
+                "specialActivities", specialActivityOptions(),
                 "paymentOptions", Arrays.stream(PaymentOption.values())
                         .map(e -> Map.of("value", e.name(), "displayName", e.getDisplayName()))
                         .collect(Collectors.toList()),
@@ -99,6 +94,16 @@ public class FormOptionsController {
                         .collect(Collectors.toList())
         );
         return ResponseEntity.ok(allOptions);
+    }
+
+    /**
+     * Retired activities are filtered out here, so neither the public form nor the admin
+     * panel can offer them. Reservations that already carry one keep rendering normally.
+     */
+    private List<Map<String, String>> specialActivityOptions() {
+        return SpecialActivity.selectableValues().stream()
+                .map(e -> Map.of("value", e.name(), "displayName", e.getDisplayName()))
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/constraints")

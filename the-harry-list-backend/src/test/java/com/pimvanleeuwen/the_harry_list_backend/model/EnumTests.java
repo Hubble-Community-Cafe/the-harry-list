@@ -2,6 +2,8 @@ package com.pimvanleeuwen.the_harry_list_backend.model;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -22,6 +24,26 @@ class EnumTests {
     void specialActivity_shouldHaveAllExpectedValues() {
         SpecialActivity[] values = SpecialActivity.values();
         assertEquals(5, values.length);
+    }
+
+    /**
+     * PRIVATE_EVENT was retired in 1.12.0 but deliberately kept in the enum: reservations
+     * booked before then still carry it, and dropping the value would break loading them.
+     */
+    @Test
+    void specialActivity_shouldKeepRetiredValueReadable() {
+        assertFalse(SpecialActivity.PRIVATE_EVENT.isSelectable());
+        assertEquals("Private event", SpecialActivity.PRIVATE_EVENT.getDisplayName());
+    }
+
+    @Test
+    void specialActivity_shouldOfferOnlySelectableValues() {
+        assertEquals(
+                List.of(SpecialActivity.GRADUATION,
+                        SpecialActivity.EAT_A_LA_CARTE,
+                        SpecialActivity.EAT_CATERING,
+                        SpecialActivity.CATERING_CORONA_ROOM),
+                SpecialActivity.selectableValues());
     }
 
     @Test
@@ -81,12 +103,11 @@ class EnumTests {
         assertEquals("Confirmed", ReservationStatus.CONFIRMED.getDisplayName());
         assertEquals("Rejected", ReservationStatus.REJECTED.getDisplayName());
         assertEquals("Cancelled", ReservationStatus.CANCELLED.getDisplayName());
-        assertEquals("Completed", ReservationStatus.COMPLETED.getDisplayName());
     }
 
     @Test
     void reservationStatus_shouldHaveAllExpectedValues() {
         ReservationStatus[] values = ReservationStatus.values();
-        assertEquals(5, values.length);
+        assertEquals(4, values.length);
     }
 }

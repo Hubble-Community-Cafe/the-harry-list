@@ -29,8 +29,10 @@ const CONSTRAINT_TYPES = [
   { value: 'ACTIVITY_NOTICE', label: 'Activity Notice' },
 ];
 
+// Selectable activities only: a constraint on a retired activity can never fire, since no
+// new reservation can carry it. Mirrors SpecialActivity.selectableValues() in the backend.
 const ACTIVITIES = [
-  'GRADUATION', 'EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM', 'PRIVATE_EVENT',
+  'GRADUATION', 'EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM',
 ];
 
 /**
