@@ -217,22 +217,17 @@ class AdminReservationControllerTest {
 
     @Test
     @WithMockUser(roles = "EDITOR")
-    void updateStatus_shouldCompleteReservation() throws Exception {
-        // Given
+    void updateStatus_shouldRejectRemovedCompletedStatus() throws Exception {
+        // COMPLETED was dropped from ReservationStatus in 1.12.0. An old client (or a
+        // bookmarked request) sending it must fail cleanly rather than change anything.
         sampleReservation.setStatus(ReservationStatus.CONFIRMED);
-        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
-        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
-        // When/Then
         mockMvc.perform(patch("/api/admin/reservations/1/status")
                 .with(csrf())
                 .param("status", "COMPLETED"))
-            .andExpect(status().isOk());
+            .andExpect(status().isBadRequest());
 
-        verify(reservationRepository).save(argThat(res ->
-            res.getStatus() == ReservationStatus.COMPLETED
-        ));
+        verify(reservationRepository, never()).save(any());
     }
 
     @Test

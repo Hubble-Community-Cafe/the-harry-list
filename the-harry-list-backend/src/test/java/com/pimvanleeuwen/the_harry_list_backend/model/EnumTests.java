@@ -81,12 +81,11 @@ class EnumTests {
         assertEquals("Confirmed", ReservationStatus.CONFIRMED.getDisplayName());
         assertEquals("Rejected", ReservationStatus.REJECTED.getDisplayName());
         assertEquals("Cancelled", ReservationStatus.CANCELLED.getDisplayName());
-        assertEquals("Completed", ReservationStatus.COMPLETED.getDisplayName());
     }
 
     @Test
     void reservationStatus_shouldHaveAllExpectedValues() {
         ReservationStatus[] values = ReservationStatus.values();
-        assertEquals(5, values.length);
+        assertEquals(4, values.length);
     }
 }
