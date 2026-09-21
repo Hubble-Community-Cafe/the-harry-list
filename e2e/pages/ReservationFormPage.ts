@@ -73,6 +73,11 @@ export class ReservationFormPage {
     await this.page.getByText(label, { exact: true }).click();
   }
 
+  /** A special-activity toggle by its visible label, for presence/absence assertions. */
+  activityCheckbox(label: string): Locator {
+    return this.page.getByRole('checkbox', { name: label });
+  }
+
   /** Advisory notices (ACTIVITY_NOTICE) shown when a triggering activity is selected. */
   activityNotices(): Locator {
     return this.page.getByTestId('activity-notice');

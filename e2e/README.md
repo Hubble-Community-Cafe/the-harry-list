@@ -144,6 +144,7 @@ faster layers.
 | Soft / hard blocked periods | `blockedPeriods` + form tests | `ConstraintValidationServiceTest` | `public/soft-block`, `public/hard-block`, `admin/blocked-periods` |
 | Form constraints (all types) | form tests | `ConstraintValidationServiceTest` | `public/constraints-blocking`, `public/constraints-dynamic`, `admin/constraints-roundtrip` |
 | Activity notice (advisory banner, and opt-in confirmation dialog) | `ReservationForm` + `FormSettingsPage` tests | `ConstraintValidationServiceTest` | `public/activity-notice` |
+| Retired private-event activity (form, options API, direct submit) | `ReservationForm` + `ReservationDetailPage` tests | `FormOptionsControllerTest`, `CreateReservationServiceTest` | `public/retired-activity` |
 | Privacy policy (GDPR notice + dialog) | `PrivacyPolicy` + `Footer` tests | — | `public/privacy-policy` |
 | Confirm a reservation (appears in admin) | `ReservationsPage`/detail tests | controller tests | `admin/reservation-lifecycle` #1 |
 | Edit / remove a reservation | `ReservationDetailPage` test | `Update`/`DeleteReservationServiceTest` | `admin/reservation-lifecycle` #2 |

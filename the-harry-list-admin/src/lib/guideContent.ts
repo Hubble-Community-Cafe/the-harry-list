@@ -64,7 +64,7 @@ export const reservationsGuide: GuideSection[] = [
 Use the controls at the top to narrow down what you see:
 
 - **Search** — type to filter by event title, contact name, email, confirmation number, or ID
-- **Status filter** — show only reservations with a specific status (Pending, Confirmed, Rejected, Cancelled, Completed)
+- **Status filter** — show only reservations with a specific status (Pending, Confirmed, Rejected, Cancelled)
 - **Location filter** — show only Hubble or Meteor reservations
 - **Show past events** — toggle to include events that have already happened (hidden by default)`,
   },
@@ -76,7 +76,7 @@ Use the controls at the top to narrow down what you see:
 
 Each reservation card shows:
 
-- **Status badge** — color-coded: *yellow* = Pending, *green* = Confirmed, *red* = Rejected, *grey* = Cancelled, *blue* = Completed
+- **Status badge** — color-coded: *yellow* = Pending, *green* = Confirmed, *red* = Rejected, *grey* = Cancelled
 - **Event title** and **contact name**
 - **Date and time** of the event
 - **Location** — displayed as a Hubble or Meteor badge
@@ -97,7 +97,6 @@ Click any reservation card to open its **detail page**. Here you can:
 ### Status Actions
 - **Confirm** — approve a pending reservation (sends a confirmation email to the contact)
 - **Reject** — decline a reservation with an optional reason
-- **Complete** — mark a confirmed reservation as completed after the event
 - **Cancel** — cancel a reservation
 
 ### Other Actions
@@ -346,7 +345,7 @@ Constraints are rules that enforce business logic on the reservation form. Each 
 - **Advance Booking** — requires a minimum number of days between booking and event date
 - **Time Restriction** — limits available time slots for certain activities
 - **Guest Minimum** — sets a minimum guest count for a specific location (e.g. Meteor minimum 1 person)
-- **Activity Notice** — shows an advisory message when an activity is selected, without blocking the booking (e.g. "A private event at Meteor has an additional charge"). Tick **Require confirmation popup** to make guests acknowledge it in a dialog (with the option to deselect the activity instead) rather than just showing a banner they can scroll past. Use that sparingly, for notices that are genuinely easy to miss.
+- **Activity Notice** — shows an advisory message when an activity is selected, without blocking the booking (e.g. "Catering requires a deposit"). Tick **Require confirmation popup** to make guests acknowledge it in a dialog (with the option to deselect the activity instead) rather than just showing a banner they can scroll past. Use that sparingly, for notices that are genuinely easy to miss.
 
 ### Adding a Constraint
 
@@ -355,7 +354,10 @@ Click **"Add Constraint"** and fill in:
 2. **Trigger activity** — which activity triggers this rule (not needed for Guest Minimum)
 3. **Target value** — what the rule applies to (location, conflicting activity, etc.)
 4. **Numeric value** — for rules that need a number (days, minimum guests)
-5. **Message** — the error text customers will see`,
+5. **Message** — the error text customers will see
+
+> **Private events** are no longer a bookable activity, so they cannot be picked as a trigger.
+> Reservations booked with one before it was retired still show it on their detail page.`,
   },
   {
     title: 'Blocked Periods',
@@ -447,7 +449,6 @@ The available actions depend on the current status:
 - **Reject** — decline the reservation. The rejection email is pre-filled with a default reason you can edit or replace
 
 ### Confirmed Reservations
-- **Complete** — mark as completed after the event has taken place
 - **Cancel** — cancel the reservation (e.g. customer called to cancel)
 
 ### Rejected Reservations
