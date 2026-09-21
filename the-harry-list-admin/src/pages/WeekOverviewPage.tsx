@@ -43,7 +43,6 @@ const STATUS_COLORS: Record<string, string> = {
   CONFIRMED: 'border-l-green-400',
   REJECTED: 'border-l-red-400',
   CANCELLED: 'border-l-dark-500',
-  COMPLETED: 'border-l-blue-400',
 };
 
 const STATUS_BADGE: Record<string, string> = {
@@ -51,7 +50,6 @@ const STATUS_BADGE: Record<string, string> = {
   CONFIRMED: 'bg-green-500/20 text-green-400',
   REJECTED: 'bg-red-500/20 text-red-400',
   CANCELLED: 'bg-dark-500/20 text-dark-400',
-  COMPLETED: 'bg-blue-500/20 text-blue-400',
 };
 
 export function WeekOverviewPage() {
@@ -180,7 +178,6 @@ export function WeekOverviewPage() {
               <option value="CONFIRMED">Confirmed</option>
               <option value="REJECTED">Rejected</option>
               <option value="CANCELLED">Cancelled</option>
-              <option value="COMPLETED">Completed</option>
             </select>
           </div>
           <div className="relative">

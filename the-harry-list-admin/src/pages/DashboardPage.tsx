@@ -210,7 +210,6 @@ function StatusBadge({ status }: { status: string }) {
     CONFIRMED: { color: 'bg-green-500/20 text-green-400', icon: CheckCircle },
     REJECTED: { color: 'bg-red-500/20 text-red-400', icon: XCircle },
     CANCELLED: { color: 'bg-dark-500/20 text-dark-400', icon: XCircle },
-    COMPLETED: { color: 'bg-blue-500/20 text-blue-400', icon: CheckCircle },
   };
 
   const { color, icon: Icon } = config[status] || config.PENDING;
