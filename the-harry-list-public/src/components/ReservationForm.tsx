@@ -134,7 +134,6 @@ const SPECIAL_ACTIVITY_LABELS: Record<string, string> = {
   EAT_A_LA_CARTE: 'Eat a la Carte',
   EAT_CATERING: 'Catering',
   CATERING_CORONA_ROOM: 'Catering for Corona Room Event',
-  PRIVATE_EVENT: 'Private Event',
 };
 
 const SPECIAL_ACTIVITY_DESCRIPTIONS: Record<string, string> = {
@@ -142,7 +141,6 @@ const SPECIAL_ACTIVITY_DESCRIPTIONS: Record<string, string> = {
   EAT_A_LA_CARTE: 'Order from the menu (max 15 guests)',
   EAT_CATERING: 'Catered food for your event',
   CATERING_CORONA_ROOM: 'Catering for a Corona Room event (Hubble only)',
-  PRIVATE_EVENT: 'Private/closed event (Meteor only)',
 };
 
 export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormProps) {
@@ -467,16 +465,16 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
     if (!watchStartTime) return null;
     const [h, m] = watchStartTime.split(':').map(Number);
     const mins = h * 60 + m;
-    const isMeteorOnly = watchSpecialActivities.includes('PRIVATE_EVENT');
-    // Kitchen warnings only apply to Hubble
-    if (!isMeteorOnly && mins >= 11 * 60 && mins < 12 * 60) {
+    // The kitchen warnings used to be skipped for private events, the one Meteor-only
+    // activity. That activity was retired, so every bookable event can now use a kitchen.
+    if (mins >= 11 * 60 && mins < 12 * 60) {
       return 'Kitchen opens at 12:00 - food may not be available at this time.';
     }
     if (mins >= 19 * 60 + 30 || (h < 3 && mins >= 0)) {
       return 'Kitchen is closed from 19:30 to 20:30 and only open for snacks after that.';
     }
     return null;
-  }, [watchStartTime, watchSpecialActivities]);
+  }, [watchStartTime]);
 
   const validateStep = async (step: number) => {
     const paymentFields: (keyof ReservationFormData)[] = ['paymentOption'];
