@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.pimvanleeuwen</groupId>
 	<artifactId>the-harry-list-backend</artifactId>
-	<version>1.12.1</version>
+	<version>1.12.2</version>
 	<name>the-harry-list-backend</name>
 	<description>The Harry List, reservation system for Stichting Bar Potential</description>
 	<url/>
@@ -31,6 +31,11 @@
 		<!-- Single clean @token@ for resource filtering; avoids the @@ delimiter
 		     collision that left the Sentry release literal/unversioned. -->
 		<sentry.release>the-harry-list-backend@${project.version}</sentry.release>
+		<!-- Override the Tomcat version managed by spring-boot-starter-parent (4.1.1 manages
+		     11.0.24) to pick up the fixes for CVE-2026-65182, CVE-2026-65905 and CVE-2026-68525
+		     (all critical, flagged by the Trivy image scan). Same override as community-cafe-web.
+		     Drop this once the Spring Boot parent manages 11.0.25 or later on its own. -->
+		<tomcat.version>11.0.25</tomcat.version>
 	</properties>
 
 	<dependencyManagement>

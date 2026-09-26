@@ -86,7 +86,7 @@ See [`e2e/README.md`](e2e/README.md) for the architecture, how to read the evide
    | `AZURE_TENANT_ID` | Azure AD tenant ID |
    | `AZURE_CLIENT_ID` | Azure AD client ID |
    | `AZURE_CLIENT_SECRET` | Azure AD client secret (for Graph API email) |
-   | `ALLOWED_GROUP_ID` | Azure AD group ID for admin access |
+   | `ALLOWED_GROUP_ID` | Azure AD group ID for admin access. On the admin container it gates the UI; on the backend it also rejects API tokens without that group (403). Set it on the backend only after the groups claim is enabled, see [Azure AD App Registration](#azure-ad-app-registration). |
    | `CALENDAR_FEED_TOKEN` | Token for public calendar feed |
    | `CALENDAR_FEED_STAFF_TOKEN` | Token for staff calendar feed (with contact details) |
    | `RECAPTCHA_ENABLED` | Set to `true` to enable reCAPTCHA (recommended for production) |
@@ -169,6 +169,8 @@ Required configuration:
 - **API Permissions**: `User.Read`, `GroupMember.Read.All` (for group-based access)
 - **Expose an API**: Create scope `access_as_user` with Application ID URI `api://{client-id}`
 - **Client Secret**: Generate one for email functionality (backend only)
+- **Groups claim** (needed for the backend staff-group check): Token configuration > Add groups claim > "Groups assigned to the application", enabled for the Access token. Choosing assigned groups keeps the token small and avoids the overage case where Entra leaves the claim out for users in many groups.
+- **Enterprise application**: set "Assignment required?" to Yes and assign only the staff group, so nobody else in the tenant can get a token at all.
 
 ## Calendar Integration
 
