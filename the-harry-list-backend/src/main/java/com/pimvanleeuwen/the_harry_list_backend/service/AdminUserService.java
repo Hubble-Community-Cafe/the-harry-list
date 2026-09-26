@@ -9,9 +9,12 @@ import com.pimvanleeuwen.the_harry_list_backend.repository.AdminUserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class AdminUserService {
@@ -95,18 +98,32 @@ public class AdminUserService {
         return adminUserRepository.save(user);
     }
 
+    /**
+     * Mirror the token's email and display name onto the stored row when they have drifted.
+     *
+     * <p>Best effort on purpose. This runs in the role filter on every staff request, and the admin
+     * fires several requests at once, so when a name changes in Entra they all try to write the same
+     * new values together. MariaDB 11.6+ defaults {@code innodb_snapshot_isolation} to ON, which turns
+     * that concurrent read-then-write into error 1020 ("Record has changed since last read") instead
+     * of serialising it, and the losers used to fail their whole request with a 500. Losing the race
+     * is harmless: the winner has already stored identical values.
+     */
     private void updateIfChanged(AdminUser user, String email, String displayName) {
-        boolean changed = false;
-        if (email != null && !email.equals(user.getEmail())) {
-            user.setEmail(email);
-            changed = true;
+        String newEmail = email != null ? email : user.getEmail();
+        String newDisplayName = displayName != null ? displayName : user.getDisplayName();
+
+        boolean changed = !Objects.equals(newEmail, user.getEmail())
+                || !Objects.equals(newDisplayName, user.getDisplayName());
+        if (!changed) {
+            return;
         }
-        if (displayName != null && !displayName.equals(user.getDisplayName())) {
-            user.setDisplayName(displayName);
-            changed = true;
-        }
-        if (changed) {
-            adminUserRepository.save(user);
+
+        try {
+            adminUserRepository.updateIdentity(user.getId(), newEmail, newDisplayName, LocalDateTime.now());
+            user.setEmail(newEmail);
+            user.setDisplayName(newDisplayName);
+        } catch (DataAccessException e) {
+            log.debug("Skipped identity refresh for oid={}, lost a concurrent write", user.getAzureOid(), e);
         }
     }
 }
