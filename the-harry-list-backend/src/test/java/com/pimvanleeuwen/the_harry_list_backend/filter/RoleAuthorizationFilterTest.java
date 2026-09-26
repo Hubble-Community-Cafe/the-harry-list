@@ -38,11 +38,12 @@ class RoleAuthorizationFilterTest {
     private MockHttpServletRequest request;
     private MockHttpServletResponse response;
 
+    private static final String STAFF_GROUP = "7f3c1a2e-staff-group";
     private static final String OID = "d7795f0e-32fd-4618-b5da-bf2c0079dd4a";
 
     @BeforeEach
     void setUp() {
-        filter = new RoleAuthorizationFilter(adminUserService);
+        filter = new RoleAuthorizationFilter(adminUserService, "");
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
         SecurityContextHolder.clearContext();
@@ -149,6 +150,57 @@ class RoleAuthorizationFilterTest {
     }
 
     @Test
+    void withGroupRestriction_memberOfTheStaffGroupIsEnriched() throws Exception {
+        filter = new RoleAuthorizationFilter(adminUserService, STAFF_GROUP);
+        request.setRequestURI("/api/admin/reservations");
+        setupJwtAuth(AdminRole.EDITOR, List.of("some-other-group", STAFF_GROUP));
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        assertTrue(hasAuthority(auth.getAuthorities(), "ROLE_EDITOR"));
+    }
+
+    @Test
+    void withGroupRestriction_tokenWithoutTheStaffGroupIsRejectedBeforeProvisioning() throws Exception {
+        filter = new RoleAuthorizationFilter(adminUserService, STAFF_GROUP);
+        request.setRequestURI("/api/reservations");
+        setJwt(Map.of("oid", OID, "sub", OID, "groups", List.of("some-other-group")));
+
+        filter.doFilter(request, response, filterChain);
+
+        assertEquals(403, response.getStatus());
+        assertTrue(response.getContentAsString().contains("NOT_IN_STAFF_GROUP"));
+        verify(filterChain, never()).doFilter(any(), any());
+        // No admin_user row may be created for someone outside the staff group.
+        verify(adminUserService, never()).getOrCreateUser(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void withGroupRestriction_tokenWithoutAnyGroupsClaimIsRejected() throws Exception {
+        // Also the shape of an Entra "overage" token, where the groups claim is left out.
+        filter = new RoleAuthorizationFilter(adminUserService, STAFF_GROUP);
+        request.setRequestURI("/api/admin/users/me");
+        setJwt(Map.of("oid", OID, "sub", OID));
+
+        filter.doFilter(request, response, filterChain);
+
+        assertEquals(403, response.getStatus());
+        verify(filterChain, never()).doFilter(any(), any());
+    }
+
+    @Test
+    void withGroupRestriction_publicPathsAreNotAffected() throws Exception {
+        filter = new RoleAuthorizationFilter(adminUserService, STAFF_GROUP);
+        request.setRequestURI("/api/public/reservations");
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
     void buildAuthorities_shouldBeHierarchical() {
         assertEquals(1, filter.buildAuthorities(AdminRole.VIEWER).size());
         assertEquals(2, filter.buildAuthorities(AdminRole.EDITOR).size());
@@ -156,12 +208,12 @@ class RoleAuthorizationFilterTest {
     }
 
     private void setupJwtAuth(AdminRole role) {
-        Jwt jwt = new Jwt("token", Instant.now(), Instant.now().plusSeconds(3600),
-                Map.of("alg", "RS256"),
-                Map.of("oid", OID, "preferred_username", "pim@hubble.cafe", "name", "Pim", "sub", OID));
+        setupJwtAuth(role, List.of());
+    }
 
-        JwtAuthenticationToken jwtAuth = new JwtAuthenticationToken(jwt);
-        SecurityContextHolder.getContext().setAuthentication(jwtAuth);
+    private void setupJwtAuth(AdminRole role, List<String> groups) {
+        setJwt(Map.of("oid", OID, "preferred_username", "pim@hubble.cafe", "name", "Pim", "sub", OID,
+                "groups", groups));
 
         AdminUser user = new AdminUser();
         user.setAzureOid(OID);
@@ -169,6 +221,12 @@ class RoleAuthorizationFilterTest {
         user.setDisplayName("Pim");
         user.setRole(role);
         when(adminUserService.getOrCreateUser(OID, "pim@hubble.cafe", "Pim")).thenReturn(user);
+    }
+
+    private void setJwt(Map<String, Object> claims) {
+        Jwt jwt = new Jwt("token", Instant.now(), Instant.now().plusSeconds(3600),
+                Map.of("alg", "RS256"), claims);
+        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt));
     }
 
     private boolean hasAuthority(java.util.Collection<? extends GrantedAuthority> authorities, String authority) {

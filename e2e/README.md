@@ -152,7 +152,7 @@ faster layers.
 | Reopen a rejected reservation to pending | `ReservationDetailPage` test | `AdminReservationControllerTest` | `admin/reservation-lifecycle` #3 |
 | Status-change email + custom message | — | `AdminReservationControllerTest` | `admin/status-email` |
 | Editable email templates | — | `EmailTemplateServiceTest` | `admin/email-template` |
-| RBAC (viewer/editor/admin), incl. staff reservation endpoints | `usePermissions` | filter tests, `ReservationControllerTest`, `EndpointAuthorizationGuardTest` | `admin/rbac` |
+| RBAC (viewer/editor/admin), incl. staff reservation endpoints and the backend staff-group check | `usePermissions` | filter tests, `ReservationControllerTest`, `EndpointAuthorizationGuardTest` | `admin/rbac` |
 | Audit log | `AuditDiff`/`AuditService` | controller tests | `admin/audit-log` |
 | Catering-only export (#280) | — | `PdfExportServiceTest` | `admin/catering-export` |
 | Appointments on the PDF export (#303) | — | `PdfExportServiceTest`, `AppointmentRecurrenceServiceTest` | `admin/appointments-export` |

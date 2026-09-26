@@ -33,7 +33,7 @@ class EndpointAuthorizationGuardTest {
     private static final String BASE_PACKAGE = "com.pimvanleeuwen.the_harry_list_backend";
     private static final List<String> STAFF_PREFIXES = List.of("/api/admin", "/api/reservations");
 
-    private final RoleAuthorizationFilter filter = new RoleAuthorizationFilter(null);
+    private final RoleAuthorizationFilter filter = new RoleAuthorizationFilter(null, "");
 
     @Test
     void everyStaffWriteEndpointDeclaresARole() throws Exception {

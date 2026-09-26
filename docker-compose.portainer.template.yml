@@ -44,6 +44,11 @@ services:
       - AZURE_TENANT_ID=__AZURE_TENANT_ID__
       - AZURE_CLIENT_ID=__AZURE_CLIENT_ID__
       - AZURE_CLIENT_SECRET=__AZURE_CLIENT_SECRET__
+      # Staff group enforced by the backend (same group as the admin's ALLOWED_GROUP_ID). Enable
+      # only AFTER the app registration emits the groups claim in access tokens (Token
+      # configuration > Add groups claim > Groups assigned to the application > Access), or every
+      # staff member gets a 403.
+      # - ALLOWED_GROUP_ID=__AZURE_GROUP_ID__
 
       # Calendar ICS Feed Tokens (generate with: openssl rand -hex 32)
       # Public feed: no contact details, Staff feed: includes email/phone
