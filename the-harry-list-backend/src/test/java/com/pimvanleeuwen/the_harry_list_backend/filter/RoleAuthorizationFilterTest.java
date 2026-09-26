@@ -71,6 +71,34 @@ class RoleAuthorizationFilterTest {
     }
 
     @Test
+    void shouldEnrichStaffReservationRequests() throws Exception {
+        // /api/reservations carries @PreAuthorize role checks, so it must be enriched too;
+        // without authorities every role check there would reject even an admin.
+        for (String uri : new String[]{"/api/reservations", "/api/reservations/42"}) {
+            SecurityContextHolder.clearContext();
+            request.setRequestURI(uri);
+            setupJwtAuth(AdminRole.EDITOR);
+
+            filter.doFilter(request, response, filterChain);
+
+            var auth = SecurityContextHolder.getContext().getAuthentication();
+            assertTrue(hasAuthority(auth.getAuthorities(), "ROLE_EDITOR"), uri);
+        }
+    }
+
+    @Test
+    void shouldNotTreatLookalikePrefixesAsProtected() throws Exception {
+        request.setRequestURI("/api/reservationsexport");
+        Jwt jwt = new Jwt("token", Instant.now(), Instant.now().plusSeconds(3600),
+                Map.of("alg", "RS256"), Map.of("oid", OID, "sub", OID));
+        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt));
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(adminUserService, never()).getOrCreateUser(anyString(), anyString(), anyString());
+    }
+
+    @Test
     void shouldEnrichAdminRequestWithViewerAuthorities() throws Exception {
         request.setRequestURI("/api/admin/reservations");
         setupJwtAuth(AdminRole.VIEWER);

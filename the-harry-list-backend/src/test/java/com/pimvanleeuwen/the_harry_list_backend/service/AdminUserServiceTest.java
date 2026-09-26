@@ -15,6 +15,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -73,12 +74,12 @@ class AdminUserServiceTest {
     void getOrCreateUser_shouldUpdateEmailIfChanged() {
         AdminUser existing = createUser(1L, OTHER_OID, "old@hubble.cafe", "Josselyn", AdminRole.EDITOR);
         when(adminUserRepository.findByAzureOid(OTHER_OID)).thenReturn(Optional.of(existing));
-        when(adminUserRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         service.getOrCreateUser(OTHER_OID, "new@hubble.cafe", "Josselyn");
 
         assertEquals("new@hubble.cafe", existing.getEmail());
-        verify(adminUserRepository).save(existing);
+        verify(adminUserRepository).updateIdentity(eq(1L), eq("new@hubble.cafe"), eq("Josselyn"), any());
+        verify(adminUserRepository, never()).save(any());
     }
 
     @Test
