@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Enriches the SecurityContext with role-based authorities for admin endpoints.
+ * Enriches the SecurityContext with role-based authorities for admin and staff reservation endpoints.
  * Runs after JWT authentication, looks up the user in the database (auto-creating
  * on first login), and adds hierarchical ROLE_ authorities.
  */
@@ -37,9 +37,17 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         this.adminUserService = adminUserService;
     }
 
+    /**
+     * Every path whose endpoints are guarded by {@code @PreAuthorize} role checks. A protected
+     * path missing here gets no {@code ROLE_} authorities, so its role checks would reject everyone.
+     */
+    private static final List<String> ROLE_PROTECTED_PREFIXES = List.of("/api/admin", "/api/reservations");
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith("/api/admin");
+        String uri = request.getRequestURI();
+        return ROLE_PROTECTED_PREFIXES.stream()
+                .noneMatch(prefix -> uri.equals(prefix) || uri.startsWith(prefix + "/"));
     }
 
     @Override
