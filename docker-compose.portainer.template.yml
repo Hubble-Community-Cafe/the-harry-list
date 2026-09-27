@@ -46,7 +46,7 @@ services:
       - AZURE_CLIENT_SECRET=__AZURE_CLIENT_SECRET__
       # Staff group enforced by the backend (same group as the admin's ALLOWED_GROUP_ID). Enable
       # only AFTER the app registration emits the groups claim in access tokens (Token
-      # configuration > Add groups claim > Groups assigned to the application > Access), or every
+      # configuration > Add groups claim > Security groups > Access), or every
       # staff member gets a 403.
       # - ALLOWED_GROUP_ID=__AZURE_GROUP_ID__
 

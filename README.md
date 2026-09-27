@@ -172,8 +172,8 @@ Required configuration:
 - **API Permissions**: `User.Read`, `GroupMember.Read.All` (for group-based access)
 - **Expose an API**: Create scope `access_as_user` with Application ID URI `api://{client-id}`
 - **Client Secret**: Generate one for email functionality (backend only)
-- **Groups claim** (needed for the backend staff-group check): Token configuration > Add groups claim > "Groups assigned to the application", enabled for the Access token. Choosing assigned groups keeps the token small and avoids the overage case where Entra leaves the claim out for users in many groups.
-- **Enterprise application**: set "Assignment required?" to Yes and assign only the staff group, so nobody else in the tenant can get a token at all.
+- **Groups claim** (needed for the backend staff-group check): Token configuration > Add groups claim > "Security groups" (or "All groups" if the staff group is a Microsoft 365 group), enabled for the Access token. The token then lists the user's groups and the backend requires the staff group among them. Entra leaves the claim out for users in more than 200 groups (overage); the backend then refuses them, which is safe but would lock out such a user.
+- **Enterprise application**: the free Entra ID plan cannot assign groups to an application (that needs P1), so "Assignment required?" stays off and the backend group check is what keeps other tenant members out. With P1, set it to Yes and assign only the staff group as an extra layer, and switch the groups claim to "Groups assigned to the application".
 
 ## Calendar Integration
 
