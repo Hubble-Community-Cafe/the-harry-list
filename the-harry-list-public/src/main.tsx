@@ -1,3 +1,5 @@
+// Must be the first import: it configures Zod before any module defines a schema (see the file).
+import './lib/zodConfig'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import * as Sentry from '@sentry/react'

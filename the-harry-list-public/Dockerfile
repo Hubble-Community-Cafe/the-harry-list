@@ -27,8 +27,9 @@ FROM nginx:alpine
 # Update Alpine packages for security patches (including libexpat)
 RUN apk upgrade --no-cache
 
-# Copy custom nginx config
+# Copy custom nginx config, plus this app's CSP template (rendered at startup, see below)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx-csp.conf /etc/nginx/csp.conf.template
 
 # Copy built assets from build stage
 COPY --from=build /app/dist /usr/share/nginx/html
@@ -45,8 +46,22 @@ RUN echo '#!/bin/sh' > /docker-entrypoint.d/40-inject-config.sh && \
     echo 'EOF' >> /docker-entrypoint.d/40-inject-config.sh && \
     chmod +x /docker-entrypoint.d/40-inject-config.sh
 
+# Render the CSP at container startup: fill in the API origin (scheme://host[:port] of API_URL, or
+# nothing when API_URL is relative or empty) and pick the header name. CSP_REPORT_ONLY=true sends
+# Content-Security-Policy-Report-Only, which only logs violations in the browser console; use it to
+# try a policy change on test before enforcing it.
+RUN mkdir -p /etc/nginx/snippets && \
+    printf '%s\n' \
+      '#!/bin/sh' \
+      'case "${API_URL:-}" in http://*|https://*) O=$(printf "%s" "$API_URL" | sed -E "s#^(https?://[^/]+).*#\\1#") ;; *) O="" ;; esac' \
+      'H="Content-Security-Policy"; [ "${CSP_REPORT_ONLY:-}" = "true" ] && H="Content-Security-Policy-Report-Only"' \
+      'sed -e "s#__API_ORIGIN__#${O}#g" -e "s#__CSP_HEADER__#${H}#g" /etc/nginx/csp.conf.template > /etc/nginx/snippets/csp.conf' \
+      > /docker-entrypoint.d/41-render-csp.sh && \
+    chmod +x /docker-entrypoint.d/41-render-csp.sh
+
 # Set ownership for non-root nginx user (already exists in nginx:alpine)
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /etc/nginx/snippets && \
     chown -R nginx:nginx /var/cache/nginx && \
     touch /var/run/nginx.pid && \
     chown -R nginx:nginx /var/run/nginx.pid

@@ -90,6 +90,9 @@ services:
       # Sentry error monitoring
       # Get DSN from sentry.io > Projects > the-harry-list-public > Settings > Client Keys
       - SENTRY_DSN=__SENTRY_DSN_PUBLIC__
+      # Content-Security-Policy (nginx-csp.conf). Set to true to send it as Report-Only, which only
+      # logs violations in the browser console; use on test to try a policy change before enforcing.
+      # - CSP_REPORT_ONLY=true
       # Address shown in the "check your spam" confirmation notice.
       # Reuses the backend's __EMAIL_FROM__ placeholder so they always match.
       - SENDER_EMAIL=__EMAIL_FROM__
@@ -117,6 +120,9 @@ services:
       # Sentry error monitoring
       # Get DSN from sentry.io > Projects > the-harry-list-admin > Settings > Client Keys
       - SENTRY_DSN=__SENTRY_DSN_ADMIN__
+      # Content-Security-Policy (nginx-csp.conf). Set to true to send it as Report-Only, which only
+      # logs violations in the browser console; use on test to try a policy change before enforcing.
+      # - CSP_REPORT_ONLY=true
 
 networks:
   harry-list:
