@@ -87,8 +87,8 @@ See [`e2e/README.md`](e2e/README.md) for the architecture, how to read the evide
    | `AZURE_CLIENT_ID` | Azure AD client ID |
    | `AZURE_CLIENT_SECRET` | Azure AD client secret (for Graph API email) |
    | `ALLOWED_GROUP_ID` | Azure AD group ID for admin access. On the admin container it gates the UI; on the backend it also rejects API tokens without that group (403). Set it on the backend only after the groups claim is enabled, see [Azure AD App Registration](#azure-ad-app-registration). |
-   | `CALENDAR_FEED_TOKEN` | Token for public calendar feed |
-   | `CALENDAR_FEED_STAFF_TOKEN` | Token for staff calendar feed (with contact details) |
+   | `CALENDAR_FEED_TOKEN` | Token for public calendar feed. Required: without it the public feed is disabled (503) |
+   | `CALENDAR_FEED_STAFF_TOKEN` | Token for staff calendar feed (with contact details). Required: without it the staff feed is disabled (503) |
    | `RECAPTCHA_ENABLED` | Set to `true` to enable reCAPTCHA (recommended for production) |
    | `RECAPTCHA_SECRET_KEY` | Google reCAPTCHA v3 secret key (backend) |
    | `RECAPTCHA_SITE_KEY` | Google reCAPTCHA v3 site key (public frontend) |
@@ -199,6 +199,7 @@ Subscribe to reservations from any calendar app (Google Calendar, Outlook, Apple
    CALENDAR_FEED_TOKEN=<public-token>
    CALENDAR_FEED_STAFF_TOKEN=<staff-token>
    ```
+   Both feeds fail closed: a feed without a token answers 503, and the backend logs a warning at startup for a missing token, or when both tokens are the same (the public URL would then also open the staff feed with contact details).
 
 3. **Subscribe** using the URLs:
    - Public: `https://your-api/api/calendar/feed.ics?token=PUBLIC_TOKEN`

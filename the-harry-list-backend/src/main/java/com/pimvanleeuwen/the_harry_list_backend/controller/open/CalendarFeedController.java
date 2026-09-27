@@ -4,6 +4,8 @@ import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.service.ICalendarService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -22,22 +24,40 @@ import java.util.List;
  * Two feeds available:
  * - /feed.ics - Public feed WITHOUT contact details
  * - /staff-feed.ics - Staff feed WITH all contact details (different token)
+ *
+ * Both fail closed: a feed whose token is not configured answers 503 instead of serving the
+ * reservation calendar to anyone who finds the URL.
  */
 @RestController
 @RequestMapping("/api/calendar")
 @Tag(name = "Calendar Feed", description = "ICS calendar feed for subscribing to reservations")
 public class CalendarFeedController {
 
+    private static final Logger log = LoggerFactory.getLogger(CalendarFeedController.class);
+
     private final ICalendarService iCalendarService;
+    private final String feedToken;
+    private final String staffFeedToken;
 
-    @Value("${calendar.feed.token:}")
-    private String feedToken;
-
-    @Value("${calendar.feed.staff-token:}")
-    private String staffFeedToken;
-
-    public CalendarFeedController(ICalendarService iCalendarService) {
+    public CalendarFeedController(ICalendarService iCalendarService,
+                                  @Value("${calendar.feed.token:}") String feedToken,
+                                  @Value("${calendar.feed.staff-token:}") String staffFeedToken) {
         this.iCalendarService = iCalendarService;
+        this.feedToken = feedToken;
+        this.staffFeedToken = staffFeedToken;
+
+        // Surface a missing or reused token in the logs right after a deploy, not when a
+        // calendar app silently stops syncing.
+        if (isBlank(feedToken)) {
+            log.warn("CALENDAR_FEED_TOKEN is not set: the public calendar feed is disabled (503)");
+        }
+        if (isBlank(staffFeedToken)) {
+            log.warn("CALENDAR_FEED_STAFF_TOKEN is not set: the staff calendar feed is disabled (503)");
+        }
+        if (!isBlank(feedToken) && feedToken.equals(staffFeedToken)) {
+            log.warn("CALENDAR_FEED_TOKEN and CALENDAR_FEED_STAFF_TOKEN are identical: anyone with the "
+                    + "public feed URL can also read the staff feed with contact details. Use different tokens.");
+        }
     }
 
     @GetMapping(value = "/feed.ics", produces = "text/calendar")
@@ -53,11 +73,13 @@ public class CalendarFeedController {
             @RequestParam(required = false) Boolean catering,
             @RequestParam(required = false, defaultValue = "false") boolean upcomingOnly) {
 
-        // Validate token if configured (constant-time comparison to prevent timing attacks)
-        if (feedToken != null && !feedToken.isEmpty()) {
-            if (token == null || !constantTimeEquals(token, feedToken)) {
-                return ResponseEntity.status(401).body("Invalid or missing token");
-            }
+        // Fail closed like the staff feed: without a configured token nobody gets the feed.
+        if (isBlank(feedToken)) {
+            return ResponseEntity.status(503).body("Public feed not configured");
+        }
+        // Constant-time comparison to prevent timing attacks.
+        if (token == null || !constantTimeEquals(token, feedToken)) {
+            return ResponseEntity.status(401).body("Invalid or missing token");
         }
 
         return generateFeed(status, location, catering, upcomingOnly, false, "reservations.ics");
@@ -78,7 +100,7 @@ public class CalendarFeedController {
             @RequestParam(required = false, defaultValue = "false") boolean upcomingOnly) {
 
         // Validate staff token (required, must be different from public token)
-        if (staffFeedToken == null || staffFeedToken.isEmpty()) {
+        if (isBlank(staffFeedToken)) {
             return ResponseEntity.status(503).body("Staff feed not configured");
         }
         if (token == null || !constantTimeEquals(token, staffFeedToken)) {
@@ -187,6 +209,10 @@ public class CalendarFeedController {
             public String outlook;
             public String appleCalendar;
         }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     /**
