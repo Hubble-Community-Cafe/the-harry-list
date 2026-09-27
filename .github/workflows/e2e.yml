@@ -2,7 +2,10 @@ name: E2E
 
 on:
   pull_request:
-    branches: [main]
+    # develop: Dependabot targets it and auto-merges minor/patch groups once the required checks
+    # pass, so the browser suite must run there too (and be a required check on develop), or a
+    # dependency update that only breaks in the browser merges unseen.
+    branches: [main, develop]
   schedule:
     - cron: '0 3 * * *' # nightly at 03:00 UTC
   workflow_dispatch:
