@@ -114,18 +114,60 @@ jobs:
           java-version: 25
           cache: maven
 
+      # The NVD vulnerability database gets its own cache. Inside ~/.m2 it was wiped by every pom.xml
+      # change (setup-java keys the Maven cache on the pom hash), forcing a full NVD download each
+      # time, which is the slow and fragile part. A fresh cache entry is saved on every run and the
+      # newest one restored, so each run only fetches the changes since the last one.
+      - name: Restore NVD database
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.dependency-check-data
+          key: nvd-db-${{ github.run_id }}
+          restore-keys: nvd-db-
+
       # Blocking: fails the workflow on any dependency with CVSS 9 or higher. False positives go in
       # .owasp-suppressions.xml with a reason, not in continue-on-error.
       - name: Run OWASP Dependency-Check
+        id: owasp
         run: |
           mvn org.owasp:dependency-check-maven:check \
             -DfailBuildOnCVSS=9 \
             -DsuppressionFile=.owasp-suppressions.xml \
+            -DdataDirectory="$HOME/.dependency-check-data" \
             -Dformats=SARIF \
             -DnvdApiKey="${NVD_API_KEY}" \
             -B
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
+      # Save even when the check failed on a finding, so the next run stays incremental. Only when the
+      # analysis really ran: the report exists then, whereas odc.mv.db is created (empty) even when
+      # the NVD download fails, and caching an empty database would only hide that.
+      - name: Check for a usable NVD database
+        id: nvd
+        if: always()
+        run: |
+          if [ -f target/dependency-check-report.sarif ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Save NVD database
+        if: always() && steps.nvd.outputs.present == 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.dependency-check-data
+          key: nvd-db-${{ github.run_id }}
+
+      # A failure has two very different causes; say which one on the run page.
+      - name: Explain a failed dependency check
+        if: failure() && steps.owasp.outcome == 'failure'
+        run: |
+          if [ -f target/dependency-check-report.sarif ]; then
+            msg="OWASP Dependency-Check found a dependency with CVSS 9 or higher. See the Security tab (category owasp-dependency-check); fix it, or suppress a false positive in .owasp-suppressions.xml with a reason."
+          else
+            msg="OWASP Dependency-Check could not run: no vulnerability data. The NVD download failed, most likely because the NVD_API_KEY secret is missing or no longer valid (dependency-check 13 cannot run without a valid key, and the NVD answers an unknown key with 404). Request a new key at https://nvd.nist.gov/developers/request-an-api-key and update the secret."
+          fi
+          echo "::error title=Dependency check::$msg"
+          echo "### Dependency check failed" >> "$GITHUB_STEP_SUMMARY"
+          echo "$msg" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Truncate long SARIF rule IDs
         if: always() && hashFiles('the-harry-list-backend/target/dependency-check-report.sarif') != ''
