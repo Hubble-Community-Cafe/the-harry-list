@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.pimvanleeuwen</groupId>
 	<artifactId>the-harry-list-backend</artifactId>
-	<version>1.12.3</version>
+	<version>1.12.4</version>
 	<name>the-harry-list-backend</name>
 	<description>The Harry List, reservation system for Stichting Bar Potential</description>
 	<url/>
@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>21</java.version>
+		<java.version>25</java.version>
 		<!-- Single clean @token@ for resource filtering; avoids the @@ delimiter
 		     collision that left the Sentry release literal/unversioned. -->
 		<sentry.release>the-harry-list-backend@${project.version}</sentry.release>
@@ -191,6 +191,28 @@
 						</exclude>
 					</excludes>
 				</configuration>
+			</plugin>
+			<!-- Test coverage report (report-only, no minimum yet): target/site/jacoco after `mvn test`.
+			     CI uploads it and writes the totals to the job summary. -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.15</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

@@ -1,21 +1,26 @@
 # Stage 1: Build backend
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /app
 COPY pom.xml .
+# Resolve dependencies in their own layer, so a source-only change does not download them again.
+RUN mvn -q -B dependency:go-offline
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn -B clean package -DskipTests
 
 # Stage 2: Run backend
-FROM eclipse-temurin:21-jre
+# Alpine/musl JRE: a much smaller image with far fewer OS packages to trip vulnerability scanners
+# than the Ubuntu-based tag. Safe for this app: it is pure Java (no native libraries), the PDF
+# export uses OpenPDF's built-in fonts (no system fonts needed), and the JDK bundles its own
+# timezone data, so TZ=Europe/Amsterdam works without the OS tzdata package.
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
-# Install curl for health checks and create non-root user.
-# Also remove the unused Canonical "pebble" service-manager binary that ships in the base
-# image: we never invoke it (our entrypoint is java -jar), and its bundled Go libraries
-# (golang.org/x/net etc.) trip image vulnerability scanners.
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
-    && rm -f /usr/bin/pebble \
-    && addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+# Pull the latest Alpine security fixes: the temurin base image is rebuilt less often than Alpine
+# patches OpenSSL, expat and friends, so without this the image ships known, already-fixed CVEs.
+# Then curl for the health check, and a non-root user (busybox addgroup/adduser syntax).
+RUN apk upgrade --no-cache \
+    && apk add --no-cache curl \
+    && addgroup -S appgroup && adduser -S -G appgroup appuser
 
 COPY --from=build /app/target/the-harry-list-backend-*.jar app.jar
 

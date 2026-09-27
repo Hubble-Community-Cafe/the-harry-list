@@ -6,14 +6,14 @@ Bar reservation system for Stichting Bar Potential.
 
 | Component | Stack |
 |-----------|-------|
-| Backend | Spring Boot 3.5 (Java 21), MariaDB |
+| Backend | Spring Boot 4.1 (Java 25), MariaDB |
 | Admin Portal | React + TypeScript, Microsoft Entra ID auth |
 | Public Form | React + TypeScript |
 
 ## Requirements
 
-- **Java 21** (Temurin recommended) — required for the backend
-- **Node.js 20+** — required for the frontends
+- **Java 25** (Temurin recommended): required for the backend
+- **Node.js 26** (see `.nvmrc`; `nvm use` picks it up): required for the frontends
 - **Docker** — required for local development and production deployment
 
 ## Local Development
@@ -47,6 +47,11 @@ Each component has its own fast test suite:
 
 - **Backend:** `cd the-harry-list-backend && ./mvnw test`
 - **Public / Admin frontends:** `cd the-harry-list-<public|admin> && npm run test:run`
+
+**Coverage** (report-only, no minimum yet): `./mvnw test` also writes a JaCoCo report to
+`the-harry-list-backend/target/site/jacoco/index.html`, and `npm run test:coverage` writes one to
+`coverage/index.html` in each frontend. CI shows the line, branch and method totals on every run's
+summary page and keeps the full reports as artifacts for 14 days.
 
 **End-to-end (Playwright):** full-stack browser tests that drive the real public + admin
 apps and assert on UI, database, and email (via Mailpit), with screenshots/traces/emails as
@@ -105,6 +110,11 @@ All three services must be served over HTTPS. Terminate TLS at the reverse proxy
 
 ### Content-Security-Policy
 Both frontends send an enforcing Content-Security-Policy. It differs per app, so it lives in `nginx-csp.conf` of each frontend (the shared `nginx.conf` includes it) and is rendered at container startup with the origin of `API_URL` filled in. When a new feature needs another origin (an external API, image host or embed), add it to that app's `nginx-csp.conf`, or the browser will block it. To try a change on test without breaking anything, set `CSP_REPORT_ONLY=true` on the frontend container: violations are then only logged in the browser console. The e2e specs `public/csp` and `admin/csp` fail on any violation.
+
+### Security scanning (CI)
+- **Blocking**: each image is built and scanned with Trivy before anything is pushed. A CRITICAL vulnerability with a fix available fails the release, and no image is pushed until all three pass. The OWASP Dependency-Check job in `security.yml` fails on any backend dependency with CVSS 9 or higher.
+- **Report-only**: the HIGH findings from Trivy, Semgrep and `npm audit` go to the Security tab without failing anything. Review them as part of the monthly quality check.
+- **Accepting a risk**: add the CVE to `.trivyignore` (image gate) or `the-harry-list-backend/.owasp-suppressions.xml` (OWASP) with a reason and a date to look again, and remove it once the fix ships.
 
 ### Versioning
 Use pinned version tags in your Portainer stack (e.g., `0.9.0`) rather than `latest`. This ensures rollbacks are reliable.
@@ -172,8 +182,8 @@ Required configuration:
 - **API Permissions**: `User.Read`, `GroupMember.Read.All` (for group-based access)
 - **Expose an API**: Create scope `access_as_user` with Application ID URI `api://{client-id}`
 - **Client Secret**: Generate one for email functionality (backend only)
-- **Groups claim** (needed for the backend staff-group check): Token configuration > Add groups claim > "Groups assigned to the application", enabled for the Access token. Choosing assigned groups keeps the token small and avoids the overage case where Entra leaves the claim out for users in many groups.
-- **Enterprise application**: set "Assignment required?" to Yes and assign only the staff group, so nobody else in the tenant can get a token at all.
+- **Groups claim** (needed for the backend staff-group check): Token configuration > Add groups claim > "Security groups" (or "All groups" if the staff group is a Microsoft 365 group), enabled for the Access token. The token then lists the user's groups and the backend requires the staff group among them. Entra leaves the claim out for users in more than 200 groups (overage); the backend then refuses them, which is safe but would lock out such a user.
+- **Enterprise application**: the free Entra ID plan cannot assign groups to an application (that needs P1), so "Assignment required?" stays off and the backend group check is what keeps other tenant members out. With P1, set it to Yes and assign only the staff group as an extra layer, and switch the groups claim to "Groups assigned to the application".
 
 ## Calendar Integration
 

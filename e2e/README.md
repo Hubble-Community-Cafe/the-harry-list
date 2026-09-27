@@ -40,7 +40,7 @@ sends the `X-Test-*` headers. Inert everywhere else.
 
 ## Prerequisites
 
-- Docker (to boot the stack) and Node 20+.
+- Docker (to boot the stack) and Node 26 (see `.nvmrc` in the repo root).
 
 ## Install
 
@@ -165,6 +165,7 @@ faster layers.
 
 ## CI
 
-`.github/workflows/e2e.yml` runs the suite on PRs to `main` (and on demand), boots the
-stack, writes a per-test summary table to the run page, and uploads the HTML report +
-traces/screenshots/videos. Making it a required check is a branch-protection setting.
+`.github/workflows/e2e.yml` runs the suite on PRs to `main` and `develop`, nightly, and on
+demand. It boots the stack, writes a per-test summary table to the run page, and uploads the
+HTML report + traces/screenshots/videos. "Playwright E2E" is a required check on `develop`
+(branch protection), so Dependabot's auto-merge waits for the browser suite as well.

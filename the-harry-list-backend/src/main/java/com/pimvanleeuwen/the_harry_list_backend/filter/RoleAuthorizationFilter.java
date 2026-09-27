@@ -111,7 +111,7 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
 
     private void rejectNotInGroup(HttpServletResponse response, String oid) throws IOException {
         // Entra drops the groups claim when a user is in too many groups (overage) and adds a
-        // _claim_names pointer instead. Emitting only "groups assigned to the application" avoids it.
+        // _claim_names pointer instead (above 200 groups). Such a user is refused, which fails safe.
         log.warn("Rejected token for oid={}: not a member of the allowed staff group", oid);
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType("application/json");

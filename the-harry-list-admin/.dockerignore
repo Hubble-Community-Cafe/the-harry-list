@@ -7,3 +7,4 @@ dist
 *.md
 .vscode
 .idea
+coverage

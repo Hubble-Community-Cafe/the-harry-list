@@ -16,4 +16,37 @@
     </suppress>
   -->
 
+  <!-- Reviewed 2026-09-27, first OWASP results after the NVD_API_KEY renewal (#451). -->
+
+  <suppress>
+    <notes>CVE-2026-33117 is in the Azure Key Vault Keys library (azure-security-keyvault-keys before
+    4.10.6): a broken authentication-tag check in its local cryptography path. It is listed under the
+    generic "Azure SDK for Java" CPE with versionEndExcluding 4.10.6, so every other Azure SDK jar with a
+    lower version number matches, although none of them contains that code. We do not depend on Key
+    Vault Keys (not in the dependency tree). The package pattern excludes it on purpose, so the CVE
+    still alerts if it is ever added.</notes>
+    <packageUrl regex="true">^pkg:maven/com\.azure/(?!azure-security-keyvault-keys@).*$</packageUrl>
+    <cve>CVE-2026-33117</cve>
+  </suppress>
+
+  <suppress until="2027-03-27Z">
+    <notes>CVE-2026-53914 is unsafe deserialization in the build cache metadata of JetBrains Kotlin before
+    2.4.20, i.e. in the compiler and build tooling. We only ship the Kotlin standard library at runtime
+    (kotlin-stdlib*, a transitive dependency of okhttp via the Microsoft Graph SDK) and compile no
+    Kotlin, so the vulnerable code never runs. Expires 2027-03-27 to force a recheck; the match also
+    disappears once okhttp/Graph pull in Kotlin 2.4.20 or later.</notes>
+    <packageUrl regex="true">^pkg:maven/org\.jetbrains\.kotlin/kotlin-stdlib.*$</packageUrl>
+    <cve>CVE-2026-53914</cve>
+  </suppress>
+
+  <suppress>
+    <notes>CVE-2022-31691 is in the Spring Tools IDE extensions for Eclipse and VS Code (Spring Boot
+    Tools, Concourse, Bosh, Cloud Foundry manifest editors), which use SnakeYAML for YAML editing. It
+    matches spring-boot-devtools through the "Spring Boot Tools" CPE, but devtools is a different
+    product: a local development dependency (optional, runtime scope) that Spring Boot also leaves out
+    of the packaged application jar.</notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework\.boot/spring-boot-devtools@.*$</packageUrl>
+    <cve>CVE-2022-31691</cve>
+  </suppress>
+
 </suppressions>

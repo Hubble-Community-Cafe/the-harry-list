@@ -174,11 +174,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
           cache: maven
 
       - name: Run unit tests
@@ -191,6 +191,19 @@ jobs:
           name: backend-test-results
           path: the-harry-list-backend/target/surefire-reports/
 
+      # Coverage is report-only for now (no minimum): totals on the run page, full report as artifact.
+      - name: Coverage summary
+        if: always() && hashFiles('the-harry-list-backend/target/site/jacoco/jacoco.csv') != ''
+        run: python3 ../scripts/coverage-summary.py "Backend" jacoco target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always() && hashFiles('the-harry-list-backend/target/site/jacoco/jacoco.csv') != ''
+        with:
+          name: backend-coverage
+          path: the-harry-list-backend/target/site/jacoco/
+          retention-days: 14
+
   backend-build:
     name: Backend Build
     runs-on: ubuntu-latest
@@ -201,11 +214,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
           cache: maven
 
       - name: Build JAR
@@ -224,7 +237,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: the-harry-list-public/package-lock.json
 
@@ -234,8 +247,21 @@ jobs:
       - name: Run linting
         run: npm run lint
 
-      - name: Run tests
-        run: npm run test:run
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      # Coverage is report-only for now (no minimum): totals on the run page, full report as artifact.
+      - name: Coverage summary
+        if: always() && hashFiles('the-harry-list-public/coverage/coverage-summary.json') != ''
+        run: python3 ../scripts/coverage-summary.py "Public frontend" vitest coverage/coverage-summary.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always() && hashFiles('the-harry-list-public/coverage/coverage-summary.json') != ''
+        with:
+          name: public-coverage
+          path: the-harry-list-public/coverage/
+          retention-days: 14
 
       - name: Build
         run: npm run build
@@ -253,7 +279,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: the-harry-list-admin/package-lock.json
 
@@ -263,8 +289,21 @@ jobs:
       - name: Run linting
         run: npm run lint
 
-      - name: Run tests
-        run: npm run test:run
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      # Coverage is report-only for now (no minimum): totals on the run page, full report as artifact.
+      - name: Coverage summary
+        if: always() && hashFiles('the-harry-list-admin/coverage/coverage-summary.json') != ''
+        run: python3 ../scripts/coverage-summary.py "Admin frontend" vitest coverage/coverage-summary.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always() && hashFiles('the-harry-list-admin/coverage/coverage-summary.json') != ''
+        with:
+          name: admin-coverage
+          path: the-harry-list-admin/coverage/
+          retention-days: 14
 
       - name: Build
         run: npm run build
@@ -319,22 +358,24 @@ jobs:
             type=sha,prefix={{branch}}-
             type=ref,event=branch
 
-      - name: Build and push Backend Docker image
-        id: push-backend
+      # Build into the local Docker daemon only. Nothing reaches GHCR (and so Portainer) until the
+      # image has passed the vulnerability gate below; the push then sends exactly the scanned image.
+      - name: Build Backend Docker image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: ./the-harry-list-backend
           file: ./the-harry-list-backend/Dockerfile
-          push: true
+          load: true
+          push: false
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Scan Backend image (Trivy)
+      - name: Scan Backend image for the Security tab (Trivy)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-backend@${{ steps.push-backend.outputs.digest }}
+          image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-backend:v${{ steps.version.outputs.version }}
           format: sarif
           output: trivy-backend.sarif
           severity: HIGH,CRITICAL
@@ -346,6 +387,18 @@ jobs:
         with:
           sarif_file: trivy-backend.sarif
           category: trivy-backend-ci
+
+      # The gate: a CRITICAL vulnerability that has a fix available stops the release before the
+      # push. Accept a specific risk by adding its CVE to .trivyignore with a reason.
+      - name: Block Backend image on critical vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-backend:v${{ steps.version.outputs.version }}
+          format: table
+          exit-code: '1'
+          severity: CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
 
       # ========== PUBLIC FRONTEND ==========
       - name: Extract metadata for Public Frontend
@@ -359,13 +412,15 @@ jobs:
             type=sha,prefix={{branch}}-
             type=ref,event=branch
 
-      - name: Build and push Public Frontend Docker image
-        id: push-public
+      # Build into the local Docker daemon only. Nothing reaches GHCR (and so Portainer) until the
+      # image has passed the vulnerability gate below; the push then sends exactly the scanned image.
+      - name: Build Public Frontend Docker image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: ./the-harry-list-public
           file: ./the-harry-list-public/Dockerfile
-          push: true
+          load: true
+          push: false
           tags: ${{ steps.meta-public.outputs.tags }}
           labels: ${{ steps.meta-public.outputs.labels }}
           cache-from: type=gha
@@ -373,10 +428,10 @@ jobs:
           secrets: |
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
 
-      - name: Scan Public Frontend image (Trivy)
+      - name: Scan Public Frontend image for the Security tab (Trivy)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-public@${{ steps.push-public.outputs.digest }}
+          image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-public:v${{ steps.version.outputs.version }}
           format: sarif
           output: trivy-public.sarif
           severity: HIGH,CRITICAL
@@ -388,6 +443,18 @@ jobs:
         with:
           sarif_file: trivy-public.sarif
           category: trivy-public-ci
+
+      # The gate: a CRITICAL vulnerability that has a fix available stops the release before the
+      # push. Accept a specific risk by adding its CVE to .trivyignore with a reason.
+      - name: Block Public Frontend image on critical vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-public:v${{ steps.version.outputs.version }}
+          format: table
+          exit-code: '1'
+          severity: CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
 
       # ========== ADMIN FRONTEND ==========
       - name: Extract metadata for Admin Frontend
@@ -401,13 +468,15 @@ jobs:
             type=sha,prefix={{branch}}-
             type=ref,event=branch
 
-      - name: Build and push Admin Frontend Docker image
-        id: push-admin
+      # Build into the local Docker daemon only. Nothing reaches GHCR (and so Portainer) until the
+      # image has passed the vulnerability gate below; the push then sends exactly the scanned image.
+      - name: Build Admin Frontend Docker image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: ./the-harry-list-admin
           file: ./the-harry-list-admin/Dockerfile
-          push: true
+          load: true
+          push: false
           tags: ${{ steps.meta-admin.outputs.tags }}
           labels: ${{ steps.meta-admin.outputs.labels }}
           cache-from: type=gha
@@ -415,10 +484,10 @@ jobs:
           secrets: |
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
 
-      - name: Scan Admin Frontend image (Trivy)
+      - name: Scan Admin Frontend image for the Security tab (Trivy)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-admin@${{ steps.push-admin.outputs.digest }}
+          image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-admin:v${{ steps.version.outputs.version }}
           format: sarif
           output: trivy-admin.sarif
           severity: HIGH,CRITICAL
@@ -430,6 +499,30 @@ jobs:
         with:
           sarif_file: trivy-admin.sarif
           category: trivy-admin-ci
+
+      # The gate: a CRITICAL vulnerability that has a fix available stops the release before the
+      # push. Accept a specific risk by adding its CVE to .trivyignore with a reason.
+      - name: Block Admin Frontend image on critical vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-admin:v${{ steps.version.outputs.version }}
+          format: table
+          exit-code: '1'
+          severity: CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+
+      # ========== PUSH ==========
+      # Only now, with all three images through the gate, publish them together. A failure above
+      # therefore never leaves a half-released version (e.g. a new backend with an old admin).
+      - name: Push Backend Docker image
+        run: docker push --all-tags ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-backend
+
+      - name: Push Public Frontend Docker image
+        run: docker push --all-tags ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-public
+
+      - name: Push Admin Frontend Docker image
+        run: docker push --all-tags ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-admin
 
   # ==================== SENTRY RELEASE ====================
   sentry-release:
