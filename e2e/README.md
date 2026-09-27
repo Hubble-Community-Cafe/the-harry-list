@@ -40,7 +40,7 @@ sends the `X-Test-*` headers. Inert everywhere else.
 
 ## Prerequisites
 
-- Docker (to boot the stack) and Node 20+.
+- Docker (to boot the stack) and Node 26 (see `.nvmrc` in the repo root).
 
 ## Install
 

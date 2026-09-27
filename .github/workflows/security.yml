@@ -67,7 +67,7 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: the-harry-list-public/package-lock.json
 
@@ -89,7 +89,7 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: the-harry-list-admin/package-lock.json
 
@@ -111,7 +111,7 @@ jobs:
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
           cache: maven
 
       # Blocking: fails the workflow on any dependency with CVSS 9 or higher. False positives go in

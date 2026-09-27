@@ -6,14 +6,14 @@ Bar reservation system for Stichting Bar Potential.
 
 | Component | Stack |
 |-----------|-------|
-| Backend | Spring Boot 3.5 (Java 21), MariaDB |
+| Backend | Spring Boot 4.1 (Java 25), MariaDB |
 | Admin Portal | React + TypeScript, Microsoft Entra ID auth |
 | Public Form | React + TypeScript |
 
 ## Requirements
 
-- **Java 21** (Temurin recommended) — required for the backend
-- **Node.js 20+** — required for the frontends
+- **Java 25** (Temurin recommended): required for the backend
+- **Node.js 26** (see `.nvmrc`; `nvm use` picks it up): required for the frontends
 - **Docker** — required for local development and production deployment
 
 ## Local Development

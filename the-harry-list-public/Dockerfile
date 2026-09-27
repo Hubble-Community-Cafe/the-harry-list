@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS build
+FROM node:26-alpine AS build
 
 # Update Alpine packages for security patches (including libexpat)
 RUN apk upgrade --no-cache
