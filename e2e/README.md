@@ -146,6 +146,7 @@ faster layers.
 | Activity notice (advisory banner, and opt-in confirmation dialog) | `ReservationForm` + `FormSettingsPage` tests | `ConstraintValidationServiceTest` | `public/activity-notice` |
 | Retired private-event activity (form, options API, direct submit) | `ReservationForm` + `ReservationDetailPage` tests | `FormOptionsControllerTest`, `CreateReservationServiceTest` | `public/retired-activity` |
 | Privacy policy (GDPR notice + dialog) | `PrivacyPolicy` + `Footer` tests | — | `public/privacy-policy` |
+| Self-hosted fonts, no requests to Google Fonts (#449) | n/a | n/a | `public/self-hosted-fonts`, `admin/self-hosted-fonts` |
 | Confirm a reservation (appears in admin) | `ReservationsPage`/detail tests | controller tests | `admin/reservation-lifecycle` #1 |
 | Edit / remove a reservation | `ReservationDetailPage` test | `Update`/`DeleteReservationServiceTest` | `admin/reservation-lifecycle` #2 |
 | Seating area (inside/outside) shown in detail (#292) | `ReservationDetailPage` test | — | `admin/reservation-lifecycle` #2 |
