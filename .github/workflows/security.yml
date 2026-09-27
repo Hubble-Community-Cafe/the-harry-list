@@ -114,6 +114,8 @@ jobs:
           java-version: 21
           cache: maven
 
+      # Blocking: fails the workflow on any dependency with CVSS 9 or higher. False positives go in
+      # .owasp-suppressions.xml with a reason, not in continue-on-error.
       - name: Run OWASP Dependency-Check
         run: |
           mvn org.owasp:dependency-check-maven:check \
@@ -124,7 +126,6 @@ jobs:
             -B
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        continue-on-error: true
 
       - name: Truncate long SARIF rule IDs
         if: always() && hashFiles('the-harry-list-backend/target/dependency-check-report.sarif') != ''

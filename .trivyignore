@@ -1,0 +1,9 @@
+# Vulnerabilities deliberately accepted by the release gate in .github/workflows/ci.yml, which
+# otherwise blocks any image with a CRITICAL vulnerability that has a fix available.
+#
+# Only add an entry when the fix cannot ship yet and the risk is understood. One CVE per line,
+# with a comment above it: why it does not apply or cannot be fixed now, who decided, and when to
+# look again. Remove the entry as soon as the fix is in. Example:
+#
+#   # tomcat-embed-core: fix needs Spring Boot 4.2; endpoint not exposed. Pim, 2026-10-01, recheck 2026-11-01
+#   CVE-2026-00000

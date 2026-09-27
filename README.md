@@ -106,6 +106,11 @@ All three services must be served over HTTPS. Terminate TLS at the reverse proxy
 ### Content-Security-Policy
 Both frontends send an enforcing Content-Security-Policy. It differs per app, so it lives in `nginx-csp.conf` of each frontend (the shared `nginx.conf` includes it) and is rendered at container startup with the origin of `API_URL` filled in. When a new feature needs another origin (an external API, image host or embed), add it to that app's `nginx-csp.conf`, or the browser will block it. To try a change on test without breaking anything, set `CSP_REPORT_ONLY=true` on the frontend container: violations are then only logged in the browser console. The e2e specs `public/csp` and `admin/csp` fail on any violation.
 
+### Security scanning (CI)
+- **Blocking**: each image is built and scanned with Trivy before anything is pushed. A CRITICAL vulnerability with a fix available fails the release, and no image is pushed until all three pass. The OWASP Dependency-Check job in `security.yml` fails on any backend dependency with CVSS 9 or higher.
+- **Report-only**: the HIGH findings from Trivy, Semgrep and `npm audit` go to the Security tab without failing anything. Review them as part of the monthly quality check.
+- **Accepting a risk**: add the CVE to `.trivyignore` (image gate) or `the-harry-list-backend/.owasp-suppressions.xml` (OWASP) with a reason and a date to look again, and remove it once the fix ships.
+
 ### Versioning
 Use pinned version tags in your Portainer stack (e.g., `0.9.0`) rather than `latest`. This ensures rollbacks are reliable.
 
