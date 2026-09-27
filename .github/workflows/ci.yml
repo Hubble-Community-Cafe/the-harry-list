@@ -191,6 +191,19 @@ jobs:
           name: backend-test-results
           path: the-harry-list-backend/target/surefire-reports/
 
+      # Coverage is report-only for now (no minimum): totals on the run page, full report as artifact.
+      - name: Coverage summary
+        if: always() && hashFiles('the-harry-list-backend/target/site/jacoco/jacoco.csv') != ''
+        run: python3 ../scripts/coverage-summary.py "Backend" jacoco target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always() && hashFiles('the-harry-list-backend/target/site/jacoco/jacoco.csv') != ''
+        with:
+          name: backend-coverage
+          path: the-harry-list-backend/target/site/jacoco/
+          retention-days: 14
+
   backend-build:
     name: Backend Build
     runs-on: ubuntu-latest
@@ -234,8 +247,21 @@ jobs:
       - name: Run linting
         run: npm run lint
 
-      - name: Run tests
-        run: npm run test:run
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      # Coverage is report-only for now (no minimum): totals on the run page, full report as artifact.
+      - name: Coverage summary
+        if: always() && hashFiles('the-harry-list-public/coverage/coverage-summary.json') != ''
+        run: python3 ../scripts/coverage-summary.py "Public frontend" vitest coverage/coverage-summary.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always() && hashFiles('the-harry-list-public/coverage/coverage-summary.json') != ''
+        with:
+          name: public-coverage
+          path: the-harry-list-public/coverage/
+          retention-days: 14
 
       - name: Build
         run: npm run build
@@ -263,8 +289,21 @@ jobs:
       - name: Run linting
         run: npm run lint
 
-      - name: Run tests
-        run: npm run test:run
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      # Coverage is report-only for now (no minimum): totals on the run page, full report as artifact.
+      - name: Coverage summary
+        if: always() && hashFiles('the-harry-list-admin/coverage/coverage-summary.json') != ''
+        run: python3 ../scripts/coverage-summary.py "Admin frontend" vitest coverage/coverage-summary.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always() && hashFiles('the-harry-list-admin/coverage/coverage-summary.json') != ''
+        with:
+          name: admin-coverage
+          path: the-harry-list-admin/coverage/
+          retention-days: 14
 
       - name: Build
         run: npm run build

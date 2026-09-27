@@ -48,6 +48,11 @@ Each component has its own fast test suite:
 - **Backend:** `cd the-harry-list-backend && ./mvnw test`
 - **Public / Admin frontends:** `cd the-harry-list-<public|admin> && npm run test:run`
 
+**Coverage** (report-only, no minimum yet): `./mvnw test` also writes a JaCoCo report to
+`the-harry-list-backend/target/site/jacoco/index.html`, and `npm run test:coverage` writes one to
+`coverage/index.html` in each frontend. CI shows the line, branch and method totals on every run's
+summary page and keeps the full reports as artifacts for 14 days.
+
 **End-to-end (Playwright):** full-stack browser tests that drive the real public + admin
 apps and assert on UI, database, and email (via Mailpit), with screenshots/traces/emails as
 evidence. They run on PRs via `.github/workflows/e2e.yml`.
