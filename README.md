@@ -103,6 +103,9 @@ Before going live, verify these are in place:
 ### HTTPS
 All three services must be served over HTTPS. Terminate TLS at the reverse proxy (Traefik, nginx, Portainer proxy) the containers themselves serve HTTP internally.
 
+### Content-Security-Policy
+Both frontends send an enforcing Content-Security-Policy. It differs per app, so it lives in `nginx-csp.conf` of each frontend (the shared `nginx.conf` includes it) and is rendered at container startup with the origin of `API_URL` filled in. When a new feature needs another origin (an external API, image host or embed), add it to that app's `nginx-csp.conf`, or the browser will block it. To try a change on test without breaking anything, set `CSP_REPORT_ONLY=true` on the frontend container: violations are then only logged in the browser console. The e2e specs `public/csp` and `admin/csp` fail on any violation.
+
 ### Versioning
 Use pinned version tags in your Portainer stack (e.g., `0.9.0`) rather than `latest`. This ensures rollbacks are reliable.
 
