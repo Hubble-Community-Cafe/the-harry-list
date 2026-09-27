@@ -120,9 +120,13 @@ Both frontends send an enforcing Content-Security-Policy. It differs per app, so
 Use pinned version tags in your Portainer stack (e.g., `0.9.0`) rather than `latest`. This ensures rollbacks are reliable.
 
 ### Database
-- Set `SPRING_JPA_HIBERNATE_DDL_AUTO=validate` (already set in the Portainer template) — never `update` in production
-- Take regular MariaDB backups before deploying new versions
-- Run schema migrations manually before updating the backend image
+- The schema is managed by Flyway. Migrations live in `the-harry-list-backend/src/main/resources/db/migration` and run automatically when the backend starts; there are no manual migration steps anymore.
+- Hibernate only validates (`SPRING_JPA_HIBERNATE_DDL_AUTO=validate`, also in the Portainer template). Never use `update`: it hides a missing migration until production.
+- **Changing the schema**: add a new file `V<next number>__short_description.sql` (for example `V3__add_reservation_source.sql`) with the SQL, next to the entity change. Never edit a migration that has already run; fix it with a new one. An entity change without its migration fails at startup, locally and in e2e, before it can reach production.
+- `V1__baseline.sql` is the production schema from before Flyway. Production was marked as V1 without running it; it only builds new databases (e2e, local development).
+- Enums are stored as `VARCHAR` (`hibernate.type.prefer_native_enum_types=false`), so a new enum value needs no migration.
+- The database user needs `CREATE`, `ALTER` and `INDEX` rights on the database, because the backend applies the migrations itself.
+- Take a MariaDB backup before deploying a version that contains new migrations.
 
 ### Rate Limiting
 The public reservation endpoint is rate-limited to 10 requests/minute per IP. If deploying behind a reverse proxy, ensure `X-Real-IP` is forwarded:
