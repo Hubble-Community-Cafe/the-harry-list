@@ -24,5 +24,9 @@
       "typescript": "~6.0.3"
     }
   },
-  "//": "overrides: npm only honours them at the workspace root. Keep the eslint and typescript ranges equal to the apps' devDependencies (the apps used \"$eslint\"/\"$typescript\", which cannot resolve here)."
+  "//": "overrides: npm only honours them at the workspace root. Keep the eslint and typescript ranges equal to the apps' devDependencies (the apps used \"$eslint\"/\"$typescript\", which cannot resolve here).",
+  "allowScripts": {
+    "@sentry/cli@2.58.6": true,
+    "@tybys/wasm-util@0.10.3": true
+  }
 }
