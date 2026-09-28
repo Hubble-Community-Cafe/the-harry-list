@@ -1,3 +1,6 @@
+# Build context is the repo ROOT (npm workspace with one root lockfile), not this folder:
+#   docker build -f the-harry-list-public/Dockerfile .
+
 # Build stage
 FROM node:26-alpine AS build
 
@@ -6,20 +9,25 @@ RUN apk upgrade --no-cache
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy every workspace manifest plus the root lockfile first (npm ci validates the whole workspace
+# against the lockfile), so the dependency layer is reused when only source files change.
+COPY package.json package-lock.json ./
+COPY the-harry-list-shared/package.json ./the-harry-list-shared/
+COPY the-harry-list-public/package.json ./the-harry-list-public/
+COPY the-harry-list-admin/package.json ./the-harry-list-admin/
 
 # Install dependencies (--include=optional ensures platform-specific native binaries
 # like rolldown are installed for the container's architecture, not the host's)
 RUN npm ci --include=optional
 
-# Copy source files
-COPY . .
+# Copy the shared package and this app's source
+COPY the-harry-list-shared/ ./the-harry-list-shared/
+COPY the-harry-list-public/ ./the-harry-list-public/
 
 # Build the application (SENTRY_AUTH_TOKEN enables source map upload to Sentry)
 RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN \
     SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN 2>/dev/null) \
-    npm run build
+    npm run build --workspace the-harry-list-public
 
 # Production stage
 FROM nginx:alpine
@@ -28,11 +36,11 @@ FROM nginx:alpine
 RUN apk upgrade --no-cache
 
 # Copy custom nginx config, plus this app's CSP template (rendered at startup, see below)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY nginx-csp.conf /etc/nginx/csp.conf.template
+COPY the-harry-list-shared/nginx.conf /etc/nginx/conf.d/default.conf
+COPY the-harry-list-public/nginx-csp.conf /etc/nginx/csp.conf.template
 
 # Copy built assets from build stage
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/the-harry-list-public/dist /usr/share/nginx/html
 
 # Create entrypoint script for runtime config injection
 RUN echo '#!/bin/sh' > /docker-entrypoint.d/40-inject-config.sh && \

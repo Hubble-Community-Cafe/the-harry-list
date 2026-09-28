@@ -149,6 +149,9 @@ faster layers.
 | Self-hosted fonts, no requests to Google Fonts (#449) | n/a | n/a | `public/self-hosted-fonts`, `admin/self-hosted-fonts` |
 | Content-Security-Policy enforced, no violations (full form incl. ALTCHA, every admin page) (#448) | `zodConfig` test | n/a | `public/csp`, `admin/csp` |
 | Accessibility, WCAG 2.2 AA via axe: every form step, validation errors, confirmation and privacy dialog, every admin page, light and dark theme, desktop and mobile (#457) | n/a | n/a | `public/accessibility`, `mobile-public/accessibility`, `admin/accessibility` |
+| Skip to content link, and admin focus moves to the page content after navigating (#458) | `SkipLink` + `Layout` tests | n/a | `public/accessibility`, `admin/accessibility` (keyboard tests) |
+| Pages and form parts load on demand; a stale tab reloads once after a deploy, without a reload loop (#459) | `chunkReload` + `App` tests | n/a | `admin/stale-deploy`, and every admin and form spec loads the chunks |
+| Unsaved changes: leaving via sidebar or browser back, closing a dialog with X, switching templates, closing the tab (#460) | `useUnsavedChanges` + page tests (reservation, templates, settings, appointments) | n/a | `admin/unsaved-changes` |
 | Confirm a reservation (appears in admin) | `ReservationsPage`/detail tests | controller tests | `admin/reservation-lifecycle` #1 |
 | Edit / remove a reservation | `ReservationDetailPage` test | `Update`/`DeleteReservationServiceTest` | `admin/reservation-lifecycle` #2 |
 | Seating area (inside/outside) shown in detail (#292) | `ReservationDetailPage` test | — | `admin/reservation-lifecycle` #2 |

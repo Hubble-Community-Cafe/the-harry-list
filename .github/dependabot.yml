@@ -19,6 +19,8 @@ version: 2
 # Dependabot *security* updates bypass it, so genuine fixes are never delayed.
 # ──────────────────────────────────────────────────────────────────────────────
 
+# Reviews: Dependabot's old "reviewers" key is gone; .github/CODEOWNERS requests the owner's review
+# on every PR, Dependabot's included.
 updates:
   # ── Backend (Maven) ──────────────────────────────────────────────────────────
   - package-ecosystem: "maven"
@@ -35,8 +37,6 @@ updates:
       semver-minor-days: 7
       semver-patch-days: 3
     open-pull-requests-limit: 5
-    reviewers:
-      - "PimVanLeeuwen"
     labels:
       - "dependencies"
       - "backend"
@@ -55,9 +55,11 @@ updates:
         update-types:
           - "major"
 
-  # ── Admin Frontend (npm) ──────────────────────────────────────────────────────
+  # ── Frontends (npm workspace) ────────────────────────────────────────────────
+  # One entry at the workspace root: the public and admin apps share one root
+  # package-lock.json, so Dependabot must update them together from "/".
   - package-ecosystem: "npm"
-    directory: "/the-harry-list-admin"
+    directory: "/"
     target-branch: "develop"
     schedule:
       interval: "weekly"
@@ -70,20 +72,17 @@ updates:
       semver-minor-days: 7
       semver-patch-days: 3
     open-pull-requests-limit: 5
-    reviewers:
-      - "PimVanLeeuwen"
     labels:
       - "dependencies"
       - "frontend"
-      - "admin"
     groups:
-      admin-minor-patch:
+      frontend-minor-patch:
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
-      admin-major:
+      frontend-major:
         patterns:
           - "*"
         update-types:
@@ -91,16 +90,19 @@ updates:
     ignore:
       # TypeScript majors are unusable until typescript-eslint supports them: its
       # typescript-estree caps the supported range (currently <6.1.0) and the
-      # "overrides" block in package.json pins typescript-eslint to the project's
-      # TypeScript, so a TS major makes `eslint .` crash on startup. Grouped major
-      # PRs would drag other, perfectly fine majors down with it.
+      # "overrides" block in the root package.json pins typescript-eslint to the
+      # project's TypeScript, so a TS major makes `eslint .` crash on startup. Grouped
+      # major PRs would drag other, perfectly fine majors down with it.
       # Remove this once typescript-eslint announces support for the next TS major.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
 
-  # ── Public Frontend (npm) ─────────────────────────────────────────────────────
+  # ── End-to-end tests (npm, own lockfile) ────────────────────────────────────
+  # e2e/ is not part of the frontend workspace: Playwright and its helpers have their
+  # own package.json and package-lock.json. No TypeScript ignore here: e2e has no
+  # typescript-eslint, so a TypeScript major does not break it.
   - package-ecosystem: "npm"
-    directory: "/the-harry-list-public"
+    directory: "/e2e"
     target-branch: "develop"
     schedule:
       interval: "weekly"
@@ -113,30 +115,58 @@ updates:
       semver-minor-days: 7
       semver-patch-days: 3
     open-pull-requests-limit: 5
-    reviewers:
-      - "PimVanLeeuwen"
     labels:
       - "dependencies"
-      - "frontend"
-      - "public"
+      - "javascript"
     groups:
-      public-minor-patch:
+      e2e-minor-patch:
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
-      public-major:
+      e2e-major:
         patterns:
           - "*"
         update-types:
           - "major"
-    ignore:
-      # Same as the admin app: TypeScript majors break `eslint .` until
-      # typescript-eslint raises its supported TypeScript range. See the comment
-      # in the admin section above.
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]
+
+  # ── Docker base images ──────────────────────────────────────────────────────
+  # The FROM images of the three Dockerfiles (node, maven, eclipse-temurin). Tags
+  # without a version, like nginx:alpine, cannot be tracked and resolve to the
+  # newest image on every build anyway. The images are built in PR CI by the e2e
+  # stack, so a broken base image fails the "Playwright E2E" check.
+  - package-ecosystem: "docker"
+    directories:
+      - "/the-harry-list-backend"
+      - "/the-harry-list-public"
+      - "/the-harry-list-admin"
+    target-branch: "develop"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Amsterdam"
+    # docker, like github-actions, supports only `default-days`: image tags are
+    # not required to follow SemVer.
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+    groups:
+      docker-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      docker-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
 
   # ── GitHub Actions ────────────────────────────────────────────────────────────
   - package-ecosystem: "github-actions"
@@ -152,8 +182,6 @@ updates:
     cooldown:
       default-days: 7
     open-pull-requests-limit: 5
-    reviewers:
-      - "PimVanLeeuwen"
     labels:
       - "dependencies"
       - "ci"

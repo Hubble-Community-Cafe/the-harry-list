@@ -46,7 +46,7 @@ Bar reservation system for Stichting Bar Potential.
 Each component has its own fast test suite:
 
 - **Backend:** `cd the-harry-list-backend && ./mvnw test`
-- **Public / Admin frontends:** `cd the-harry-list-<public|admin> && npm run test:run`
+- **Public / Admin frontends:** the two frontends and `the-harry-list-shared` (the code, fonts, nginx config and base configs both apps share) are one npm workspace. Install once at the repo root with `npm install` (one root `package-lock.json`), then run `npm run test:run`, `npm run build` or `npm run lint` at the root for all of them, or inside one package folder for just that one.
 
 **Coverage** (report-only, no minimum yet): `./mvnw test` also writes a JaCoCo report to
 `the-harry-list-backend/target/site/jacoco/index.html`, and `npm run test:coverage` writes one to

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Header } from '../components/Header';
-import { ThemeProvider } from '../lib/ThemeContext';
+import { ThemeProvider } from 'the-harry-list-shared';
 
 const renderWithProviders = (component: React.ReactNode) => {
   return render(

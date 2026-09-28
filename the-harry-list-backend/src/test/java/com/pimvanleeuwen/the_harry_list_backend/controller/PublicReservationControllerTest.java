@@ -24,6 +24,8 @@ import java.time.LocalTime;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -128,6 +130,69 @@ class PublicReservationControllerTest {
                         .content(objectMapper.writeValueAsString(sampleRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.confirmationNumber").value("ABC123"));
+    }
+
+    private org.springframework.test.web.servlet.ResultActions submit(PublicReservationRequest request) throws Exception {
+        return mockMvc.perform(post("/api/public/reservations")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)));
+    }
+
+    @Test
+    void submitReservation_withoutAcceptedTerms_isRejected() throws Exception {
+        // The terms carry the consent to process personal data; the form required them, the API did not.
+        sampleRequest.setTermsAccepted(null);
+        submit(sampleRequest)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("termsAccepted: You must accept the terms"));
+
+        sampleRequest.setTermsAccepted(false);
+        submit(sampleRequest)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("termsAccepted: You must accept the terms"));
+
+        verify(createReservationService, never()).execute(any());
+    }
+
+    @Test
+    void submitReservation_invoiceWithoutType_isRejected() throws Exception {
+        sampleRequest.setPaymentOption(PaymentOption.INVOICE);
+        submit(sampleRequest)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("invoiceType: Please select an invoice type"));
+        verify(createReservationService, never()).execute(any());
+    }
+
+    @Test
+    void submitReservation_tueInvoiceWithoutCostCenter_isRejected() throws Exception {
+        sampleRequest.setPaymentOption(PaymentOption.INVOICE);
+        sampleRequest.setInvoiceType(InvoiceType.TUE);
+        submit(sampleRequest)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("costCenter: Kostenplaats is required"));
+    }
+
+    @Test
+    void submitReservation_externalInvoiceWithoutAddress_isRejected() throws Exception {
+        sampleRequest.setPaymentOption(PaymentOption.INVOICE);
+        sampleRequest.setInvoiceType(InvoiceType.EXTERNAL);
+        sampleRequest.setInvoiceName("Acme B.V.");
+        submit(sampleRequest)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("invoiceAddress: Address is required"));
+    }
+
+    @Test
+    void submitReservation_completeInvoiceDetails_areAccepted() throws Exception {
+        Reservation saved = sampleRequest.toReservation();
+        saved.setId(2L);
+        saved.setConfirmationNumber("INV123");
+        when(createReservationService.execute(any(Reservation.class))).thenReturn(ResponseEntity.status(201).body(saved));
+        sampleRequest.setPaymentOption(PaymentOption.INVOICE);
+        sampleRequest.setInvoiceType(InvoiceType.TUE);
+        sampleRequest.setCostCenter("12345");
+
+        submit(sampleRequest).andExpect(status().isCreated());
     }
 
     private PublicReservationRequest createSampleRequest() {

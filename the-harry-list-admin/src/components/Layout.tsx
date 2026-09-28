@@ -1,14 +1,14 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
   LayoutDashboard, Calendar, CalendarDays, LogOut,
-  User, Menu, CalendarSync, CalendarPlus, FileDown, Mail, Settings, History
+  User, Menu, CalendarSync, CalendarPlus, FileDown, Mail, Settings, History, Loader2
 } from 'lucide-react';
-import { useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { clearAuth} from '../lib/api';
 import { usePermissions } from '../lib/usePermissions';
 import { useRole } from '../lib/RoleContext';
-import { ThemeToggle } from './ThemeToggle';
+import { ThemeToggle, SkipLink, MAIN_CONTENT_ID } from 'the-harry-list-shared';
 import { version } from '../../package.json';
 
 export function Layout() {
@@ -19,6 +19,21 @@ export function Layout() {
   const { role } = useRole();
 
   const user = accounts[0];
+
+  // After navigating to another page, move focus to the new page's content and scroll it to the top,
+  // so screen readers announce the page and keyboard users continue from its start. Skipped on the
+  // first render: a fresh page load keeps the browser's default focus.
+  const { pathname } = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+  const previousPathname = useRef(pathname);
+  useEffect(() => {
+    if (previousPathname.current === pathname) return;
+    previousPathname.current = pathname;
+    const main = mainRef.current;
+    if (!main) return;
+    main.scrollTop = 0;
+    main.focus({ preventScroll: true });
+  }, [pathname]);
 
   const handleLogout = () => {
     clearAuth();
@@ -44,6 +59,7 @@ export function Layout() {
 
   return (
     <div className="h-screen bg-dark-950 flex overflow-hidden">
+      <SkipLink />
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -156,8 +172,17 @@ export function Layout() {
         </header>
 
         {/* Page content — scrollable */}
-        <main className="flex-1 p-6 overflow-y-auto">
-          <Outlet />
+        <main id={MAIN_CONTENT_ID} ref={mainRef} tabIndex={-1} className="flex-1 p-6 overflow-y-auto outline-none">
+          {/* Pages load on demand (see App.tsx); the sidebar stays while a page chunk arrives. */}
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center py-24" role="status" aria-label="Loading page">
+                <Loader2 className="w-8 h-8 text-hubble-400 animate-spin" />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

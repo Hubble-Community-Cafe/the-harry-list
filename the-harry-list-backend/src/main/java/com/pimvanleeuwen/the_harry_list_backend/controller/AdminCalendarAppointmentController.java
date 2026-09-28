@@ -8,7 +8,6 @@ import com.pimvanleeuwen.the_harry_list_backend.repository.CalendarAppointmentRe
 import com.pimvanleeuwen.the_harry_list_backend.service.AuditDiff;
 import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,7 +19,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/calendar-appointments")
 @Tag(name = "Admin - Calendar Appointments", description = "Manage custom calendar appointments that appear in ICS feeds")
-@SecurityRequirement(name = "basicAuth")
 public class AdminCalendarAppointmentController {
 
     private final CalendarAppointmentRepository repository;

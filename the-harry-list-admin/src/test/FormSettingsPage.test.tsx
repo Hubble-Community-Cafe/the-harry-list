@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { screen, waitFor, fireEvent, within } from '@testing-library/react';
+import { renderInDataRouter } from './renderInDataRouter';
 import { FormSettingsPage } from '../pages/FormSettingsPage';
 import { fetchBlockedPeriods, createFormConstraint } from '../lib/api';
 
@@ -91,11 +91,7 @@ vi.mock('../lib/api', () => ({
 }));
 
 const renderWithRouter = (component: React.ReactNode) => {
-  return render(
-    <BrowserRouter>
-      {component}
-    </BrowserRouter>
-  );
+  return renderInDataRouter(component);
 };
 
 describe('FormSettingsPage', () => {
@@ -372,5 +368,32 @@ describe('FormSettingsPage', () => {
       expect((document.querySelector('input[type="time"]') as HTMLInputElement).value).toBe('');
     });
     expect(screen.queryByLabelText('Clear start time')).not.toBeInTheDocument();
+  });
+
+  describe('unsaved dialog edits', () => {
+    const openNewConstraint = async () => {
+      renderWithRouter(<FormSettingsPage />);
+      fireEvent.click(await screen.findByText('Add Constraint'));
+      const dialog = (await screen.findByText('New Constraint')).closest('.fixed') as HTMLElement;
+      return dialog;
+    };
+
+    it('closes the constraint dialog with X at once when nothing changed', async () => {
+      const dialog = await openNewConstraint();
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+      expect(screen.queryByText('New Constraint')).not.toBeInTheDocument();
+      expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument();
+    });
+
+    it('asks before closing the constraint dialog with X after a change', async () => {
+      const dialog = await openNewConstraint();
+      fireEvent.change(dialog.querySelector('textarea')!, { target: { value: 'Unsaved message' } });
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+      expect(screen.getByText('Discard unsaved changes?')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByText('Keep editing'));
+      expect(screen.getByDisplayValue('Unsaved message')).toBeInTheDocument();
+    });
   });
 });

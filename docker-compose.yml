@@ -64,8 +64,8 @@ services:
   # Public Reservation Form Frontend
   the-harry-list-public:
     build:
-      context: ./the-harry-list-public
-      dockerfile: Dockerfile
+      context: .  # repo root: npm workspace with one root lockfile
+      dockerfile: the-harry-list-public/Dockerfile
     ports:
       - "5173:80"
     networks:
@@ -84,8 +84,8 @@ services:
   # Admin Portal Frontend
   the-harry-list-admin:
     build:
-      context: ./the-harry-list-admin
-      dockerfile: Dockerfile
+      context: .  # repo root: npm workspace with one root lockfile
+      dockerfile: the-harry-list-admin/Dockerfile
     ports:
       - "5174:80"
     networks:

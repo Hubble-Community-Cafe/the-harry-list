@@ -17,7 +17,6 @@ import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
 import com.pimvanleeuwen.the_harry_list_backend.service.ReservationAnalytics;
 import com.pimvanleeuwen.the_harry_list_backend.service.ReservationMapper;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +39,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/reservations")
 @Tag(name = "Admin - Reservations", description = "Admin endpoints for managing reservations (login required)")
-@SecurityRequirement(name = "basicAuth")
 public class AdminReservationController {
 
     private static final Logger log = LoggerFactory.getLogger(AdminReservationController.class);

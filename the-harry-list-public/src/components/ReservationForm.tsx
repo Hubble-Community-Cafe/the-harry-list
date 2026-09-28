@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { Suspense, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import * as Sentry from '@sentry/react';
 import { submitReservation, fetchFormOptions, fetchFormConstraints, fetchBlockedPeriods, getAltchaChallengeUrl } from '../lib/api';
-import { AltchaWidget } from './AltchaWidget';
+import { AltchaWidget } from '../lib/deferredChunks';
 import { ActivityNoticeDialog } from './ActivityNoticeDialog';
 import { checkBlockedDate } from '../lib/blockedPeriods';
 import type { ReservationFormData, FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
@@ -1504,11 +1504,13 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
               </p>
             </div>
 
-            {/* ALTCHA proof-of-work widget */}
-            <AltchaWidget
-              challengeUrl={getAltchaChallengeUrl()}
-              onVerified={setAltchaPayload}
-            />
+            {/* ALTCHA proof-of-work widget (loaded on demand; normally prefetched long before step 4) */}
+            <Suspense fallback={null}>
+              <AltchaWidget
+                challengeUrl={getAltchaChallengeUrl()}
+                onVerified={setAltchaPayload}
+              />
+            </Suspense>
 
             {/* Submit Error */}
             {submitError && (

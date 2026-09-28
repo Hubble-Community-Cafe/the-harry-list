@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { screen, waitFor, fireEvent, within } from '@testing-library/react';
+import { renderInDataRouter } from './renderInDataRouter';
 import { CalendarAppointmentsPage } from '../pages/CalendarAppointmentsPage';
 
 const { mockFetch, mockCreate, mockUpdate, mockToggle, mockDelete, mockUsePermissions } = vi.hoisted(() => {
@@ -72,11 +72,7 @@ const sampleAppointments = [
 ];
 
 const renderPage = () => {
-  return render(
-    <BrowserRouter>
-      <CalendarAppointmentsPage />
-    </BrowserRouter>
-  );
+  return renderInDataRouter(<CalendarAppointmentsPage />);
 };
 
 describe('CalendarAppointmentsPage', () => {
@@ -306,6 +302,34 @@ describe('CalendarAppointmentsPage', () => {
     expect(id).toBe(8);
     expect(payload.recurrenceType).toBe('WEEKLY');
     expect(payload.recurrenceInterval).toBe(2);
+  });
+
+  describe('unsaved dialog edits', () => {
+    const openNewAppointment = async () => {
+      renderPage();
+      await waitFor(() => expect(screen.getByText('Staff Meeting')).toBeInTheDocument());
+      fireEvent.click(screen.getByText('Add Appointment'));
+      return screen.getByText('New Appointment').closest('.fixed') as HTMLElement;
+    };
+
+    it('closes the appointment dialog with X at once when nothing changed', async () => {
+      const dialog = await openNewAppointment();
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+      expect(screen.queryByText('New Appointment')).not.toBeInTheDocument();
+    });
+
+    it('asks before closing the appointment dialog with X after a change', async () => {
+      const dialog = await openNewAppointment();
+      fireEvent.change(within(dialog).getByPlaceholderText('e.g. Staff Meeting, Holiday Closure'), {
+        target: { value: 'Unsaved appointment' },
+      });
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+      expect(screen.getByText('Discard unsaved changes?')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByText('Keep editing'));
+      expect(screen.getByDisplayValue('Unsaved appointment')).toBeInTheDocument();
+    });
   });
 });
 

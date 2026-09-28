@@ -1,6 +1,7 @@
 package com.pimvanleeuwen.the_harry_list_backend.dto;
 
 import com.pimvanleeuwen.the_harry_list_backend.model.*;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,6 +24,7 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ValidInvoiceDetails
 public class PublicReservationRequest {
 
     // ===== ALTCHA proof-of-work payload =====
@@ -94,6 +96,11 @@ public class PublicReservationRequest {
     // ===== Additional Information =====
     private String comments;
 
+    // The terms include consent to process the personal data in this request, so a submission
+    // without it is refused here too, not only by the form.
+    // @AssertTrue alone accepts null, so a request that leaves the field out needs @NotNull too.
+    @NotNull(message = "You must accept the terms")
+    @AssertTrue(message = "You must accept the terms")
     private Boolean termsAccepted;
 
     /**

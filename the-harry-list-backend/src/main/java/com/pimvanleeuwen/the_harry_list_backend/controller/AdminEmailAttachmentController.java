@@ -8,7 +8,6 @@ import com.pimvanleeuwen.the_harry_list_backend.model.EmailAttachment;
 import com.pimvanleeuwen.the_harry_list_backend.repository.EmailAttachmentRepository;
 import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +23,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/email-attachments")
 @Tag(name = "Admin - Email Attachments", description = "Manage PDF attachments for catering emails")
-@SecurityRequirement(name = "basicAuth")
 public class AdminEmailAttachmentController {
 
     private static final Logger log = LoggerFactory.getLogger(AdminEmailAttachmentController.class);

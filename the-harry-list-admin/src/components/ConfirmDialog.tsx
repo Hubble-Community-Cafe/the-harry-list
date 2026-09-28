@@ -24,7 +24,7 @@ export function ConfirmDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-overlay">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 animate-overlay">
       <div className="bg-dark-900 border border-dark-700 rounded-xl w-full max-w-sm animate-modal">
         <div className="p-6 space-y-4">
           <div className="flex items-start gap-3">

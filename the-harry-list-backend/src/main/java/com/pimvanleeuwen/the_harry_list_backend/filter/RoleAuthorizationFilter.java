@@ -57,8 +57,9 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
     /**
      * Every path whose endpoints are guarded by {@code @PreAuthorize} role checks. A protected
      * path missing here gets no {@code ROLE_} authorities, so its role checks would reject everyone.
+     * The OpenAPI docs use the same list to mark staff endpoints (StaffEndpointDocumentation).
      */
-    private static final List<String> ROLE_PROTECTED_PREFIXES = List.of("/api/admin", "/api/reservations");
+    public static final List<String> ROLE_PROTECTED_PREFIXES = List.of("/api/admin", "/api/reservations");
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {

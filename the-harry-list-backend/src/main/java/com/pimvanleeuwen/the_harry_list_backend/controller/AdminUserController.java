@@ -5,7 +5,6 @@ import com.pimvanleeuwen.the_harry_list_backend.model.AdminUser;
 import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import com.pimvanleeuwen.the_harry_list_backend.util.AuditActorResolver;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,7 +18,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/users")
 @Tag(name = "Admin - Users", description = "Manage admin users and roles")
-@SecurityRequirement(name = "basicAuth")
 public class AdminUserController {
 
     private final AdminUserService adminUserService;

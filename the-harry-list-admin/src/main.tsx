@@ -2,11 +2,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PublicClientApplication, EventType, type AccountInfo } from '@azure/msal-browser';
 import { MsalProvider } from '@azure/msal-react';
-import { BrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import { msalConfig } from './lib/authConfig';
 import { setMsalInstance } from './lib/api';
-import { installTranslationCrashGuard } from './lib/translationCrashGuard';
+import { installTranslationCrashGuard, installChunkReload } from 'the-harry-list-shared';
 import App from './App';
 import './index.css';
 
@@ -14,6 +14,8 @@ declare const __APP_VERSION__: string;
 
 // Must run before React renders — see translationCrashGuard for details.
 installTranslationCrashGuard();
+// A tab opened before a deploy reloads once to fetch the new build when a lazy chunk is gone.
+installChunkReload();
 
 const sentryDsn = window.__RUNTIME_CONFIG__?.SENTRY_DSN || import.meta.env.VITE_SENTRY_DSN;
 if (sentryDsn && !sentryDsn.startsWith('__')) {
@@ -84,12 +86,14 @@ msalInstance.initialize().then(async () => {
     }
   });
 
+  // A data router, so pages can block navigation while they hold unsaved changes (useBlocker).
+  // One catch-all route renders App, which keeps defining the actual routes with <Routes>.
+  const router = createBrowserRouter([{ path: '*', element: <App /> }]);
+
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <MsalProvider instance={msalInstance}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <RouterProvider router={router} />
       </MsalProvider>
     </StrictMode>
   );

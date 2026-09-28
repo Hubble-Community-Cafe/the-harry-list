@@ -5,6 +5,7 @@ import type { EmailAttachment } from '../types/reservation';
 import { HelpGuide } from '../components/HelpGuide';
 import { emailTemplatesGuide } from '../lib/guideContent';
 import { usePermissions } from '../lib/usePermissions';
+import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 
 interface EmailTemplateDto {
   templateType: string;
@@ -28,6 +29,11 @@ export function EmailTemplatesPage() {
   const [expandedType, setExpandedType] = useState<string | null>(null);
   const [editSubject, setEditSubject] = useState('');
   const [editBody, setEditBody] = useState('');
+  // Unsaved: the open template's subject or body differs from the stored version.
+  const expandedTemplate = templates.find((t) => t.templateType === expandedType);
+  const isTemplateDirty =
+    !!expandedTemplate && (editSubject !== expandedTemplate.subject || editBody !== expandedTemplate.bodyTemplate);
+  const { confirmDiscard, unsavedChangesDialog } = useUnsavedChanges(isTemplateDirty);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -242,7 +248,7 @@ export function EmailTemplatesPage() {
             >
               {/* Card header */}
               <button
-                onClick={() => openEditor(template)}
+                onClick={() => confirmDiscard(() => openEditor(template))}
                 className="w-full flex items-center justify-between p-5 text-left hover:bg-dark-800/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
@@ -478,6 +484,7 @@ export function EmailTemplatesPage() {
         )}
       </div>
       )}
+      {unsavedChangesDialog}
     </div>
   );
 }

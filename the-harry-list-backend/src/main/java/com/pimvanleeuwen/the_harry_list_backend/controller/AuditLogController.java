@@ -9,7 +9,6 @@ import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditLog;
 import com.pimvanleeuwen.the_harry_list_backend.repository.AuditLogRepository;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.criteria.Predicate;
 import org.slf4j.Logger;
@@ -39,7 +38,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/audit")
 @Tag(name = "Admin - Audit Log", description = "Read-only audit trail of changes (login required)")
-@SecurityRequirement(name = "basicAuth")
 public class AuditLogController {
 
     private static final Logger log = LoggerFactory.getLogger(AuditLogController.class);
