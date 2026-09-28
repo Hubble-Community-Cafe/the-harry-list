@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { resetBackend, seedReservation, seedUser } from '../../fixtures/backend';
 import { THEMES, useTheme, expectNoA11yViolations } from '../../fixtures/a11y';
 
@@ -35,3 +35,22 @@ for (const theme of THEMES) {
     }
   });
 }
+
+test('keyboard: skip link to the content, and focus follows sidebar navigation', async ({ page, request }) => {
+  await resetBackend(request);
+  await seedUser(request, { oid: 'e2e-admin', role: 'ADMIN' });
+  await page.goto('/');
+  await page.locator('main h1').first().waitFor();
+
+  await page.keyboard.press('Tab');
+  const skipLink = page.getByRole('link', { name: 'Skip to content' });
+  await expect(skipLink).toBeFocused();
+  await expect(skipLink).toBeInViewport();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#main-content')).toBeFocused();
+
+  // Choosing another page moves focus to its content, so screen readers announce the new page.
+  await page.getByRole('link', { name: 'Reservations' }).click();
+  await page.locator('main h1').first().waitFor();
+  await expect(page.locator('#main-content')).toBeFocused();
+});

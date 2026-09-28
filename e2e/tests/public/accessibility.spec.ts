@@ -54,3 +54,19 @@ for (const theme of THEMES) {
     });
   });
 }
+
+test('keyboard: the first Tab reaches a visible skip link that jumps past the header', async ({ page, request }) => {
+  await resetBackend(request);
+  await page.goto('/');
+
+  await page.keyboard.press('Tab');
+  const skipLink = page.getByRole('link', { name: 'Skip to content' });
+  await expect(skipLink).toBeFocused();
+  await expect(skipLink).toBeInViewport();
+
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#main-content')).toBeFocused();
+  // The next Tab continues inside the content, not in the header.
+  await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => !!document.activeElement?.closest('#main-content'))).toBe(true);
+});

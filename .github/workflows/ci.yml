@@ -34,6 +34,7 @@ jobs:
             "nginx.conf"
             "src/lib/ThemeContext.tsx"
             "src/components/ThemeToggle.tsx"
+            "src/components/SkipLink.tsx"
             "src/lib/utils.ts"
             "src/test/setup.ts"
           )

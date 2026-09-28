@@ -6,6 +6,7 @@ import { Footer } from './components/Footer';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { ThemeProvider } from './lib/ThemeContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { SkipLink, MAIN_CONTENT_ID } from './components/SkipLink';
 
 interface SubmissionResult {
   confirmationNumber: string;
@@ -33,6 +34,7 @@ function App() {
     <ErrorBoundary>
     <ThemeProvider>
       <div className="min-h-screen bg-dark-950 flex flex-col">
+        <SkipLink />
         {/* Background decoration */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-hubble-600/20 rounded-full blur-3xl" />
@@ -42,7 +44,7 @@ function App() {
 
         <Header />
 
-        <main className="flex-1 relative z-10">
+        <main id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 relative z-10 outline-none">
           <div className="container mx-auto px-4 py-12">
             {!submitted ? (
             <>

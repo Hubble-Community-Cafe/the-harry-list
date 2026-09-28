@@ -825,3 +825,28 @@ body.dark {
     border-color: var(--color-dark-400) !important;
   }
 }
+
+/* "Skip to content" link (SkipLink.tsx): parked above the viewport until it receives keyboard focus,
+   then shown top-left as a Hubble teal button. White on #0f4d64 is 9.3:1 in both themes. */
+.skip-link {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  background-color: #0f4d64;
+  color: #ffffff;
+  font-family: 'Lato', system-ui, sans-serif;
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+  /* Two-tone ring: the white inner edge stands out on the dark theme, the teal outer edge on the
+     light theme. The transparent outline keeps a ring in Windows high-contrast mode. */
+  outline: 2px solid transparent;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #0f4d64;
+}
