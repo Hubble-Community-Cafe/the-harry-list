@@ -68,6 +68,11 @@ export class ReservationFormPage {
     }
   }
 
+  /** Set the number of guests in one go (fill does not pass through each typed digit). */
+  async setGuests(guests: number): Promise<void> {
+    await this.page.getByTestId('expected-guests').fill(String(guests));
+  }
+
   /** Toggle a special activity by its visible label (e.g. "Catering"). */
   async toggleActivity(label: string): Promise<void> {
     await this.page.getByText(label, { exact: true }).click();

@@ -13,6 +13,7 @@ import { submitReservation, fetchFormOptions, fetchFormConstraints, fetchBlocked
 import { AltchaWidget } from '../lib/deferredChunks';
 import { ActivityNoticeDialog } from './ActivityNoticeDialog';
 import { checkBlockedDate } from '../lib/blockedPeriods';
+import { noticeApplies, requiresConfirmation } from '../lib/activityNotices';
 import type { ReservationFormData, FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
 
 // Phone number validation - allows international formats
@@ -121,13 +122,6 @@ const steps = [
   { id: 3, title: 'Payment', icon: CreditCard },
   { id: 4, title: 'Confirm', icon: ClipboardCheck },
 ];
-
-/**
- * targetValue marker that opts an ACTIVITY_NOTICE into a confirmation dialog rather than
- * a passive banner. Must match FormConstraint.ACTIVITY_NOTICE_CONFIRM in the backend and
- * the constant in the admin's FormSettingsPage.
- */
-const ACTIVITY_NOTICE_CONFIRM = 'CONFIRM';
 
 const SPECIAL_ACTIVITY_LABELS: Record<string, string> = {
   GRADUATION: 'Graduation / PhD Defense',
@@ -257,24 +251,41 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
   }, [seatingLocked, setValue]);
 
   // Advisory notices (e.g. "this option costs money") shown when a selected activity
-  // matches an ACTIVITY_NOTICE constraint. Purely informational — no enforcement.
+  // matches an ACTIVITY_NOTICE constraint, optionally only for one location and/or from a
+  // minimum group size. Purely informational, no enforcement.
   const activityNotices = useMemo(() => {
+    const ctx = { activities: watchSpecialActivities, location: watchLocation, guests: watchExpectedGuests };
     return constraints
-      .filter(c => c.constraintType === 'ACTIVITY_NOTICE' && watchSpecialActivities.includes(c.triggerActivity))
+      .filter(c => noticeApplies(c, ctx))
       .map(c => ({ id: c.id, message: c.message }));
-  }, [constraints, watchSpecialActivities]);
+  }, [constraints, watchSpecialActivities, watchLocation, watchExpectedGuests]);
 
-  // A notice staff marked as requiring acknowledgement opens a dialog before the activity
-  // is actually selected. Holds the pending activity + its message while the guest decides.
-  const [pendingNotice, setPendingNotice] = useState<{ activity: string; message: string } | null>(null);
+  // A notice staff marked as requiring acknowledgement opens a dialog. Holds the notice and
+  // its activity while the guest decides; the activity may or may not be selected yet.
+  const [pendingNotice, setPendingNotice] = useState<{ id: number; activity: string; message: string } | null>(null);
+  // Confirm-required notices the guest already acknowledged, so they are not asked twice.
+  // Deselecting the activity forgets them again.
+  const [acknowledgedNotices, setAcknowledgedNotices] = useState<number[]>([]);
 
-  /** The confirm-required notice for an activity, or undefined when it has none. */
+  /** The unacknowledged confirm-required notice for an activity, if the form now meets its conditions. */
   const confirmNoticeFor = useCallback((activity: string) => {
+    const ctx = { activities: [activity], location: watchLocation, guests: watchExpectedGuests };
     return constraints.find(c =>
-      c.constraintType === 'ACTIVITY_NOTICE'
-      && c.triggerActivity === activity
-      && c.targetValue === ACTIVITY_NOTICE_CONFIRM);
-  }, [constraints]);
+      requiresConfirmation(c) && noticeApplies(c, ctx) && !acknowledgedNotices.includes(c.id));
+  }, [constraints, watchLocation, watchExpectedGuests, acknowledgedNotices]);
+
+  // A conditional notice (e.g. Meteor with 8+ guests) can start to apply after its activity
+  // was picked, when the guest changes the location or group size. Ask for it then.
+  useEffect(() => {
+    if (pendingNotice) return;
+    for (const activity of watchSpecialActivities) {
+      const notice = confirmNoticeFor(activity);
+      if (notice) {
+        setPendingNotice({ id: notice.id, activity, message: notice.message });
+        return;
+      }
+    }
+  }, [pendingNotice, watchSpecialActivities, confirmNoticeFor]);
 
   // Calculate duration for long reservation warning
   const durationMinutes = useMemo(() => {
@@ -576,6 +587,8 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
   const deselectActivity = (activity: string) => {
     const current = getValues('specialActivities') || [];
     setValue('specialActivities', current.filter(a => a !== activity));
+    setAcknowledgedNotices(prev => prev.filter(id =>
+      constraints.find(c => c.id === id)?.triggerActivity !== activity));
   };
 
   const toggleActivity = (activity: string) => {
@@ -591,7 +604,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
     // the guest answers the dialog, so declining leaves the form exactly as it was.
     const notice = confirmNoticeFor(activity);
     if (notice) {
-      setPendingNotice({ activity, message: notice.message });
+      setPendingNotice({ id: notice.id, activity, message: notice.message });
       return;
     }
     selectActivity(activity);
@@ -1579,10 +1592,17 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       <ActivityNoticeDialog
         message={pendingNotice?.message ?? null}
         onConfirm={() => {
-          if (pendingNotice) selectActivity(pendingNotice.activity);
+          if (pendingNotice) {
+            const { id } = pendingNotice;
+            setAcknowledgedNotices(prev => [...prev, id]);
+            selectActivity(pendingNotice.activity);
+          }
           setPendingNotice(null);
         }}
-        onDecline={() => setPendingNotice(null)}
+        onDecline={() => {
+          if (pendingNotice) deselectActivity(pendingNotice.activity);
+          setPendingNotice(null);
+        }}
       />
     </div>
   );

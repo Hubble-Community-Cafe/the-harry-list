@@ -258,6 +258,60 @@ describe('FormSettingsPage', () => {
     });
   });
 
+  it('saves an Activity Notice limited to a location and minimum group size', async () => {
+    vi.mocked(createFormConstraint).mockResolvedValueOnce({
+      id: 11,
+      constraintType: 'ACTIVITY_NOTICE',
+      triggerActivity: 'EAT_A_LA_CARTE',
+      targetValue: 'CONFIRM',
+      secondaryValue: 'METEOR',
+      numericValue: 8,
+      message: 'Please pre-order from the menu.',
+      enabled: true,
+    });
+
+    renderWithRouter(<FormSettingsPage />);
+    await waitFor(() => expect(screen.getByText('Add Constraint')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByText('Add Constraint'));
+    await waitFor(() => expect(screen.getByText('New Constraint')).toBeInTheDocument());
+
+    fireEvent.change(screen.getByTestId('constraint-type'), { target: { value: 'ACTIVITY_NOTICE' } });
+
+    const location = screen.getByLabelText('Only at location');
+    const minGuests = screen.getByLabelText('Only from number of guests');
+    // Both conditions start empty, meaning "everyone who picks the activity".
+    expect(location).toHaveValue('');
+    expect(minGuests).toHaveValue(null);
+
+    fireEvent.click(screen.getByTestId('constraint-require-confirmation'));
+    fireEvent.change(screen.getByTestId('constraint-trigger'), { target: { value: 'EAT_A_LA_CARTE' } });
+    fireEvent.change(location, { target: { value: 'METEOR' } });
+    fireEvent.change(minGuests, { target: { value: '8' } });
+    fireEvent.change(screen.getByTestId('constraint-message'), {
+      target: { value: 'Please pre-order from the menu.' },
+    });
+    fireEvent.click(screen.getByTestId('save-constraint'));
+
+    await waitFor(() => expect(createFormConstraint).toHaveBeenCalled());
+    expect(vi.mocked(createFormConstraint).mock.calls[0][0]).toMatchObject({
+      constraintType: 'ACTIVITY_NOTICE',
+      triggerActivity: 'EAT_A_LA_CARTE',
+      targetValue: 'CONFIRM',
+      secondaryValue: 'METEOR',
+      numericValue: 8,
+    });
+  });
+
+  it('hides the notice conditions for other constraint types', async () => {
+    renderWithRouter(<FormSettingsPage />);
+    await waitFor(() => expect(screen.getByText('Add Constraint')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByText('Add Constraint'));
+    await waitFor(() => expect(screen.getByText('New Constraint')).toBeInTheDocument());
+
+    expect(screen.queryByTestId('constraint-notice-location')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('constraint-notice-min-guests')).not.toBeInTheDocument();
+  });
+
   it('opens new blocked period modal when Add Blocked Period is clicked', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {

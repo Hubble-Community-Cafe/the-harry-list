@@ -64,11 +64,15 @@ public class FormConstraint {
      *  ADVANCE_BOOKING: minimum days ahead
      *  GUEST_LIMIT: maximum number of guests
      *  TIME_RESTRICTION: unused
+     *  ACTIVITY_NOTICE: optional, only show the notice from this many guests
      */
     @Column(name = "numeric_value")
     private Integer numericValue;
 
-    /** Optional secondary value for extra context (e.g. time range). */
+    /** Optional secondary value for extra context (e.g. time range).
+     *  ACTIVITY_NOTICE: optional location (HUBBLE or METEOR) the notice is limited to,
+     *      since targetValue already holds the {@link #ACTIVITY_NOTICE_CONFIRM} marker.
+     */
     @Column(name = "secondary_value", length = 100)
     private String secondaryValue;
 

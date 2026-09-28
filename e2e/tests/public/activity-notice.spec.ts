@@ -88,3 +88,53 @@ test.describe('public: activity notice requiring confirmation', () => {
     await captureScreenshot(testInfo, page, '2-confirmed-and-selected');
   });
 });
+
+/**
+ * A notice can be limited to one location and a minimum group size: at Meteor, groups of 8
+ * or more eating a la carte must confirm they will pre-order. It pops up as soon as all
+ * conditions match, whatever order the guest fills them in, and never at Hubble.
+ */
+test.describe('public: activity notice limited to a location and group size', () => {
+  const NOTICE = 'Groups of 8 or more at Meteor: please send your menu choices in advance.';
+
+  test.beforeEach(async ({ request }) => {
+    await resetBackend(request);
+    await seedConstraint(request, {
+      constraintType: 'ACTIVITY_NOTICE',
+      triggerActivity: 'EAT_A_LA_CARTE',
+      targetValue: 'CONFIRM',
+      secondaryValue: 'METEOR',
+      numericValue: 8,
+      message: NOTICE,
+    });
+  });
+
+  test('asks at Meteor with 8+ guests, but not at Hubble', async ({ page }, testInfo) => {
+    const form = new ReservationFormPage(page);
+    await form.goto();
+    await form.fillContact({ name: 'Mila Menu', email: 'mila.menu@example.com' });
+    await form.continue();
+    await form.expectStep('Event Details');
+
+    const alaCarte = form.activityCheckbox('Eat a la carte');
+
+    // Hubble with a big group: nothing changes for Hubble.
+    await form.setGuests(12);
+    await form.selectLocation('HUBBLE');
+    await form.toggleActivity('Eat a la carte');
+    await expect(alaCarte).toHaveAttribute('aria-checked', 'true');
+    await expect(form.activityNoticeDialog()).toHaveCount(0);
+    await expect(form.activityNotices()).toHaveCount(0);
+
+    // Switching to Meteor makes every condition match, so the popup appears.
+    await form.selectLocation('METEOR');
+    await expect(form.activityNoticeDialog()).toBeVisible();
+    await expect(form.activityNoticeDialog()).toContainText(NOTICE);
+    await captureScreenshot(testInfo, page, '1-meteor-group-popup');
+
+    await form.confirmActivityNotice();
+    await expect(form.activityNoticeDialog()).toHaveCount(0);
+    await expect(alaCarte).toHaveAttribute('aria-checked', 'true');
+    await expect(form.activityNotices()).toHaveText(NOTICE);
+  });
+});

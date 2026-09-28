@@ -350,7 +350,7 @@ Constraints are rules that enforce business logic on the reservation form. Each 
 - **Advance Booking** — requires a minimum number of days between booking and event date
 - **Time Restriction** — limits available time slots for certain activities
 - **Guest Minimum** — sets a minimum guest count for a specific location (e.g. Meteor minimum 1 person)
-- **Activity Notice** — shows an advisory message when an activity is selected, without blocking the booking (e.g. "Catering requires a deposit"). Tick **Require confirmation popup** to make guests acknowledge it in a dialog (with the option to deselect the activity instead) rather than just showing a banner they can scroll past. Use that sparingly, for notices that are genuinely easy to miss.
+- **Activity Notice** — shows an advisory message when an activity is selected, without blocking the booking (e.g. "Catering requires a deposit"). Tick **Require confirmation popup** to make guests acknowledge it in a dialog (with the option to deselect the activity instead) rather than just showing a banner they can scroll past. Use that sparingly, for notices that are genuinely easy to miss. Optionally fill in **Only at location** and/or **Only from number of guests** to show the notice only for that bar or for bigger groups (e.g. Meteor, Eat a la Carte, from 8 guests: "please send your menu choices in advance"). Guests then see it as soon as all of those match, in whatever order they fill in the form.
 
 ### Adding a Constraint
 

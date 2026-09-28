@@ -143,7 +143,7 @@ faster layers.
 | Sender / spam-folder notice on confirmation (#310) | `SuccessMessage` test | — | `public/happy-path` |
 | Soft / hard blocked periods | `blockedPeriods` + form tests | `ConstraintValidationServiceTest` | `public/soft-block`, `public/hard-block`, `admin/blocked-periods` |
 | Form constraints (all types) | form tests | `ConstraintValidationServiceTest` | `public/constraints-blocking`, `public/constraints-dynamic`, `admin/constraints-roundtrip` |
-| Activity notice (advisory banner, and opt-in confirmation dialog) | `ReservationForm` + `FormSettingsPage` tests | `ConstraintValidationServiceTest` | `public/activity-notice` |
+| Activity notice (advisory banner, opt-in confirmation dialog, optional location and minimum-guest conditions) | `ReservationForm` + `FormSettingsPage` tests | `ConstraintValidationServiceTest` | `public/activity-notice` |
 | Retired private-event activity (form, options API, direct submit) | `ReservationForm` + `ReservationDetailPage` tests | `FormOptionsControllerTest`, `CreateReservationServiceTest` | `public/retired-activity` |
 | Privacy policy (GDPR notice + dialog) | `PrivacyPolicy` + `Footer` tests | — | `public/privacy-policy` |
 | Self-hosted fonts, no requests to Google Fonts (#449) | n/a | n/a | `public/self-hosted-fonts`, `admin/self-hosted-fonts` |
