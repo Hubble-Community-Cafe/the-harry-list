@@ -26,14 +26,6 @@
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.5"
   },
-  "overrides": {
-    "eslint-plugin-react-hooks": {
-      "eslint": "$eslint"
-    },
-    "typescript-eslint": {
-      "typescript": "$typescript"
-    }
-  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@sentry/vite-plugin": "^5.4.0",

@@ -55,9 +55,11 @@ updates:
         update-types:
           - "major"
 
-  # ── Admin Frontend (npm) ──────────────────────────────────────────────────────
+  # ── Frontends (npm workspace) ────────────────────────────────────────────────
+  # One entry at the workspace root: the public and admin apps share one root
+  # package-lock.json, so Dependabot must update them together from "/".
   - package-ecosystem: "npm"
-    directory: "/the-harry-list-admin"
+    directory: "/"
     target-branch: "develop"
     schedule:
       interval: "weekly"
@@ -75,15 +77,14 @@ updates:
     labels:
       - "dependencies"
       - "frontend"
-      - "admin"
     groups:
-      admin-minor-patch:
+      frontend-minor-patch:
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
-      admin-major:
+      frontend-major:
         patterns:
           - "*"
         update-types:
@@ -91,50 +92,10 @@ updates:
     ignore:
       # TypeScript majors are unusable until typescript-eslint supports them: its
       # typescript-estree caps the supported range (currently <6.1.0) and the
-      # "overrides" block in package.json pins typescript-eslint to the project's
-      # TypeScript, so a TS major makes `eslint .` crash on startup. Grouped major
-      # PRs would drag other, perfectly fine majors down with it.
+      # "overrides" block in the root package.json pins typescript-eslint to the
+      # project's TypeScript, so a TS major makes `eslint .` crash on startup. Grouped
+      # major PRs would drag other, perfectly fine majors down with it.
       # Remove this once typescript-eslint announces support for the next TS major.
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]
-
-  # ── Public Frontend (npm) ─────────────────────────────────────────────────────
-  - package-ecosystem: "npm"
-    directory: "/the-harry-list-public"
-    target-branch: "develop"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "Europe/Amsterdam"
-    cooldown:
-      default-days: 7
-      semver-major-days: 30
-      semver-minor-days: 7
-      semver-patch-days: 3
-    open-pull-requests-limit: 5
-    reviewers:
-      - "PimVanLeeuwen"
-    labels:
-      - "dependencies"
-      - "frontend"
-      - "public"
-    groups:
-      public-minor-patch:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-      public-major:
-        patterns:
-          - "*"
-        update-types:
-          - "major"
-    ignore:
-      # Same as the admin app: TypeScript majors break `eslint .` until
-      # typescript-eslint raises its supported TypeScript range. See the comment
-      # in the admin section above.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
 

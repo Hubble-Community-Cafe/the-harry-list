@@ -1,0 +1,18 @@
+# Build context for the frontend images is the repo root (npm workspace). Keep it small and never
+# send local installs, builds, secrets or unrelated parts of the repo.
+**/node_modules
+**/dist
+**/coverage
+.git
+.github
+.env
+.env.*
+**/.env
+**/.env.*
+e2e
+the-harry-list-backend
+scripts
+*.md
+.vscode
+.idea
+**/.DS_Store

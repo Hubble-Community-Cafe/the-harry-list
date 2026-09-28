@@ -241,9 +241,11 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-          cache-dependency-path: the-harry-list-public/package-lock.json
+          cache-dependency-path: package-lock.json
 
+      # npm workspace: one install at the repo root for both frontends (one root lockfile).
       - name: Install dependencies
+        working-directory: .
         run: npm ci
 
       - name: Run linting
@@ -283,9 +285,11 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-          cache-dependency-path: the-harry-list-admin/package-lock.json
+          cache-dependency-path: package-lock.json
 
+      # npm workspace: one install at the repo root for both frontends (one root lockfile).
       - name: Install dependencies
+        working-directory: .
         run: npm ci
 
       - name: Run linting
@@ -419,7 +423,7 @@ jobs:
       - name: Build Public Frontend Docker image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
-          context: ./the-harry-list-public
+          context: .
           file: ./the-harry-list-public/Dockerfile
           load: true
           push: false
@@ -475,7 +479,7 @@ jobs:
       - name: Build Admin Frontend Docker image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
-          context: ./the-harry-list-admin
+          context: .
           file: ./the-harry-list-admin/Dockerfile
           load: true
           push: false

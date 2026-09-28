@@ -39,6 +39,9 @@ This is a monorepo with three components:
   # Backend
   cd the-harry-list-backend && ./mvnw test
 
+  # Frontends: one npm workspace, install once at the repo root
+  npm install
+
   # Admin frontend
   cd the-harry-list-admin && npm test
 

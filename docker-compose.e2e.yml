@@ -73,8 +73,8 @@ services:
   # backend at the host-published address (http://localhost:8080).
   public:
     build:
-      context: ./the-harry-list-public
-      dockerfile: Dockerfile
+      context: .  # repo root: npm workspace with one root lockfile
+      dockerfile: the-harry-list-public/Dockerfile
     environment:
       - API_URL=http://localhost:8080
     ports:
@@ -88,8 +88,8 @@ services:
   # uses the X-Test-* headers the e2e backend accepts.
   admin:
     build:
-      context: ./the-harry-list-admin
-      dockerfile: Dockerfile
+      context: .  # repo root: npm workspace with one root lockfile
+      dockerfile: the-harry-list-admin/Dockerfile
     environment:
       - API_URL=http://localhost:8080
       - E2E_AUTH_OID=e2e-admin

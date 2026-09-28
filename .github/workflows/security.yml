@@ -56,12 +56,9 @@ jobs:
           category: semgrep
 
   # ==================== DEPENDENCY SCANNING ====================
-  dependency-scan-public:
-    name: Dependency Scan (public frontend)
+  dependency-scan-frontends:
+    name: Dependency Scan (frontends)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: the-harry-list-public
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -69,33 +66,13 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-          cache-dependency-path: the-harry-list-public/package-lock.json
+          cache-dependency-path: package-lock.json
 
+      # npm workspace: one root lockfile covers both frontends, so one audit covers both.
       - run: npm ci
 
       - name: Audit npm dependencies
         # continue-on-error: Dependabot handles the fixes; we report but don't block here
-        run: npm audit --audit-level=high
-        continue-on-error: true
-
-  dependency-scan-admin:
-    name: Dependency Scan (admin frontend)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: the-harry-list-admin
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: the-harry-list-admin/package-lock.json
-
-      - run: npm ci
-
-      - name: Audit npm dependencies
         run: npm audit --audit-level=high
         continue-on-error: true
 

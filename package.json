@@ -1,0 +1,27 @@
+{
+  "name": "the-harry-list",
+  "private": true,
+  "description": "npm workspace for the two frontends; the backend (Maven) and e2e (own package) are not part of it.",
+  "workspaces": [
+    "the-harry-list-public",
+    "the-harry-list-admin"
+  ],
+  "scripts": {
+    "lint": "npm run lint --workspaces --if-present",
+    "test:run": "npm run test:run --workspaces --if-present",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "overrides": {
+    "eslint-plugin-react-hooks": {
+      "eslint": "^10.10.0"
+    },
+    "typescript-eslint": {
+      "typescript": "~6.0.3"
+    }
+  },
+  "//": "overrides: npm only honours them at the workspace root. Keep the eslint and typescript ranges equal to the apps' devDependencies (the apps used \"$eslint\"/\"$typescript\", which cannot resolve here)."
+}

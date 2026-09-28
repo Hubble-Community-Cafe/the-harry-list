@@ -16,3 +16,5 @@ docker-compose.*.local.yml
 
 .DS_Store
 
+# npm workspace: dependencies for both frontends are installed at the repo root
+/node_modules/
