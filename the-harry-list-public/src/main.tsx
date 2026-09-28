@@ -5,8 +5,7 @@ import { createRoot } from 'react-dom/client'
 import * as Sentry from '@sentry/react'
 import './index.css'
 import App from './App.tsx'
-import { installTranslationCrashGuard } from './lib/translationCrashGuard'
-import { installChunkReload } from './lib/chunkReload'
+import { installTranslationCrashGuard, installChunkReload } from 'the-harry-list-shared'
 
 declare const __APP_VERSION__: string;
 

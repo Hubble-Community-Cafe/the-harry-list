@@ -38,7 +38,8 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 // Mock runtime config for API URL resolution
-window.__RUNTIME_CONFIG__ = {
+// Each app declares window.__RUNTIME_CONFIG__ in its own types; set it untyped here.
+(window as unknown as { __RUNTIME_CONFIG__: Record<string, string> }).__RUNTIME_CONFIG__ = {
   API_URL: 'http://localhost:8080',
 };
 

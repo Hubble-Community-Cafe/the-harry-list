@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { MAIN_CONTENT_ID } from '../components/SkipLink';
+import { MAIN_CONTENT_ID } from 'the-harry-list-shared';
 
 vi.mock('@azure/msal-react', () => ({
   useMsal: () => ({ instance: { logoutPopup: vi.fn() }, accounts: [{ name: 'Test User', username: 'test@hubble.cafe' }] }),
@@ -21,7 +21,11 @@ vi.mock('../lib/usePermissions', () => ({
 
 vi.mock('../lib/RoleContext', () => ({ useRole: () => ({ role: 'VIEWER' }) }));
 
-vi.mock('../components/ThemeToggle', () => ({ ThemeToggle: () => null }));
+// Keep the rest of the shared package real (SkipLink, ThemeProvider); only the toggle is not under test.
+vi.mock('the-harry-list-shared', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('the-harry-list-shared')>()),
+  ThemeToggle: () => null,
+}));
 
 const renderLayout = () =>
   render(

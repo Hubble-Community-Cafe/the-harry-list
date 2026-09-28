@@ -2,9 +2,8 @@ import { Suspense, useEffect, useState } from 'react';
 import { ReservationForm } from './components/ReservationForm';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
-import { ThemeProvider } from './lib/ThemeContext';
+import { ThemeProvider, SkipLink, MAIN_CONTENT_ID } from 'the-harry-list-shared';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { SkipLink, MAIN_CONTENT_ID } from './components/SkipLink';
 import { PrivacyPolicy, SuccessMessage, prefetchDeferredChunks } from './lib/deferredChunks';
 
 interface SubmissionResult {

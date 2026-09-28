@@ -22,25 +22,16 @@ If you only have `.ttf` or `.otf` files, convert them using:
 
 ### 3. Add Font Files to the Project
 
-Copy the font files to both frontend projects:
+Both frontends load the fonts from the shared package, so copy them to one place:
 
 ```bash
-# For public frontend
-cp AXIS.woff2 the-harry-list-public/public/fonts/
-cp AXIS.woff the-harry-list-public/public/fonts/
-
-# For admin frontend  
-cp AXIS.woff2 the-harry-list-admin/public/fonts/
-cp AXIS.woff the-harry-list-admin/public/fonts/
+cp AXIS.woff2 AXIS.woff the-harry-list-shared/fonts/
 ```
 
 ### 4. Font Files Already Referenced
 
-The CSS has already been configured to use AXIS font. Once you add the font files, titles will automatically use the AXIS font.
-
-The @font-face rules are defined in:
-- `the-harry-list-public/src/index.css`
-- `the-harry-list-admin/src/index.css`
+The @font-face rules for AXIS and the self-hosted Lato are defined once, in
+`the-harry-list-shared/styles.css`, which both apps import from their `src/index.css`.
 
 ### 5. Font Usage in Tailwind
 

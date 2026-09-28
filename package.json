@@ -3,6 +3,7 @@
   "private": true,
   "description": "npm workspace for the two frontends; the backend (Maven) and e2e (own package) are not part of it.",
   "workspaces": [
+    "the-harry-list-shared",
     "the-harry-list-public",
     "the-harry-list-admin"
   ],

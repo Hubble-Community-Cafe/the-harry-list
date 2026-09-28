@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react';
-import { ThemeToggle } from './ThemeToggle';
+import { ThemeToggle } from 'the-harry-list-shared';
 
 // Solid, not translucent: the header is not sticky, so nothing ever scrolls
 // beneath it. A backdrop-blur here would only frost the fixed decorative

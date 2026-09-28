@@ -8,8 +8,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { clearAuth} from '../lib/api';
 import { usePermissions } from '../lib/usePermissions';
 import { useRole } from '../lib/RoleContext';
-import { ThemeToggle } from './ThemeToggle';
-import { SkipLink, MAIN_CONTENT_ID } from './SkipLink';
+import { ThemeToggle, SkipLink, MAIN_CONTENT_ID } from 'the-harry-list-shared';
 import { version } from '../../package.json';
 
 export function Layout() {

@@ -6,7 +6,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { Layout } from './components/Layout';
 import { useGroupAuthorization } from './lib/useGroupAuthorization';
 import { isE2E } from './lib/e2eAuth';
-import { ThemeProvider } from './lib/ThemeContext';
+import { ThemeProvider } from 'the-harry-list-shared';
 import { RoleProvider } from './lib/RoleContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Loader2, ShieldX } from 'lucide-react';

@@ -1,81 +1,7 @@
 @import "tailwindcss";
-
-/* Lato, self-hosted (latin + latin-ext subsets) so no visitor data goes to Google Fonts. */
-@font-face {
-  font-family: 'Lato';
-  src: url('./assets/fonts/lato-300.woff2') format('woff2');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Lato';
-  src: url('./assets/fonts/lato-300-ext.woff2') format('woff2');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-@font-face {
-  font-family: 'Lato';
-  src: url('./assets/fonts/lato-400.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Lato';
-  src: url('./assets/fonts/lato-400-ext.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-@font-face {
-  font-family: 'Lato';
-  src: url('./assets/fonts/lato-700.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Lato';
-  src: url('./assets/fonts/lato-700-ext.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-@font-face {
-  font-family: 'Lato';
-  src: url('./assets/fonts/lato-900.woff2') format('woff2');
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Lato';
-  src: url('./assets/fonts/lato-900-ext.woff2') format('woff2');
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
-/* AXIS Font - Custom title font for Hubble & Meteor branding */
-@font-face {
-  font-family: 'AXIS';
-  src: url('./assets/fonts/AXIS.woff2') format('woff2'),
-       url('./assets/fonts/AXIS.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
+@import "the-harry-list-shared/styles.css";
+/* Tailwind skips node_modules when scanning for classes: include the shared components explicitly. */
+@source "../../the-harry-list-shared/src";
 
 @theme {
   /* Hubble brand colors (blue theme) */
@@ -824,29 +750,4 @@ body.dark {
     background-color: var(--color-dark-950) !important;
     border-color: var(--color-dark-400) !important;
   }
-}
-
-/* "Skip to content" link (SkipLink.tsx): parked above the viewport until it receives keyboard focus,
-   then shown top-left as a Hubble teal button. White on #0f4d64 is 9.3:1 in both themes. */
-.skip-link {
-  position: fixed;
-  top: 1rem;
-  left: 1rem;
-  z-index: 100;
-  padding: 0.5rem 1rem;
-  border-radius: 0.75rem;
-  background-color: #0f4d64;
-  color: #ffffff;
-  font-family: 'Lato', system-ui, sans-serif;
-  font-weight: 700;
-  text-decoration: none;
-  transform: translateY(-200%);
-}
-
-.skip-link:focus {
-  transform: none;
-  /* Two-tone ring: the white inner edge stands out on the dark theme, the teal outer edge on the
-     light theme. The transparent outline keeps a ring in Windows high-contrast mode. */
-  outline: 2px solid transparent;
-  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #0f4d64;
 }

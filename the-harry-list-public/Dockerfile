@@ -12,6 +12,7 @@ WORKDIR /app
 # Copy every workspace manifest plus the root lockfile first (npm ci validates the whole workspace
 # against the lockfile), so the dependency layer is reused when only source files change.
 COPY package.json package-lock.json ./
+COPY the-harry-list-shared/package.json ./the-harry-list-shared/
 COPY the-harry-list-public/package.json ./the-harry-list-public/
 COPY the-harry-list-admin/package.json ./the-harry-list-admin/
 
@@ -19,7 +20,8 @@ COPY the-harry-list-admin/package.json ./the-harry-list-admin/
 # like rolldown are installed for the container's architecture, not the host's)
 RUN npm ci --include=optional
 
-# Copy this app's source
+# Copy the shared package and this app's source
+COPY the-harry-list-shared/ ./the-harry-list-shared/
 COPY the-harry-list-public/ ./the-harry-list-public/
 
 # Build the application (SENTRY_AUTH_TOKEN enables source map upload to Sentry)
@@ -34,7 +36,7 @@ FROM nginx:alpine
 RUN apk upgrade --no-cache
 
 # Copy custom nginx config, plus this app's CSP template (rendered at startup, see below)
-COPY the-harry-list-public/nginx.conf /etc/nginx/conf.d/default.conf
+COPY the-harry-list-shared/nginx.conf /etc/nginx/conf.d/default.conf
 COPY the-harry-list-public/nginx-csp.conf /etc/nginx/csp.conf.template
 
 # Copy built assets from build stage

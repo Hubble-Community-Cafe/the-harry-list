@@ -6,8 +6,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import { msalConfig } from './lib/authConfig';
 import { setMsalInstance } from './lib/api';
-import { installTranslationCrashGuard } from './lib/translationCrashGuard';
-import { installChunkReload } from './lib/chunkReload';
+import { installTranslationCrashGuard, installChunkReload } from 'the-harry-list-shared';
 import App from './App';
 import './index.css';
 
