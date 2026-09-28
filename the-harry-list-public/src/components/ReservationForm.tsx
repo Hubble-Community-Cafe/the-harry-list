@@ -226,12 +226,21 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
     return null;
   }, [watchExpectedGuests, constraints, watchSpecialActivities]);
 
-  // Auto-set location when locked
+  // Auto-set location when locked, and give the guest their own choice back once the lock
+  // lifts. Otherwise typing "12" guests passes through "1", flips a Hubble booking to Meteor
+  // and silently leaves it there. `undefined` means no lock is holding a choice.
+  const locationBeforeLock = useRef<string | null | undefined>(undefined);
   useEffect(() => {
     if (locationLocked) {
+      if (locationBeforeLock.current === undefined) {
+        locationBeforeLock.current = getValues('location') ?? null;
+      }
       setValue('location', locationLocked);
+    } else if (locationBeforeLock.current !== undefined) {
+      setValue('location', locationBeforeLock.current);
+      locationBeforeLock.current = undefined;
     }
-  }, [locationLocked, setValue]);
+  }, [locationLocked, setValue, getValues]);
 
   // Constraint: seating lock derived from dynamic constraints
   const seatingLocked = useMemo(() => {

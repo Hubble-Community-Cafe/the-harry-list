@@ -61,8 +61,8 @@ async function goToStep2(user: ReturnType<typeof userEvent.setup>) {
   await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
 }
 
-// Set the count in one change: typing "12" key by key passes through 1 guest, which
-// locks the location to Meteor on its own.
+// Set the count in one change, so no intermediate count (e.g. 1 while typing "12")
+// briefly locks the location to Meteor.
 function setGuests(value: string) {
   fireEvent.change(screen.getByRole('spinbutton'), { target: { value } });
 }
