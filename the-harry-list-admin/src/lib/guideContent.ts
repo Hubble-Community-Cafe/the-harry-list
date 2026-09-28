@@ -287,7 +287,10 @@ The **Reservation Confirmed/Rejected** and **Reservation Updated** templates als
 - **Send Test Email** — send a preview to any email address to check how it looks
 
 ### Tip
-The body uses **HTML**. If you're not comfortable editing HTML, only change the text content and leave the HTML tags intact.`,
+The body uses **HTML**. If you're not comfortable editing HTML, only change the text content and leave the HTML tags intact.
+
+### Unsaved changes
+If you open or close another template, leave the page, or close the tab before saving, you are first asked whether to discard your changes. Choose **Keep editing** to return and save them.`,
   },
   {
     title: 'PDF Attachments',
@@ -324,7 +327,9 @@ export const formSettingsGuide: GuideSection[] = [
 - **Form Constraints** — rules that validate or restrict what customers can select
 - **Blocked Periods** — specific date ranges when reservations are not allowed
 
-These settings directly affect what customers see and can do on the public reservation form.`,
+These settings directly affect what customers see and can do on the public reservation form.
+
+If you close a constraint or blocked period with the **X**, leave the page, or close the tab before saving, you are first asked whether to discard your changes. **Cancel** throws them away straight away.`,
   },
   {
     title: 'Form Constraints',
@@ -434,7 +439,11 @@ export const reservationDetailGuide: GuideSection[] = [
 - **Activities** — selected special activities (catering, à la carte, etc.)
 - **Additional Notes** — any comments the customer added
 - **Payment** — payment option and invoice details (if applicable)
-- **Status History** — who confirmed/rejected and when`,
+- **Status History** — who confirmed/rejected and when
+
+## Unsaved changes
+
+When you edit a reservation and then close the editor with the **X**, go back in the browser, or close the tab before saving, you are first asked whether to discard your changes. Choose **Keep editing** to return and save them. **Cancel** closes the editor and throws the changes away straight away.`,
   },
   {
     title: 'Status Actions',

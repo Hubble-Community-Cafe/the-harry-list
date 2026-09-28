@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { screen, waitFor, fireEvent, within } from '@testing-library/react';
+import { renderInDataRouter } from './renderInDataRouter';
 import { ReservationDetailPage } from '../pages/ReservationDetailPage';
 
 vi.mock('@azure/msal-react', () => ({
@@ -63,13 +63,7 @@ const DEFAULT_REJECTION_MESSAGE =
   'Unfortunately we cannot host you since we do not have any places left at this time';
 
 const renderPage = () =>
-  render(
-    <MemoryRouter initialEntries={['/reservations/1']}>
-      <Routes>
-        <Route path="/reservations/:id" element={<ReservationDetailPage />} />
-      </Routes>
-    </MemoryRouter>
-  );
+  renderInDataRouter(<ReservationDetailPage />, { path: '/reservations/:id', initialEntry: '/reservations/1' });
 
 describe('ReservationDetailPage — change history', () => {
   beforeEach(() => {
@@ -402,5 +396,62 @@ describe('ReservationDetailPage — edit email default', () => {
     await waitFor(() => expect(updateReservation).toHaveBeenCalled());
     const payload = vi.mocked(updateReservation).mock.calls[0][1] as { expectedGuests?: number };
     expect(payload.expectedGuests).toBe(137);
+  });
+});
+
+describe('ReservationDetailPage: unsaved edits', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const openEditor = async () => {
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('edit-reservation')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('edit-reservation'));
+    await screen.findByTestId('edit-save');
+  };
+  const changeGuests = () => fireEvent.change(screen.getByTestId('edit-guests'), { target: { value: '99' } });
+
+  it('closes the editor with X at once when nothing changed', async () => {
+    await openEditor();
+    fireEvent.click(screen.getByRole('button', { name: 'Close editor' }));
+    expect(screen.queryByTestId('edit-save')).not.toBeInTheDocument();
+    expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument();
+  });
+
+  it('asks before closing with X after a change, and keeps the edit on "Keep editing"', async () => {
+    await openEditor();
+    changeGuests();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close editor' }));
+    expect(screen.getByText('Discard unsaved changes?')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Keep editing'));
+    expect(screen.getByTestId('edit-guests')).toHaveValue(99);
+  });
+
+  it('closes on "Discard changes"', async () => {
+    await openEditor();
+    changeGuests();
+    fireEvent.click(screen.getByRole('button', { name: 'Close editor' }));
+    fireEvent.click(screen.getByText('Discard changes'));
+    expect(screen.queryByTestId('edit-save')).not.toBeInTheDocument();
+  });
+
+  it('closes with Cancel at once even after a change, since Cancel is an explicit discard', async () => {
+    await openEditor();
+    changeGuests();
+    const editor = screen.getByRole('heading', { name: 'Edit Reservation' }).closest('.fixed') as HTMLElement;
+    fireEvent.click(within(editor).getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByTestId('edit-save')).not.toBeInTheDocument();
+    expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument();
+  });
+
+  it('asks before leaving the page with unsaved edits', async () => {
+    await openEditor();
+    changeGuests();
+    fireEvent.click(screen.getByRole('link', { name: /Back to/i }));
+    expect(await screen.findByText('Discard unsaved changes?')).toBeInTheDocument();
+    expect(screen.queryByTestId('other-page')).not.toBeInTheDocument();
   });
 });

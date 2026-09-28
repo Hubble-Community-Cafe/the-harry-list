@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PublicClientApplication, EventType, type AccountInfo } from '@azure/msal-browser';
 import { MsalProvider } from '@azure/msal-react';
-import { BrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import { msalConfig } from './lib/authConfig';
 import { setMsalInstance } from './lib/api';
@@ -87,12 +87,14 @@ msalInstance.initialize().then(async () => {
     }
   });
 
+  // A data router, so pages can block navigation while they hold unsaved changes (useBlocker).
+  // One catch-all route renders App, which keeps defining the actual routes with <Routes>.
+  const router = createBrowserRouter([{ path: '*', element: <App /> }]);
+
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <MsalProvider instance={msalInstance}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <RouterProvider router={router} />
       </MsalProvider>
     </StrictMode>
   );

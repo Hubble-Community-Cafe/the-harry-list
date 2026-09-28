@@ -9,6 +9,7 @@ import {
 } from '../lib/api';
 import type { CalendarAppointment, RecurrenceType, DayOfWeek } from '../types/reservation';
 import { usePermissions } from '../lib/usePermissions';
+import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import {
   FREQUENCY_OPTIONS, WEEK_OF_MONTH_OPTIONS, WEEKDAYS,
@@ -59,6 +60,14 @@ export function CalendarAppointmentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<CalendarAppointment | null>(null);
+  // The dialog's starting values, to tell real changes from merely opening it.
+  const [editingBaseline, setEditingBaseline] = useState('');
+  const openEditor = (appointment: CalendarAppointment) => {
+    setEditing(appointment);
+    setEditingBaseline(JSON.stringify(appointment));
+  };
+  const isAppointmentDirty = !!editing && JSON.stringify(editing) !== editingBaseline;
+  const { confirmDiscard, unsavedChangesDialog } = useUnsavedChanges(isAppointmentDirty);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -180,7 +189,7 @@ export function CalendarAppointmentsPage() {
         </div>
         {canManageAppointments && (
         <button
-          onClick={() => setEditing({ ...emptyAppointment })}
+          onClick={() => openEditor({ ...emptyAppointment })}
           className="btn-primary flex items-center gap-2 shrink-0"
           data-testid="add-appointment"
         >
@@ -264,7 +273,7 @@ export function CalendarAppointmentsPage() {
               {canManageAppointments && (
               <div className="flex items-center gap-2 shrink-0">
                 <button
-                  onClick={() => setEditing(normalizeForEditing(appointment))}
+                  onClick={() => openEditor(normalizeForEditing(appointment))}
                   className="p-1.5 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800"
                   title="Edit"
                 >
@@ -303,7 +312,11 @@ export function CalendarAppointmentsPage() {
                 <h2 className="text-lg font-semibold text-white">
                   {editing.id ? 'Edit Appointment' : 'New Appointment'}
                 </h2>
-                <button onClick={() => setEditing(null)} className="text-dark-400 hover:text-white">
+                <button
+                  onClick={() => confirmDiscard(() => setEditing(null))}
+                  aria-label="Close"
+                  className="text-dark-400 hover:text-white"
+                >
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -542,6 +555,7 @@ export function CalendarAppointmentsPage() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
+      {unsavedChangesDialog}
     </div>
   );
 }

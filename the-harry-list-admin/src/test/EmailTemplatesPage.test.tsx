@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
+import { renderInDataRouter } from './renderInDataRouter';
 import { EmailTemplatesPage } from '../pages/EmailTemplatesPage';
 
 // Hoist mocks so vi.mock factory can access them
@@ -48,11 +48,7 @@ const sampleAttachments = [
 ];
 
 function renderPage() {
-  return render(
-    <BrowserRouter>
-      <EmailTemplatesPage />
-    </BrowserRouter>
-  );
+  return renderInDataRouter(<EmailTemplatesPage />);
 }
 
 describe('EmailTemplatesPage', () => {
@@ -186,6 +182,32 @@ describe('EmailTemplatesPage', () => {
       expect(screen.queryByText('Reservation Submitted')).toBeNull();
       expect(mockFetchWithAuth).not.toHaveBeenCalled();
       expect(mockFetchEmailAttachments).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('unsaved template edits', () => {
+    const openTemplate = async () => {
+      renderPage();
+      fireEvent.click(await screen.findByText('Reservation Submitted'));
+      return screen.findByDisplayValue('Reservation Received - {{eventTitle}}');
+    };
+
+    it('collapses a template at once when nothing changed', async () => {
+      await openTemplate();
+      fireEvent.click(screen.getByText('Reservation Submitted'));
+      expect(screen.queryByDisplayValue('Reservation Received - {{eventTitle}}')).not.toBeInTheDocument();
+      expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument();
+    });
+
+    it('asks before collapsing or switching with unsaved edits, and keeps them on "Keep editing"', async () => {
+      const subject = await openTemplate();
+      fireEvent.change(subject, { target: { value: 'Edited subject' } });
+
+      fireEvent.click(screen.getByText('Reservation Submitted'));
+      expect(screen.getByText('Discard unsaved changes?')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByText('Keep editing'));
+      expect(screen.getByDisplayValue('Edited subject')).toBeInTheDocument();
     });
   });
 });

@@ -16,6 +16,7 @@ import {
 import type { Reservation, EmailAttachment } from '../types/reservation';
 import type { AuditLogEntry } from '../types/audit';
 import { usePermissions } from '../lib/usePermissions';
+import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { HelpGuide } from '../components/HelpGuide';
 import { reservationDetailGuide } from '../lib/guideContent';
 
@@ -98,6 +99,10 @@ export function ReservationDetailPage() {
   const [sendEditEmail, setSendEditEmail] = useState(false);
   // Optional free-text message added to the "reservation updated" email.
   const [editMessage, setEditMessage] = useState('');
+  // The edit form's starting values, to tell real changes from merely opening the editor.
+  const [editBaseline, setEditBaseline] = useState('');
+  const isEditDirty = isEditing && (JSON.stringify(editData) !== editBaseline || editMessage.trim() !== '');
+  const { confirmDiscard, unsavedChangesDialog } = useUnsavedChanges(isEditDirty);
 
   // Catering email state
   const [showCateringEmail, setShowCateringEmail] = useState(false);
@@ -168,7 +173,7 @@ export function ReservationDetailPage() {
 
   const startEditing = () => {
     if (!reservation) return;
-    setEditData({
+    const initial: Partial<Reservation> = {
       // Contact info
       contactName: reservation.contactName,
       email: reservation.email,
@@ -198,7 +203,9 @@ export function ReservationDetailPage() {
       // Additional
       comments: reservation.comments || '',
       internalNotes: reservation.internalNotes || '',
-    });
+    };
+    setEditData(initial);
+    setEditBaseline(JSON.stringify(initial));
     setEditMessage('');
     setIsEditing(true);
   };
@@ -908,7 +915,11 @@ export function ReservationDetailPage() {
           <div className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-dark-700">
               <h2 className="text-xl font-title font-semibold text-white tracking-tight">Edit Reservation</h2>
-              <button onClick={() => setIsEditing(false)} className="text-dark-400 hover:text-white">
+              <button
+                onClick={() => confirmDiscard(() => setIsEditing(false))}
+                aria-label="Close editor"
+                className="text-dark-400 hover:text-white"
+              >
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -1252,6 +1263,7 @@ export function ReservationDetailPage() {
           </div>
         </div>
       )}
+      {unsavedChangesDialog}
     </div>
   );
 }

@@ -16,6 +16,7 @@ import { HelpGuide } from '../components/HelpGuide';
 import { formSettingsGuide } from '../lib/guideContent';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { usePermissions } from '../lib/usePermissions';
+import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { UsersTab } from './UsersPage';
 
 const CONSTRAINT_TYPES = [
@@ -86,6 +87,21 @@ export function SettingsPage() {
 
   // Blocked period form state
   const [editingPeriod, setEditingPeriod] = useState<BlockedPeriod | null>(null);
+  // Starting values of the open dialog, to tell real changes from merely opening it.
+  const [constraintBaseline, setConstraintBaseline] = useState('');
+  const [periodBaseline, setPeriodBaseline] = useState('');
+  const openConstraint = (constraint: FormConstraint) => {
+    setEditingConstraint(constraint);
+    setConstraintBaseline(JSON.stringify(constraint));
+  };
+  const openPeriod = (period: BlockedPeriod) => {
+    setEditingPeriod(period);
+    setPeriodBaseline(JSON.stringify(period));
+  };
+  const isSettingsDirty =
+    (!!editingConstraint && JSON.stringify(editingConstraint) !== constraintBaseline) ||
+    (!!editingPeriod && JSON.stringify(editingPeriod) !== periodBaseline);
+  const { confirmDiscard, unsavedChangesDialog } = useUnsavedChanges(isSettingsDirty);
   const [savingPeriod, setSavingPeriod] = useState(false);
 
   // Delete confirmation state
@@ -274,7 +290,7 @@ export function SettingsPage() {
               Manage rules that control which activities, locations, and time slots are available in the reservation form.
             </p>
             <button
-              onClick={() => setEditingConstraint({ ...emptyConstraint })}
+              onClick={() => openConstraint({ ...emptyConstraint })}
               data-testid="add-constraint"
               className="flex items-center gap-2 px-3 py-2 bg-hubble-600 hover:bg-hubble-500 text-white rounded-lg text-sm transition-colors"
             >
@@ -309,7 +325,7 @@ export function SettingsPage() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
-                      onClick={() => setEditingConstraint({ ...c })}
+                      onClick={() => openConstraint({ ...c })}
                       className="p-1.5 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors"
                       title="Edit"
                     >
@@ -348,7 +364,7 @@ export function SettingsPage() {
               Block specific dates or date ranges from being reserved. Optionally scope to a specific location.
             </p>
             <button
-              onClick={() => setEditingPeriod({ ...emptyBlockedPeriod })}
+              onClick={() => openPeriod({ ...emptyBlockedPeriod })}
               data-testid="add-blocked-period"
               className="flex items-center gap-2 px-3 py-2 bg-hubble-600 hover:bg-hubble-500 text-white rounded-lg text-sm transition-colors"
             >
@@ -396,7 +412,7 @@ export function SettingsPage() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
-                      onClick={() => setEditingPeriod({ ...bp })}
+                      onClick={() => openPeriod({ ...bp })}
                       className="p-1.5 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors"
                       title="Edit"
                     >
@@ -436,7 +452,11 @@ export function SettingsPage() {
                 <h2 className="text-lg font-bold text-white">
                   {editingConstraint.id ? 'Edit Constraint' : 'New Constraint'}
                 </h2>
-                <button onClick={() => setEditingConstraint(null)} className="text-dark-400 hover:text-white">
+                <button
+                  onClick={() => confirmDiscard(() => setEditingConstraint(null))}
+                  aria-label="Close"
+                  className="text-dark-400 hover:text-white"
+                >
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -608,7 +628,11 @@ export function SettingsPage() {
                 <h2 className="text-lg font-bold text-white">
                   {editingPeriod.id ? 'Edit Blocked Period' : 'New Blocked Period'}
                 </h2>
-                <button onClick={() => setEditingPeriod(null)} className="text-dark-400 hover:text-white">
+                <button
+                  onClick={() => confirmDiscard(() => setEditingPeriod(null))}
+                  aria-label="Close"
+                  className="text-dark-400 hover:text-white"
+                >
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -834,6 +858,7 @@ export function SettingsPage() {
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
+      {unsavedChangesDialog}
     </div>
   );
 }
