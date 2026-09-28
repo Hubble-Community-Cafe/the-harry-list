@@ -14,6 +14,7 @@ import { AltchaWidget } from '../lib/deferredChunks';
 import { ActivityNoticeDialog } from './ActivityNoticeDialog';
 import { checkBlockedDate } from '../lib/blockedPeriods';
 import { noticeApplies, requiresConfirmation } from '../lib/activityNotices';
+import { useRestoreAfterLock } from '../lib/useRestoreAfterLock';
 import type { ReservationFormData, FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
 
 // Phone number validation - allows international formats
@@ -228,19 +229,8 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
 
   // Auto-set location when locked, and give the guest their own choice back once the lock
   // lifts. Otherwise typing "12" guests passes through "1", flips a Hubble booking to Meteor
-  // and silently leaves it there. `undefined` means no lock is holding a choice.
-  const locationBeforeLock = useRef<string | null | undefined>(undefined);
-  useEffect(() => {
-    if (locationLocked) {
-      if (locationBeforeLock.current === undefined) {
-        locationBeforeLock.current = getValues('location') ?? null;
-      }
-      setValue('location', locationLocked);
-    } else if (locationBeforeLock.current !== undefined) {
-      setValue('location', locationBeforeLock.current);
-      locationBeforeLock.current = undefined;
-    }
-  }, [locationLocked, setValue, getValues]);
+  // and silently leaves it there.
+  useRestoreAfterLock('location', locationLocked, getValues, setValue);
 
   // Constraint: seating lock derived from dynamic constraints
   const seatingLocked = useMemo(() => {
@@ -252,12 +242,8 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
     return null;
   }, [watchSpecialActivities, constraints]);
 
-  // Auto-set seating area when locked
-  useEffect(() => {
-    if (seatingLocked) {
-      setValue('seatingArea', seatingLocked);
-    }
-  }, [seatingLocked, setValue]);
+  // Auto-set seating area when locked, and restore the guest's choice when the activity goes.
+  useRestoreAfterLock('seatingArea', seatingLocked, getValues, setValue);
 
   // Advisory notices (e.g. "this option costs money") shown when a selected activity
   // matches an ACTIVITY_NOTICE constraint, optionally only for one location and/or from a

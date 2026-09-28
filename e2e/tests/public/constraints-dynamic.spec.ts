@@ -74,3 +74,38 @@ test.describe('public: the small-group Meteor lock gives the chosen location bac
     await captureScreenshot(testInfo, page, '1-hubble-kept-after-typing-12');
   });
 });
+
+/**
+ * A SEATING_LOCK forces inside or outside while its activity is selected. Removing the
+ * activity must give the guest's own seating choice back.
+ */
+test.describe('public: a seating lock gives the chosen seating back', () => {
+  test.beforeEach(async ({ request }) => {
+    await resetBackend(request);
+    await seedConstraint(request, {
+      constraintType: 'SEATING_LOCK',
+      triggerActivity: 'CATERING_CORONA_ROOM',
+      targetValue: 'INSIDE',
+      message: 'Corona Room catering requires inside seating.',
+    });
+  });
+
+  test('outside seating comes back after deselecting the activity', async ({ page }, testInfo) => {
+    const form = new ReservationFormPage(page);
+    await form.goto();
+    await form.fillContact({ name: 'Otto Outside', email: 'otto.outside@example.com' });
+    await form.continue();
+    await form.expectStep('Event Details');
+
+    await form.selectSeating('OUTSIDE');
+
+    await form.toggleActivity('Catering Corona Room');
+    await expect(form.seatingRadio('INSIDE')).toBeChecked();
+    await expect(form.seatingRadio('OUTSIDE')).toBeDisabled();
+
+    await form.toggleActivity('Catering Corona Room');
+    await expect(form.seatingRadio('OUTSIDE')).toBeChecked();
+    await expect(form.seatingRadio('OUTSIDE')).toBeEnabled();
+    await captureScreenshot(testInfo, page, '1-outside-kept-after-deselecting');
+  });
+});

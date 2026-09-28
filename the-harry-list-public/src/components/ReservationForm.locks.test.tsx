@@ -5,7 +5,8 @@ import { ReservationForm } from './ReservationForm';
 import type { FormOptions, FormConstraint } from '../types/reservation';
 
 // The form forces a location for small groups (under 8 guests: Meteor) and for activities
-// locked to one bar. Once that lock lifts, the guest's own choice must come back.
+// locked to one bar, and a seating area for activities locked to inside or outside. Once
+// such a lock lifts, the guest's own choice must come back.
 
 vi.mock('../lib/api', () => ({
   fetchFormOptions: vi.fn(),
@@ -44,6 +45,14 @@ const mockConstraints: FormConstraint[] = [
     message: 'Corona Room catering is only available at Hubble.',
     enabled: true,
   },
+  {
+    id: 2,
+    constraintType: 'SEATING_LOCK',
+    triggerActivity: 'CATERING_CORONA_ROOM',
+    targetValue: 'INSIDE',
+    message: 'Corona Room catering requires inside seating.',
+    enabled: true,
+  },
 ];
 
 async function goToStep2(user: ReturnType<typeof userEvent.setup>) {
@@ -58,10 +67,13 @@ async function goToStep2(user: ReturnType<typeof userEvent.setup>) {
 
 const location = (value: 'HUBBLE' | 'METEOR' | 'NO_PREFERENCE') =>
   screen.getByTestId(`location-${value}`) as HTMLInputElement;
+const seating = (value: 'INSIDE' | 'OUTSIDE') =>
+  screen.getByTestId(`seating-${value}`) as HTMLInputElement;
+const coronaRoom = () => screen.getByRole('checkbox', { name: 'Catering for Corona Room Event' });
 const setGuests = (value: string) =>
   fireEvent.change(screen.getByRole('spinbutton'), { target: { value } });
 
-describe('ReservationForm location lock', () => {
+describe('ReservationForm location and seating locks', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(fetchFormOptions).mockResolvedValue(mockOptions);
@@ -130,12 +142,40 @@ describe('ReservationForm location lock', () => {
     await goToStep2(user);
 
     await user.click(location('METEOR'));
-    const corona = screen.getByRole('checkbox', { name: 'Catering for Corona Room Event' });
 
-    await user.click(corona);
+    await user.click(coronaRoom());
     await waitFor(() => expect(location('HUBBLE')).toBeChecked());
 
-    await user.click(corona);
+    await user.click(coronaRoom());
     await waitFor(() => expect(location('METEOR')).toBeChecked());
+  });
+
+  it('restores outside seating when the activity that forced inside is removed', async () => {
+    const user = userEvent.setup();
+    render(<ReservationForm onSuccess={vi.fn()} onOpenPrivacy={vi.fn()} />);
+    await goToStep2(user);
+
+    await user.click(seating('OUTSIDE'));
+
+    await user.click(coronaRoom());
+    await waitFor(() => expect(seating('INSIDE')).toBeChecked());
+    expect(seating('OUTSIDE')).toBeDisabled();
+
+    await user.click(coronaRoom());
+    await waitFor(() => expect(seating('OUTSIDE')).toBeChecked());
+    expect(seating('OUTSIDE')).toBeEnabled();
+  });
+
+  it('leaves no seating chosen when the guest had not picked one before the lock', async () => {
+    const user = userEvent.setup();
+    render(<ReservationForm onSuccess={vi.fn()} onOpenPrivacy={vi.fn()} />);
+    await goToStep2(user);
+
+    await user.click(coronaRoom());
+    await waitFor(() => expect(seating('INSIDE')).toBeChecked());
+
+    await user.click(coronaRoom());
+    await waitFor(() => expect(seating('INSIDE')).not.toBeChecked());
+    expect(seating('OUTSIDE')).not.toBeChecked();
   });
 });

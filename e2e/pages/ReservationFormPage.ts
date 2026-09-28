@@ -148,6 +148,11 @@ export class ReservationFormPage {
     await this.page.getByTestId(`location-${location}`).check({ force: true });
   }
 
+  /** A seating radio, for checked/disabled assertions. */
+  seatingRadio(seating: Seating): Locator {
+    return this.page.getByTestId(`seating-${seating}`);
+  }
+
   async selectSeating(seating: Seating): Promise<void> {
     await this.page.getByTestId(`seating-${seating}`).check({ force: true });
   }
