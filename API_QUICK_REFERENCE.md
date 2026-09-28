@@ -1,30 +1,37 @@
 # Quick API Reference
 
+A one-page overview. The complete, always up-to-date reference is Swagger UI, generated from the
+code: `http://localhost:8080/swagger-ui/index.html` in development (disabled in production).
+
 ## Base URL
 ```
 http://localhost:8080
 ```
 
+---
+
 ## Authentication
 
-**Public Endpoints (No Login Required):**
-- `POST /api/public/reservations` - Submit a reservation
-- `GET /api/options/*` - Get form options
-- `GET /actuator/health` - Health check
+**Public endpoints (no login):**
+- `POST /api/public/reservations`: submit a reservation request
+- `GET /api/public/altcha/challenge`: proof-of-work challenge the form solves before submitting
+- `GET /api/options/*`: form options
+- `GET /api/calendar/feed.ics` and `/api/calendar/staff-feed.ics`: calendar feeds, protected by their own `token` query parameter
+- `GET /actuator/health`: health check
 
-**Staff Endpoints (Login Required):**
-- All `/api/reservations/*` endpoints
-- All `/api/admin/*` endpoints
+**Staff endpoints (Microsoft Entra ID login):** everything under `/api/admin/*` and `/api/reservations/*`. Send an Entra ID access token for this app:
 
-**Staff Credentials:**
+```http
+Authorization: Bearer <access token>
 ```
-Username: admin
-Password: admin
-```
+
+There are no usernames or passwords. To get a token for manual testing, sign in to the admin portal and copy the `Authorization` header of any request to this API from the browser's developer tools (Network tab). In Swagger UI, paste only the token under **Authorize**.
+
+**Roles:** every staff endpoint needs one of three roles, where a higher role includes the lower ones: **VIEWER** (read), **EDITOR** (change reservations, blocked periods, appointments, attachments), **ADMIN** (users, email templates, form settings, audit log). Swagger UI lists the required role on each endpoint. When the backend runs with `ALLOWED_GROUP_ID`, the token must also belong to the staff group.
 
 ---
 
-## Public Endpoints (No Login Required)
+## Public Endpoints
 
 ### Submit a Reservation
 ```http
@@ -32,30 +39,37 @@ POST /api/public/reservations
 Content-Type: application/json
 
 {
+  "altcha": "<solved ALTCHA payload>",
   "contactName": "John Doe",
   "email": "john@example.com",
   "phoneNumber": "+31612345678",
-  "eventTitle": "Test Event",
-  "eventType": "BORREL",
-  "organizerType": "ASSOCIATION",
+  "organizationName": "Study Association",
+  "eventTitle": "Summer Drinks",
+  "description": "Drinks after the exams",
+  "specialActivities": ["GRADUATION"],
   "expectedGuests": 50,
   "eventDate": "2026-03-15",
-  "startTime": "16:00:00",
-  "endTime": "22:00:00",
+  "startTime": "16:00",
+  "endTime": "22:00",
   "location": "HUBBLE",
-  "paymentOption": "PIN",
+  "seatingArea": "INSIDE",
+  "paymentOption": "INDIVIDUAL",
   "termsAccepted": true
 }
 ```
 
+`altcha` is required when ALTCHA is enabled (production); get a challenge from `GET /api/public/altcha/challenge`.
+
+The public form also asks for invoice details when `paymentOption` is `INVOICE`: `invoiceType`, plus `costCenter` for `TUE` and `FONTYS`, or `invoiceName` and `invoiceAddress` for `EXTERNAL`, and it requires `termsAccepted: true`. These rules are checked by the form only; the API itself does not enforce them.
+
 **Response:**
 ```json
 {
-  "confirmationNumber": 1,
-  "eventTitle": "Test Event",
+  "confirmationNumber": "A1B2C3",
+  "eventTitle": "Summer Drinks",
   "contactName": "John Doe",
   "email": "john@example.com",
-  "message": "Your reservation request has been submitted successfully. We will review your request and contact you at john@example.com soon."
+  "message": "Your reservation request has been submitted successfully. ..."
 }
 ```
 
@@ -63,86 +77,80 @@ Content-Type: application/json
 ```http
 GET /api/options/all
 ```
+Also available separately: `/api/options/special-activities`, `/payment-options`, `/invoice-types`, `/locations`, `/seating-areas`, `/constraints` and `/blocked-periods`.
 
 ---
 
-## Staff Endpoints (Login Required)
+## Staff Endpoints (examples)
 
-### Get All Reservations
+### Get All Reservations (VIEWER)
 ```http
 GET /api/reservations
-Authorization: Basic admin:admin
+Authorization: Bearer <access token>
 ```
 
-### Get Single Reservation
+### Get Single Reservation (VIEWER)
 ```http
 GET /api/reservations/1
-Authorization: Basic admin:admin
+Authorization: Bearer <access token>
 ```
 
-### Update Reservation
+### Update Reservation (EDITOR)
 ```http
-PUT /api/reservations/1
-Authorization: Basic admin:admin
+PUT /api/reservations/1?sendEmail=false
+Authorization: Bearer <access token>
 Content-Type: application/json
 ```
 
-### Delete Reservation
+### Delete Reservation (EDITOR)
 ```http
-DELETE /api/reservations/1
-Authorization: Basic admin:admin
+DELETE /api/reservations/1?sendEmail=false
+Authorization: Bearer <access token>
 ```
 
-### Update Status (Admin)
+### Update Status (EDITOR)
 ```http
-PATCH /api/admin/reservations/1/status?status=CONFIRMED&confirmedBy=admin
-Authorization: Basic admin:admin
+PATCH /api/admin/reservations/1/status?status=CONFIRMED
+Authorization: Bearer <access token>
 ```
 
 ---
 
 ## Valid Enum Values
 
-### Event Types
-- BORREL, LUNCH, ACTIVITY, GRADUATION, DINNER, PARTY, MEETING, OTHER
+### Locations
+- HUBBLE, METEOR, NO_PREFERENCE
 
-### Organizer Types
-- ASSOCIATION, COMPANY, PRIVATE, UNIVERSITY, PHD, STUDENT, STAFF, OTHER
+### Seating Areas
+- INSIDE, OUTSIDE
 
 ### Payment Options
-- PIN, CASH, INVOICE, COST_CENTER, PREPAID
+- INDIVIDUAL, ONE_PERSON, INVOICE
 
-### Locations
-- HUBBLE, METEOR
-
-### Dietary Preferences
-- NONE, VEGETARIAN, VEGAN, HALAL, GLUTEN_FREE, LACTOSE_FREE, NUT_ALLERGY, OTHER
+### Invoice Types
+- TUE, FONTYS, EXTERNAL
 
 ### Special Activities
 - GRADUATION, EAT_A_LA_CARTE, EAT_CATERING, CATERING_CORONA_ROOM
-- `PRIVATE_EVENT` was retired in 1.12.0. It is no longer returned by `/api/options/*` and is
-  rejected with a 400 on submission, but stays readable on reservations booked before then.
+- `PRIVATE_EVENT` was retired in 1.12.0. It is no longer returned by `/api/options/*` and is rejected with a 400 on submission, but stays readable on reservations booked before then.
 
 ### Reservation Status
 - PENDING, CONFIRMED, REJECTED, CANCELLED
-- `COMPLETED` was removed in 1.12.0. `PATCH /api/admin/reservations/{id}/status?status=COMPLETED`
-  now returns 400.
+- `COMPLETED` was removed in 1.12.0. `PATCH /api/admin/reservations/{id}/status?status=COMPLETED` now returns 400.
 
 ## Date/Time Formats
-- **Date**: `YYYY-MM-DD` (e.g., "2026-03-15")
-- **Time**: `HH:mm:ss` (e.g., "16:00:00")
+- **Date**: `YYYY-MM-DD` (e.g. "2026-03-15")
+- **Time**: `HH:mm` or `HH:mm:ss` (e.g. "16:00")
 
-## Required Fields
+## Required Fields (public submission)
 - contactName
-- email
+- email (a valid address)
 - eventTitle
-- eventType
-- organizerType
+- description
 - expectedGuests (must be positive)
 - eventDate
 - startTime
 - endTime
-- location
+- seatingArea
 - paymentOption
-- termsAccepted
-
+- altcha (when ALTCHA is enabled)

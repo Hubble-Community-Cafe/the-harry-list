@@ -17,19 +17,22 @@ import org.springframework.context.annotation.Configuration;
             Bar Reservation System for Stichting Bar Potential (Hubble & Meteor Community Cafés)
             
             ## Authentication
-            
-            This API has two types of endpoints:
-            
-            ### Public Endpoints (No Login Required)
-            - `POST /api/public/reservations` - Submit a reservation request
-            - `GET /api/options/*` - Get form options (event types, locations, etc.)
-            - `GET /actuator/health` - Health check
-            
-            ### Staff Endpoints (Login Required)
-            - `GET/PUT/DELETE /api/reservations/*` - Manage reservations
-            - `PATCH /api/admin/reservations/*` - Admin actions (status updates, notes)
-            
-            Use the **Authorize** button to login with your staff credentials.
+
+            ### Public endpoints (no login)
+            - `POST /api/public/reservations`: submit a reservation request
+            - `GET /api/public/altcha/challenge`: proof-of-work challenge for the form
+            - `GET /api/options/*`: form options (activities, locations and so on)
+            - `GET /api/calendar/*.ics`: calendar feeds, protected by their own `token` parameter
+            - `GET /actuator/health`: health check
+
+            ### Staff endpoints (Microsoft Entra ID login)
+            Everything under `/api/admin/*` and `/api/reservations/*` needs an Entra ID access token
+            for this app, sent as `Authorization: Bearer <token>`. Each operation states its required
+            role: VIEWER, EDITOR or ADMIN, where a higher role includes the lower ones.
+
+            To try staff endpoints here, sign in to the admin portal, copy the bearer token from any
+            request to this API in the browser's developer tools (Network tab, `Authorization`
+            header), and paste it via **Authorize** (without the word "Bearer").
             """,
         contact = @Contact(
             name = "Stichting Bar Potential",
@@ -41,10 +44,11 @@ import org.springframework.context.annotation.Configuration;
     }
 )
 @SecurityScheme(
-    name = "basicAuth",
+    name = StaffEndpointDocumentation.SECURITY_SCHEME,
     type = SecuritySchemeType.HTTP,
-    scheme = "basic",
-    description = "Staff login credentials"
+    scheme = "bearer",
+    bearerFormat = "JWT",
+    description = "Microsoft Entra ID access token of a staff member (paste the token without \"Bearer\")"
 )
 public class OpenApiConfig {
 }

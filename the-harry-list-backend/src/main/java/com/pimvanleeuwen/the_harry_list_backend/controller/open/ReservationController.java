@@ -6,7 +6,6 @@ import com.pimvanleeuwen.the_harry_list_backend.service.DeleteReservationService
 import com.pimvanleeuwen.the_harry_list_backend.service.GetReservationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.UpdateReservationService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/reservations")
 @Tag(name = "Staff - Reservations", description = "Staff endpoints for managing reservations (login required)")
-@SecurityRequirement(name = "basicAuth")
 public class ReservationController {
 
     private final GetReservationService getReservationService;
