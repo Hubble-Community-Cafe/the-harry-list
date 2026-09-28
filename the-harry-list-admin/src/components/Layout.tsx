@@ -132,7 +132,7 @@ export function Layout() {
               Sign Out
             </button>
             <div className="mt-3 text-center">
-              <span className="text-[10px] text-dark-600">v{version}</span>
+              <span className="text-[10px] text-dark-500">v{version}</span>
             </div>
           </div>
         </div>

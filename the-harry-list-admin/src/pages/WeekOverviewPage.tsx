@@ -171,6 +171,7 @@ export function WeekOverviewPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Filter by status"
               className="select-field pl-9 pr-8 text-sm min-w-[140px]"
             >
               <option value="ALL">All Statuses</option>
@@ -185,6 +186,7 @@ export function WeekOverviewPage() {
             <select
               value={locationFilter}
               onChange={(e) => setLocationFilter(e.target.value)}
+              aria-label="Filter by location"
               className="select-field pl-9 pr-8 text-sm min-w-[140px]"
             >
               <option value="ALL">All Locations</option>
@@ -200,6 +202,7 @@ export function WeekOverviewPage() {
         <div className="flex items-center justify-between">
           <button
             onClick={() => navigateWeek(-1)}
+            aria-label="Previous week"
             className="p-2 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -216,6 +219,7 @@ export function WeekOverviewPage() {
           </div>
           <button
             onClick={() => navigateWeek(1)}
+            aria-label="Next week"
             className="p-2 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors"
           >
             <ChevronRight className="w-5 h-5" />
@@ -280,7 +284,7 @@ export function WeekOverviewPage() {
               {/* Reservations & Appointments */}
               <div className="flex-1 p-2 space-y-2 overflow-auto">
                 {dayReservations.length === 0 && (weekAppointments[dateStr]?.length ?? 0) === 0 ? (
-                  <div className="text-xs text-dark-600 text-center py-4">No events</div>
+                  <div className="text-xs text-dark-500 text-center py-4">No events</div>
                 ) : (
                   <>
                     {dayReservations.map((reservation) => (

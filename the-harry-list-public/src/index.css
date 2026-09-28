@@ -109,8 +109,8 @@
   --color-dark-100: #bde8ec;
   --color-dark-200: #98dce3;
   --color-dark-300: #94a3b8;
-  --color-dark-400: #64748b;
-  --color-dark-500: #475569;
+  --color-dark-400: #818fa4; /* 4.6:1 on every dark page and card background (WCAG AA); was #64748b */
+  --color-dark-500: #7e8fa7; /* 4.6:1 on every dark page and card background (WCAG AA); was #475569 */
   --color-dark-600: #334155;
   --color-dark-700: #1e293b;
   --color-dark-800: #1a2332;
@@ -219,8 +219,8 @@ body {
   --color-dark-100: #2b3840;
   --color-dark-200: #3d4f56;
   --color-dark-300: #4b5e66;
-  --color-dark-400: #5f7580;
-  --color-dark-500: #7a8f98;
+  --color-dark-400: #51646d; /* 4.6:1 on the tinted light backgrounds (WCAG AA); was #5f7580 */
+  --color-dark-500: #53646b; /* 4.6:1 on the tinted light backgrounds (WCAG AA); was #7a8f98 */
   --color-dark-600: #a3b4bb;
   --color-dark-700: #d4dce0;
   --color-dark-800: #e8edf0;
@@ -274,23 +274,28 @@ body {
   color: #ffffff;
 }
 
-.light .text-dark-300 {
+.light .text-dark-300,
+.light [class*="text-dark-300/"] {
   color: #4b5e66;
 }
 
-.light .text-dark-400 {
-  color: #5f7580;
+.light .text-dark-400,
+.light [class*="text-dark-400/"] {
+  color: #51646d;
 }
 
-.light .text-dark-500 {
-  color: #7a8f98;
+.light .text-dark-500,
+.light [class*="text-dark-500/"] {
+  color: #53646b;
 }
 
-.light .text-dark-600 {
+.light .text-dark-600,
+.light [class*="text-dark-600/"] {
   color: #a3b4bb;
 }
 
-.light .text-dark-700 {
+.light .text-dark-700,
+.light [class*="text-dark-700/"] {
   color: #c4cdd2;
 }
 
@@ -519,36 +524,50 @@ body {
   border-color: rgba(180, 130, 0, 0.15);
 }
 
+/* Form error messages: .error-text applies text-red-400 inside a component class, which the
+   .light .text-red-400 override below does not reach, so it needs its own light colour. */
+.light .error-text {
+  color: #bf1f1f;
+}
+
 /* Status text colors — deeper for light mode contrast */
-.light .text-amber-400 {
-  color: #b45309;
+.light .text-amber-400,
+.light [class*="text-amber-400/"] {
+  color: #af5109; /* 4.6:1 on its tinted badge backgrounds (WCAG AA); was #b45309 */
 }
 
-.light .text-red-400 {
-  color: #dc2626;
+.light .text-red-400,
+.light [class*="text-red-400/"] {
+  color: #bf1f1f; /* 4.6:1 on its tinted badge backgrounds (WCAG AA); was #dc2626 */
 }
 
-.light .text-blue-400 {
+.light .text-blue-400,
+.light [class*="text-blue-400/"] {
   color: #2563eb;
 }
 
-.light .text-hubble-300 {
+.light .text-hubble-300,
+.light [class*="text-hubble-300/"] {
   color: #1a6b7c;
 }
 
-.light .text-hubble-400 {
+.light .text-hubble-400,
+.light [class*="text-hubble-400/"] {
   color: #1a6b7c;
 }
 
-.light .text-hubble-500 {
+.light .text-hubble-500,
+.light [class*="text-hubble-500/"] {
   color: #0f4d64;
 }
 
-.light .text-meteor-300 {
+.light .text-meteor-300,
+.light [class*="text-meteor-300/"] {
   color: #065f46;
 }
 
-.light .text-meteor-400 {
+.light .text-meteor-400,
+.light [class*="text-meteor-400/"] {
   color: #065f46;
 }
 
