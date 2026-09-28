@@ -320,7 +320,7 @@ jobs:
         run: echo "version=$(node -p "require('./the-harry-list-public/package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
@@ -344,7 +344,7 @@ jobs:
       # Build into the local Docker daemon only. Nothing reaches GHCR (and so Portainer) until the
       # image has passed the vulnerability gate below; the push then sends exactly the scanned image.
       - name: Build Backend Docker image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: ./the-harry-list-backend
           file: ./the-harry-list-backend/Dockerfile
@@ -365,7 +365,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Backend Trivy results
-        uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4
+        uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4
         if: always()
         with:
           sarif_file: trivy-backend.sarif
@@ -398,7 +398,7 @@ jobs:
       # Build into the local Docker daemon only. Nothing reaches GHCR (and so Portainer) until the
       # image has passed the vulnerability gate below; the push then sends exactly the scanned image.
       - name: Build Public Frontend Docker image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
           file: ./the-harry-list-public/Dockerfile
@@ -421,7 +421,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Public Frontend Trivy results
-        uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4
+        uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4
         if: always()
         with:
           sarif_file: trivy-public.sarif
@@ -454,7 +454,7 @@ jobs:
       # Build into the local Docker daemon only. Nothing reaches GHCR (and so Portainer) until the
       # image has passed the vulnerability gate below; the push then sends exactly the scanned image.
       - name: Build Admin Frontend Docker image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
           file: ./the-harry-list-admin/Dockerfile
@@ -477,7 +477,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Admin Frontend Trivy results
-        uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4
+        uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4
         if: always()
         with:
           sarif_file: trivy-admin.sarif
