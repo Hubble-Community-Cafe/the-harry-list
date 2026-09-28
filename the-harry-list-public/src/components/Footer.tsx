@@ -48,7 +48,7 @@ export function Footer({ onOpenPrivacy }: FooterProps) {
         </div>
 
         {/* Copyright */}
-        <div className="mt-6 pt-6 border-t border-dark-800/50 text-center text-xs text-dark-600">
+        <div className="mt-6 pt-6 border-t border-dark-800/50 text-center text-xs text-dark-500">
           © {new Date().getFullYear()} Hubble & Meteor Community Cafés. All rights reserved.
         </div>
       </div>

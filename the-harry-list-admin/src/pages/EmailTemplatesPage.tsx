@@ -403,12 +403,14 @@ export function EmailTemplatesPage() {
               value={newAttachmentName}
               onChange={(e) => setNewAttachmentName(e.target.value)}
               placeholder="Display name (e.g. Catering Menu 2026)"
+              aria-label="Attachment display name"
               className="input-field flex-1 text-sm"
             />
             <input
               ref={fileInputRef}
               type="file"
               accept=".pdf,application/pdf"
+              aria-label="PDF file"
               className="text-sm text-dark-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-dark-800 file:text-white hover:file:bg-dark-700 file:cursor-pointer file:transition-colors"
             />
             <button

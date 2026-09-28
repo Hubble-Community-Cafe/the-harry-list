@@ -120,6 +120,7 @@ export function ReservationsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Filter by status"
               className="select-field pl-10 pr-8 min-w-[150px]"
             >
               {statusOptions.map((status) => (
@@ -136,6 +137,7 @@ export function ReservationsPage() {
             <select
               value={locationFilter}
               onChange={(e) => setLocationFilter(e.target.value)}
+              aria-label="Filter by location"
               className="select-field pl-10 pr-8 min-w-[150px]"
             >
               {locationOptions.map((location) => (

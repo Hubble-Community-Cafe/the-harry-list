@@ -75,12 +75,13 @@ export function ExportPage() {
         <div className="p-5 space-y-5">
           {/* Date Selection */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-dark-300 mb-2">
+            <label htmlFor="export-date" className="flex items-center gap-2 text-sm font-medium text-dark-300 mb-2">
               <Calendar className="w-4 h-4" />
               Select Date
             </label>
             <input
               type="date"
+              id="export-date"
               data-testid="export-date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}

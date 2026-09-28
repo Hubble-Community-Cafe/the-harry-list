@@ -738,7 +738,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
                     type="text"
-                    {...register('contactName')}
+                    {...register('contactName')} id="contactName"
                     data-testid="contact-name"
                     className="input-field pl-10"
                     placeholder="John Doe"
@@ -754,7 +754,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
                     type="email"
-                    {...register('email')}
+                    {...register('email')} id="email"
                     data-testid="contact-email"
                     className="input-field pl-10"
                     placeholder="john@example.com"
@@ -770,7 +770,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
                     type="tel"
-                    {...register('phoneNumber')}
+                    {...register('phoneNumber')} id="phoneNumber"
                     className="input-field pl-10"
                     placeholder="+31 6 12345678"
                     aria-describedby={errors.phoneNumber ? 'phoneNumber-error' : undefined}
@@ -785,7 +785,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
                     type="text"
-                    {...register('organizationName')}
+                    {...register('organizationName')} id="organizationName"
                     className="input-field pl-10"
                     placeholder="Your organization name"
                   />
@@ -814,7 +814,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 <label htmlFor="eventTitle" className="label">Event Title *</label>
                 <input
                   type="text"
-                  {...register('eventTitle')}
+                  {...register('eventTitle')} id="eventTitle"
                   data-testid="event-title"
                   className="input-field"
                   placeholder="Annual Association Drinks"
@@ -960,7 +960,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
                     type="date"
-                    {...register('eventDate')}
+                    {...register('eventDate')} id="eventDate"
                     data-testid="event-date"
                     className="input-field pl-10 pr-4 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                     min={minDateForBooking}
@@ -975,11 +975,11 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
               {/* Start Time */}
               <div className="form-group">
                 <label htmlFor="startTime" className="label">Start Time *</label>
-                <select {...register('startTime')} data-testid="start-time" className="select-field">
+                <select {...register('startTime')} id="startTime" aria-describedby={errors.startTime ? 'startTime-error' : undefined} data-testid="start-time" className="select-field">
                   <option value="">Select start time...</option>
                   {startTimes.map(time => <option key={time} value={time}>{time}</option>)}
                 </select>
-                {errors.startTime && <p className="error-text">{errors.startTime.message}</p>}
+                {errors.startTime && <p id="startTime-error" className="error-text">{errors.startTime.message}</p>}
                 {startTimeWarning && (
                   <div className="mt-2 text-xs text-amber-400/80 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
                     <p>⚠️ <span className="font-medium">Note:</span> {startTimeWarning}</p>
@@ -990,11 +990,11 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
               {/* End Time */}
               <div className="form-group">
                 <label htmlFor="endTime" className="label">End Time *</label>
-                <select {...register('endTime')} data-testid="end-time" className="select-field">
+                <select {...register('endTime')} id="endTime" aria-describedby={errors.endTime ? 'endTime-error' : undefined} data-testid="end-time" className="select-field">
                   <option value="">Select end time...</option>
                   {endTimes.map(time => <option key={time} value={time}>{time}</option>)}
                 </select>
-                {errors.endTime && <p className="error-text">{errors.endTime.message}</p>}
+                {errors.endTime && <p id="endTime-error" className="error-text">{errors.endTime.message}</p>}
               </div>
             </div>
 
@@ -1208,7 +1208,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
               <label htmlFor="comments" className="label">Additional Location/Seating Remarks (optional)</label>
               <input
                 type="text"
-                {...register('comments')}
+                {...register('comments')} id="comments"
                 className="input-field"
                 placeholder="e.g., Near the window, quiet corner..."
               />
@@ -1240,7 +1240,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
               <div className="form-group">
                 <label htmlFor="cateringDietaryNotes" className="label">Catering Dietary Notes</label>
                 <textarea
-                  {...register('cateringDietaryNotes')}
+                  {...register('cateringDietaryNotes')} id="cateringDietaryNotes"
                   className="input-field min-h-[80px] resize-none"
                   placeholder="Allergies, dietary requirements, or other catering notes..."
                 />
@@ -1251,7 +1251,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
             <div className="form-group">
               <label htmlFor="description" className="label">Event Description *</label>
               <textarea
-                {...register('description')}
+                {...register('description')} id="description"
                 className="input-field min-h-[100px] resize-none"
                 placeholder="Tell us more about your event..."
               />
@@ -1320,7 +1320,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
               <div className="space-y-4 pl-4 border-l-2 border-meteor-500/30">
                 <div className="form-group">
                   <label htmlFor="invoiceType" className="label">Invoice Type *</label>
-                  <select {...register('invoiceType')} className="select-field" disabled={optionsLoading}>
+                  <select {...register('invoiceType')} id="invoiceType" className="select-field" disabled={optionsLoading}>
                     <option value="">Select invoice type...</option>
                     {(formOptions?.invoiceTypes ?? [
                       { value: 'TUE', displayName: 'TU/e' },
@@ -1339,7 +1339,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                     <label htmlFor="costCenter" className="label">Kostenplaats *</label>
                     <input
                       type="text"
-                      {...register('costCenter')}
+                      {...register('costCenter')} id="costCenter"
                       className="input-field"
                       placeholder="e.g., CC-12345"
                     />
@@ -1354,7 +1354,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                       <label htmlFor="invoiceName" className="label">Company Name *</label>
                       <input
                         type="text"
-                        {...register('invoiceName')}
+                        {...register('invoiceName')} id="invoiceName"
                         className="input-field"
                         placeholder="Company or organization name"
                       />
@@ -1364,7 +1364,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                     <div className="form-group">
                       <label htmlFor="invoiceAddress" className="label">Invoice Address *</label>
                       <textarea
-                        {...register('invoiceAddress')}
+                        {...register('invoiceAddress')} id="invoiceAddress"
                         className="input-field min-h-[80px] resize-none"
                         placeholder="Full billing address..."
                       />
@@ -1374,7 +1374,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                     <div className="form-group">
                       <label htmlFor="invoiceRemarks" className="label">Invoice Remarks</label>
                       <textarea
-                        {...register('invoiceRemarks')}
+                        {...register('invoiceRemarks')} id="invoiceRemarks"
                         className="input-field min-h-[60px] resize-none"
                         placeholder="Any additional remarks for the invoice..."
                       />
