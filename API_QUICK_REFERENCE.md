@@ -60,7 +60,7 @@ Content-Type: application/json
 
 `altcha` is required when ALTCHA is enabled (production); get a challenge from `GET /api/public/altcha/challenge`.
 
-The public form also asks for invoice details when `paymentOption` is `INVOICE`: `invoiceType`, plus `costCenter` for `TUE` and `FONTYS`, or `invoiceName` and `invoiceAddress` for `EXTERNAL`, and it requires `termsAccepted: true`. These rules are checked by the form only; the API itself does not enforce them.
+When `paymentOption` is `INVOICE`, the invoice details are required too: `invoiceType`, plus `costCenter` for `TUE` and `FONTYS`, or `invoiceName` and `invoiceAddress` for `EXTERNAL`. `termsAccepted` must be `true`. The API enforces the same rules as the form and answers a missing detail with 400 and the field name, for example `{"error": "costCenter: Kostenplaats is required"}`.
 
 **Response:**
 ```json
@@ -153,4 +153,6 @@ Authorization: Bearer <access token>
 - endTime
 - seatingArea
 - paymentOption
+- termsAccepted (must be `true`)
+- invoiceType, and costCenter (TUE, FONTYS) or invoiceName and invoiceAddress (EXTERNAL), when paymentOption is INVOICE
 - altcha (when ALTCHA is enabled)
