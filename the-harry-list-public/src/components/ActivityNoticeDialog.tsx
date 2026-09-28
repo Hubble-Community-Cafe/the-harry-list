@@ -5,6 +5,8 @@ import { AlertTriangle } from 'lucide-react';
  * Confirmation dialog for an ACTIVITY_NOTICE constraint that staff have marked as
  * requiring acknowledgement (targetValue = "CONFIRM"). It appears the moment the guest
  * selects the triggering activity, so an easily-missed banner becomes a deliberate choice.
+ * A notice limited to a location or group size appears as soon as those also match, which
+ * can be after the activity was already selected.
  *
  * The title is intentionally fixed ("Please Note") — only the message is configurable in
  * the admin Settings, which keeps every notice consistent.

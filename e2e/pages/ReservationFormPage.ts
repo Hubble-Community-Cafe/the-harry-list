@@ -68,6 +68,18 @@ export class ReservationFormPage {
     }
   }
 
+  /** Set the number of guests in one go (fill does not pass through each typed digit). */
+  async setGuests(guests: number): Promise<void> {
+    await this.page.getByTestId('expected-guests').fill(String(guests));
+  }
+
+  /** Type the number of guests key by key, like a guest would (e.g. 12 passes through 1). */
+  async typeGuests(guests: number): Promise<void> {
+    const field = this.page.getByTestId('expected-guests');
+    await field.clear();
+    await field.pressSequentially(String(guests));
+  }
+
   /** Toggle a special activity by its visible label (e.g. "Catering"). */
   async toggleActivity(label: string): Promise<void> {
     await this.page.getByText(label, { exact: true }).click();
@@ -127,8 +139,18 @@ export class ReservationFormPage {
   }
 
   // ---- Location & seating (on the merged Details step; radios are visually hidden -> force) ----
+  /** A location radio, for checked/disabled assertions. */
+  locationRadio(location: Location): Locator {
+    return this.page.getByTestId(`location-${location}`);
+  }
+
   async selectLocation(location: Location): Promise<void> {
     await this.page.getByTestId(`location-${location}`).check({ force: true });
+  }
+
+  /** A seating radio, for checked/disabled assertions. */
+  seatingRadio(seating: Seating): Locator {
+    return this.page.getByTestId(`seating-${seating}`);
   }
 
   async selectSeating(seating: Seating): Promise<void> {

@@ -1,6 +1,8 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
 import com.pimvanleeuwen.the_harry_list_backend.config.SecurityConfig;
+import com.pimvanleeuwen.the_harry_list_backend.model.FormConstraint;
+import com.pimvanleeuwen.the_harry_list_backend.model.FormConstraintType;
 import com.pimvanleeuwen.the_harry_list_backend.repository.BlockedPeriodRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.FormConstraintRepository;
 import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
@@ -11,6 +13,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -71,5 +76,28 @@ class FormOptionsControllerTest {
                 .andExpect(jsonPath("$.invoiceTypes").isNotEmpty())
                 .andExpect(jsonPath("$.locations").isNotEmpty())
                 .andExpect(jsonPath("$.seatingAreas").isNotEmpty());
+    }
+
+    @Test
+    void getActiveConstraints_shouldExposeActivityNoticeConditions() throws Exception {
+        // The public form only shows this notice at Meteor from 8 guests, so it needs
+        // the location (secondaryValue) and group size (numericValue) as well.
+        when(formConstraintRepository.findByEnabledTrue()).thenReturn(List.of(FormConstraint.builder()
+                .id(1L)
+                .constraintType(FormConstraintType.ACTIVITY_NOTICE)
+                .triggerActivity("EAT_A_LA_CARTE")
+                .targetValue(FormConstraint.ACTIVITY_NOTICE_CONFIRM)
+                .secondaryValue("METEOR")
+                .numericValue(8)
+                .message("Please pre-order from the menu.")
+                .enabled(true)
+                .build()));
+
+        mockMvc.perform(get("/api/options/constraints"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].constraintType").value("ACTIVITY_NOTICE"))
+                .andExpect(jsonPath("$[0].targetValue").value("CONFIRM"))
+                .andExpect(jsonPath("$[0].secondaryValue").value("METEOR"))
+                .andExpect(jsonPath("$[0].numericValue").value(8));
     }
 }

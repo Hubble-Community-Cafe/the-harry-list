@@ -82,8 +82,8 @@ public class ConstraintValidationService {
                     break;
                 case ACTIVITY_NOTICE:
                     // Advisory only: the frontend shows the message (e.g. "this option
-                    // costs money") when the trigger activity is selected. Nothing to
-                    // enforce server-side.
+                    // costs money") when the trigger activity is selected, optionally only
+                    // for one location or group size. Nothing to enforce server-side.
                     break;
                 default:
                     break;

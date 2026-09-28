@@ -318,7 +318,12 @@ export function SettingsPage() {
                       <span className="text-xs text-dark-500">
                         {c.triggerActivity}
                         {c.targetValue && ` → ${c.targetValue}`}
-                        {c.numericValue !== null && c.numericValue !== undefined && ` (${c.numericValue})`}
+                        {c.constraintType === 'ACTIVITY_NOTICE'
+                          ? [
+                              c.secondaryValue && ` at ${c.secondaryValue}`,
+                              c.numericValue != null && `, ${c.numericValue}+ guests`,
+                            ].filter(Boolean).join('')
+                          : c.numericValue !== null && c.numericValue !== undefined && ` (${c.numericValue})`}
                       </span>
                     </div>
                     <p className="text-sm text-dark-300">{c.message}</p>
@@ -522,6 +527,53 @@ export function SettingsPage() {
                   </div>
                 )}
 
+                {/* Optional conditions: ACTIVITY_NOTICE keeps the location in secondaryValue
+                    (targetValue is taken by the CONFIRM marker) and the group size in numericValue. */}
+                {editingConstraint.constraintType === 'ACTIVITY_NOTICE' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="constraint-notice-location" className="block text-sm text-dark-400 mb-1">
+                        Only at location
+                      </label>
+                      <select
+                        id="constraint-notice-location"
+                        data-testid="constraint-notice-location"
+                        value={editingConstraint.secondaryValue || ''}
+                        onChange={e => setEditingConstraint({ ...editingConstraint, secondaryValue: e.target.value })}
+                        className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      >
+                        <option value="">Any location</option>
+                        {LOCATIONS.map(l => (
+                          <option key={l} value={l}>{l}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="constraint-notice-min-guests" className="block text-sm text-dark-400 mb-1">
+                        Only from number of guests
+                      </label>
+                      <input
+                        id="constraint-notice-min-guests"
+                        type="number"
+                        min={1}
+                        data-testid="constraint-notice-min-guests"
+                        value={editingConstraint.numericValue ?? ''}
+                        onChange={e => setEditingConstraint({
+                          ...editingConstraint,
+                          numericValue: e.target.value ? parseInt(e.target.value) : undefined,
+                        })}
+                        placeholder="Any group size"
+                        className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      />
+                    </div>
+                    <p className="sm:col-span-2 text-xs text-dark-500">
+                      Leave both empty to show the notice to everyone who picks the activity. When
+                      set, the notice (and popup) only appears once the guest has also chosen that
+                      location and/or at least that many guests, in whatever order they fill in the form.
+                    </p>
+                  </div>
+                )}
+
                 {editingConstraint.constraintType !== 'ACTIVITY_NOTICE' && (
                   <div>
                     <label className="block text-sm text-dark-400 mb-1">Target Value</label>
@@ -591,8 +643,9 @@ export function SettingsPage() {
                   />
                   {editingConstraint.constraintType === 'ACTIVITY_NOTICE' && (
                     <p className="text-xs text-dark-500 mt-1">
-                      Shown as an informational note when the trigger activity is selected
-                      (e.g. "A private event at Meteor has an additional charge"). It does not block the booking.
+                      Shown as an informational note when the trigger activity is selected and the
+                      conditions above match (e.g. "A private event at Meteor has an additional charge").
+                      It does not block the booking.
                     </p>
                   )}
                 </div>
