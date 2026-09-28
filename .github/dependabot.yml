@@ -19,6 +19,8 @@ version: 2
 # Dependabot *security* updates bypass it, so genuine fixes are never delayed.
 # ──────────────────────────────────────────────────────────────────────────────
 
+# Reviews: Dependabot's old "reviewers" key is gone; .github/CODEOWNERS requests the owner's review
+# on every PR, Dependabot's included.
 updates:
   # ── Backend (Maven) ──────────────────────────────────────────────────────────
   - package-ecosystem: "maven"
@@ -35,8 +37,6 @@ updates:
       semver-minor-days: 7
       semver-patch-days: 3
     open-pull-requests-limit: 5
-    reviewers:
-      - "PimVanLeeuwen"
     labels:
       - "dependencies"
       - "backend"
@@ -72,8 +72,6 @@ updates:
       semver-minor-days: 7
       semver-patch-days: 3
     open-pull-requests-limit: 5
-    reviewers:
-      - "PimVanLeeuwen"
     labels:
       - "dependencies"
       - "frontend"
@@ -99,6 +97,77 @@ updates:
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
 
+  # ── End-to-end tests (npm, own lockfile) ────────────────────────────────────
+  # e2e/ is not part of the frontend workspace: Playwright and its helpers have their
+  # own package.json and package-lock.json. No TypeScript ignore here: e2e has no
+  # typescript-eslint, so a TypeScript major does not break it.
+  - package-ecosystem: "npm"
+    directory: "/e2e"
+    target-branch: "develop"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Amsterdam"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "javascript"
+    groups:
+      e2e-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      e2e-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+
+  # ── Docker base images ──────────────────────────────────────────────────────
+  # The FROM images of the three Dockerfiles (node, maven, eclipse-temurin). Tags
+  # without a version, like nginx:alpine, cannot be tracked and resolve to the
+  # newest image on every build anyway. The images are built in PR CI by the e2e
+  # stack, so a broken base image fails the "Playwright E2E" check.
+  - package-ecosystem: "docker"
+    directories:
+      - "/the-harry-list-backend"
+      - "/the-harry-list-public"
+      - "/the-harry-list-admin"
+    target-branch: "develop"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Amsterdam"
+    # docker, like github-actions, supports only `default-days`: image tags are
+    # not required to follow SemVer.
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+    groups:
+      docker-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      docker-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+
   # ── GitHub Actions ────────────────────────────────────────────────────────────
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -113,8 +182,6 @@ updates:
     cooldown:
       default-days: 7
     open-pull-requests-limit: 5
-    reviewers:
-      - "PimVanLeeuwen"
     labels:
       - "dependencies"
       - "ci"
