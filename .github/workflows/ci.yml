@@ -35,6 +35,7 @@ jobs:
             "src/lib/ThemeContext.tsx"
             "src/components/ThemeToggle.tsx"
             "src/components/SkipLink.tsx"
+            "src/lib/chunkReload.ts"
             "src/lib/utils.ts"
             "src/test/setup.ts"
           )

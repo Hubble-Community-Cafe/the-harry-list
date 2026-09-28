@@ -2,9 +2,9 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
   LayoutDashboard, Calendar, CalendarDays, LogOut,
-  User, Menu, CalendarSync, CalendarPlus, FileDown, Mail, Settings, History
+  User, Menu, CalendarSync, CalendarPlus, FileDown, Mail, Settings, History, Loader2
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { clearAuth} from '../lib/api';
 import { usePermissions } from '../lib/usePermissions';
 import { useRole } from '../lib/RoleContext';
@@ -174,7 +174,16 @@ export function Layout() {
 
         {/* Page content — scrollable */}
         <main id={MAIN_CONTENT_ID} ref={mainRef} tabIndex={-1} className="flex-1 p-6 overflow-y-auto outline-none">
-          <Outlet />
+          {/* Pages load on demand (see App.tsx); the sidebar stays while a page chunk arrives. */}
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center py-24" role="status" aria-label="Loading page">
+                <Loader2 className="w-8 h-8 text-hubble-400 animate-spin" />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

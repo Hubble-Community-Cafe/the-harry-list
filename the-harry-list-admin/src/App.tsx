@@ -1,16 +1,8 @@
+import { lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useIsAuthenticated } from '@azure/msal-react';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
-import { ReservationsPage } from './pages/ReservationsPage';
-import { ReservationDetailPage } from './pages/ReservationDetailPage';
-import { CalendarPage } from './pages/CalendarPage';
-import { ExportPage } from './pages/ExportPage';
-import { EmailTemplatesPage } from './pages/EmailTemplatesPage';
-import { SettingsPage } from './pages/FormSettingsPage';
-import { CalendarAppointmentsPage } from './pages/CalendarAppointmentsPage';
-import { WeekOverviewPage } from './pages/WeekOverviewPage';
-import { AuditLogPage } from './pages/AuditLogPage';
 import { Layout } from './components/Layout';
 import { useGroupAuthorization } from './lib/useGroupAuthorization';
 import { isE2E } from './lib/e2eAuth';
@@ -18,6 +10,19 @@ import { ThemeProvider } from './lib/ThemeContext';
 import { RoleProvider } from './lib/RoleContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Loader2, ShieldX } from 'lucide-react';
+
+// Every page except the Dashboard (the landing page) and Login loads on demand, in its own chunk,
+// so the first download only contains what the first screen needs. Layout shows a spinner while a
+// page chunk loads.
+const ReservationsPage = lazy(() => import('./pages/ReservationsPage').then((mod) => ({ default: mod.ReservationsPage })));
+const ReservationDetailPage = lazy(() => import('./pages/ReservationDetailPage').then((mod) => ({ default: mod.ReservationDetailPage })));
+const CalendarPage = lazy(() => import('./pages/CalendarPage').then((mod) => ({ default: mod.CalendarPage })));
+const ExportPage = lazy(() => import('./pages/ExportPage').then((mod) => ({ default: mod.ExportPage })));
+const EmailTemplatesPage = lazy(() => import('./pages/EmailTemplatesPage').then((mod) => ({ default: mod.EmailTemplatesPage })));
+const SettingsPage = lazy(() => import('./pages/FormSettingsPage').then((mod) => ({ default: mod.SettingsPage })));
+const CalendarAppointmentsPage = lazy(() => import('./pages/CalendarAppointmentsPage').then((mod) => ({ default: mod.CalendarAppointmentsPage })));
+const WeekOverviewPage = lazy(() => import('./pages/WeekOverviewPage').then((mod) => ({ default: mod.WeekOverviewPage })));
+const AuditLogPage = lazy(() => import('./pages/AuditLogPage').then((mod) => ({ default: mod.AuditLogPage })));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isMsalAuthenticated = useIsAuthenticated();

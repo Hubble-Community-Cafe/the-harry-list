@@ -1,12 +1,11 @@
-import { useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { ReservationForm } from './components/ReservationForm';
-import { SuccessMessage } from './components/SuccessMessage';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
-import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { ThemeProvider } from './lib/ThemeContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { SkipLink, MAIN_CONTENT_ID } from './components/SkipLink';
+import { PrivacyPolicy, SuccessMessage, prefetchDeferredChunks } from './lib/deferredChunks';
 
 interface SubmissionResult {
   confirmationNumber: string;
@@ -19,6 +18,17 @@ function App() {
   const [submitted, setSubmitted] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<SubmissionResult | null>(null);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  // The privacy dialog is loaded on demand: mount it on first open, then keep it mounted so it
+  // closes and reopens exactly as before.
+  const [privacyMounted, setPrivacyMounted] = useState(false);
+  const openPrivacy = () => {
+    setPrivacyMounted(true);
+    setShowPrivacy(true);
+  };
+
+  useEffect(() => {
+    prefetchDeferredChunks();
+  }, []);
 
   const handleSuccess = (result: SubmissionResult) => {
     setSubmissionResult(result);
@@ -62,19 +72,25 @@ function App() {
               </div>
 
               {/* Form */}
-              <ReservationForm onSuccess={handleSuccess} onOpenPrivacy={() => setShowPrivacy(true)} />
+              <ReservationForm onSuccess={handleSuccess} onOpenPrivacy={openPrivacy} />
             </>
           ) : (
-            <SuccessMessage
-              result={submissionResult!}
-              onNewReservation={handleNewReservation}
-            />
+            <Suspense fallback={null}>
+              <SuccessMessage
+                result={submissionResult!}
+                onNewReservation={handleNewReservation}
+              />
+            </Suspense>
           )}
         </div>
       </main>
 
-      <Footer onOpenPrivacy={() => setShowPrivacy(true)} />
-      <PrivacyPolicy open={showPrivacy} onClose={() => setShowPrivacy(false)} />
+      <Footer onOpenPrivacy={openPrivacy} />
+      {privacyMounted && (
+        <Suspense fallback={null}>
+          <PrivacyPolicy open={showPrivacy} onClose={() => setShowPrivacy(false)} />
+        </Suspense>
+      )}
     </div>
     </ThemeProvider>
     </ErrorBoundary>
