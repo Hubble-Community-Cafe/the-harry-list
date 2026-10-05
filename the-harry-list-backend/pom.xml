@@ -36,6 +36,15 @@
 		     (all critical, flagged by the Trivy image scan). Same override as community-cafe-web.
 		     Drop this once the Spring Boot parent manages 11.0.25 or later on its own. -->
 		<tomcat.version>11.0.25</tomcat.version>
+		<!-- Override the Jackson 3 version managed by spring-boot-starter-parent (4.1.1 manages
+		     3.1.5) to pick up the fixes for CVE-2026-68497, CVE-2026-89407, CVE-2026-89425,
+		     CVE-2026-91776, CVE-2026-91777, CVE-2026-19032 and CVE-2026-83557 (Trivy image scan).
+		     Drop this once the Spring Boot parent manages 3.1.7 or later on its own. -->
+		<jackson-bom.version>3.1.7</jackson-bom.version>
+		<!-- Override the Netty version managed by spring-boot-starter-parent (4.1.1 manages
+		     4.2.17.Final, pulled in by azure-core-http-netty for Microsoft Graph) to pick up the
+		     fix for CVE-2026-89044. Drop this once the parent manages 4.2.18.Final or later. -->
+		<netty.version>4.2.18.Final</netty.version>
 	</properties>
 
 	<dependencyManagement>
