@@ -52,6 +52,10 @@ export async function expectRuntimeConfigNotCached(request: APIRequestContext): 
   expect(config.headers()['cache-control']).toBe('no-cache');
   expect(config.headers()['expires'], 'Expires on /config.js').toBeUndefined();
 
+  // headersArray, because headers() joins repeated headers into one value.
   const script = await request.get(await hashedScriptPath(request));
-  expect(script.headers()['cache-control']).toContain('immutable');
+  const cacheControl = script.headersArray().filter((h) => h.name.toLowerCase() === 'cache-control');
+  expect(cacheControl.map((h) => h.value), 'Cache-Control on a hashed bundle').toEqual([
+    'public, max-age=31536000, immutable',
+  ]);
 }
