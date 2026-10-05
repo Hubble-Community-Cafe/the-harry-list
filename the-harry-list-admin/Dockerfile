@@ -35,8 +35,9 @@ FROM nginx:alpine
 # Update Alpine packages for security patches (including libexpat)
 RUN apk upgrade --no-cache
 
-# Copy custom nginx config, plus this app's CSP template (rendered at startup, see below)
+# Copy custom nginx config and its shared security headers, plus this app's CSP template (rendered at startup, see below)
 COPY the-harry-list-shared/nginx.conf /etc/nginx/conf.d/default.conf
+COPY the-harry-list-shared/nginx-security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY the-harry-list-admin/nginx-csp.conf /etc/nginx/csp.conf.template
 
 # Copy built assets from build stage
