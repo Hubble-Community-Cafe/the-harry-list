@@ -101,12 +101,12 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.6.4</version>
+            <version>1.6.5</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
-            <version>1.6.4</version>
+            <version>1.6.5</version>
         </dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -173,7 +173,7 @@
 		<dependency>
 			<groupId>io.sentry</groupId>
 			<artifactId>sentry</artifactId>
-			<version>8.57.0</version>
+			<version>8.58.0</version>
 		</dependency>
 	</dependencies>
 
