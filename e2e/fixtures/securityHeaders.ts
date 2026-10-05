@@ -41,16 +41,23 @@ export async function expectSecurityHeadersEverywhere(request: APIRequestContext
   }
 }
 
+/** Unhashed files both apps serve: the runtime config and public/ folder files. */
+const UNHASHED_FILES = ['/config.js', '/favicon.svg', '/fonts/AXIS.woff2'];
+
 /**
- * The runtime config (/config.js, written at container startup) is revalidated on every load, so a
- * changed setting reaches browsers after a restart. Hashed bundles keep their year-long cache.
+ * Unhashed files (the runtime config written at container startup, and the public/ folder files)
+ * are revalidated on every load, so a changed setting or replaced file shows up right away. Hashed
+ * bundles keep their year-long cache, with a single Cache-Control header.
  */
-export async function expectRuntimeConfigNotCached(request: APIRequestContext): Promise<void> {
+export async function expectCachePolicy(request: APIRequestContext): Promise<void> {
+  for (const path of UNHASHED_FILES) {
+    const response = await request.get(path);
+    expect(response.ok(), path).toBe(true);
+    expect(response.headers()['cache-control'], `Cache-Control on ${path}`).toBe('no-cache');
+    expect(response.headers()['expires'], `Expires on ${path}`).toBeUndefined();
+  }
   const config = await request.get('/config.js');
-  expect(config.ok()).toBe(true);
   expect(await config.text()).toContain('window.__RUNTIME_CONFIG__');
-  expect(config.headers()['cache-control']).toBe('no-cache');
-  expect(config.headers()['expires'], 'Expires on /config.js').toBeUndefined();
 
   // headersArray, because headers() joins repeated headers into one value.
   const script = await request.get(await hashedScriptPath(request));
@@ -58,4 +65,9 @@ export async function expectRuntimeConfigNotCached(request: APIRequestContext): 
   expect(cacheControl.map((h) => h.value), 'Cache-Control on a hashed bundle').toEqual([
     'public, max-age=31536000, immutable',
   ]);
+
+  // A missing bundle must not be cached, or a 404 hit mid-deploy would stick for a year.
+  const missing = await request.get('/assets/does-not-exist.js');
+  expect(missing.status()).toBe(404);
+  expect(missing.headers()['cache-control'], 'Cache-Control on a missing bundle').toBeUndefined();
 }
