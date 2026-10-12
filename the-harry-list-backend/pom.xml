@@ -168,7 +168,7 @@
 		<dependency>
 			<groupId>com.azure</groupId>
 			<artifactId>azure-identity</artifactId>
-			<version>1.18.6</version>
+			<version>1.18.7</version>
 		</dependency>
 
 		<!-- OpenPDF for PDF generation -->
@@ -182,7 +182,7 @@
 		<dependency>
 			<groupId>io.sentry</groupId>
 			<artifactId>sentry</artifactId>
-			<version>8.58.0</version>
+			<version>8.59.0</version>
 		</dependency>
 	</dependencies>
 
