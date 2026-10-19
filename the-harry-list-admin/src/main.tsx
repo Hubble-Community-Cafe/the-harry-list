@@ -6,7 +6,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import { msalConfig } from './lib/authConfig';
 import { setMsalInstance } from './lib/api';
-import { installTranslationCrashGuard, installChunkReload } from 'the-harry-list-shared';
+import { installTranslationCrashGuard, installChunkReload, SENTRY_EXTENSION_DENY_URLS, SENTRY_EXTENSION_ERRORS } from 'the-harry-list-shared';
 import App from './App';
 import './index.css';
 
@@ -31,7 +31,10 @@ if (sentryDsn && !sentryDsn.startsWith('__')) {
       'Failed to fetch',
       'NetworkError when attempting to fetch resource',
       'Load failed',
+      // Thrown by browser extensions, not by our code.
+      ...SENTRY_EXTENSION_ERRORS,
     ],
+    denyUrls: SENTRY_EXTENSION_DENY_URLS,
   });
 }
 

@@ -508,11 +508,16 @@ jobs:
         run: docker push --all-tags ghcr.io/${{ steps.vars.outputs.owner }}/the-harry-list-admin
 
   # ==================== SENTRY RELEASE ====================
+  # One release per project, named <project>@<version> exactly like the SDKs and the source map
+  # upload, so the commits and deploy land on the release the events report.
   sentry-release:
-    name: Create Sentry Release
+    name: Create Sentry Release (${{ matrix.project }})
     runs-on: ubuntu-latest
     needs: [docker-build-push]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        project: [the-harry-list-backend, the-harry-list-public, the-harry-list-admin]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -528,8 +533,8 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: stichting-bar-potential
         with:
-          projects: the-harry-list-backend the-harry-list-public the-harry-list-admin
-          version: ${{ steps.version.outputs.version }}
+          projects: ${{ matrix.project }}
+          version: ${{ matrix.project }}@${{ steps.version.outputs.version }}
           environment: production
 
   # ==================== GITHUB RELEASE ====================
