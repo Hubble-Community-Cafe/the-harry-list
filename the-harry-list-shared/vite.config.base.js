@@ -20,7 +20,8 @@ export function createViteConfig({ name, version }) {
       sentryVitePlugin({
         org: 'stichting-bar-potential',
         project: name,
-        release: { name: version },
+        // Same <project>@<version> name as Sentry.init and the CI release, so they are one release.
+        release: { name: `${name}@${version}` },
         sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] },
         disable: !process.env.SENTRY_AUTH_TOKEN,
       }),

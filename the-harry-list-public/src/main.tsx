@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client'
 import * as Sentry from '@sentry/react'
 import './index.css'
 import App from './App.tsx'
-import { installTranslationCrashGuard, installChunkReload } from 'the-harry-list-shared'
+import { installTranslationCrashGuard, installChunkReload, SENTRY_EXTENSION_DENY_URLS, SENTRY_EXTENSION_ERRORS } from 'the-harry-list-shared'
 
 declare const __APP_VERSION__: string;
 
@@ -28,7 +28,10 @@ if (sentryDsn && !sentryDsn.startsWith('__')) {
       'Failed to fetch',
       'NetworkError when attempting to fetch resource',
       'Load failed',
+      // Thrown by browser extensions, not by our code.
+      ...SENTRY_EXTENSION_ERRORS,
     ],
+    denyUrls: SENTRY_EXTENSION_DENY_URLS,
   });
 }
 
