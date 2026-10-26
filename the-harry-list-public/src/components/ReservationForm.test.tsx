@@ -265,14 +265,14 @@ describe('ReservationForm', () => {
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
 
-      await user.click(screen.getByRole('button', { name: 'Go to previous step' }));
+      await user.click(screen.getByRole('button', { name: 'Back to previous step' }));
       expect(screen.getByText('Contact Information')).toBeInTheDocument();
     });
 
     it('back button is hidden on step 1', async () => {
       renderForm();
       await waitForFormLoaded();
-      const backButton = screen.getByRole('button', { name: 'Go to previous step' });
+      const backButton = screen.getByRole('button', { name: 'Back to previous step' });
       expect(backButton).toHaveClass('opacity-0');
     });
   });

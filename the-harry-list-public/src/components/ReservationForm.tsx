@@ -1535,7 +1535,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
         <div className="flex items-center justify-between mt-8 pt-6 border-t border-dark-800">
           <button
             type="button"
-            aria-label="Go to previous step"
+            aria-label="Back to previous step"
             onClick={prevStep}
             disabled={currentStep === 1}
             className={`
