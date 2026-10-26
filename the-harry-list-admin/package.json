@@ -16,7 +16,7 @@
     "@azure/msal-browser": "^5.25.0",
     "@azure/msal-react": "^5.7.3",
     "@hookform/resolvers": "^5.9.2",
-    "@sentry/react": "^10.76.2",
+    "@sentry/react": "^11.0.0",
     "@tailwindcss/vite": "^4.3.3",
     "clsx": "^2.1.1",
     "lucide-react": "^1.55.0",
