@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@azure/msal-browser": "^5.25.0",
-    "@azure/msal-react": "^5.7.2",
-    "@hookform/resolvers": "^5.9.1",
+    "@azure/msal-react": "^5.7.3",
+    "@hookform/resolvers": "^5.9.2",
     "@sentry/react": "^10.76.2",
     "@tailwindcss/vite": "^4.3.3",
     "clsx": "^2.1.1",
@@ -49,7 +49,7 @@
     "tailwindcss": "^4.3.1",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.2",
-    "vite": "^8.3.4",
+    "vite": "^8.3.5",
     "vitest": "^5.0.5"
   }
 }
