@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.pimvanleeuwen</groupId>
 	<artifactId>the-harry-list-backend</artifactId>
-	<version>1.13.7</version>
+	<version>1.13.8</version>
 	<name>the-harry-list-backend</name>
 	<description>The Harry List, reservation system for Stichting Bar Potential</description>
 	<url/>
@@ -45,6 +45,10 @@
 		     4.2.17.Final, pulled in by azure-core-http-netty for Microsoft Graph) to pick up the
 		     fix for CVE-2026-89044. Drop this once the parent manages 4.2.18.Final or later. -->
 		<netty.version>4.2.18.Final</netty.version>
+		<!-- Swagger UI webjar override, see dependencyManagement. Also filtered into
+		     application.properties as springdoc.swagger-ui.version, because springdoc serves the
+		     webjar path of the version baked into its own jar (5.34.0) and 404s otherwise. -->
+		<swagger-ui.version>5.34.1</swagger-ui.version>
 	</properties>
 
 	<dependencyManagement>
@@ -62,6 +66,17 @@
 				<version>2.22.4</version>
 				<type>pom</type>
 				<scope>import</scope>
+			</dependency>
+			<!-- Override the Swagger UI webjar pulled in by springdoc-openapi 3.2.0 (5.34.0, which
+			     bundles DOMPurify 3.4.16) to pick up DOMPurify 3.4.17 with the fixes for
+			     CVE-2026-116802, CVE-2026-116803 and CVE-2026-116804 (OWASP Dependency-Check).
+			     REMOVE this, the swagger-ui.version property and springdoc.swagger-ui.version in
+			     application.properties once springdoc pulls swagger-ui 5.34.1 or later on its own.
+			     Check with: ./mvnw dependency:tree -Dincludes=org.webjars:swagger-ui -->
+			<dependency>
+				<groupId>org.webjars</groupId>
+				<artifactId>swagger-ui</artifactId>
+				<version>${swagger-ui.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -110,12 +125,12 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.6.5</version>
+            <version>1.6.6</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
-            <version>1.6.5</version>
+            <version>1.6.6</version>
         </dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -135,7 +150,7 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>3.1.1</version>
+            <version>3.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
@@ -163,7 +178,7 @@
 		<dependency>
 			<groupId>com.microsoft.graph</groupId>
 			<artifactId>microsoft-graph</artifactId>
-			<version>6.71.0</version>
+			<version>6.72.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.azure</groupId>
@@ -182,7 +197,7 @@
 		<dependency>
 			<groupId>io.sentry</groupId>
 			<artifactId>sentry</artifactId>
-			<version>8.61.0</version>
+			<version>8.61.1</version>
 		</dependency>
 	</dependencies>
 
@@ -217,7 +232,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.15</version>
+				<version>0.8.16</version>
 				<executions>
 					<execution>
 						<id>prepare-agent</id>
