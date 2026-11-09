@@ -111,7 +111,7 @@ public class SmtpEmailService implements EmailNotificationService {
 
     @Override
     public void sendRawEmail(String to, String subject, String htmlBody) {
-        deliver(to, subject, htmlBody, null);
+        deliver(to, subject, htmlBody);
     }
 
     @Override
@@ -122,8 +122,9 @@ public class SmtpEmailService implements EmailNotificationService {
         deliver(to, subject, htmlBody, replyTo);
     }
 
+    /** Like the Graph mailer: replies go to the staff inbox, not to the no-reply sender. */
     private void deliver(String to, String subject, String htmlBody) {
-        deliver(to, subject, htmlBody, null);
+        deliver(to, subject, htmlBody, staffEmail);
     }
 
     private void deliver(String to, String subject, String htmlBody, String replyTo) {

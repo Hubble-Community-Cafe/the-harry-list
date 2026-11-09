@@ -409,7 +409,8 @@ class AdminReservationControllerTest {
         mockMvc.perform(get("/api/admin/reservations/1/catering-email/preview"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.subject").value("Catering Options for Test Event"))
-            .andExpect(jsonPath("$.body").value("<p>Hello John</p>"));
+            .andExpect(jsonPath("$.body").value("<p>Hello John</p>"))
+            .andExpect(jsonPath("$.defaultReplyTo").value("reservations@test.hubble.cafe"));
     }
 
     @Test

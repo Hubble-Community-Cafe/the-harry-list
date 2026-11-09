@@ -8,6 +8,8 @@ export const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL ?? 'http://localhost:
 export const ADMIN_BASE_URL = process.env.ADMIN_BASE_URL ?? 'http://localhost:5174';
 export const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8080';
 export const MAILPIT_URL = process.env.MAILPIT_URL ?? 'http://localhost:8025';
+/** Staff inbox the e2e backend is configured with (APP_MAIL_STAFF in docker-compose.e2e.yml). */
+export const STAFF_EMAIL = process.env.STAFF_EMAIL ?? 'reservations@e2e.hubble.cafe';
 
 // CI builds all images from scratch, so allow plenty of time for the stack to come up.
 const WEBSERVER_TIMEOUT = process.env.CI ? 600_000 : 240_000;

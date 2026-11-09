@@ -64,7 +64,7 @@ public class AdminReservationController {
                                       EmailAttachmentRepository emailAttachmentRepository,
                                       AuditService auditService,
                                       @Value("${app.bar.name:Hubble and Meteor Community Cafes}") String barName,
-                                      @Value("${app.mail.staff:events@hubble.cafe}") String staffEmail) {
+                                      @Value("${app.mail.staff}") String staffEmail) {
         this.reservationRepository = reservationRepository;
         this.reservationMapper = reservationMapper;
         this.emailTemplateService = emailTemplateService;

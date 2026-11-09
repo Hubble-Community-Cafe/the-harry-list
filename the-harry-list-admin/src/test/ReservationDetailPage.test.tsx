@@ -57,7 +57,7 @@ vi.mock('../lib/api', () => ({
   sendCateringEmail: vi.fn(),
 }));
 
-import { fetchReservationAuditLog, fetchReservation, updateReservationStatus, updateReservation } from '../lib/api';
+import { fetchReservationAuditLog, fetchReservation, updateReservationStatus, updateReservation, fetchCateringEmailPreview } from '../lib/api';
 
 const DEFAULT_REJECTION_MESSAGE =
   'Unfortunately we cannot host you since we do not have any places left at this time';
@@ -453,5 +453,29 @@ describe('ReservationDetailPage: unsaved edits', () => {
     fireEvent.click(screen.getByRole('link', { name: /Back to/i }));
     expect(await screen.findByText('Discard unsaved changes?')).toBeInTheDocument();
     expect(screen.queryByTestId('other-page')).not.toBeInTheDocument();
+  });
+});
+
+describe('ReservationDetailPage — catering email reply-to', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('pre-fills the reply-to with the inbox the backend is configured with', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, status: 'PENDING', specialActivities: ['EAT_CATERING'],
+    });
+    vi.mocked(fetchCateringEmailPreview).mockResolvedValueOnce({
+      subject: 'Catering Options', body: '<p>menu</p>', defaultReplyTo: 'reservations@example.com',
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByRole('button', { name: /Send Catering Options/i }));
+
+    const replyTo = await screen.findByLabelText(/Reply-To Email/i);
+    await waitFor(() => expect(replyTo).toHaveValue('reservations@example.com'));
+    // No real inbox is suggested as an example.
+    expect(replyTo).not.toHaveAttribute('placeholder', expect.stringContaining('events@'));
   });
 });

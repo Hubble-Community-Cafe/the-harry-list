@@ -7,7 +7,6 @@ import com.pimvanleeuwen.the_harry_list_backend.repository.EmailTemplateReposito
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -28,11 +27,13 @@ class EmailTemplateServiceTest {
     @Mock
     private EmailTemplateRepository repository;
 
-    @InjectMocks
+    private static final String STAFF_EMAIL = "reservations@test.hubble.cafe";
+
     private EmailTemplateService service;
 
     @BeforeEach
     void setUp() {
+        service = new EmailTemplateService(repository, STAFF_EMAIL);
         when(repository.findByTemplateType(any())).thenReturn(Optional.empty());
     }
 
@@ -292,6 +293,13 @@ class EmailTemplateServiceTest {
         assertTrue(service.buildSampleRawHtmlVariables(EmailTemplateType.UPDATED)
                 .containsKey("customMessage"));
         assertTrue(service.buildSampleRawHtmlVariables(EmailTemplateType.SUBMITTED).isEmpty());
+    }
+
+    @Test
+    void buildSampleVariables_shouldUseConfiguredStaffEmail() {
+        for (EmailTemplateType type : EmailTemplateType.values()) {
+            assertEquals(STAFF_EMAIL, service.buildSampleVariables(type).get("staffEmail"), type.name());
+        }
     }
 
     // --- Default content ---
