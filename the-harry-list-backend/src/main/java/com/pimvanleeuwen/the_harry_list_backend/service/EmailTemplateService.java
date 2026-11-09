@@ -4,6 +4,7 @@ import com.pimvanleeuwen.the_harry_list_backend.dto.EmailTemplateDto;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplate;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
 import com.pimvanleeuwen.the_harry_list_backend.repository.EmailTemplateRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -21,6 +22,7 @@ import java.util.Optional;
 public class EmailTemplateService {
 
     private final EmailTemplateRepository repository;
+    private final String staffEmail;
 
     // Available variables per template type, shown to admins as documentation
     private static final Map<EmailTemplateType, List<String>> AVAILABLE_VARIABLES = new EnumMap<>(EmailTemplateType.class);
@@ -283,8 +285,10 @@ public class EmailTemplateService {
                 """);
     }
 
-    public EmailTemplateService(EmailTemplateRepository repository) {
+    public EmailTemplateService(EmailTemplateRepository repository,
+                                @Value("${app.mail.staff}") String staffEmail) {
         this.repository = repository;
+        this.staffEmail = staffEmail;
     }
 
     /**
@@ -367,16 +371,13 @@ public class EmailTemplateService {
         vars.put("location", "Hubble Community Café");
         vars.put("expectedGuests", "40");
         vars.put("barName", "Hubble and Meteor Community Cafes");
-        vars.put("staffEmail", "events@hubble.cafe");
+        vars.put("staffEmail", staffEmail);
         vars.put("status", "Confirmed");
 
         if (type == EmailTemplateType.STATUS_CHANGED) {
             vars.put("statusColor", "#4CAF50");
             vars.put("statusMessage", "We're pleased to confirm your reservation!");
             vars.put("statusSubject", "Reservation Confirmed");
-        }
-        if (type == EmailTemplateType.CATERING_OPTIONS) {
-            vars.put("staffEmail", "events@hubble.cafe");
         }
         if (type == EmailTemplateType.STAFF_NOTIFICATION) {
             vars.put("email", "jane.doe@example.com");

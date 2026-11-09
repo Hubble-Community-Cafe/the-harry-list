@@ -823,12 +823,13 @@ export function ReservationDetailPage() {
 
                 {/* Reply-to */}
                 <div className="form-group">
-                  <label className="label">Reply-To Email (optional)</label>
+                  <label htmlFor="catering-reply-to" className="label">Reply-To Email (optional)</label>
                   <input
+                    id="catering-reply-to"
                     type="email"
                     value={cateringReplyTo}
                     onChange={(e) => setCateringReplyTo(e.target.value)}
-                    placeholder="e.g. events@hubble.cafe"
+                    placeholder="e.g. name@hubble.cafe"
                     className="input-field"
                   />
                 </div>

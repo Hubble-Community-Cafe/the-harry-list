@@ -14,6 +14,7 @@ export interface MailpitMessageSummary {
 }
 
 export interface MailpitMessage extends MailpitMessageSummary {
+  ReplyTo: Array<{ Address: string; Name: string }>;
   HTML: string;
   Text: string;
 }

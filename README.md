@@ -98,6 +98,8 @@ See [`e2e/README.md`](e2e/README.md) for the architecture, how to read the evide
    | `RECAPTCHA_SECRET_KEY` | Google reCAPTCHA v3 secret key (backend) |
    | `RECAPTCHA_SITE_KEY` | Google reCAPTCHA v3 site key (public frontend) |
    | `EMAIL_FROM` | Address confirmation emails are sent from. Also shown in the public confirmation screen's "check your spam folder" notice (`SENDER_EMAIL` derives from this in the compose template). |
+   | `EMAIL_STAFF` | Staff inbox for reservations. It receives the new reservation alerts, is the Reply-To on every email guests get (so their replies land here), is filled into `{{staffEmail}}` in the email templates, and is the default Reply-To of catering emails. Change only this value to move reservation mail to another inbox; replies to emails sent before the change still go to the old address. |
+   | `EMAIL_BAR_NAME` | Name used in the email texts (`{{barName}}`), for example `Hubble and Meteor Community Cafes`. |
 
 4. **Deploy** the stack in Portainer using the modified compose file
 

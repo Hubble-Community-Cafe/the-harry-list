@@ -487,7 +487,7 @@ For reservations that include catering activities, you'll see a **"Send Catering
 1. Click **"Send Catering Options"**
 2. The dialog shows a pre-filled email with:
    - **Recipient** — the customer's email
-   - **Reply-to** — where the customer's reply will go (fill in your own email or the staff inbox)
+   - **Reply-to** — where the customer's reply will go. It is pre-filled with the reservations inbox; change it to your own email if the customer should reply to you directly
    - **Attachments** — all active PDF menus (pre-checked, uncheck any you don't want to include)
    - **Subject** — pre-filled from the template
    - **Body** — pre-filled HTML email body

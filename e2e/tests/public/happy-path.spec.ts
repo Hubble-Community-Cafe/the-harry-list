@@ -3,6 +3,7 @@ import { ReservationFormPage } from '../../pages/ReservationFormPage';
 import { resetBackend } from '../../fixtures/backend';
 import { clearMailbox, waitForEmailTo } from '../../fixtures/mailpit';
 import { captureScreenshot, attachHtml } from '../../fixtures/evidence';
+import { STAFF_EMAIL } from '../../playwright.config';
 
 /**
  * The golden path: a guest completes all five steps with nothing in the way, the
@@ -67,5 +68,11 @@ test.describe('public: full booking happy path', () => {
     const email = await waitForEmailTo(request, CONTACT.email);
     await attachHtml(testInfo, 'confirmation-email.html', email.HTML);
     expect(email.HTML).toContain(ACTIVITY.title);
+    // Guest replies go to the configured staff inbox (APP_MAIL_STAFF), not a hardcoded one.
+    expect(email.ReplyTo.map(r => r.Address)).toEqual([STAFF_EMAIL]);
+
+    // Staff are alerted at that same configured inbox.
+    const alert = await waitForEmailTo(request, STAFF_EMAIL);
+    expect(alert.Subject).toContain(ACTIVITY.title);
   });
 });

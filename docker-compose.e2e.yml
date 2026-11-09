@@ -56,6 +56,8 @@ services:
       - SPRING_DATASOURCE_PASSWORD=harrypass
       - SPRING_MAIL_HOST=mailpit
       - SPRING_MAIL_PORT=1025
+      # Same variable Portainer sets; specs assert alerts and guest Reply-To follow it.
+      - APP_MAIL_STAFF=reservations@e2e.hubble.cafe
       - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
       - CALENDAR_FEED_TOKEN=e2e-feed-token
       # Backend staff-group check, matched by the default groups claim of the e2e header login.

@@ -76,6 +76,18 @@ class SmtpEmailServiceTest {
         assertEquals("jane@example.com", sent.getAllRecipients()[0].toString());
         assertTrue(sent.getContent().toString().contains("Your reservation is confirmed."),
                 "The rendered template body must be sent as the email content");
+        assertEquals("staff@test.cafe", sent.getReplyTo()[0].toString(),
+                "Guest replies must go to the configured staff inbox");
+    }
+
+    @Test
+    void sendEmailWithAttachments_keepsExplicitReplyTo() throws Exception {
+        service.sendEmailWithAttachments("jane@example.com", "Catering", "<p>menu</p>",
+                java.util.List.of(), "chef@test.cafe");
+
+        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(mailSender).send(captor.capture());
+        assertEquals("chef@test.cafe", captor.getValue().getReplyTo()[0].toString());
     }
 
     @Test
