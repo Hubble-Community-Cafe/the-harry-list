@@ -1,3 +1,5 @@
+import { configuredValue } from 'the-harry-list-shared';
+
 /**
  * End-to-end test authentication bridge.
  *
@@ -10,11 +12,6 @@
  * docker-compose.e2e.yml, so {@link isE2E} returns false everywhere else.
  */
 
-function clean(value: string | undefined): string | undefined {
-  if (!value || value.startsWith('__') || value.trim() === '') return undefined;
-  return value;
-}
-
 export interface E2eAuth {
   oid: string;
   email?: string;
@@ -24,9 +21,9 @@ export interface E2eAuth {
 /** Returns the injected e2e identity, or null when not running under the e2e stack. */
 export function getE2eAuth(): E2eAuth | null {
   const cfg = window.__RUNTIME_CONFIG__;
-  const oid = clean(cfg?.E2E_AUTH_OID);
+  const oid = configuredValue(cfg?.E2E_AUTH_OID);
   if (!oid) return null;
-  return { oid, email: clean(cfg?.E2E_AUTH_EMAIL), name: clean(cfg?.E2E_AUTH_NAME) };
+  return { oid, email: configuredValue(cfg?.E2E_AUTH_EMAIL), name: configuredValue(cfg?.E2E_AUTH_NAME) };
 }
 
 /** True only when the app is running under the e2e test stack. */

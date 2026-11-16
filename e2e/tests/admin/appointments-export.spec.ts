@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { statSync } from 'node:fs';
-import { resetBackend, seedUser, seedAppointment } from '../../fixtures/backend';
+import { resetBackend, seedAppointment, seedAdmin } from '../../fixtures/backend';
 import { captureScreenshot } from '../../fixtures/evidence';
 
 /**
@@ -15,7 +15,7 @@ test.describe('admin: appointments on the PDF export', () => {
 
   test.beforeEach(async ({ request }) => {
     await resetBackend(request);
-    await seedUser(request, { oid: 'e2e-admin', email: 'admin@e2e.test', role: 'ADMIN' });
+    await seedAdmin(request);
     // HUBBLE matches the export page's default location.
     await seedAppointment(request, {
       title: 'Beer delivery',

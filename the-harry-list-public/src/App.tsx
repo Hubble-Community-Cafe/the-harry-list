@@ -2,8 +2,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { ReservationForm } from './components/ReservationForm';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
-import { ThemeProvider, SkipLink, MAIN_CONTENT_ID } from 'the-harry-list-shared';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { ThemeProvider, SkipLink, MAIN_CONTENT_ID, ErrorBoundary } from 'the-harry-list-shared';
 import { PrivacyPolicy, SuccessMessage, prefetchDeferredChunks } from './lib/deferredChunks';
 
 interface SubmissionResult {
@@ -40,7 +39,7 @@ function App() {
   };
 
   return (
-    <ErrorBoundary>
+    <ErrorBoundary buttonClassName="bg-hubble-600 hover:bg-hubble-500">
     <ThemeProvider>
       <div className="min-h-screen bg-dark-950 flex flex-col">
         <SkipLink />

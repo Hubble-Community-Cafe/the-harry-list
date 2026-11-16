@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { resetBackend, seedUser, seedReservation } from '../../fixtures/backend';
+import { resetBackend, seedReservation, seedAdmin } from '../../fixtures/backend';
 import { captureScreenshot } from '../../fixtures/evidence';
 
 /**
@@ -11,7 +11,7 @@ test.describe('admin: week overview shows reservations', () => {
 
   test.beforeEach(async ({ request }) => {
     await resetBackend(request);
-    await seedUser(request, { oid: 'e2e-admin', role: 'ADMIN' });
+    await seedAdmin(request);
     await seedReservation(request, {
       contactName: 'Week Guest',
       email: 'week@example.com',

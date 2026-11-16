@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { AdminSettingsPage } from '../../pages/AdminSettingsPage';
-import { resetBackend, seedUser } from '../../fixtures/backend';
+import { resetBackend, seedAdmin } from '../../fixtures/backend';
 import { captureScreenshot } from '../../fixtures/evidence';
 
 /**
@@ -11,7 +11,7 @@ test.describe('admin: manage blocked periods', () => {
   test.beforeEach(async ({ request }) => {
     // The admin SPA sends X-Test-Oid=e2e-admin (docker-compose.e2e.yml); give it a role.
     await resetBackend(request);
-    await seedUser(request, { oid: 'e2e-admin', email: 'admin@e2e.test', role: 'ADMIN' });
+    await seedAdmin(request);
   });
 
   test('creates a soft block and shows the "Soft block" badge', async ({ page }, testInfo) => {

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { CalendarAppointmentsPage } from '../../pages/CalendarAppointmentsPage';
-import { resetBackend, seedUser } from '../../fixtures/backend';
+import { resetBackend, seedAdmin } from '../../fixtures/backend';
 import { attachText, captureScreenshot } from '../../fixtures/evidence';
 import { BACKEND_URL } from '../../playwright.config';
 
@@ -15,7 +15,7 @@ const FEED_TOKEN = 'e2e-feed-token';
 test.describe('admin: recurring calendar appointments', () => {
   test.beforeEach(async ({ request }) => {
     await resetBackend(request);
-    await seedUser(request, { oid: 'e2e-admin', email: 'admin@e2e.test', role: 'ADMIN' });
+    await seedAdmin(request);
   });
 
   test('creates an "every 2nd Friday" appointment and emits BYDAY=2FR in the feed', async ({ page, request }, testInfo) => {

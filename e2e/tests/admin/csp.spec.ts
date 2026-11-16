@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { resetBackend, seedReservation, seedUser } from '../../fixtures/backend';
+import { resetBackend, seedReservation, seedAdmin } from '../../fixtures/backend';
 import { watchCspViolations, expectEnforcingCsp, expectNoCspViolations } from '../../fixtures/csp';
 
 /**
@@ -10,7 +10,7 @@ import { watchCspViolations, expectEnforcingCsp, expectNoCspViolations } from '.
 test('every admin page loads under the Content-Security-Policy', async ({ page, request }, testInfo) => {
   await resetBackend(request);
   // ADMIN, so the admin-only pages render their real content instead of a permission error.
-  await seedUser(request, { oid: 'e2e-admin', role: 'ADMIN' });
+  await seedAdmin(request);
   const seeded = await seedReservation(request, {
     contactName: 'CSP Guest',
     email: 'csp.guest@example.com',

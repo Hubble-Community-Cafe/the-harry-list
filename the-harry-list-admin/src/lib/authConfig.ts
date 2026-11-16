@@ -1,5 +1,6 @@
 import type { Configuration } from '@azure/msal-browser';
 import { LogLevel } from '@azure/msal-browser';
+import { configuredValue } from 'the-harry-list-shared';
 
 // Runtime configuration interface
 declare global {
@@ -21,13 +22,8 @@ declare global {
 
 // Helper to get runtime config value (falls back to build-time env)
 const getConfig = (runtimeKey: keyof NonNullable<typeof window.__RUNTIME_CONFIG__>, envKey: string): string => {
-  const runtimeValue = window.__RUNTIME_CONFIG__?.[runtimeKey];
-  // Check if it's a valid value (not the placeholder)
-  if (runtimeValue && !runtimeValue.startsWith('__')) {
-    return runtimeValue;
-  }
-  // Fall back to build-time env variable
-  return import.meta.env[envKey] || '';
+  // A filled-in runtime value wins; otherwise fall back to the build-time env variable.
+  return configuredValue(window.__RUNTIME_CONFIG__?.[runtimeKey]) ?? (import.meta.env[envKey] || '');
 };
 
 // Get configuration values from runtime config or build-time env

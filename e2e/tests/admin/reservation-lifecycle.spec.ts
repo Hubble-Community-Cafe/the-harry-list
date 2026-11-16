@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ReservationFormPage } from '../../pages/ReservationFormPage';
-import { resetBackend, seedUser, seedReservation } from '../../fixtures/backend';
+import { resetBackend, seedReservation, seedAdmin } from '../../fixtures/backend';
 import { clearMailbox, waitForEmailTo } from '../../fixtures/mailpit';
 import { captureScreenshot, attachHtml } from '../../fixtures/evidence';
 import { PUBLIC_BASE_URL } from '../../playwright.config';
@@ -14,7 +14,7 @@ test.describe('admin: reservation lifecycle', () => {
   test.beforeEach(async ({ request }) => {
     await resetBackend(request);
     // The admin SPA authenticates as e2e-admin (docker-compose.e2e.yml).
-    await seedUser(request, { oid: 'e2e-admin', email: 'admin@e2e.test', role: 'ADMIN' });
+    await seedAdmin(request);
   });
 
   test('a public submission appears in the admin list and can be confirmed', async ({ page, request }, testInfo) => {

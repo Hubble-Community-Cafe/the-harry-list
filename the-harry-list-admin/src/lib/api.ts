@@ -1,13 +1,13 @@
 import { PublicClientApplication } from '@azure/msal-browser';
 import * as Sentry from '@sentry/react';
-import { apiErrorMessage } from 'the-harry-list-shared';
+import { apiErrorMessage, configuredValue } from 'the-harry-list-shared';
 import { getE2eAuth } from './e2eAuth';
 // Note: Window.__RUNTIME_CONFIG__ type is declared in authConfig.ts
 
 // Get API URL from runtime config or fall back to build-time env
 const getApiUrl = (): string => {
-  const runtimeUrl = window.__RUNTIME_CONFIG__?.API_URL;
-  if (runtimeUrl && !runtimeUrl.startsWith('__')) {
+  const runtimeUrl = configuredValue(window.__RUNTIME_CONFIG__?.API_URL);
+  if (runtimeUrl) {
     return runtimeUrl;
   }
   const envUrl = import.meta.env.VITE_API_URL;

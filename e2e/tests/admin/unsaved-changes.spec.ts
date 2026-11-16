@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { resetBackend, seedUser, seedReservation } from '../../fixtures/backend';
+import { resetBackend, seedReservation, seedAdmin } from '../../fixtures/backend';
 
 /**
  * Unsaved input in the admin is not lost by accident: leaving the page via the sidebar or the
@@ -10,7 +10,7 @@ import { resetBackend, seedUser, seedReservation } from '../../fixtures/backend'
 test.describe('admin: unsaved changes', () => {
   test.beforeEach(async ({ page, request }) => {
     await resetBackend(request);
-    await seedUser(request, { oid: 'e2e-admin', role: 'ADMIN' });
+    await seedAdmin(request);
     await seedReservation(request, {
       contactName: 'Unsaved Guest',
       email: 'unsaved.guest@example.com',
