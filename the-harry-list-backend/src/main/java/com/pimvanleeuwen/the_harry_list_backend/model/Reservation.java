@@ -227,9 +227,7 @@ public class Reservation {
      */
     public boolean hasCateringActivity() {
         return specialActivities != null && specialActivities.stream()
-                .anyMatch(a -> a == SpecialActivity.EAT_A_LA_CARTE
-                        || a == SpecialActivity.EAT_CATERING
-                        || a == SpecialActivity.CATERING_CORONA_ROOM);
+                .anyMatch(SpecialActivity.catering()::contains);
     }
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();

@@ -1,7 +1,9 @@
 package com.pimvanleeuwen.the_harry_list_backend.model;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Special activities that can be selected for a reservation.
@@ -34,6 +36,14 @@ public enum SpecialActivity {
 
     public String getDisplayName() {
         return displayName;
+    }
+
+    /**
+     * The activities that involve food, so the kitchen needs to know: they drive the catering
+     * filter on calendar feeds and the PDF day report, and the catering email.
+     */
+    public static Set<SpecialActivity> catering() {
+        return EnumSet.of(EAT_A_LA_CARTE, EAT_CATERING, CATERING_CORONA_ROOM);
     }
 
     /** Whether this activity can still be chosen on a new reservation. */

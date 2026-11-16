@@ -1,11 +1,13 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
 import com.pimvanleeuwen.the_harry_list_backend.model.CalendarAppointment;
 import com.pimvanleeuwen.the_harry_list_backend.model.RecurrenceType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.model.SpecialActivity;
 import com.pimvanleeuwen.the_harry_list_backend.repository.CalendarAppointmentRepository;
+import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationFilter;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -51,21 +54,7 @@ public class ICalendarService {
      *                 excluded when {@code catering} is true.
      */
     public String generateCalendarFeed(List<ReservationStatus> includeStatuses, String location, Boolean catering, boolean includeConfidentialDetails) {
-        List<Reservation> reservations = reservationRepository.findAll();
-
-        if (includeStatuses != null && !includeStatuses.isEmpty()) {
-            reservations = reservations.stream()
-                    .filter(r -> includeStatuses.contains(r.getStatus()))
-                    .toList();
-        }
-
-        if (location != null && !location.isEmpty()) {
-            reservations = reservations.stream()
-                    .filter(r -> r.getLocation() != null && r.getLocation().name().equalsIgnoreCase(location))
-                    .toList();
-        }
-
-        reservations = filterByCatering(reservations, catering);
+        List<Reservation> reservations = findReservations(ReservationFilter.any(), includeStatuses, location, catering);
 
         List<CalendarAppointment> appointments = getFilteredAppointments(location, catering);
 
@@ -83,23 +72,8 @@ public class ICalendarService {
      */
     public String generateUpcomingCalendarFeed(List<ReservationStatus> includeStatuses, String location, Boolean catering, boolean includeConfidentialDetails) {
         LocalDate today = LocalDate.now();
-        List<Reservation> reservations = reservationRepository.findAll().stream()
-                .filter(r -> r.getEventDate() != null && !r.getEventDate().isBefore(today))
-                .toList();
-
-        if (includeStatuses != null && !includeStatuses.isEmpty()) {
-            reservations = reservations.stream()
-                    .filter(r -> includeStatuses.contains(r.getStatus()))
-                    .toList();
-        }
-
-        if (location != null && !location.isEmpty()) {
-            reservations = reservations.stream()
-                    .filter(r -> r.getLocation() != null && r.getLocation().name().equalsIgnoreCase(location))
-                    .toList();
-        }
-
-        reservations = filterByCatering(reservations, catering);
+        List<Reservation> reservations = findReservations(ReservationFilter.any().from(today),
+                includeStatuses, location, catering);
 
         List<CalendarAppointment> appointments = getFilteredAppointments(location, catering).stream()
                 .filter(a -> {
@@ -115,14 +89,24 @@ public class ICalendarService {
         return buildIcsCalendar(reservations, appointments, includeConfidentialDetails);
     }
 
-    /** Filters reservations to catering-only or non-catering-only; no-op when {@code catering} is null. */
-    private List<Reservation> filterByCatering(List<Reservation> reservations, Boolean catering) {
-        if (catering == null) {
-            return reservations;
+    /**
+     * Loads the feed's reservations, filtered by the database. {@code location} comes from the
+     * feed URL and is matched case-insensitively; an unknown bar matches nothing.
+     */
+    private List<Reservation> findReservations(ReservationFilter filter, List<ReservationStatus> statuses,
+                                               String location, Boolean catering) {
+        filter = filter.withStatuses(statuses).withCatering(catering);
+        if (location != null && !location.isEmpty()) {
+            BarLocation bar = Arrays.stream(BarLocation.values())
+                    .filter(b -> b.name().equalsIgnoreCase(location))
+                    .findFirst()
+                    .orElse(null);
+            if (bar == null) {
+                return List.of();
+            }
+            filter = filter.at(bar);
         }
-        return reservations.stream()
-                .filter(r -> r.hasCateringActivity() == catering)
-                .toList();
+        return reservationRepository.findMatching(filter);
     }
 
     private List<CalendarAppointment> getFilteredAppointments(String location, Boolean catering) {
