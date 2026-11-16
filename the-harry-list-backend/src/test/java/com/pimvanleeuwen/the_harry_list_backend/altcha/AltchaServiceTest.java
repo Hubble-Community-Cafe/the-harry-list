@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.altcha;
 
+import com.pimvanleeuwen.the_harry_list_backend.config.properties.AltchaProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AltchaServiceTest {
 
     private final ObjectMapper mapper = new ObjectMapper();
-    private final AltchaService altcha = new AltchaService(true, "test-secret-key", 2000, 300);
+    private final AltchaService altcha = new AltchaService(new AltchaProperties(true, "test-secret-key", 2000, 300));
 
     /** Solve the challenge the way the browser widget does: find n with SHA-256(salt+n) == challenge. */
     private long solve(String salt, String challenge, int maxNumber) throws Exception {
@@ -70,7 +71,7 @@ class AltchaServiceTest {
 
     @Test
     void whenDisabled_anyPayloadPasses() {
-        AltchaService off = new AltchaService(false, "", 2000, 300);
+        AltchaService off = new AltchaService(new AltchaProperties(false, "", 2000, 300));
         assertThat(off.verify(null)).isTrue();
         assertThat(off.verify("garbage")).isTrue();
     }

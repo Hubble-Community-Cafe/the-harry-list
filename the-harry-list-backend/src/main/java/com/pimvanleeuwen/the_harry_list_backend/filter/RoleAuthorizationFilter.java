@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.filter;
 
+import com.pimvanleeuwen.the_harry_list_backend.config.properties.AzureProperties;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminRole;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminUser;
 import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
@@ -11,7 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -55,9 +55,11 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
      *                            all reservation data.
      */
     @Autowired
-    public RoleAuthorizationFilter(AdminUserService adminUserService,
-                                   @Value("${azure.allowed-group-id:}") String allowedGroupId,
-                                   @Value("${azure.require-allowed-group:false}") boolean requireAllowedGroup) {
+    public RoleAuthorizationFilter(AdminUserService adminUserService, AzureProperties azure) {
+        this(adminUserService, azure.allowedGroupId(), azure.requireAllowedGroup());
+    }
+
+    RoleAuthorizationFilter(AdminUserService adminUserService, String allowedGroupId, boolean requireAllowedGroup) {
         this.adminUserService = adminUserService;
         this.allowedGroupId = allowedGroupId == null ? "" : allowedGroupId.trim();
         if (this.allowedGroupId.isEmpty()) {

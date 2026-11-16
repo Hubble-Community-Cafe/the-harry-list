@@ -1,12 +1,12 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller.open;
 
+import com.pimvanleeuwen.the_harry_list_backend.config.properties.CalendarFeedProperties;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.service.ICalendarService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,12 +39,10 @@ public class CalendarFeedController {
     private final String feedToken;
     private final String staffFeedToken;
 
-    public CalendarFeedController(ICalendarService iCalendarService,
-                                  @Value("${calendar.feed.token:}") String feedToken,
-                                  @Value("${calendar.feed.staff-token:}") String staffFeedToken) {
+    public CalendarFeedController(ICalendarService iCalendarService, CalendarFeedProperties feeds) {
         this.iCalendarService = iCalendarService;
-        this.feedToken = feedToken;
-        this.staffFeedToken = staffFeedToken;
+        this.feedToken = feeds.token();
+        this.staffFeedToken = feeds.staffToken();
 
         // Surface a missing or reused token in the logs right after a deploy, not when a
         // calendar app silently stops syncing.

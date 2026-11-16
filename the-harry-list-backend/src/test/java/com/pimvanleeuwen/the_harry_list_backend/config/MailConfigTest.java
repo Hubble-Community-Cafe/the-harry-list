@@ -1,10 +1,12 @@
 package com.pimvanleeuwen.the_harry_list_backend.config;
 
+import com.pimvanleeuwen.the_harry_list_backend.config.properties.AppMailProperties;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailMessages;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.GraphMailTransport;
 import com.pimvanleeuwen.the_harry_list_backend.service.SmtpMailTransport;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -15,12 +17,17 @@ import static org.mockito.Mockito.mock;
 /** Which delivery each environment gets; the messages are the same everywhere. */
 class MailConfigTest {
 
+    @EnableConfigurationProperties(AppMailProperties.class)
+    static class Settings {
+    }
+
     private final ApplicationContextRunner runner = new ApplicationContextRunner()
-            .withUserConfiguration(MailConfig.class)
+            .withUserConfiguration(Settings.class, MailConfig.class)
             .withBean(EmailMessages.class, () -> mock(EmailMessages.class))
             .withBean(JavaMailSender.class, () -> mock(JavaMailSender.class))
             .withPropertyValues(
                     "app.mail.from=noreply@test.cafe",
+                    "app.mail.staff=staff@test.cafe",
                     "app.mail.graph.tenant-id=tenant",
                     "app.mail.graph.client-id=client",
                     "app.mail.graph.client-secret=secret");

@@ -1,8 +1,8 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
+import com.pimvanleeuwen.the_harry_list_backend.config.properties.CalendarFeedProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,11 +21,13 @@ import java.util.List;
 @Tag(name = "Admin Calendar", description = "Admin endpoints for calendar feed management")
 public class AdminCalendarController {
 
-    @Value("${calendar.feed.token:}")
-    private String publicFeedToken;
+    private final String publicFeedToken;
+    private final String staffFeedToken;
 
-    @Value("${calendar.feed.staff-token:}")
-    private String staffFeedToken;
+    public AdminCalendarController(CalendarFeedProperties feeds) {
+        this.publicFeedToken = feeds.token();
+        this.staffFeedToken = feeds.staffToken();
+    }
 
     @GetMapping("/feeds")
     @Operation(

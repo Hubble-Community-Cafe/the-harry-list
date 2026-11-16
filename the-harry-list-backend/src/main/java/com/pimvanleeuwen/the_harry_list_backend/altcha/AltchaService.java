@@ -2,9 +2,9 @@ package com.pimvanleeuwen.the_harry_list_backend.altcha;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pimvanleeuwen.the_harry_list_backend.config.properties.AltchaProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Mac;
@@ -40,14 +40,11 @@ public class AltchaService {
     /** Solved signatures (single-use), mapped to their expiry epoch for lazy cleanup. */
     private final Map<String, Long> usedSignatures = new ConcurrentHashMap<>();
 
-    public AltchaService(
-            @Value("${app.altcha.enabled:false}") boolean enabled,
-            @Value("${app.altcha.hmac-key:}") String hmacKey,
-            @Value("${app.altcha.max-number:50000}") int maxNumber,
-            @Value("${app.altcha.expiry-seconds:300}") long expirySeconds) {
-        this.enabled = enabled;
-        this.maxNumber = maxNumber;
-        this.expirySeconds = expirySeconds;
+    public AltchaService(AltchaProperties settings) {
+        this.enabled = settings.enabled();
+        this.maxNumber = settings.maxNumber();
+        this.expirySeconds = settings.expirySeconds();
+        String hmacKey = settings.hmacKey();
         if (hmacKey == null || hmacKey.isBlank()) {
             this.hmacKey = randomHex(32);
             if (enabled) {

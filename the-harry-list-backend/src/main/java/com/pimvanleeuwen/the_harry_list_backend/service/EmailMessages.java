@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.config.properties.AppMailProperties;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
@@ -28,11 +29,10 @@ public class EmailMessages {
     private final String staffEmail;
     private final String barName;
 
-    public EmailMessages(EmailTemplateService templates,
-                         @Value("${app.mail.staff}") String staffEmail,
+    public EmailMessages(EmailTemplateService templates, AppMailProperties mail,
                          @Value("${app.bar.name:Hubble and Meteor Community Cafes}") String barName) {
         this.templates = templates;
-        this.staffEmail = staffEmail;
+        this.staffEmail = mail.staff();
         this.barName = barName;
     }
 

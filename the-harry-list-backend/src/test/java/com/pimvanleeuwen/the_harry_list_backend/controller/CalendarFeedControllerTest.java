@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
+import com.pimvanleeuwen.the_harry_list_backend.config.properties.CalendarFeedProperties;
 import com.pimvanleeuwen.the_harry_list_backend.controller.open.CalendarFeedController;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.service.ICalendarService;
@@ -40,7 +41,7 @@ class CalendarFeedControllerTest {
     }
 
     private CalendarFeedController controller(String publicToken, String staffToken) {
-        return new CalendarFeedController(calendarService, publicToken, staffToken);
+        return new CalendarFeedController(calendarService, new CalendarFeedProperties(publicToken, staffToken));
     }
 
     private ResponseEntity<String> publicFeed(CalendarFeedController c, String token) {

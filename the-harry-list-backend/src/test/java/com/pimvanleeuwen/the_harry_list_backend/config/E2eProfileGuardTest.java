@@ -26,7 +26,8 @@ class E2eProfileGuardTest {
     private java.lang.reflect.Method smtpBean() {
         try {
             return MailConfig.class.getDeclaredMethod("smtpEmailNotificationService",
-                    org.springframework.mail.javamail.JavaMailSender.class, String.class,
+                    org.springframework.mail.javamail.JavaMailSender.class,
+                    com.pimvanleeuwen.the_harry_list_backend.config.properties.AppMailProperties.class,
                     com.pimvanleeuwen.the_harry_list_backend.service.EmailMessages.class);
         } catch (NoSuchMethodException e) {
             throw new AssertionError("MailConfig.smtpEmailNotificationService is missing", e);

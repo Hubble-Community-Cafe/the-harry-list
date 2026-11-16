@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.config.properties.AppMailProperties;
 import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
@@ -32,7 +33,7 @@ class EmailMessagesTest {
 
     @BeforeEach
     void setUp() {
-        messages = new EmailMessages(templates, "staff@test.cafe", "Test Bar");
+        messages = new EmailMessages(templates, new AppMailProperties(false, null, "staff@test.cafe", null), "Test Bar");
         lenient().when(templates.getRenderedSubject(any(), anyMap())).thenReturn("Subject");
         lenient().when(templates.getRenderedBody(any(), anyMap())).thenReturn("<p>body</p>");
         lenient().when(templates.getRenderedBody(any(), anyMap(), anyMap())).thenReturn("<p>body with note</p>");

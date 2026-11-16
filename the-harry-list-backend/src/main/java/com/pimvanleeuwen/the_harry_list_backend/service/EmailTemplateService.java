@@ -1,10 +1,10 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.config.properties.AppMailProperties;
 import com.pimvanleeuwen.the_harry_list_backend.dto.EmailTemplateDto;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplate;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
 import com.pimvanleeuwen.the_harry_list_backend.repository.EmailTemplateRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -285,10 +285,9 @@ public class EmailTemplateService {
                 """);
     }
 
-    public EmailTemplateService(EmailTemplateRepository repository,
-                                @Value("${app.mail.staff}") String staffEmail) {
+    public EmailTemplateService(EmailTemplateRepository repository, AppMailProperties mail) {
         this.repository = repository;
-        this.staffEmail = staffEmail;
+        this.staffEmail = mail.staff();
     }
 
     /**
