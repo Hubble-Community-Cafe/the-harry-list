@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -55,6 +56,7 @@ public class ReservationLifecycleService {
      * @throws BusinessRuleException when the change is not allowed from the current status
      *         (see {@link ReservationStatus#canMoveTo}) or confirms a reservation without a location
      */
+    @Transactional
     public com.pimvanleeuwen.the_harry_list_backend.dto.Reservation changeStatus(
             Long id, ReservationStatus status, String confirmedBy,
             boolean sendEmail, String customMessage, String actor) {
@@ -75,12 +77,12 @@ public class ReservationLifecycleService {
         if (confirmedBy != null && status == ReservationStatus.CONFIRMED) {
             reservation.setConfirmedBy(confirmedBy);
         }
-        Reservation saved = reservationRepository.save(reservation);
+        Reservation saved = reservationRepository.saveAndFlush(reservation);
 
         // Privacy-safe analytics: a coarse note that a status transition happened, for
         // the terminal/meaningful states only (PENDING re-opens are internal churn).
         if (status != ReservationStatus.PENDING) {
-            analyticsLog.info(ReservationAnalytics.reservationStatusChangedLine(status, saved.getLocation()));
+            AfterCommit.run(() -> analyticsLog.info(ReservationAnalytics.reservationStatusChangedLine(status, saved.getLocation())));
         }
 
         log.info("AUDIT reservation.status_changed id={} confirmation='{}' event='{}' date={} status={}->{} user='{}'{}",
@@ -99,11 +101,7 @@ public class ReservationLifecycleService {
                         + (hasCustomMessage ? " (with message)" : ""));
 
         if (sendEmail && emailService != null) {
-            try {
-                emailService.sendStatusChangeEmail(saved, customMessage);
-            } catch (Exception e) {
-                log.error("Failed to send status change email, but status was updated successfully", e);
-            }
+            AfterCommit.run(() -> emailService.sendStatusChangeEmail(saved, customMessage));
         }
 
         return reservationMapper.toDto(saved);
@@ -113,6 +111,7 @@ public class ReservationLifecycleService {
      * Mark catering as arranged, or undo that.
      * @throws NotFoundException when no reservation has this id
      */
+    @Transactional
     public com.pimvanleeuwen.the_harry_list_backend.dto.Reservation setCateringArranged(
             Long id, boolean arranged, String actor) {
         log.info("AUDIT reservation.catering_arranged id={} arranged={} user='{}'", id, arranged, actor);
@@ -120,7 +119,7 @@ public class ReservationLifecycleService {
         Reservation reservation = find(id);
         boolean previous = reservation.isCateringArranged();
         reservation.setCateringArranged(arranged);
-        Reservation saved = reservationRepository.save(reservation);
+        Reservation saved = reservationRepository.saveAndFlush(reservation);
 
         auditService.recordAction(AuditEntityType.RESERVATION, id, label(saved),
                 AuditAction.CATERING_ARRANGED,
@@ -134,6 +133,7 @@ public class ReservationLifecycleService {
      * Replace the staff-only internal notes.
      * @throws NotFoundException when no reservation has this id
      */
+    @Transactional
     public com.pimvanleeuwen.the_harry_list_backend.dto.Reservation updateInternalNotes(
             Long id, String notes, String actor) {
         log.info("AUDIT reservation.notes_updated id={} user='{}'", id, actor);
@@ -144,7 +144,7 @@ public class ReservationLifecycleService {
 
         Reservation reservation = find(id);
         reservation.setInternalNotes(notes);
-        Reservation saved = reservationRepository.save(reservation);
+        Reservation saved = reservationRepository.saveAndFlush(reservation);
 
         // Note content is intentionally not stored in the audit log (may be long/sensitive).
         auditService.recordAction(AuditEntityType.RESERVATION, id, label(saved),

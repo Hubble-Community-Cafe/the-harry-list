@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DeleteReservationService {
@@ -31,20 +32,13 @@ public class DeleteReservationService {
      * @param sendEmail Whether to send email notification
      * @throws NotFoundException when no reservation has this id
      */
+    @Transactional
     public void delete(Long id, boolean sendEmail) {
         log.info("LOGGING reservation.cancel.started id={}", id);
 
         Reservation r = reservationRepository.findById(id)
                 .orElseThrow(() -> NotFoundException.of("Reservation", id));
 
-        // Send email notification before deleting if enabled
-        if (sendEmail && emailService != null) {
-            try {
-                emailService.sendReservationCancelledEmail(r);
-            } catch (Exception e) {
-                log.error("Failed to send cancellation email, but proceeding with deletion", e);
-            }
-        }
 
         // No contact name or email: these logs are centralized (Loki), so guest PII must not be written.
         log.info("LOGGING reservation.cancelled id={} confirmation='{}' event='{}' date={}",
@@ -55,5 +49,10 @@ public class DeleteReservationService {
         auditService.recordDelete(AuditEntityType.RESERVATION, id,
                 r.getConfirmationNumber() + " - " + r.getEventTitle(),
                 "Reservation deleted (contact: " + r.getContactName() + ")");
+
+        // Only once the delete has committed; the in-memory record still has the details.
+        if (sendEmail && emailService != null) {
+            AfterCommit.run(() -> emailService.sendReservationCancelledEmail(r));
+        }
     }
 }
