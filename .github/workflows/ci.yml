@@ -256,11 +256,11 @@ jobs:
 
       - name: Compute lowercase owner
         id: vars
-        run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+        run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
       - name: Extract project version
         id: version
-        run: echo "version=$(node -p "require('./the-harry-list-public/package.json').version")" >> $GITHUB_OUTPUT
+        run: echo "version=$(node -p "require('./the-harry-list-public/package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
@@ -333,7 +333,7 @@ jobs:
 
       - name: Extract version
         id: version
-        run: echo "version=$(node -p "require('./the-harry-list-public/package.json').version")" >> $GITHUB_OUTPUT
+        run: echo "version=$(node -p "require('./the-harry-list-public/package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Create Sentry release
         uses: getsentry/action-release@e6703d0b00208e0b3687ba660d18ab5af7892821 # v3
@@ -358,15 +358,15 @@ jobs:
 
       - name: Extract version
         id: version
-        run: echo "version=$(node -p "require('./the-harry-list-public/package.json').version")" >> $GITHUB_OUTPUT
+        run: echo "version=$(node -p "require('./the-harry-list-public/package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Check if tag already exists
         id: check-tag
         run: |
           if git ls-remote --tags origin "v${{ steps.version.outputs.version }}" | grep -q .; then
-            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "exists=true" >> "$GITHUB_OUTPUT"
           else
-            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Get merged PR info
@@ -384,13 +384,13 @@ jobs:
             PR_NUMBER=$(echo "$PR_JSON" | jq -r '.number')
             PR_BODY=$(echo "$PR_JSON" | jq -r '.body // ""')
 
-            echo "title=$PR_TITLE (#$PR_NUMBER)" >> $GITHUB_OUTPUT
-            echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+            echo "title=$PR_TITLE (#$PR_NUMBER)" >> "$GITHUB_OUTPUT"
+            echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
 
             # Write body to file to handle multiline
             echo "$PR_BODY" > /tmp/pr_body.md
           else
-            echo "title=Release v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+            echo "title=Release v${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
             echo "" > /tmp/pr_body.md
           fi
 
