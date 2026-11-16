@@ -50,7 +50,7 @@ public class CreateReservationService {
         // Note: never log name/email/phone here. These logs are centralized (Loki), so guest
         // PII must not be written. Event/date/location/guests are operational context only.
         log.info("LOGGING reservation.submitted event='{}' date={} location={} guests={}",
-                input.getEventTitle(), input.getEventDate(), input.getLocation(), input.getExpectedGuests());
+                LogSafe.text(input.getEventTitle()), input.getEventDate(), input.getLocation(), input.getExpectedGuests());
 
         // Retired activities are filtered out of the form options, so a submission carrying
         // one bypassed the form. Reject it rather than dropping it silently, which would
@@ -92,7 +92,7 @@ public class CreateReservationService {
 
         log.info("LOGGING reservation.created id={} confirmation='{}' event='{}' date={} location={}",
                 savedEntity.getId(), savedEntity.getConfirmationNumber(),
-                savedEntity.getEventTitle(), savedEntity.getEventDate(), savedEntity.getLocation());
+                LogSafe.text(savedEntity.getEventTitle()), savedEntity.getEventDate(), savedEntity.getLocation());
 
         // Privacy-safe analytics line scraped into Loki (job=app-analytics). PII-free by
         // contract: only coarse buckets (bar, weekday, time slot, guest band, lead time).

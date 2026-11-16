@@ -136,8 +136,13 @@ class PublicReservationControllerTest {
                 .andExpect(jsonPath("$.confirmationNumber").value("ABC123"));
     }
 
+    /** Distinct client address per call, so these validation tests never hit the rate limit. */
+    private static final java.util.concurrent.atomic.AtomicInteger CLIENT = new java.util.concurrent.atomic.AtomicInteger();
+
     private org.springframework.test.web.servlet.ResultActions submit(PublicReservationRequest request) throws Exception {
+        String clientIp = "203.0.113." + (CLIENT.incrementAndGet() % 250 + 1);
         return mockMvc.perform(post("/api/public/reservations")
+                .with(r -> { r.setRemoteAddr(clientIp); return r; })
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)));
     }
@@ -186,6 +191,23 @@ class PublicReservationControllerTest {
         submit(sampleRequest)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("invoiceAddress: Address is required"));
+    }
+
+    @Test
+    void submitReservation_tooLongText_isA400NotA500() throws Exception {
+        // The database limits used to be checked only on save, which surfaced as a 500.
+        sampleRequest.setEventTitle("x".repeat(256));
+        submit(sampleRequest)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("eventTitle: Event title must not exceed 255 characters"));
+
+        sampleRequest.setEventTitle("x".repeat(255));
+        sampleRequest.setComments("x".repeat(5001));
+        submit(sampleRequest)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("comments"));
+
+        verify(createReservationService, never()).create(any());
     }
 
     @Test

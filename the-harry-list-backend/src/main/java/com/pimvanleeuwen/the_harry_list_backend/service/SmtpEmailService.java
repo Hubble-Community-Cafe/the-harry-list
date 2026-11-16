@@ -139,7 +139,7 @@ public class SmtpEmailService implements EmailNotificationService {
             helper.setSubject(subject);
             helper.setText(htmlBody, true);
             mailSender.send(message);
-            log.info("LOGGING email.smtp_sent subject='{}'", subject);
+            log.info("LOGGING email.smtp_sent subject='{}'", LogSafe.text(subject));
         } catch (Exception e) {
             log.error("Failed to send SMTP (e2e) email", e);
         }

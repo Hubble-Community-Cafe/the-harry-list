@@ -27,6 +27,8 @@ public class ReservationLifecycleService {
     private static final Logger log = LoggerFactory.getLogger(ReservationLifecycleService.class);
     /** Dedicated, PII-free analytics logger scraped into Loki (job=app-analytics). */
     private static final Logger analyticsLog = LoggerFactory.getLogger("analytics");
+    /** Same limit as the internal_notes column validation on the entity. */
+    private static final int MAX_INTERNAL_NOTES = 5000;
 
     private final ReservationRepository reservationRepository;
     private final ReservationMapper reservationMapper;
@@ -82,9 +84,9 @@ public class ReservationLifecycleService {
         }
 
         log.info("AUDIT reservation.status_changed id={} confirmation='{}' event='{}' date={} status={}->{} user='{}'{}",
-                id, saved.getConfirmationNumber(), saved.getEventTitle(), saved.getEventDate(),
+                id, saved.getConfirmationNumber(), LogSafe.text(saved.getEventTitle()), saved.getEventDate(),
                 oldStatus, status, actor,
-                confirmedBy != null ? " confirmedBy='" + confirmedBy + "'" : "");
+                confirmedBy != null ? " confirmedBy='" + LogSafe.text(confirmedBy) + "'" : "");
 
         // The message content itself is not stored in the audit log (may be long); we only
         // record that a custom message accompanied the status change.
@@ -135,6 +137,10 @@ public class ReservationLifecycleService {
     public com.pimvanleeuwen.the_harry_list_backend.dto.Reservation updateInternalNotes(
             Long id, String notes, String actor) {
         log.info("AUDIT reservation.notes_updated id={} user='{}'", id, actor);
+
+        if (notes != null && notes.length() > MAX_INTERNAL_NOTES) {
+            throw new BusinessRuleException("Internal notes must not exceed " + MAX_INTERNAL_NOTES + " characters");
+        }
 
         Reservation reservation = find(id);
         reservation.setInternalNotes(notes);

@@ -13,6 +13,7 @@ import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository
 import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
+import com.pimvanleeuwen.the_harry_list_backend.service.LogSafe;
 import com.pimvanleeuwen.the_harry_list_backend.service.ReservationLifecycleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -125,7 +126,7 @@ public class AdminReservationController {
         String message = emailRequest.get("message");
 
         log.info("AUDIT email.custom_sent id={} subject='{}' user='{}'",
-                id, subject, actor(principal));
+                id, LogSafe.text(subject), actor(principal));
 
         return reservationRepository.findById(id)
                 .map(reservation -> {

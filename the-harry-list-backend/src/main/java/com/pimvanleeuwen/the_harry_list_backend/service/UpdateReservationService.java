@@ -80,7 +80,7 @@ public class UpdateReservationService {
 
         log.info("LOGGING reservation.updated id={} confirmation='{}' event='{}' date={} location={} guests={}",
                 savedEntity.getId(), savedEntity.getConfirmationNumber(),
-                savedEntity.getEventTitle(), savedEntity.getEventDate(),
+                LogSafe.text(savedEntity.getEventTitle()), savedEntity.getEventDate(),
                 savedEntity.getLocation(), savedEntity.getExpectedGuests());
 
         auditService.recordUpdate(AuditEntityType.RESERVATION, savedEntity.getId(),

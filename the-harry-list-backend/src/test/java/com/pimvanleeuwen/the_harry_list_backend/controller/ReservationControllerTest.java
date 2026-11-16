@@ -167,6 +167,22 @@ class ReservationControllerTest {
 
     @Test
     @WithMockUser(roles = "EDITOR")
+    void updateReservation_shouldRejectTooLongTextWithA400() throws Exception {
+        sampleReservation.setId(1L);
+        sampleReservation.setInternalNotes("x".repeat(5001));
+
+        mockMvc.perform(put("/api/reservations/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sampleReservation)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("internalNotes: Internal notes must not exceed 5000 characters"));
+
+        verify(updateReservationService, never()).update(any(), anyBoolean(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
     void updateReservation_shouldRejectZeroOrNegativeGuestCount() throws Exception {
         sampleReservation.setId(1L);
         sampleReservation.setExpectedGuests(0);

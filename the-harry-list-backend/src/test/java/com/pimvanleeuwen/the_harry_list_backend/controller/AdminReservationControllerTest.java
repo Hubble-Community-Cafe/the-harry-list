@@ -453,6 +453,39 @@ class AdminReservationControllerTest {
 
     @Test
     @WithMockUser(roles = "EDITOR")
+    void updateInternalNotes_shouldRejectTooLongNotesWithA400() throws Exception {
+        mockMvc.perform(patch("/api/admin/reservations/1/notes")
+                .with(csrf())
+                .contentType(MediaType.TEXT_PLAIN)
+                .content("x".repeat(5001)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.detail").value("Internal notes must not exceed 5000 characters"));
+
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldNotLetConfirmedByForgeALogLine() throws Exception {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+        sampleReservation.setEventTitle("Party\nAUDIT reservation.deleted id=7");
+
+        try (LogCapture logs = LogCapture.start()) {
+            mockMvc.perform(patch("/api/admin/reservations/1/status")
+                    .with(csrf())
+                    .param("status", "CONFIRMED")
+                    .param("confirmedBy", "Ann' user='someone-else")
+                    .param("sendEmail", "false"))
+                .andExpect(status().isOk());
+
+            logs.assertNeverLogged("\nAUDIT", "user='someone-else");
+        }
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
     void updateInternalNotes_shouldReturnNotFoundWhenReservationDoesNotExist() throws Exception {
         // Given
         when(reservationRepository.findById(999L)).thenReturn(Optional.empty());
