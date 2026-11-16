@@ -100,9 +100,10 @@ services:
       # Sentry error monitoring (leave empty to disable)
       - SENTRY_DSN=${SENTRY_DSN_ADMIN:-}
 
-  # Local MariaDB for development
+  # Local MariaDB for development. Same version line as production (13.0); not 'latest', which
+  # would silently move to a new major version.
   mariadb:
-    image: mariadb:latest
+    image: mariadb:13.0
     restart: always
     ports:
       - "3306:3306"

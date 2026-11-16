@@ -18,7 +18,8 @@ name: harry-list-e2e
 services:
   # Throwaway database — tmpfs means a clean schema/data on every boot.
   mariadb-e2e:
-    image: mariadb:11
+    # Same version line as production (13.0), so the migrations are tested on what they run on.
+    image: mariadb:13.0
     environment:
       MARIADB_ROOT_PASSWORD: rootpass
       MARIADB_DATABASE: harrylist_e2e
@@ -36,7 +37,7 @@ services:
 
   # Mail catcher — backend sends here over SMTP; tests read via the REST API.
   mailpit:
-    image: axllent/mailpit:latest
+    image: axllent/mailpit:v1.33.1
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: "true"
       MP_SMTP_AUTH_ALLOW_INSECURE: "true"
