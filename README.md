@@ -218,6 +218,8 @@ Subscribe to reservations from any calendar app (Google Calendar, Outlook, Apple
    ```
    Both feeds fail closed: a feed without a token answers 503, and the backend logs a warning at startup for a missing token, or when both tokens are the same (the public URL would then also open the staff feed with contact details).
 
+   The staff token is shared by all staff and cannot be revoked per person. Rotate `CALENDAR_FEED_STAFF_TOKEN` (generate a new one and redeploy the backend) when a staff feed link may have leaked or someone with access leaves; everyone then re-subscribes with the new link from the admin Calendar page.
+
 3. **Subscribe** using the URLs:
    - Public: `https://your-api/api/calendar/feed.ics?token=PUBLIC_TOKEN`
    - Staff: `https://your-api/api/calendar/staff-feed.ics?token=STAFF_TOKEN`

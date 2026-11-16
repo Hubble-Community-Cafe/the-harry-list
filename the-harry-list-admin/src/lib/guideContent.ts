@@ -223,6 +223,9 @@ Calendar feeds update automatically — new and changed reservations appear with
 
 Staff feed URLs contain a security token. **Do not share staff feed URLs** with people outside the team.
 
+### If a staff feed link is shared or someone leaves the team
+Everyone uses the **same** staff feed link, so removing someone from the portal does **not** stop a calendar they already subscribed to. If a staff feed link may have been shared, or someone with access leaves, ask the administrator who runs the server to **change the staff feed token**. All staff then copy the new link from this page and subscribe again; the old link stops working right away.
+
 ## Filtering a Feed
 
 Each feed URL already includes a **location** filter. You can append extra parameters from the **Additional URL Parameters** section to narrow it further, and combine them:
