@@ -11,6 +11,7 @@ import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.repository.EmailAttachmentRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
+import com.pimvanleeuwen.the_harry_list_backend.service.EmailMessages;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
 import com.pimvanleeuwen.the_harry_list_backend.service.LogSafe;
@@ -20,7 +21,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +28,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,16 +41,13 @@ import java.util.Map;
 public class AdminReservationController {
 
     private static final Logger log = LoggerFactory.getLogger(AdminReservationController.class);
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final ReservationRepository reservationRepository;
     private final ReservationLifecycleService lifecycleService;
     private final EmailTemplateService emailTemplateService;
     private final EmailAttachmentRepository emailAttachmentRepository;
     private final AuditService auditService;
-    private final String barName;
-    private final String staffEmail;
+    private final EmailMessages emailMessages;
 
     @Autowired(required = false)
     private EmailNotificationService emailService;
@@ -62,15 +57,13 @@ public class AdminReservationController {
                                       EmailTemplateService emailTemplateService,
                                       EmailAttachmentRepository emailAttachmentRepository,
                                       AuditService auditService,
-                                      @Value("${app.bar.name:Hubble and Meteor Community Cafes}") String barName,
-                                      @Value("${app.mail.staff}") String staffEmail) {
+                                      EmailMessages emailMessages) {
         this.reservationRepository = reservationRepository;
         this.lifecycleService = lifecycleService;
         this.emailTemplateService = emailTemplateService;
         this.emailAttachmentRepository = emailAttachmentRepository;
         this.auditService = auditService;
-        this.barName = barName;
-        this.staffEmail = staffEmail;
+        this.emailMessages = emailMessages;
     }
 
     private static String label(com.pimvanleeuwen.the_harry_list_backend.model.Reservation r) {
@@ -153,10 +146,10 @@ public class AdminReservationController {
     public ResponseEntity<?> previewCateringEmail(@PathVariable Long id) {
         return reservationRepository.findById(id)
                 .map(reservation -> {
-                    Map<String, String> vars = buildCateringVars(reservation);
+                    Map<String, String> vars = emailMessages.cateringVars(reservation);
                     String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.CATERING_OPTIONS, vars);
                     String body = emailTemplateService.getRenderedBody(EmailTemplateType.CATERING_OPTIONS, vars);
-                    return ResponseEntity.ok(Map.of("subject", subject, "body", body, "defaultReplyTo", staffEmail));
+                    return ResponseEntity.ok(Map.of("subject", subject, "body", body, "defaultReplyTo", emailMessages.staffEmail()));
                 })
                 .orElseThrow(() -> NotFoundException.of("Reservation", id));
     }
@@ -180,7 +173,7 @@ public class AdminReservationController {
 
                     try {
                         // Render subject/body from template or use overrides
-                        Map<String, String> vars = buildCateringVars(reservation);
+                        Map<String, String> vars = emailMessages.cateringVars(reservation);
                         String subject = (request.getSubject() != null && !request.getSubject().isBlank())
                                 ? request.getSubject()
                                 : emailTemplateService.getRenderedSubject(EmailTemplateType.CATERING_OPTIONS, vars);
@@ -221,20 +214,5 @@ public class AdminReservationController {
     private static ResponseEntity<ProblemDetail> emailFailed() {
         return ResponseEntity.internalServerError().body(GlobalExceptionHandler.problem(
                 HttpStatus.INTERNAL_SERVER_ERROR, "The email could not be sent. Please try again later."));
-    }
-
-    private Map<String, String> buildCateringVars(com.pimvanleeuwen.the_harry_list_backend.model.Reservation reservation) {
-        Map<String, String> vars = new HashMap<>();
-        vars.put("contactName", reservation.getContactName());
-        vars.put("confirmationNumber", reservation.getConfirmationNumber());
-        vars.put("eventTitle", reservation.getEventTitle());
-        vars.put("eventDate", reservation.getEventDate().format(DATE_FORMATTER));
-        vars.put("startTime", reservation.getStartTime().format(TIME_FORMATTER));
-        vars.put("endTime", reservation.getEndTime().format(TIME_FORMATTER));
-        vars.put("location", reservation.getLocation() != null ? reservation.getLocation().getDisplayName() : "No Preference");
-        vars.put("expectedGuests", String.valueOf(reservation.getExpectedGuests()));
-        vars.put("barName", barName);
-        vars.put("staffEmail", staffEmail);
-        return vars;
     }
 }

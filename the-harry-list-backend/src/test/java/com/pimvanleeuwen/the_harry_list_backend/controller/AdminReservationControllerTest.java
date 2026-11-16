@@ -12,6 +12,7 @@ import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import com.pimvanleeuwen.the_harry_list_backend.repository.EmailAttachmentRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
+import com.pimvanleeuwen.the_harry_list_backend.service.EmailMessages;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
 import com.pimvanleeuwen.the_harry_list_backend.service.ReservationLifecycleService;
@@ -45,7 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * {@link ReservationLifecycleService}, so these tests cover the HTTP contract end to end.
  */
 @WebMvcTest(AdminReservationController.class)
-@Import(ReservationLifecycleService.class)
+@Import({ReservationLifecycleService.class, EmailMessages.class})
 class AdminReservationControllerTest {
 
     @Autowired

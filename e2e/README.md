@@ -23,8 +23,10 @@ Playwright (chromium)
 Everything is launched by `docker-compose.e2e.yml` (repo root). The backend runs the
 **`e2e` Spring profile**, which swaps in test-only behaviour that never exists in dev/prod:
 
-- **Email** goes over SMTP to **Mailpit** (`SmtpEmailService`, `@Profile("e2e")`) instead of
-  Microsoft Graph, so tests can read the real rendered messages.
+- **Email** goes over SMTP to **Mailpit** (`SmtpMailTransport`, wired in `MailConfig` under
+  `@Profile("e2e")`) instead of Microsoft Graph. Only the delivery differs: the messages come from
+  the same `ReservationEmailService` and `EmailMessages` as production, so tests read the real
+  rendered messages.
 - **Auth** is header-based (`E2eSecurityConfig`): the admin app and API requests send
   `X-Test-Oid`, and the real `RoleAuthorizationFilter` resolves the role from the DB — so
   RBAC and audit attribution behave exactly like production.
@@ -141,7 +143,7 @@ faster layers.
 |------|------------------|---------------------|----------|
 | Make a reservation (happy + many options) | form unit tests | `CreateReservationService*` | `public/happy-path`, `public/booking-options` |
 | Sender / spam-folder notice on confirmation (#310) | `SuccessMessage` test | — | `public/happy-path` |
-| Staff inbox comes only from `APP_MAIL_STAFF`: new reservation alert, guest Reply-To, catering default Reply-To | `ReservationDetailPage` test | `SmtpEmailServiceTest`, `EmailTemplateServiceTest`, `AdminReservationControllerTest` | `public/happy-path` |
+| Staff inbox comes only from `APP_MAIL_STAFF`: new reservation alert, guest Reply-To, catering default Reply-To | `ReservationDetailPage` test | `EmailMessagesTest`, `EmailTemplateServiceTest`, `AdminReservationControllerTest` | `public/happy-path` |
 | Soft / hard blocked periods | `blockedPeriods` + form tests | `ConstraintValidationServiceTest`, `FormOptionsControllerTest` (staff-only reason never public) | `public/soft-block`, `public/hard-block`, `admin/blocked-periods` |
 | Form constraints (all types), and a forced location (small group or activity lock) or seating giving the guest's own choice back once it lifts | form tests | `ConstraintValidationServiceTest` | `public/constraints-blocking`, `public/constraints-dynamic`, `admin/constraints-roundtrip` |
 | Activity notice (advisory banner, opt-in confirmation dialog, optional location and minimum-guest conditions) | `ReservationForm` + `FormSettingsPage` tests | `ConstraintValidationServiceTest` | `public/activity-notice` |
