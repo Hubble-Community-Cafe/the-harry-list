@@ -1,8 +1,12 @@
 // Everything the public form and the admin share, imported as `the-harry-list-shared`.
 export { SkipLink, MAIN_CONTENT_ID } from './components/SkipLink';
+export { ErrorBoundary } from './components/ErrorBoundary';
 export { ThemeToggle } from './components/ThemeToggle';
 export { ThemeProvider, useTheme } from './lib/ThemeContext';
 export { installChunkReload } from './lib/chunkReload';
 export { SENTRY_EXTENSION_DENY_URLS, SENTRY_EXTENSION_ERRORS } from './lib/sentryFilters';
+export { initSentry, type SentrySetup } from './lib/sentry';
+export { configuredValue } from './lib/runtimeConfig';
 export { installTranslationCrashGuard } from './lib/translationCrashGuard';
 export { cn } from './lib/utils';
+export { apiErrorMessage } from './lib/apiError';

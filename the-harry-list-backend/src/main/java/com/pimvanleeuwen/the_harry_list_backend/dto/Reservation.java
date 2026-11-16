@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,21 +32,27 @@ public class Reservation {
 
     // ===== Contact Information =====
     @NotBlank(message = "Name is required")
+    @Size(max = 255, message = "Name must not exceed 255 characters")
     private String contactName;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Must be a valid email address")
+    @Size(max = 255, message = "Email must not exceed 255 characters")
     private String email;
 
+    @Size(max = 50, message = "Phone number must not exceed 50 characters")
     private String phoneNumber;
 
+    @Size(max = 255, message = "Organization name must not exceed 255 characters")
     private String organizationName;
 
     // ===== Event Details =====
     @NotBlank(message = "Event title is required")
+    @Size(max = 255, message = "Event title must not exceed 255 characters")
     private String eventTitle;
 
     @NotBlank(message = "Description is required")
+    @Size(max = 5000, message = "Description must not exceed 5000 characters")
     private String description;
 
     private Set<SpecialActivity> specialActivities;
@@ -67,6 +74,7 @@ public class Reservation {
     @NotNull(message = "End time is required")
     private LocalTime endTime;
 
+    @Size(max = 1000, message = "Long reservation reason must not exceed 1000 characters")
     private String longReservationReason;
 
     // ===== Location =====
@@ -81,25 +89,32 @@ public class Reservation {
 
     private InvoiceType invoiceType;
 
+    @Size(max = 100, message = "Cost center must not exceed 100 characters")
     private String costCenter;
 
+    @Size(max = 255, message = "Invoice name must not exceed 255 characters")
     private String invoiceName;
 
+    @Size(max = 500, message = "Invoice address must not exceed 500 characters")
     private String invoiceAddress;
 
+    @Size(max = 1000, message = "Invoice remarks must not exceed 1000 characters")
     private String invoiceRemarks;
 
     // ===== Catering =====
+    @Size(max = 1000, message = "Catering dietary notes must not exceed 1000 characters")
     private String cateringDietaryNotes;
 
     private Boolean cateringArranged;
 
     // ===== Additional Information =====
+    @Size(max = 5000, message = "Comments must not exceed 5000 characters")
     private String comments;
 
     private Boolean termsAccepted;
 
     // ===== Internal (staff-only) =====
+    @Size(max = 5000, message = "Internal notes must not exceed 5000 characters")
     private String internalNotes;
 
     // ===== Read-only fields (returned in responses) =====

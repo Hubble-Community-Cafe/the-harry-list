@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller.open;
 
+import com.pimvanleeuwen.the_harry_list_backend.dto.PublicBlockedPeriodDto;
 import com.pimvanleeuwen.the_harry_list_backend.model.*;
 import com.pimvanleeuwen.the_harry_list_backend.repository.BlockedPeriodRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.FormConstraintRepository;
@@ -113,8 +114,10 @@ public class FormOptionsController {
     }
 
     @GetMapping("/blocked-periods")
-    @Operation(summary = "Get active blocked periods", description = "Returns all enabled blocked periods so the form can disable unavailable dates")
-    public ResponseEntity<List<BlockedPeriod>> getActiveBlockedPeriods() {
-        return ResponseEntity.ok(blockedPeriodRepository.findByEnabledTrue());
+    @Operation(summary = "Get active blocked periods", description = "Returns all enabled blocked periods so the form can disable unavailable dates. The staff-only reason is never included.")
+    public ResponseEntity<List<PublicBlockedPeriodDto>> getActiveBlockedPeriods() {
+        return ResponseEntity.ok(blockedPeriodRepository.findByEnabledTrue().stream()
+                .map(PublicBlockedPeriodDto::fromEntity)
+                .toList());
     }
 }

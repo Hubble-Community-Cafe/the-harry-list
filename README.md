@@ -91,12 +91,11 @@ See [`e2e/README.md`](e2e/README.md) for the architecture, how to read the evide
    | `AZURE_TENANT_ID` | Azure AD tenant ID |
    | `AZURE_CLIENT_ID` | Azure AD client ID |
    | `AZURE_CLIENT_SECRET` | Azure AD client secret (for Graph API email) |
-   | `ALLOWED_GROUP_ID` | Azure AD group ID for admin access. On the admin container it gates the UI; on the backend it also rejects API tokens without that group (403). Set it on the backend only after the groups claim is enabled, see [Azure AD App Registration](#azure-ad-app-registration). |
+   | `ALLOWED_GROUP_ID` | Azure AD group ID for admin access. On the admin container it gates the UI; on the backend it also rejects API tokens without that group (403). **Required on the backend in production**: under the `prod` profile it refuses to start without it, because otherwise every tenant user can read all reservations. Enable the groups claim first, see [Azure AD App Registration](#azure-ad-app-registration). |
    | `CALENDAR_FEED_TOKEN` | Token for public calendar feed. Required: without it the public feed is disabled (503) |
    | `CALENDAR_FEED_STAFF_TOKEN` | Token for staff calendar feed (with contact details). Required: without it the staff feed is disabled (503) |
-   | `RECAPTCHA_ENABLED` | Set to `true` to enable reCAPTCHA (recommended for production) |
-   | `RECAPTCHA_SECRET_KEY` | Google reCAPTCHA v3 secret key (backend) |
-   | `RECAPTCHA_SITE_KEY` | Google reCAPTCHA v3 site key (public frontend) |
+   | `APP_ALTCHA_ENABLED` | Set to `true` to require the ALTCHA proof-of-work on the public form (recommended for production) |
+   | `APP_ALTCHA_HMAC_KEY` | Secret key that signs ALTCHA challenges (backend); generate with `openssl rand -hex 32` and keep it stable |
    | `EMAIL_FROM` | Address confirmation emails are sent from. Also shown in the public confirmation screen's "check your spam folder" notice (`SENDER_EMAIL` derives from this in the compose template). |
    | `EMAIL_STAFF` | Staff inbox for reservations. It receives the new reservation alerts, is the Reply-To on every email guests get (so their replies land here), is filled into `{{staffEmail}}` in the email templates, and is the default Reply-To of catering emails. Change only this value to move reservation mail to another inbox; replies to emails sent before the change still go to the old address. |
    | `EMAIL_BAR_NAME` | Name used in the email texts (`{{barName}}`), for example `Hubble and Meteor Community Cafes`. |
@@ -135,6 +134,7 @@ The public reservation endpoint is rate-limited to 10 requests/minute per IP. If
 ```nginx
 proxy_set_header X-Real-IP $remote_addr;
 ```
+The backend only trusts `X-Real-IP` when the connection comes from loopback or a private network (such as the Docker network the proxy runs on); from any other address it uses the connection's own IP, so clients cannot dodge the limit by sending the header themselves. Keep the backend port bound to `127.0.0.1` (as in the Portainer template) so it is only reachable through the proxy.
 
 ### Logging
 Sensitive data (passwords, tokens) is never logged. Set these in production:
@@ -149,37 +149,17 @@ Set `SENTRY_DSN` on all three services for error tracking. The backend also expo
 
 ---
 
-## Google reCAPTCHA v3 Setup
+## Bot Protection (ALTCHA)
 
-The public reservation form is protected by Google reCAPTCHA v3 to prevent bot submissions.
+The public reservation form is protected by [ALTCHA](https://altcha.org), a self-hosted proof-of-work check: no third party, no cookies, no tracking. The browser solves a small puzzle signed by the backend before the form can be submitted, and each solution can be used only once.
 
-### Setup
+Set on the backend:
+```env
+APP_ALTCHA_ENABLED=true
+APP_ALTCHA_HMAC_KEY=<openssl rand -hex 32>
+```
 
-1. **Register your site** at [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin)
-   - Choose **reCAPTCHA v3**
-   - Add your domains (e.g., `yourdomain.com`, `localhost` for development)
-
-2. **Get your keys**:
-   - **Site Key** (public) — Used in the frontend
-   - **Secret Key** (private) — Used in the backend
-
-3. **Set environment variables**:
-
-   **Backend (`the-harry-list-backend`)**:
-   ```env
-   RECAPTCHA_ENABLED=true
-   RECAPTCHA_SECRET_KEY=your-secret-key
-   ```
-
-   **Public Frontend (`the-harry-list-public`)**:
-   ```env
-   RECAPTCHA_SITE_KEY=your-site-key
-   ```
-
-### Development
-
-reCAPTCHA is disabled by default in local development (`RECAPTCHA_ENABLED=false`).
-To test reCAPTCHA locally, register `localhost` in the reCAPTCHA admin console and set the environment variables.
+It is off by default in local development and in the e2e stack. Optional tuning: `APP_ALTCHA_MAX_NUMBER` (puzzle difficulty, default 50000) and `APP_ALTCHA_EXPIRY_SECONDS` (default 300).
 
 ## Azure AD App Registration
 
@@ -216,6 +196,8 @@ Subscribe to reservations from any calendar app (Google Calendar, Outlook, Apple
    CALENDAR_FEED_STAFF_TOKEN=<staff-token>
    ```
    Both feeds fail closed: a feed without a token answers 503, and the backend logs a warning at startup for a missing token, or when both tokens are the same (the public URL would then also open the staff feed with contact details).
+
+   The staff token is shared by all staff and cannot be revoked per person. Rotate `CALENDAR_FEED_STAFF_TOKEN` (generate a new one and redeploy the backend) when a staff feed link may have leaked or someone with access leaves; everyone then re-subscribes with the new link from the admin Calendar page.
 
 3. **Subscribe** using the URLs:
    - Public: `https://your-api/api/calendar/feed.ics?token=PUBLIC_TOKEN`

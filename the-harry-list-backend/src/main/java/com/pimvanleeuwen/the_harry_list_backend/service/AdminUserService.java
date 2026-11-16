@@ -1,5 +1,7 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.BusinessRuleException;
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminRole;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminUser;
@@ -60,10 +62,10 @@ public class AdminUserService {
      */
     public AdminUser updateRole(Long userId, AdminRole newRole, String requestingUserOid) {
         AdminUser target = adminUserRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> NotFoundException.of("User", userId));
 
         if (target.getAzureOid().equals(requestingUserOid)) {
-            throw new IllegalArgumentException("Cannot change your own role");
+            throw new BusinessRuleException("Cannot change your own role");
         }
 
         AdminRole oldRole = target.getRole();

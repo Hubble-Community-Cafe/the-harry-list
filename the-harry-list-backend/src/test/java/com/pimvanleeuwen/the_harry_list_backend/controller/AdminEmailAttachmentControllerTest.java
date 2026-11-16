@@ -104,7 +104,7 @@ class AdminEmailAttachmentControllerTest {
                 .param("name", "Not a PDF")
                 .with(csrf()))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message").value("Only PDF files are allowed"));
+            .andExpect(jsonPath("$.detail").value("Only PDF files are allowed"));
 
         verify(repository, never()).save(any());
     }
@@ -136,7 +136,7 @@ class AdminEmailAttachmentControllerTest {
                 .param("name", "Big PDF")
                 .with(csrf()))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message").value("File size exceeds 3MB limit"));
+            .andExpect(jsonPath("$.detail").value("File size exceeds 3MB limit"));
 
         verify(repository, never()).save(any());
     }

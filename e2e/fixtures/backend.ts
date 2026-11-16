@@ -24,6 +24,14 @@ export async function seedUser(
   if (!res.ok()) throw new Error(`/test/users failed: ${res.status()}`);
 }
 
+/** The identity the admin SPA signs in as on the e2e stack (E2E_AUTH_OID in docker-compose.e2e.yml). */
+export const E2E_ADMIN_OID = 'e2e-admin';
+
+/** Give the admin SPA's e2e identity the ADMIN role. Every admin spec needs this after a reset. */
+export async function seedAdmin(request: APIRequestContext): Promise<void> {
+  await seedUser(request, { oid: E2E_ADMIN_OID, email: 'admin@e2e.test', role: 'ADMIN' });
+}
+
 export interface SeedBlockedPeriod {
   location?: string | null;
   startDate: string;

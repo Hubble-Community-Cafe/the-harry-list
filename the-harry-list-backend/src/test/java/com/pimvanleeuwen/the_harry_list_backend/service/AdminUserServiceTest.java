@@ -1,5 +1,7 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.BusinessRuleException;
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminRole;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminUser;
 import com.pimvanleeuwen.the_harry_list_backend.repository.AdminUserRepository;
@@ -124,7 +126,7 @@ class AdminUserServiceTest {
 
         try {
             service.updateRole(1L, AdminRole.EDITOR, ADMIN_OID);
-        } catch (IllegalArgumentException ignored) {
+        } catch (BusinessRuleException ignored) {
             // expected
         }
         verifyNoInteractions(auditService);
@@ -135,7 +137,7 @@ class AdminUserServiceTest {
         AdminUser self = createUser(1L, ADMIN_OID, "pim@hubble.cafe", "Pim", AdminRole.ADMIN);
         when(adminUserRepository.findById(1L)).thenReturn(Optional.of(self));
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(BusinessRuleException.class, () ->
                 service.updateRole(1L, AdminRole.VIEWER, ADMIN_OID));
     }
 
@@ -143,7 +145,7 @@ class AdminUserServiceTest {
     void updateRole_shouldThrowWhenUserNotFound() {
         when(adminUserRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(NotFoundException.class, () ->
                 service.updateRole(999L, AdminRole.EDITOR, ADMIN_OID));
     }
 

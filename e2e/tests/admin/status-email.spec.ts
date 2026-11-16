@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { resetBackend, seedUser, seedReservation, adminAuthHeaders } from '../../fixtures/backend';
+import { resetBackend, seedReservation, adminAuthHeaders, seedAdmin, E2E_ADMIN_OID } from '../../fixtures/backend';
 import { clearMailbox, waitForEmailTo } from '../../fixtures/mailpit';
 import { attachHtml } from '../../fixtures/evidence';
 import { BACKEND_URL } from '../../playwright.config';
@@ -11,7 +11,7 @@ import { BACKEND_URL } from '../../playwright.config';
 test.describe('admin: status-change email with custom message', () => {
   test.beforeEach(async ({ request }) => {
     await resetBackend(request);
-    await seedUser(request, { oid: 'e2e-admin', role: 'ADMIN' });
+    await seedAdmin(request);
   });
 
   test('confirming a reservation emails the guest including the custom message', async ({ request }, testInfo) => {
@@ -34,7 +34,7 @@ test.describe('admin: status-change email with custom message', () => {
     const res = await request.patch(
       `${BACKEND_URL}/api/admin/reservations/${reservation.id}/status`,
       {
-        headers: adminAuthHeaders('e2e-admin'),
+        headers: adminAuthHeaders(E2E_ADMIN_OID),
         params: { status: 'CONFIRMED', customMessage, sendEmail: 'true' },
       }
     );

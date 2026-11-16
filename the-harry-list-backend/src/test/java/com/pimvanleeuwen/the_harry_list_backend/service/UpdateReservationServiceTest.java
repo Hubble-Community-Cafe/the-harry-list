@@ -1,22 +1,28 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
 import com.pimvanleeuwen.the_harry_list_backend.dto.Reservation;
+import com.pimvanleeuwen.the_harry_list_backend.exception.BusinessRuleException;
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.model.*;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionSynchronizationUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -25,7 +31,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for UpdateReservationService.
+ * Unit tests for UpdateReservationService. The mapper is the real one, so these tests cover
+ * which fields an edit may change and which it must leave as stored.
  */
 @ExtendWith(MockitoExtension.class)
 class UpdateReservationServiceTest {
@@ -33,14 +40,17 @@ class UpdateReservationServiceTest {
     @Mock
     private ReservationRepository reservationRepository;
 
-    @Mock
-    private ReservationMapper reservationMapper;
+    @Spy
+    private ReservationMapper reservationMapper = new ReservationMapper();
 
     @Mock
     private AuditService auditService;
 
     @Mock
     private EmailNotificationService emailService;
+
+    @Mock
+    private ConstraintValidationService constraintValidationService;
 
     @InjectMocks
     private UpdateReservationService updateReservationService;
@@ -53,181 +63,152 @@ class UpdateReservationServiceTest {
         sampleDto = createSampleDto();
         existingEntity = createExistingEntity();
         // emailService is an optional (@Autowired(required=false)) field, not a constructor arg, so
-        // @InjectMocks (constructor injection) doesn't set it — wire the mock in explicitly.
+        // @InjectMocks (constructor injection) doesn't set it; wire the mock in explicitly.
         ReflectionTestUtils.setField(updateReservationService, "emailService", emailService);
     }
 
-    @Test
-    void execute_shouldUpdateReservationSuccessfully() {
-        // Given
+    @AfterEach
+    void tearDown() {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    private void givenStoredReservation() {
         sampleDto.setId(1L);
-        com.pimvanleeuwen.the_harry_list_backend.model.Reservation updatedEntity = createExistingEntity();
-        updatedEntity.setContactName("Updated Name");
-
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(existingEntity));
-        when(reservationMapper.toEntity(sampleDto)).thenReturn(updatedEntity);
-        when(reservationRepository.save(any())).thenReturn(updatedEntity);
-        when(reservationMapper.toDto(updatedEntity)).thenReturn(sampleDto);
+        lenient().when(reservationRepository.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
+    }
 
-        // When
-        ResponseEntity<Reservation> response = updateReservationService.execute(sampleDto);
+    @Test
+    void update_shouldEditTheStoredRecordInPlace() {
+        givenStoredReservation();
 
-        // Then
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        verify(reservationRepository, times(1)).save(any());
+        Reservation response = updateReservationService.update(sampleDto, true, null);
+
+        // The loaded record itself is saved, not a rebuilt copy.
+        verify(reservationRepository).saveAndFlush(same(existingEntity));
+        assertEquals("John Doe", existingEntity.getContactName());
+        assertEquals(BarLocation.HUBBLE, existingEntity.getLocation());
+        assertEquals("John Doe", response.getContactName());
+    }
+
+    @Test
+    void update_shouldKeepEverythingTheEditFormDoesNotOwn() {
+        existingEntity.setStatus(ReservationStatus.CONFIRMED);
+        existingEntity.setConfirmationNumber("ABC123");
+        existingEntity.setConfirmedBy("Ann");
+        existingEntity.setTermsAccepted(true);
+        existingEntity.setCateringArranged(true);
+        existingEntity.setInternalNotes("Call before noon");
+        givenStoredReservation();
+        // The edit form leaves internal notes out, and says nothing about terms or catering.
+        sampleDto.setInternalNotes(null);
+        sampleDto.setTermsAccepted(null);
+        sampleDto.setCateringArranged(false);
+
+        updateReservationService.update(sampleDto, false, null);
+
+        assertEquals(ReservationStatus.CONFIRMED, existingEntity.getStatus());
+        assertEquals("ABC123", existingEntity.getConfirmationNumber());
+        assertEquals("Ann", existingEntity.getConfirmedBy());
+        assertEquals(LocalDateTime.of(2026, 1, 1, 10, 0), existingEntity.getCreatedAt());
+        assertTrue(existingEntity.getTermsAccepted());
+        assertTrue(existingEntity.isCateringArranged());
+        assertEquals("Call before noon", existingEntity.getInternalNotes());
+    }
+
+    @Test
+    void update_shouldReplaceInternalNotesWhenSent() {
+        existingEntity.setInternalNotes("Old note");
+        givenStoredReservation();
+        sampleDto.setInternalNotes("New note");
+
+        updateReservationService.update(sampleDto, false, null);
+
+        assertEquals("New note", existingEntity.getInternalNotes());
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    void execute_shouldRecordFieldLevelDiff() {
-        // Given: only the contact name changes between existing and the incoming entity
-        sampleDto.setId(1L);
-        com.pimvanleeuwen.the_harry_list_backend.model.Reservation incoming = createExistingEntity();
-        incoming.setContactName("Updated Name");
+    void update_shouldRecordFieldLevelDiff() {
+        givenStoredReservation();
+        existingEntity.setTermsAccepted(true);
+        existingEntity.setCateringArranged(true);
 
-        when(reservationRepository.findById(1L)).thenReturn(Optional.of(existingEntity));
-        when(reservationMapper.toEntity(sampleDto)).thenReturn(incoming);
-        when(reservationRepository.save(any())).thenReturn(incoming);
-        when(reservationMapper.toDto(incoming)).thenReturn(sampleDto);
+        updateReservationService.update(sampleDto, true, null);
 
-        // When
-        updateReservationService.execute(sampleDto);
-
-        // Then
-        ArgumentCaptor<java.util.List<com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange>> captor =
-                ArgumentCaptor.forClass(java.util.List.class);
+        ArgumentCaptor<List<FieldChange>> captor = ArgumentCaptor.forClass(List.class);
         verify(auditService).recordUpdate(eq(AuditEntityType.RESERVATION), eq(1L), any(), captor.capture(), any());
-        assertTrue(captor.getValue().stream().anyMatch(c ->
-                c.field().equals("contactName")
-                        && "Original Name".equals(c.oldValue())
-                        && "Updated Name".equals(c.newValue())));
+        List<FieldChange> changes = captor.getValue();
+        assertTrue(changes.stream().anyMatch(c -> c.field().equals("contactName")
+                && "Original Name".equals(c.oldValue()) && "John Doe".equals(c.newValue())));
+        // Fields the edit does not touch never show up as spurious changes.
+        assertTrue(changes.stream().noneMatch(c -> List.of("termsAccepted", "cateringArranged", "status",
+                "confirmationNumber", "createdAt", "updatedAt").contains(c.field())));
     }
 
     @Test
-    void executeWithEmail_shouldForwardCustomMessageToEmail() {
-        // Given
-        sampleDto.setId(1L);
-        com.pimvanleeuwen.the_harry_list_backend.model.Reservation incoming = createExistingEntity();
-        incoming.setContactName("Updated Name");
+    void update_shouldForwardCustomMessageToEmail() {
+        givenStoredReservation();
 
-        when(reservationRepository.findById(1L)).thenReturn(Optional.of(existingEntity));
-        when(reservationMapper.toEntity(sampleDto)).thenReturn(incoming);
-        when(reservationRepository.save(any())).thenReturn(incoming);
-        when(reservationMapper.toDto(incoming)).thenReturn(sampleDto);
+        updateReservationService.update(sampleDto, true, "We moved your booking to the terrace.");
 
-        // When
-        updateReservationService.executeWithEmail(sampleDto, true, "We moved your booking to the terrace.");
-
-        // Then
         verify(emailService).sendReservationUpdatedEmail(any(), eq("We moved your booking to the terrace."));
     }
 
     @Test
-    void executeWithEmail_shouldNotSendEmailWhenDisabled() {
-        // Given
-        sampleDto.setId(1L);
-        com.pimvanleeuwen.the_harry_list_backend.model.Reservation incoming = createExistingEntity();
-        incoming.setContactName("Updated Name");
+    void update_shouldNotSendEmailWhenDisabled() {
+        givenStoredReservation();
 
-        when(reservationRepository.findById(1L)).thenReturn(Optional.of(existingEntity));
-        when(reservationMapper.toEntity(sampleDto)).thenReturn(incoming);
-        when(reservationRepository.save(any())).thenReturn(incoming);
-        when(reservationMapper.toDto(incoming)).thenReturn(sampleDto);
+        updateReservationService.update(sampleDto, false, "ignored message");
 
-        // When
-        updateReservationService.executeWithEmail(sampleDto, false, "ignored message");
-
-        // Then
         verify(emailService, never()).sendReservationUpdatedEmail(any(), any());
     }
 
     @Test
-    void execute_shouldReturnBadRequestWhenIdIsNull() {
-        // Given
-        sampleDto.setId(null);
+    void update_shouldSendEmailOnlyAfterTheTransactionCommits() {
+        givenStoredReservation();
+        TransactionSynchronizationManager.initSynchronization();
 
-        // When
-        ResponseEntity<Reservation> response = updateReservationService.execute(sampleDto);
+        updateReservationService.update(sampleDto, true, null);
+        verify(emailService, never()).sendReservationUpdatedEmail(any(), any());
 
-        // Then
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        verify(reservationRepository, never()).save(any());
+        TransactionSynchronizationUtils.triggerAfterCommit();
+        verify(emailService).sendReservationUpdatedEmail(same(existingEntity), isNull());
     }
 
     @Test
-    void execute_shouldReturnNotFoundWhenReservationDoesNotExist() {
-        // Given
+    void update_shouldRejectMissingId() {
+        sampleDto.setId(null);
+
+        assertThrows(BusinessRuleException.class, () -> updateReservationService.update(sampleDto, true, null));
+
+        verify(reservationRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void update_shouldThrowNotFoundWhenReservationDoesNotExist() {
         sampleDto.setId(999L);
         when(reservationRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // When
-        ResponseEntity<Reservation> response = updateReservationService.execute(sampleDto);
+        assertThrows(NotFoundException.class, () -> updateReservationService.update(sampleDto, true, null));
 
-        // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        verify(reservationRepository, never()).save(any());
+        verify(reservationRepository, never()).saveAndFlush(any());
     }
 
     @Test
-    void execute_shouldPreserveStatusAndCreatedAt() {
-        // Given
-        sampleDto.setId(1L);
-        existingEntity.setStatus(ReservationStatus.CONFIRMED);
-        existingEntity.setCreatedAt(LocalDateTime.of(2026, 1, 1, 10, 0));
+    void update_shouldNotApplyFormRules() {
+        // Policy: staff edits may override the public form's rules (constraints, blocked
+        // periods, retired activities), e.g. to fit a group in after talking to the guest.
+        // Only new submissions are checked, in CreateReservationService.
+        givenStoredReservation();
+        sampleDto.setSpecialActivities(Set.of(SpecialActivity.PRIVATE_EVENT));
 
-        com.pimvanleeuwen.the_harry_list_backend.model.Reservation updatedEntity =
-                new com.pimvanleeuwen.the_harry_list_backend.model.Reservation();
+        assertDoesNotThrow(() -> updateReservationService.update(sampleDto, false, null));
 
-        when(reservationRepository.findById(1L)).thenReturn(Optional.of(existingEntity));
-        when(reservationMapper.toEntity(sampleDto)).thenReturn(updatedEntity);
-        when(reservationRepository.save(any())).thenAnswer(invocation -> {
-            com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = invocation.getArgument(0);
-            // Verify that status and createdAt are preserved
-            assertEquals(ReservationStatus.CONFIRMED, saved.getStatus());
-            assertEquals(LocalDateTime.of(2026, 1, 1, 10, 0), saved.getCreatedAt());
-            return saved;
-        });
-        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
-
-        // When
-        updateReservationService.execute(sampleDto);
-
-        // Then
-        verify(reservationRepository, times(1)).save(any());
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    void execute_shouldPreserveTermsAcceptedAndCateringArranged() {
-        // Existing reservation has terms accepted and catering arranged...
-        sampleDto.setId(1L);
-        existingEntity.setTermsAccepted(true);
-        existingEntity.setCateringArranged(true);
-
-        // ...but the incoming edit payload (mapped) carries neither (form doesn't send them).
-        com.pimvanleeuwen.the_harry_list_backend.model.Reservation incoming = createExistingEntity();
-        incoming.setTermsAccepted(null);
-        incoming.setCateringArranged(false);
-        incoming.setContactName("Updated Name"); // one real change so an audit entry is recorded
-
-        when(reservationRepository.findById(1L)).thenReturn(Optional.of(existingEntity));
-        when(reservationMapper.toEntity(sampleDto)).thenReturn(incoming);
-        when(reservationRepository.save(any())).thenAnswer(i -> i.getArgument(0));
-        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
-
-        updateReservationService.execute(sampleDto);
-
-        // The saved entity keeps the preserved values...
-        verify(reservationRepository).save(argThat(saved ->
-                Boolean.TRUE.equals(saved.getTermsAccepted()) && saved.isCateringArranged()));
-
-        // ...and neither shows up as a spurious audit change.
-        ArgumentCaptor<java.util.List<com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange>> captor =
-                ArgumentCaptor.forClass(java.util.List.class);
-        verify(auditService).recordUpdate(any(), any(), any(), captor.capture(), any());
-        assertTrue(captor.getValue().stream().noneMatch(c ->
-                c.field().equals("termsAccepted") || c.field().equals("cateringArranged")));
+        assertEquals(Set.of(SpecialActivity.PRIVATE_EVENT), existingEntity.getSpecialActivities());
+        verifyNoInteractions(constraintValidationService);
     }
 
     private Reservation createSampleDto() {

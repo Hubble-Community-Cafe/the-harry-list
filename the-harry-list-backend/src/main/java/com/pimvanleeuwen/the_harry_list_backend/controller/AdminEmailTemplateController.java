@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.dto.EmailTemplateDto;
 import com.pimvanleeuwen.the_harry_list_backend.dto.TestEmailRequest;
 import com.pimvanleeuwen.the_harry_list_backend.dto.UpdateEmailTemplateRequest;
@@ -48,7 +49,7 @@ public class AdminEmailTemplateController {
     public ResponseEntity<EmailTemplateDto> getByType(@PathVariable EmailTemplateType type) {
         return emailTemplateService.findByType(type)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Email template", type));
     }
 
     @PutMapping("/{type}")
@@ -108,9 +109,11 @@ public class AdminEmailTemplateController {
                 "status", "sent",
                 "message", "Test email sent to " + request.getToEmail()));
         } catch (Exception e) {
+            // Mail provider error text can hold internal details, so staff get a generic message;
+            // the cause is logged by the email service.
             return ResponseEntity.ok(Map.of(
                 "status", "error",
-                "message", "Failed to send: " + e.getMessage()));
+                "message", "The test email could not be sent. Please try again later."));
         }
     }
 }

@@ -10,6 +10,7 @@ import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.model.SpecialActivity;
 import com.pimvanleeuwen.the_harry_list_backend.repository.CalendarAppointmentRepository;
+import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationFilter;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 
@@ -47,11 +48,10 @@ public class PdfExportService {
     }
 
     public byte[] generateDailyReport(LocalDate date, BarLocation location, boolean confirmedOnly, boolean cateringOnly) throws DocumentException {
-        List<Reservation> reservations = reservationRepository.findAll().stream()
-                .filter(r -> r.getEventDate() != null && r.getEventDate().equals(date))
-                .filter(r -> r.getLocation() != null && r.getLocation().equals(location))
-                .filter(r -> !confirmedOnly || r.getStatus() == ReservationStatus.CONFIRMED)
-                .filter(r -> !cateringOnly || r.hasCateringActivity())
+        ReservationFilter filter = ReservationFilter.any().on(date).at(location)
+                .withStatuses(confirmedOnly ? List.of(ReservationStatus.CONFIRMED) : null)
+                .withCatering(cateringOnly ? Boolean.TRUE : null);
+        List<Reservation> reservations = reservationRepository.findMatching(filter).stream()
                 .sorted(Comparator.comparing(r -> r.getStartTime() != null ? r.getStartTime() : java.time.LocalTime.MAX))
                 .toList();
 

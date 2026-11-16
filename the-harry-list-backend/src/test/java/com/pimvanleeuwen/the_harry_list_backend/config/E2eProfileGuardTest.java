@@ -1,7 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.config;
 
 import com.pimvanleeuwen.the_harry_list_backend.controller.TestSupportController;
-import com.pimvanleeuwen.the_harry_list_backend.service.SmtpEmailService;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Profile;
 
@@ -17,17 +16,29 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 class E2eProfileGuardTest {
 
-    private String[] profilesOf(Class<?> type) {
-        Profile profile = type.getAnnotation(Profile.class);
-        assertNotNull(profile, type.getSimpleName() + " must be annotated with @Profile");
+    private String[] profilesOf(java.lang.reflect.AnnotatedElement element) {
+        Profile profile = element.getAnnotation(Profile.class);
+        assertNotNull(profile, element + " must be annotated with @Profile");
         return profile.value();
+    }
+
+    /** The SMTP email service is a @Bean method in MailConfig, so its gate sits on that method. */
+    private java.lang.reflect.Method smtpBean() {
+        try {
+            return MailConfig.class.getDeclaredMethod("smtpEmailNotificationService",
+                    org.springframework.mail.javamail.JavaMailSender.class,
+                    com.pimvanleeuwen.the_harry_list_backend.config.properties.AppMailProperties.class,
+                    com.pimvanleeuwen.the_harry_list_backend.service.EmailMessages.class);
+        } catch (NoSuchMethodException e) {
+            throw new AssertionError("MailConfig.smtpEmailNotificationService is missing", e);
+        }
     }
 
     @Test
     void e2eOnlyBeansAreGatedToTheE2eProfile() {
         assertArrayEquals(new String[]{"e2e"}, profilesOf(E2eSecurityConfig.class));
         assertArrayEquals(new String[]{"e2e"}, profilesOf(TestSupportController.class));
-        assertArrayEquals(new String[]{"e2e"}, profilesOf(SmtpEmailService.class));
+        assertArrayEquals(new String[]{"e2e"}, profilesOf(smtpBean()));
     }
 
     @Test

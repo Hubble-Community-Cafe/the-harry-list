@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.filter;
 
+import com.pimvanleeuwen.the_harry_list_backend.config.properties.AzureProperties;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminRole;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminUser;
 import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
@@ -10,7 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -44,11 +45,28 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
     private final AdminUserService adminUserService;
     private final String allowedGroupId;
 
-    public RoleAuthorizationFilter(AdminUserService adminUserService,
-                                   @Value("${azure.allowed-group-id:}") String allowedGroupId) {
+    public RoleAuthorizationFilter(AdminUserService adminUserService, String allowedGroupId) {
+        this(adminUserService, allowedGroupId, false);
+    }
+
+    /**
+     * @param requireAllowedGroup when true (production), refuse to start without a staff group,
+     *                            because otherwise every user of the tenant gets VIEWER access to
+     *                            all reservation data.
+     */
+    @Autowired
+    public RoleAuthorizationFilter(AdminUserService adminUserService, AzureProperties azure) {
+        this(adminUserService, azure.allowedGroupId(), azure.requireAllowedGroup());
+    }
+
+    RoleAuthorizationFilter(AdminUserService adminUserService, String allowedGroupId, boolean requireAllowedGroup) {
         this.adminUserService = adminUserService;
         this.allowedGroupId = allowedGroupId == null ? "" : allowedGroupId.trim();
         if (this.allowedGroupId.isEmpty()) {
+            if (requireAllowedGroup) {
+                throw new IllegalStateException("ALLOWED_GROUP_ID must be set: without it every user of the "
+                        + "tenant can read all reservations. Set it to the Entra staff group id.");
+            }
             log.warn("ALLOWED_GROUP_ID is not set: the backend accepts every user of the tenant. "
                     + "Staff group membership is then only checked by the admin UI.");
         }
@@ -115,9 +133,11 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         // _claim_names pointer instead (above 200 groups). Such a user is refused, which fails safe.
         log.warn("Rejected token for oid={}: not a member of the allowed staff group", oid);
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        response.setContentType("application/json");
-        response.getWriter().write("{\"error\":\"NOT_IN_STAFF_GROUP\","
-                + "\"message\":\"You are not a member of the staff group for this application.\"}");
+        // Same problem+json shape as GlobalExceptionHandler, plus a machine-readable code.
+        response.setContentType("application/problem+json");
+        response.getWriter().write("{\"type\":\"about:blank\",\"title\":\"Forbidden\",\"status\":403,"
+                + "\"detail\":\"You are not a member of the staff group for this application.\","
+                + "\"code\":\"NOT_IN_STAFF_GROUP\"}");
     }
 
     /**

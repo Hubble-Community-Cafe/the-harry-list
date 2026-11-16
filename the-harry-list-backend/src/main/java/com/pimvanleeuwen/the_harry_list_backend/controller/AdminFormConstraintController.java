@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditAction;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
@@ -44,7 +45,7 @@ public class AdminFormConstraintController {
     public ResponseEntity<FormConstraint> getById(@PathVariable Long id) {
         return repository.findById(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Form constraint", id));
     }
 
     @PostMapping
@@ -76,7 +77,7 @@ public class AdminFormConstraintController {
                             diffs, "Form constraint updated");
                     return ResponseEntity.ok(saved);
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Form constraint", id));
     }
 
     @PatchMapping("/{id}/toggle")
@@ -94,7 +95,7 @@ public class AdminFormConstraintController {
                             "Form constraint " + (saved.getEnabled() ? "enabled" : "disabled"));
                     return ResponseEntity.ok(saved);
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Form constraint", id));
     }
 
     @DeleteMapping("/{id}")
@@ -108,6 +109,6 @@ public class AdminFormConstraintController {
                             "Form constraint deleted");
                     return ResponseEntity.ok(Map.of("status", "deleted"));
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Form constraint", id));
     }
 }

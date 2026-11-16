@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { AdminSettingsPage } from '../../pages/AdminSettingsPage';
 import { ReservationFormPage } from '../../pages/ReservationFormPage';
-import { resetBackend, seedUser } from '../../fixtures/backend';
+import { resetBackend, seedAdmin } from '../../fixtures/backend';
 import { PUBLIC_BASE_URL } from '../../playwright.config';
 import { captureScreenshot } from '../../fixtures/evidence';
 
@@ -14,7 +14,7 @@ test.describe('admin: a constraint created in the UI is enforced on the public f
 
   test.beforeEach(async ({ request }) => {
     await resetBackend(request);
-    await seedUser(request, { oid: 'e2e-admin', role: 'ADMIN' });
+    await seedAdmin(request);
   });
 
   test('a guest-limit constraint blocks an over-limit public booking', async ({ page }, testInfo) => {

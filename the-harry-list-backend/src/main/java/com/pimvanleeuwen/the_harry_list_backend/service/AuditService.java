@@ -10,7 +10,11 @@ import com.pimvanleeuwen.the_harry_list_backend.repository.AuditLogRepository;
 import com.pimvanleeuwen.the_harry_list_backend.util.AuditActorResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 
@@ -22,6 +26,10 @@ import java.util.List;
  * <p>All writes are wrapped defensively: a failure to record an audit entry is
  * logged but never propagated, so it can never break the underlying business
  * operation (same philosophy as the existing email-send paths).
+ *
+ * <p>Inside a transaction the entry is written after it commits, in a transaction of its
+ * own ({@link AfterCommit}): the log then never shows a change that rolled back, and a
+ * failing audit insert cannot roll back the change it describes.
  */
 @Service
 public class AuditService {
@@ -31,8 +39,20 @@ public class AuditService {
     private final AuditLogRepository auditLogRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public AuditService(AuditLogRepository auditLogRepository) {
+    /** Runs each audit insert in its own transaction; null in unit tests (plain save). */
+    private final TransactionTemplate ownTransaction;
+
+    @Autowired
+    public AuditService(AuditLogRepository auditLogRepository, PlatformTransactionManager transactionManager) {
         this.auditLogRepository = auditLogRepository;
+        this.ownTransaction = new TransactionTemplate(transactionManager);
+        this.ownTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    }
+
+    /** For unit tests without a transaction manager. */
+    AuditService(AuditLogRepository auditLogRepository) {
+        this.auditLogRepository = auditLogRepository;
+        this.ownTransaction = null;
     }
 
     /** Record a creation. {@code snapshot} may carry the initial field values, or be empty. */
@@ -77,11 +97,25 @@ public class AuditService {
             entry.setChanges(serialize(changes));
             entry.setSummary(summary);
 
-            auditLogRepository.save(entry);
+            AfterCommit.run(() -> write(entry));
         } catch (Exception e) {
             // Auditing must never break the underlying operation.
             log.error("Failed to write audit log entry: entityType={} action={} entityId={}",
                     entityType, action, entityId, e);
+        }
+    }
+
+    private void write(AuditLog entry) {
+        try {
+            if (ownTransaction != null) {
+                ownTransaction.executeWithoutResult(status -> auditLogRepository.save(entry));
+            } else {
+                auditLogRepository.save(entry);
+            }
+        } catch (Exception e) {
+            // Auditing must never break the underlying operation.
+            log.error("Failed to write audit log entry: entityType={} action={} entityId={}",
+                    entry.getEntityType(), entry.getAction(), entry.getEntityId(), e);
         }
     }
 

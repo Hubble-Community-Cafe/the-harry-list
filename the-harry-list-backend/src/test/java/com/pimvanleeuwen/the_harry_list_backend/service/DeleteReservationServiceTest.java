@@ -1,5 +1,7 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.LogCapture;
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.model.*;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,8 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -41,41 +41,53 @@ class DeleteReservationServiceTest {
     }
 
     @Test
-    void execute_shouldDeleteReservationWhenExists() {
+    void delete_shouldDeleteReservationWhenExists() {
         // Given
         Long id = 1L;
         when(reservationRepository.findById(id)).thenReturn(Optional.of(sampleReservation));
         doNothing().when(reservationRepository).deleteById(id);
 
         // When
-        ResponseEntity<Void> response = deleteReservationService.execute(id);
+        deleteReservationService.delete(id, true);
 
         // Then
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         verify(reservationRepository, times(1)).deleteById(id);
         verify(auditService).recordDelete(eq(AuditEntityType.RESERVATION), eq(id), any(), any());
     }
 
     @Test
-    void execute_shouldNotAuditWhenReservationDoesNotExist() {
+    void delete_shouldNeverLogGuestPii() {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+
+        try (LogCapture logs = LogCapture.start()) {
+            deleteReservationService.delete(1L, false);
+
+            assertFalse(logs.isEmpty());
+            logs.assertNeverLogged("John Doe", "john@example.com", "+31612345678");
+        }
+    }
+
+    @Test
+    void delete_shouldNotAuditWhenReservationDoesNotExist() {
         when(reservationRepository.findById(999L)).thenReturn(Optional.empty());
 
-        deleteReservationService.execute(999L);
+        assertThrows(NotFoundException.class, () -> deleteReservationService.delete(999L, true));
 
         verifyNoInteractions(auditService);
     }
 
     @Test
-    void execute_shouldReturnNotFoundWhenReservationDoesNotExist() {
+    void delete_shouldThrowNotFoundWhenReservationDoesNotExist() {
         // Given
         Long id = 999L;
         when(reservationRepository.findById(id)).thenReturn(Optional.empty());
 
         // When
-        ResponseEntity<Void> response = deleteReservationService.execute(id);
+        NotFoundException thrown = assertThrows(NotFoundException.class,
+                () -> deleteReservationService.delete(id, true));
 
         // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("Reservation 999 not found", thrown.getMessage());
         verify(reservationRepository, never()).deleteById(any());
     }
 

@@ -1,0 +1,98 @@
+name: Build and scan image
+description: >-
+  Builds one image into the local Docker daemon, reports its HIGH and CRITICAL vulnerabilities
+  to the Security tab, and fails on a CRITICAL one that has a fix. It never pushes: the caller
+  publishes all images together once each has passed, so a release is never half done.
+
+inputs:
+  image:
+    description: Image name without tag, e.g. ghcr.io/owner/the-harry-list-backend
+    required: true
+  label:
+    description: Short name for the SARIF file and the Security tab category, e.g. backend
+    required: true
+  version:
+    description: Project version, tagged as v<version>
+    required: true
+  context:
+    description: Docker build context
+    required: true
+  dockerfile:
+    description: Path to the Dockerfile
+    required: true
+  sentry-auth-token:
+    description: Passed to the build as the SENTRY_AUTH_TOKEN secret (frontends upload source maps)
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
+      with:
+        images: ${{ inputs.image }}
+        tags: |
+          type=raw,value=latest
+          type=raw,value=v${{ inputs.version }}
+          type=sha,prefix={{branch}}-
+          type=ref,event=branch
+
+    # Build into the local Docker daemon only. Nothing reaches GHCR (and so Portainer) until the
+    # image has passed the vulnerability gate below; the caller then pushes exactly this image.
+    - name: Build image
+      if: inputs.sentry-auth-token == ''
+      uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+      with:
+        context: ${{ inputs.context }}
+        file: ${{ inputs.dockerfile }}
+        load: true
+        push: false
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build image (with Sentry source map upload)
+      if: inputs.sentry-auth-token != ''
+      uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+      with:
+        context: ${{ inputs.context }}
+        file: ${{ inputs.dockerfile }}
+        load: true
+        push: false
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        secrets: |
+          SENTRY_AUTH_TOKEN=${{ inputs.sentry-auth-token }}
+
+    - name: Scan image for the Security tab (Trivy)
+      uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+      with:
+        image-ref: ${{ inputs.image }}:v${{ inputs.version }}
+        format: sarif
+        output: trivy-${{ inputs.label }}.sarif
+        severity: HIGH,CRITICAL
+        ignore-unfixed: true
+
+    - name: Upload Trivy results
+      uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+      if: always()
+      with:
+        sarif_file: trivy-${{ inputs.label }}.sarif
+        category: trivy-${{ inputs.label }}-ci
+
+    # The gate: a CRITICAL vulnerability that has a fix available stops the release before the
+    # push. Accept a specific risk by adding its CVE to .trivyignore with a reason.
+    - name: Block image on critical vulnerabilities (Trivy)
+      uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+      with:
+        image-ref: ${{ inputs.image }}:v${{ inputs.version }}
+        format: table
+        exit-code: '1'
+        severity: CRITICAL
+        ignore-unfixed: true
+        trivyignores: .trivyignore

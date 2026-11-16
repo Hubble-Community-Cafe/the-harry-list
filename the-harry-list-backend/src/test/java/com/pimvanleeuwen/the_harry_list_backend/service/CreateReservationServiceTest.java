@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.BusinessRuleException;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
@@ -14,8 +15,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -81,7 +80,7 @@ class CreateReservationServiceTest {
     }
 
     @Test
-    void execute_shouldCreateReservationSuccessfully() {
+    void create_shouldCreateReservationSuccessfully() {
         // Given
         when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of());
@@ -90,17 +89,16 @@ class CreateReservationServiceTest {
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         // When
-        ResponseEntity<Reservation> response = createReservationService.execute(sampleDto);
+        Reservation response = createReservationService.create(sampleDto);
 
         // Then
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertNotNull(response.getBody());
+        assertNotNull(response);
         verify(reservationRepository, times(1)).save(any());
         verify(auditService).recordCreate(eq(AuditEntityType.RESERVATION), eq(1L), any(), any(), any());
     }
 
     @Test
-    void execute_shouldEmitExactlyOnePrivacySafeAnalyticsLine() {
+    void create_shouldEmitExactlyOnePrivacySafeAnalyticsLine() {
         // Given
         when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of());
@@ -109,7 +107,7 @@ class CreateReservationServiceTest {
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         // When
-        createReservationService.execute(sampleDto);
+        createReservationService.create(sampleDto);
 
         // Then — exactly one line, in the enriched PII-free contract format.
         List<ILoggingEvent> events = analyticsAppender.list;
@@ -120,7 +118,7 @@ class CreateReservationServiceTest {
     }
 
     @Test
-    void execute_shouldFallBackToNoPreferenceWhenLocationNull() {
+    void create_shouldFallBackToNoPreferenceWhenLocationNull() {
         // Given a reservation persisted without a location.
         sampleEntity.setLocation(null);
         when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
@@ -130,7 +128,7 @@ class CreateReservationServiceTest {
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         // When
-        createReservationService.execute(sampleDto);
+        createReservationService.create(sampleDto);
 
         // Then — only the bar changes; the rest of the buckets stay as configured.
         assertEquals(
@@ -139,7 +137,7 @@ class CreateReservationServiceTest {
     }
 
     @Test
-    void execute_shouldNeverLogGuestPii() {
+    void create_shouldNeverLogGuestPii() {
         // Given
         when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of());
@@ -148,7 +146,7 @@ class CreateReservationServiceTest {
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         // When
-        createReservationService.execute(sampleDto);
+        createReservationService.create(sampleDto);
 
         // Then — no name/email/phone in any analytics or service log line.
         assertNoPii(analyticsAppender);
@@ -165,16 +163,16 @@ class CreateReservationServiceTest {
     }
 
     @Test
-    void execute_shouldNotAuditWhenConstraintViolation() {
+    void create_shouldNotAuditWhenConstraintViolation() {
         when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of("violation"));
 
-        assertThrows(IllegalArgumentException.class, () -> createReservationService.execute(sampleDto));
+        assertThrows(BusinessRuleException.class, () -> createReservationService.create(sampleDto));
         verifyNoInteractions(auditService);
     }
 
     @Test
-    void execute_shouldSetStatusToPending() {
+    void create_shouldSetStatusToPending() {
         // Given
         when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of());
@@ -195,21 +193,21 @@ class CreateReservationServiceTest {
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         // When
-        createReservationService.execute(sampleDto);
+        createReservationService.create(sampleDto);
 
         // Then
         verify(reservationRepository, times(1)).save(any());
     }
 
     @Test
-    void execute_shouldRejectRetiredActivity() {
+    void create_shouldRejectRetiredActivity() {
         // PRIVATE_EVENT is no longer offered by the form, so a submission carrying it
         // bypassed the form. It must fail before anything is persisted, and before the
         // constraint check, since no constraint references the retired activity any more.
         sampleDto.setSpecialActivities(Set.of(SpecialActivity.PRIVATE_EVENT));
 
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-                () -> createReservationService.execute(sampleDto));
+        BusinessRuleException thrown = assertThrows(BusinessRuleException.class,
+                () -> createReservationService.create(sampleDto));
 
         assertEquals("Private event is no longer available", thrown.getMessage());
         verify(reservationRepository, never()).save(any());
@@ -218,7 +216,7 @@ class CreateReservationServiceTest {
     }
 
     @Test
-    void execute_shouldAcceptSelectableActivities() {
+    void create_shouldAcceptSelectableActivities() {
         // The guard must not get in the way of the activities that are still offered.
         sampleDto.setSpecialActivities(Set.of(SpecialActivity.EAT_CATERING));
         when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
@@ -227,20 +225,19 @@ class CreateReservationServiceTest {
         when(reservationRepository.save(any())).thenReturn(sampleEntity);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
-        ResponseEntity<Reservation> response = createReservationService.execute(sampleDto);
+        assertNotNull(createReservationService.create(sampleDto));
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         verify(reservationRepository, times(1)).save(any());
     }
 
     @Test
-    void execute_shouldRejectWhenConstraintViolation() {
+    void create_shouldRejectWhenConstraintViolation() {
         // Given
         when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of("Catering and à la carte dining cannot be combined"));
 
         // When / Then
-        assertThrows(IllegalArgumentException.class, () -> createReservationService.execute(sampleDto));
+        assertThrows(BusinessRuleException.class, () -> createReservationService.create(sampleDto));
         verify(reservationRepository, never()).save(any());
     }
 

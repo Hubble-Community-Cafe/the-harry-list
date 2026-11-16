@@ -2,6 +2,7 @@ package com.pimvanleeuwen.the_harry_list_backend.service;
 
 import com.pimvanleeuwen.the_harry_list_backend.model.*;
 import com.pimvanleeuwen.the_harry_list_backend.repository.CalendarAppointmentRepository;
+import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationFilter;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,14 @@ class ICalendarServiceTest {
 
     private Reservation sampleReservation;
 
+    /** Stores these reservations; the repository answers each query by applying its filter to them. */
+    private void givenStored(java.util.List<Reservation> stored) {
+        lenient().when(reservationRepository.findMatching(any())).thenAnswer(invocation -> {
+            ReservationFilter filter = invocation.getArgument(0);
+            return stored.stream().filter(filter::matches).toList();
+        });
+    }
+
     @BeforeEach
     void setUp() {
         sampleReservation = createSampleReservation();
@@ -47,7 +56,7 @@ class ICalendarServiceTest {
     @Test
     void generateCalendarFeed_shouldReturnValidIcsFormat() {
         // Given
-        when(reservationRepository.findAll()).thenReturn(List.of(sampleReservation));
+        givenStored(List.of(sampleReservation));
 
         // When
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -64,7 +73,7 @@ class ICalendarServiceTest {
     @Test
     void generateCalendarFeed_shouldIncludeEventDetails() {
         // Given
-        when(reservationRepository.findAll()).thenReturn(List.of(sampleReservation));
+        givenStored(List.of(sampleReservation));
 
         // When
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -84,7 +93,7 @@ class ICalendarServiceTest {
         pendingReservation.setStatus(ReservationStatus.PENDING);
         pendingReservation.setEventTitle("Pending Event");
 
-        when(reservationRepository.findAll()).thenReturn(Arrays.asList(confirmedReservation, pendingReservation));
+        givenStored(Arrays.asList(confirmedReservation, pendingReservation));
 
         // When
         String ics = iCalendarService.generateCalendarFeed(
@@ -106,7 +115,7 @@ class ICalendarServiceTest {
         meteorReservation.setLocation(BarLocation.METEOR);
         meteorReservation.setEventTitle("Meteor Event");
 
-        when(reservationRepository.findAll()).thenReturn(Arrays.asList(hubbleReservation, meteorReservation));
+        givenStored(Arrays.asList(hubbleReservation, meteorReservation));
 
         // When
         String ics = iCalendarService.generateCalendarFeed(null, "HUBBLE", false);
@@ -121,7 +130,7 @@ class ICalendarServiceTest {
         // Given
         sampleReservation.setEmail("test@example.com");
         sampleReservation.setPhoneNumber("+31612345678");
-        when(reservationRepository.findAll()).thenReturn(List.of(sampleReservation));
+        givenStored(List.of(sampleReservation));
 
         // When
         String icsWithDetails = iCalendarService.generateCalendarFeed(null, null, true);
@@ -137,7 +146,7 @@ class ICalendarServiceTest {
     @Test
     void generateCalendarFeed_shouldReturnEmptyCalendarWhenNoReservations() {
         // Given
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
 
         // When
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -160,7 +169,7 @@ class ICalendarServiceTest {
         pastReservation.setEventDate(LocalDate.now().minusDays(7));
         pastReservation.setEventTitle("Past Event");
 
-        when(reservationRepository.findAll()).thenReturn(Arrays.asList(futureReservation, pastReservation));
+        givenStored(Arrays.asList(futureReservation, pastReservation));
 
         // When
         String ics = iCalendarService.generateUpcomingCalendarFeed(null, null, false);
@@ -175,7 +184,7 @@ class ICalendarServiceTest {
     @Test
     void generateCalendarFeed_shouldDefaultToAllWhenCateringNull() {
         Reservation cateringReservation = createCateringReservation();
-        when(reservationRepository.findAll()).thenReturn(Arrays.asList(sampleReservation, cateringReservation));
+        givenStored(Arrays.asList(sampleReservation, cateringReservation));
 
         // catering = null => no catering filtering (backward compatible)
         String ics = iCalendarService.generateCalendarFeed(null, null, null, false);
@@ -187,7 +196,7 @@ class ICalendarServiceTest {
     @Test
     void generateCalendarFeed_shouldFilterCateringOnly() {
         Reservation cateringReservation = createCateringReservation();
-        when(reservationRepository.findAll()).thenReturn(Arrays.asList(sampleReservation, cateringReservation));
+        givenStored(Arrays.asList(sampleReservation, cateringReservation));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, true, false);
 
@@ -198,7 +207,7 @@ class ICalendarServiceTest {
     @Test
     void generateCalendarFeed_shouldFilterNonCateringOnly() {
         Reservation cateringReservation = createCateringReservation();
-        when(reservationRepository.findAll()).thenReturn(Arrays.asList(sampleReservation, cateringReservation));
+        givenStored(Arrays.asList(sampleReservation, cateringReservation));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false, false);
 
@@ -211,7 +220,7 @@ class ICalendarServiceTest {
         // Appointments have no catering attribute => treated as non-catering => dropped from a catering-only feed
         Reservation cateringReservation = createCateringReservation();
         CalendarAppointment appointment = createSampleAppointment();
-        when(reservationRepository.findAll()).thenReturn(List.of(cateringReservation));
+        givenStored(List.of(cateringReservation));
         // Lenient: catering-only short-circuits before the appointment repo is queried — that
         // early exit is precisely the behaviour under test (appointments never reach the feed).
         lenient().when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
@@ -227,7 +236,7 @@ class ICalendarServiceTest {
         // Appointments count as non-catering, so they stay in a non-catering feed
         Reservation cateringReservation = createCateringReservation();
         CalendarAppointment appointment = createSampleAppointment();
-        when(reservationRepository.findAll()).thenReturn(Arrays.asList(sampleReservation, cateringReservation));
+        givenStored(Arrays.asList(sampleReservation, cateringReservation));
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false, false);
@@ -251,7 +260,7 @@ class ICalendarServiceTest {
         hubbleNonCatering.setLocation(BarLocation.HUBBLE);
         hubbleNonCatering.setEventTitle("Hubble Plain Event");
 
-        when(reservationRepository.findAll()).thenReturn(Arrays.asList(hubbleCatering, meteorCatering, hubbleNonCatering));
+        givenStored(Arrays.asList(hubbleCatering, meteorCatering, hubbleNonCatering));
 
         String ics = iCalendarService.generateCalendarFeed(null, "HUBBLE", true, false);
 
@@ -269,7 +278,7 @@ class ICalendarServiceTest {
         futurePlain.setEventDate(LocalDate.now().plusDays(5));
         futurePlain.setEventTitle("Future Plain Event");
 
-        when(reservationRepository.findAll()).thenReturn(Arrays.asList(futureCatering, futurePlain));
+        givenStored(Arrays.asList(futureCatering, futurePlain));
 
         String ics = iCalendarService.generateUpcomingCalendarFeed(null, null, true, false);
 
@@ -282,7 +291,7 @@ class ICalendarServiceTest {
     @Test
     void generateCalendarFeed_shouldIncludeAppointments() {
         CalendarAppointment appointment = createSampleAppointment();
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -304,7 +313,7 @@ class ICalendarServiceTest {
                 .recurrenceType(RecurrenceType.NONE)
                 .enabled(true)
                 .build();
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -317,7 +326,7 @@ class ICalendarServiceTest {
     @Test
     void generateCalendarFeed_shouldRenderTimeboxedAppointments() {
         CalendarAppointment appointment = createSampleAppointment();
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -341,7 +350,7 @@ class ICalendarServiceTest {
                 .recurrenceType(RecurrenceType.NONE)
                 .enabled(true)
                 .build();
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(hubbleAppt, meteorAppt));
 
         String ics = iCalendarService.generateCalendarFeed(null, "HUBBLE", false);
@@ -353,7 +362,7 @@ class ICalendarServiceTest {
     @Test
     void generateCalendarFeed_shouldIncludeRruleForRecurring() {
         CalendarAppointment appointment = createSampleAppointment(); // WEEKLY with end date
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -372,7 +381,7 @@ class ICalendarServiceTest {
                 .recurrenceType(RecurrenceType.YEARLY)
                 .enabled(true)
                 .build();
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -395,7 +404,7 @@ class ICalendarServiceTest {
                 .recurrenceInterval(2)
                 .enabled(true)
                 .build();
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -417,7 +426,7 @@ class ICalendarServiceTest {
                 .recurrenceInterval(3)
                 .enabled(true)
                 .build();
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -441,7 +450,7 @@ class ICalendarServiceTest {
                 .recurrenceEndDate(LocalDate.of(2026, 12, 31))
                 .enabled(true)
                 .build();
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -462,7 +471,7 @@ class ICalendarServiceTest {
                 .recurrenceDayOfWeek(java.time.DayOfWeek.MONDAY)
                 .enabled(true)
                 .build();
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -484,7 +493,7 @@ class ICalendarServiceTest {
                 .recurrenceDayOfWeek(java.time.DayOfWeek.TUESDAY)
                 .enabled(true)
                 .build();
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -505,7 +514,7 @@ class ICalendarServiceTest {
                 .recurrenceWeekOfMonth(2)
                 .enabled(true)
                 .build();
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -518,7 +527,7 @@ class ICalendarServiceTest {
     @Test
     void generateCalendarFeed_shouldExcludeDisabledAppointments() {
         // findByEnabledTrue() already filters, so an empty result means disabled ones are excluded
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(Collections.emptyList());
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -546,7 +555,7 @@ class ICalendarServiceTest {
                 .recurrenceType(RecurrenceType.NONE)
                 .enabled(true)
                 .build();
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(pastAppt, futureAppt));
 
         String ics = iCalendarService.generateUpcomingCalendarFeed(null, null, false);
@@ -558,7 +567,7 @@ class ICalendarServiceTest {
     @Test
     void generateCalendarFeed_shouldIncludeAppointmentDescription() {
         CalendarAppointment appointment = createSampleAppointment();
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false);
@@ -569,7 +578,7 @@ class ICalendarServiceTest {
     @Test
     void generateCalendarFeed_shouldIncludeAppointmentCategories() {
         CalendarAppointment appointment = createSampleAppointment();
-        when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
+        givenStored(Collections.emptyList());
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 
         String ics = iCalendarService.generateCalendarFeed(null, null, false);

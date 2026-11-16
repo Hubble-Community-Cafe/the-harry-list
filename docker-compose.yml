@@ -31,10 +31,6 @@ services:
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MariaDBDialect
       - SPRING_JPA_SHOW_SQL=true
 
-      # Security Configuration
-      - SPRING_SECURITY_USER_NAME=admin
-      - SPRING_SECURITY_USER_PASSWORD=admin
-
       # Azure AD Configuration (for JWT auth and Graph API)
       - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
       - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
@@ -104,9 +100,10 @@ services:
       # Sentry error monitoring (leave empty to disable)
       - SENTRY_DSN=${SENTRY_DSN_ADMIN:-}
 
-  # Local MariaDB for development
+  # Local MariaDB for development. Same version line as production (13.0); not 'latest', which
+  # would silently move to a new major version.
   mariadb:
-    image: mariadb:latest
+    image: mariadb:13.0
     restart: always
     ports:
       - "3306:3306"

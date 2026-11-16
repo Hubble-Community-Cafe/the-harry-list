@@ -1,5 +1,7 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.BusinessRuleException;
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminRole;
 import com.pimvanleeuwen.the_harry_list_backend.model.AdminUser;
 import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
@@ -32,7 +34,7 @@ public class AdminUserController {
         String oid = extractOid(auth);
         AdminUser user = adminUserService.getCurrentUser(oid);
         if (user == null) {
-            return ResponseEntity.notFound().build();
+            throw new NotFoundException("Current user not found");
         }
         return ResponseEntity.ok(user);
     }
@@ -54,14 +56,14 @@ public class AdminUserController {
 
         String roleStr = body.get("role");
         if (roleStr == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "role is required"));
+            throw new BusinessRuleException("role is required");
         }
 
         AdminRole newRole;
         try {
             newRole = AdminRole.valueOf(roleStr.toUpperCase());
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid role: " + roleStr));
+            throw new BusinessRuleException("Invalid role: " + roleStr);
         }
 
         String oid = extractOid(auth);

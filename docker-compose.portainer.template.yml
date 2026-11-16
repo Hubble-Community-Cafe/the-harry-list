@@ -12,7 +12,9 @@ services:
         condition: on-failure
         delay: 5s
     ports:
-      - "9802:8080"
+      # Localhost only: the reverse proxy reaches the backend over the Docker network, and the
+      # rate limiter only trusts X-Real-IP from private peers, so the API must not be exposed directly.
+      - "127.0.0.1:9802:8080"
     networks:
       - harry-list
       - mariadb_mariadb-network
@@ -28,10 +30,6 @@ services:
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MariaDBDialect
       - SPRING_JPA_SHOW_SQL=false
 
-      # Basic Auth for Admin API endpoints
-      - SPRING_SECURITY_USER_NAME=__API_USERNAME__
-      - SPRING_SECURITY_USER_PASSWORD=__API_PASSWORD__
-
       # Email Configuration (Microsoft Graph for Microsoft 365)
       # Set APP_MAIL_ENABLED=false to disable email notifications
       - APP_MAIL_ENABLED=true
@@ -44,11 +42,11 @@ services:
       - AZURE_TENANT_ID=__AZURE_TENANT_ID__
       - AZURE_CLIENT_ID=__AZURE_CLIENT_ID__
       - AZURE_CLIENT_SECRET=__AZURE_CLIENT_SECRET__
-      # Staff group enforced by the backend (same group as the admin's ALLOWED_GROUP_ID). Enable
-      # only AFTER the app registration emits the groups claim in access tokens (Token
-      # configuration > Add groups claim > Security groups > Access), or every
-      # staff member gets a 403.
-      # - ALLOWED_GROUP_ID=__AZURE_GROUP_ID__
+      # Staff group enforced by the backend (same group as the admin's ALLOWED_GROUP_ID).
+      # Required: the backend refuses to start under the prod profile without it. The app
+      # registration must emit the groups claim in access tokens (Token configuration >
+      # Add groups claim > Security groups > Access), or every staff member gets a 403.
+      - ALLOWED_GROUP_ID=__AZURE_GROUP_ID__
 
       # Calendar ICS Feed Tokens (generate with: openssl rand -hex 32)
       # Public feed: no contact details, Staff feed: includes email/phone
@@ -72,7 +70,7 @@ services:
 
       # Logging
       - LOGGING_LEVEL_ROOT=INFO
-      - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG
+      - LOGGING_LEVEL_COM_PIMVANLEEUWEN=INFO
 
   # Public Reservation Form Frontend
   the-harry-list-public:

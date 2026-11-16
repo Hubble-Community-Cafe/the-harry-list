@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { resetBackend, seedReservation, seedUser } from '../../fixtures/backend';
+import { resetBackend, seedReservation, seedAdmin } from '../../fixtures/backend';
 import { THEMES, useTheme, expectNoA11yViolations } from '../../fixtures/a11y';
 
 /** WCAG 2.2 AA (axe) on every admin page, in both themes, as an ADMIN so every page shows its full content. */
@@ -7,7 +7,7 @@ for (const theme of THEMES) {
   test(`every admin page is accessible (${theme})`, async ({ page, request }, testInfo) => {
     test.setTimeout(90_000);
     await resetBackend(request);
-    await seedUser(request, { oid: 'e2e-admin', role: 'ADMIN' });
+    await seedAdmin(request);
     const seeded = await seedReservation(request, {
       contactName: 'Ada Access',
       email: 'ada.a11y@example.com',
@@ -38,7 +38,7 @@ for (const theme of THEMES) {
 
 test('keyboard: skip link to the content, and focus follows sidebar navigation', async ({ page, request }) => {
   await resetBackend(request);
-  await seedUser(request, { oid: 'e2e-admin', role: 'ADMIN' });
+  await seedAdmin(request);
   await page.goto('/');
   await page.locator('main h1').first().waitFor();
 

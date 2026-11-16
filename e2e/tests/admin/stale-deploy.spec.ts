@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { resetBackend, seedUser } from '../../fixtures/backend';
+import { resetBackend, seedAdmin } from '../../fixtures/backend';
 
 /**
  * Pages load on demand from content-hashed chunk files. A tab opened before a deploy asks for the
@@ -12,7 +12,7 @@ const RESERVATIONS_CHUNK = /\/assets\/ReservationsPage-[^/]+\.js$/;
 test.describe('admin: page chunks from a previous deploy', () => {
   test.beforeEach(async ({ page, request }) => {
     await resetBackend(request);
-    await seedUser(request, { oid: 'e2e-admin', role: 'ADMIN' });
+    await seedAdmin(request);
     await page.goto('/');
     await page.locator('main h1').first().waitFor();
   });

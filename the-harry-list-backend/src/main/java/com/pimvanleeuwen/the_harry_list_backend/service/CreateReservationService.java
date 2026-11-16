@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.BusinessRuleException;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
@@ -7,14 +8,13 @@ import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-public class CreateReservationService implements Command<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation, com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> {
+public class CreateReservationService {
 
     private static final Logger log = LoggerFactory.getLogger(CreateReservationService.class);
     /**
@@ -41,22 +41,18 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
         this.auditService = auditService;
     }
 
-    @Override
-    public ResponseEntity<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> execute(com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input) {
-        return executeWithEmail(input, true);
-    }
-
     /**
-     * Create a reservation with optional email notification.
+     * Create a reservation in PENDING status and email the requester.
      * @param input The reservation DTO
-     * @param sendEmail Whether to send email notification
+     * @return the saved reservation
+     * @throws BusinessRuleException when the request breaks a form rule or uses a retired activity
      */
-    public ResponseEntity<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> executeWithEmail(
-            com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input, boolean sendEmail) {
+    @Transactional
+    public com.pimvanleeuwen.the_harry_list_backend.dto.Reservation create(com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input) {
         // Note: never log name/email/phone here. These logs are centralized (Loki), so guest
         // PII must not be written. Event/date/location/guests are operational context only.
         log.info("LOGGING reservation.submitted event='{}' date={} location={} guests={}",
-                input.getEventTitle(), input.getEventDate(), input.getLocation(), input.getExpectedGuests());
+                LogSafe.text(input.getEventTitle()), input.getEventDate(), input.getLocation(), input.getExpectedGuests());
 
         // Retired activities are filtered out of the form options, so a submission carrying
         // one bypassed the form. Reject it rather than dropping it silently, which would
@@ -70,7 +66,7 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
 
         if (!retired.isEmpty()) {
             log.warn("Reservation rejected due to retired activities: {}", retired);
-            throw new IllegalArgumentException(String.join("; ", retired));
+            throw new BusinessRuleException(String.join("; ", retired));
         }
 
         // Validate against dynamic constraints
@@ -84,7 +80,7 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
 
         if (!violations.isEmpty()) {
             log.warn("Reservation rejected due to constraint violations: {}", violations);
-            throw new IllegalArgumentException(String.join("; ", violations));
+            throw new BusinessRuleException(String.join("; ", violations));
         }
 
         // Convert DTO to entity
@@ -98,26 +94,21 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
 
         log.info("LOGGING reservation.created id={} confirmation='{}' event='{}' date={} location={}",
                 savedEntity.getId(), savedEntity.getConfirmationNumber(),
-                savedEntity.getEventTitle(), savedEntity.getEventDate(), savedEntity.getLocation());
+                LogSafe.text(savedEntity.getEventTitle()), savedEntity.getEventDate(), savedEntity.getLocation());
 
         // Privacy-safe analytics line scraped into Loki (job=app-analytics). PII-free by
         // contract: only coarse buckets (bar, weekday, time slot, guest band, lead time).
-        analyticsLog.info(ReservationAnalytics.reservationCreatedLine(savedEntity));
+        AfterCommit.run(() -> analyticsLog.info(ReservationAnalytics.reservationCreatedLine(savedEntity)));
 
         auditService.recordCreate(AuditEntityType.RESERVATION, savedEntity.getId(),
                 savedEntity.getConfirmationNumber() + " - " + savedEntity.getEventTitle(),
                 List.of(), "Reservation created");
 
-        // Send email notification if enabled
-        if (sendEmail && emailService != null) {
-            try {
-                emailService.sendReservationSubmittedEmail(savedEntity);
-            } catch (Exception e) {
-                log.error("Failed to send confirmation email, but reservation was created successfully", e);
-            }
+        if (emailService != null) {
+            AfterCommit.run(() -> emailService.sendReservationSubmittedEmail(savedEntity));
         }
 
         // Convert back to DTO and return
-        return ResponseEntity.status(HttpStatus.CREATED).body(reservationMapper.toDto(savedEntity));
+        return reservationMapper.toDto(savedEntity);
     }
 }

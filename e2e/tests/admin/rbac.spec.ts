@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { resetBackend, seedUser, seedReservation, adminAuthHeaders } from '../../fixtures/backend';
+import { resetBackend, seedUser, seedReservation, adminAuthHeaders, seedAdmin, E2E_ADMIN_OID } from '../../fixtures/backend';
 import { BACKEND_URL } from '../../playwright.config';
 import { attachJson } from '../../fixtures/evidence';
 
@@ -47,6 +47,9 @@ test.describe('admin: RBAC is enforced by the backend', () => {
 
     expect(viewerRead.status()).toBe(200); // reads are allowed
     expect(viewerWrite.status()).toBe(403); // viewers cannot mutate
+    // Every API error is a problem response with a readable detail.
+    expect(viewerWrite.headers()['content-type']).toContain('application/problem+json');
+    expect((await viewerWrite.json()).detail).toBe('You do not have permission to perform this action');
     expect(editorWrite.status(), `editor create response: ${editorWriteBody}`).toBe(201); // editors can
   });
 
@@ -108,7 +111,7 @@ test.describe('admin: RBAC is enforced by the backend', () => {
   test('a tenant member outside the staff group is refused and never provisioned', async ({ request }, testInfo) => {
     // The e2e backend runs with ALLOWED_GROUP_ID=e2e-staff-group, and the header login puts that
     // group in the token by default. X-Test-Groups impersonates someone outside the staff group.
-    await seedUser(request, { oid: 'e2e-admin', role: 'ADMIN' });
+    await seedAdmin(request);
     const outsider = { ...adminAuthHeaders('e2e-outsider'), 'X-Test-Groups': 'some-other-group' };
 
     const outsiderMe = await request.get(`${BACKEND_URL}/api/admin/users/me`, { headers: outsider });
@@ -116,7 +119,7 @@ test.describe('admin: RBAC is enforced by the backend', () => {
     const staffList = await request.get(`${BACKEND_URL}/api/reservations`, {
       headers: adminAuthHeaders('e2e-viewer'),
     });
-    const users = await request.get(`${BACKEND_URL}/api/admin/users`, { headers: adminAuthHeaders('e2e-admin') });
+    const users = await request.get(`${BACKEND_URL}/api/admin/users`, { headers: adminAuthHeaders(E2E_ADMIN_OID) });
     const userOids: string[] = (await users.json()).map((u: { azureOid: string }) => u.azureOid);
 
     await attachJson(testInfo, 'rbac-group-results.json', {

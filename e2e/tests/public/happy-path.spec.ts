@@ -70,6 +70,8 @@ test.describe('public: full booking happy path', () => {
     expect(email.HTML).toContain(ACTIVITY.title);
     // Guest replies go to the configured staff inbox (APP_MAIL_STAFF), not a hardcoded one.
     expect(email.ReplyTo.map(r => r.Address)).toEqual([STAFF_EMAIL]);
+    // Guests get mail from the ducksandbears.cafe sender, not a hubble.cafe address.
+    expect(email.From.Address).toBe('noreply@ducksandbears.cafe');
 
     // Staff are alerted at that same configured inbox.
     const alert = await waitForEmailTo(request, STAFF_EMAIL);

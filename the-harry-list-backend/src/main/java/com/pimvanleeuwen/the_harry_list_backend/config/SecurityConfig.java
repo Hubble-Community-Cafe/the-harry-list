@@ -1,7 +1,8 @@
 package com.pimvanleeuwen.the_harry_list_backend.config;
 
+import com.pimvanleeuwen.the_harry_list_backend.config.properties.AzureProperties;
+import com.pimvanleeuwen.the_harry_list_backend.config.properties.CorsProperties;
 import com.pimvanleeuwen.the_harry_list_backend.filter.RoleAuthorizationFilter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -33,19 +34,16 @@ import java.util.List;
 @Profile("!e2e")
 public class SecurityConfig {
 
-    @Value("${azure.tenant-id:}")
-    private String azureTenantId;
-
-    @Value("${azure.client-id:}")
-    private String azureClientId;
-
-    @Value("${cors.allowed-origins:}")
-    private String corsAllowedOrigins;
-
     private final RoleAuthorizationFilter roleAuthorizationFilter;
+    private final String azureTenantId;
+    private final String azureClientId;
+    private final List<String> corsAllowedOrigins;
 
-    public SecurityConfig(RoleAuthorizationFilter roleAuthorizationFilter) {
+    public SecurityConfig(RoleAuthorizationFilter roleAuthorizationFilter, AzureProperties azure, CorsProperties cors) {
         this.roleAuthorizationFilter = roleAuthorizationFilter;
+        this.azureTenantId = azure.tenantId();
+        this.azureClientId = azure.clientId();
+        this.corsAllowedOrigins = cors.allowedOrigins();
     }
 
     @Bean
@@ -149,8 +147,8 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Use configured origins if available, otherwise fall back to permissive for dev
-        if (corsAllowedOrigins != null && !corsAllowedOrigins.isEmpty()) {
-            configuration.setAllowedOrigins(Arrays.asList(corsAllowedOrigins.split(",")));
+        if (!corsAllowedOrigins.isEmpty()) {
+            configuration.setAllowedOrigins(corsAllowedOrigins);
         } else {
             configuration.setAllowedOriginPatterns(List.of("http://localhost:*"));
         }

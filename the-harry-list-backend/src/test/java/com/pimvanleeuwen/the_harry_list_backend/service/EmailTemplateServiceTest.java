@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.config.properties.AppMailProperties;
 import com.pimvanleeuwen.the_harry_list_backend.dto.EmailTemplateDto;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplate;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
@@ -33,7 +34,7 @@ class EmailTemplateServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new EmailTemplateService(repository, STAFF_EMAIL);
+        service = new EmailTemplateService(repository, new AppMailProperties(false, null, STAFF_EMAIL, null));
         when(repository.findByTemplateType(any())).thenReturn(Optional.empty());
     }
 

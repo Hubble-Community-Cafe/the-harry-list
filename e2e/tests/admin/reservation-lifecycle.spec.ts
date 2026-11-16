@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ReservationFormPage } from '../../pages/ReservationFormPage';
-import { resetBackend, seedUser, seedReservation } from '../../fixtures/backend';
+import { resetBackend, seedReservation, seedAdmin } from '../../fixtures/backend';
 import { clearMailbox, waitForEmailTo } from '../../fixtures/mailpit';
 import { captureScreenshot, attachHtml } from '../../fixtures/evidence';
 import { PUBLIC_BASE_URL } from '../../playwright.config';
@@ -14,7 +14,7 @@ test.describe('admin: reservation lifecycle', () => {
   test.beforeEach(async ({ request }) => {
     await resetBackend(request);
     // The admin SPA authenticates as e2e-admin (docker-compose.e2e.yml).
-    await seedUser(request, { oid: 'e2e-admin', email: 'admin@e2e.test', role: 'ADMIN' });
+    await seedAdmin(request);
   });
 
   test('a public submission appears in the admin list and can be confirmed', async ({ page, request }, testInfo) => {
@@ -150,5 +150,42 @@ test.describe('admin: reservation lifecycle', () => {
     await page.getByTestId('confirm-dialog-submit').click();
     await expect(page.getByTestId('reservation-status')).toContainText('CONFIRMED');
     await captureScreenshot(testInfo, page, '3-confirmed-after-reopen');
+  });
+
+  test('a cancelled reservation can be moved back to pending', async ({ page, request }, testInfo) => {
+    // The customer cancelled, then changed their mind: staff reopen the same reservation.
+    await seedReservation(request, {
+      contactName: 'Cancel Guest',
+      email: 'cancel.guest@example.com',
+      eventTitle: 'Cancelled Booking',
+      description: 'Cancelled, then revived',
+      eventDate: '2030-12-06',
+      startTime: '18:00',
+      endTime: '20:00',
+      expectedGuests: 20,
+      location: 'HUBBLE',
+      seatingArea: 'INSIDE',
+      paymentOption: 'INDIVIDUAL',
+      status: 'CONFIRMED',
+    });
+
+    await page.goto('/reservations');
+    await page.getByPlaceholder(/Search by name/).fill('Cancelled Booking');
+    const row = page.getByTestId('reservation-row').filter({ hasText: 'Cancelled Booking' });
+    await expect(row).toHaveCount(1);
+    await row.click();
+    await expect(page.getByTestId('reservation-status')).toContainText('CONFIRMED');
+
+    await page.getByTestId('cancel-reservation').click();
+    await page.getByTestId('cancel-dialog-submit').click();
+    await expect(page.getByTestId('reservation-status')).toContainText('CANCELLED');
+    await captureScreenshot(testInfo, page, '1-cancelled');
+
+    await page.getByTestId('reopen-reservation').click();
+    await expect(page.getByText(/Move this cancelled reservation back/)).toBeVisible();
+    await page.getByTestId('reopen-dialog-submit').click();
+    await expect(page.getByTestId('reservation-status')).toContainText('PENDING');
+    await expect(page.getByTestId('confirm-reservation')).toBeVisible();
+    await captureScreenshot(testInfo, page, '2-back-to-pending');
   });
 });

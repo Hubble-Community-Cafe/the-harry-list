@@ -1,3 +1,4 @@
+import { apiErrorMessage, configuredValue } from 'the-harry-list-shared';
 // Runtime configuration interface
 declare global {
   interface Window {
@@ -11,8 +12,8 @@ declare global {
 
 // Get API URL from runtime config or fall back to build-time env
 const getApiUrl = (): string => {
-  const runtimeUrl = window.__RUNTIME_CONFIG__?.API_URL;
-  if (runtimeUrl && !runtimeUrl.startsWith('__')) {
+  const runtimeUrl = configuredValue(window.__RUNTIME_CONFIG__?.API_URL);
+  if (runtimeUrl) {
     return runtimeUrl;
   }
   const envUrl = import.meta.env.VITE_API_URL;
@@ -38,11 +39,8 @@ export const getAltchaChallengeUrl = (): string => {
 export const DEFAULT_SENDER_EMAIL = 'noreply@ducksandbears.cafe';
 
 export const getSenderEmail = (): string => {
-  const runtimeSender = window.__RUNTIME_CONFIG__?.SENDER_EMAIL;
-  if (runtimeSender && !runtimeSender.startsWith('__') && runtimeSender.length > 0) {
-    return runtimeSender;
-  }
-  return import.meta.env.VITE_SENDER_EMAIL || DEFAULT_SENDER_EMAIL;
+  return configuredValue(window.__RUNTIME_CONFIG__?.SENDER_EMAIL)
+    ?? (import.meta.env.VITE_SENDER_EMAIL || DEFAULT_SENDER_EMAIL);
 };
 
 const API_BASE_URL = getApiUrl();
@@ -111,8 +109,9 @@ export async function submitReservation(data: ReservationFormData, altchaPayload
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Failed to submit reservation' }));
-    throw new Error(error.message || 'Failed to submit reservation');
+    // Problem response from the backend: its detail is the reason (constraint, captcha, validation).
+    const error = await response.json().catch(() => null);
+    throw new Error(apiErrorMessage(error, 'Failed to submit reservation'));
   }
 
   return response.json();

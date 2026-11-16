@@ -2,7 +2,7 @@
 #   docker build -f the-harry-list-public/Dockerfile .
 
 # Build stage
-FROM node:26-alpine AS build
+FROM node:26-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS build
 
 # Update Alpine packages for security patches (including libexpat)
 RUN apk upgrade --no-cache
@@ -30,7 +30,7 @@ RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN \
     npm run build --workspace the-harry-list-public
 
 # Production stage
-FROM nginx:alpine
+FROM nginx:1.31.8-alpine@sha256:fed7e14be83cbd2661a75cdc5b872d936cf155d46c327084d30b8df19ae88d72
 
 # Update Alpine packages for security patches (including libexpat)
 RUN apk upgrade --no-cache
@@ -48,7 +48,6 @@ RUN echo '#!/bin/sh' > /docker-entrypoint.d/40-inject-config.sh && \
     echo 'cat > /usr/share/nginx/html/config.js << EOF' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo 'window.__RUNTIME_CONFIG__ = {' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '  API_URL: "${API_URL:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
-    echo '  RECAPTCHA_SITE_KEY: "${RECAPTCHA_SITE_KEY:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '  SENTRY_DSN: "${SENTRY_DSN:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '  SENDER_EMAIL: "${SENDER_EMAIL:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '};' >> /docker-entrypoint.d/40-inject-config.sh && \

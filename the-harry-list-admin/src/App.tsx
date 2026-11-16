@@ -6,10 +6,9 @@ import { DashboardPage } from './pages/DashboardPage';
 import { Layout } from './components/Layout';
 import { useGroupAuthorization } from './lib/useGroupAuthorization';
 import { isE2E } from './lib/e2eAuth';
-import { ThemeProvider } from 'the-harry-list-shared';
+import { ThemeProvider, ErrorBoundary } from 'the-harry-list-shared';
 import { RoleProvider } from './lib/RoleContext';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { Loader2, ShieldX } from 'lucide-react';
+import { AlertTriangle, Loader2, ShieldX } from 'lucide-react';
 
 // Every page except the Dashboard (the landing page) and Login loads on demand, in its own chunk,
 // so the first download only contains what the first screen needs. Layout shows a spinner while a
@@ -79,7 +78,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <ErrorBoundary>
+    <ErrorBoundary
+      buttonClassName="bg-dark-800 hover:bg-dark-700"
+      icon={
+        <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle className="w-8 h-8 text-amber-400" />
+        </div>
+      }
+    >
     <ThemeProvider>
     <RoleProvider>
       <Routes>

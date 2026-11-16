@@ -12,7 +12,6 @@ https://drive.google.com/drive/folders/1fq9Yx7V08Nv1tF_tbl8Lr0JXFb2WmUKg
 You'll need these formats for web compatibility:
 - `AXIS.woff2` (preferred, smallest file size)
 - `AXIS.woff` (fallback for older browsers)
-- `AXIS.ttf` (optional fallback)
 
 ### 2. Convert Font Formats (if needed)
 

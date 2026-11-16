@@ -1,6 +1,8 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
+import com.pimvanleeuwen.the_harry_list_backend.repository.AuditLogRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,10 +12,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Automatically removes reservations older than the configured retention period.
+ * Automatically removes reservations older than the configured retention period, together
+ * with their audit history (which holds the same personal data, e.g. name or email changes).
+ * Other audit entries (settings, users, reservations staff already deleted) are removed once
+ * they are older than the same period.
  * Retention is configured via DATA_RETENTION_DAYS environment variable.
  * Set to 0 to disable automatic removal.
  */
@@ -23,11 +29,14 @@ public class DataRetentionService {
     private static final Logger log = LoggerFactory.getLogger(DataRetentionService.class);
 
     private final ReservationRepository reservationRepository;
+    private final AuditLogRepository auditLogRepository;
     private final int retentionDays;
 
     public DataRetentionService(ReservationRepository reservationRepository,
+                                AuditLogRepository auditLogRepository,
                                 @Value("${app.data.retention.days:365}") int retentionDays) {
         this.reservationRepository = reservationRepository;
+        this.auditLogRepository = auditLogRepository;
         this.retentionDays = retentionDays;
     }
 
@@ -58,14 +67,17 @@ public class DataRetentionService {
         LocalDate cutoff = cutoffDate();
         List<Reservation> expired = reservationRepository.findByEventDateBefore(cutoff);
 
-        if (expired.isEmpty()) {
-            log.info("Data retention: no reservations older than {} days to purge", retentionDays);
-            return;
+        int history = 0;
+        if (!expired.isEmpty()) {
+            history = auditLogRepository.deleteHistoryOf(AuditEntityType.RESERVATION,
+                    expired.stream().map(Reservation::getId).toList());
+            reservationRepository.deleteAll(expired);
         }
+        int otherAudit = auditLogRepository.deleteOlderThanExceptLiveReservations(
+                LocalDateTime.now().minusDays(retentionDays), AuditEntityType.RESERVATION);
 
-        reservationRepository.deleteAll(expired);
-        log.info("LOGGING data.retention.purge count={} cutoff={} retentionDays={}",
-                expired.size(), cutoff, retentionDays);
+        log.info("LOGGING data.retention.purge count={} cutoff={} retentionDays={} auditEntries={}",
+                expired.size(), cutoff, retentionDays, history + otherAudit);
     }
 
     private LocalDate cutoffDate() {

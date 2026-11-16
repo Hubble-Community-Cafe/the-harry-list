@@ -2,6 +2,7 @@ package com.pimvanleeuwen.the_harry_list_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.pimvanleeuwen.the_harry_list_backend.LogCapture;
 import com.pimvanleeuwen.the_harry_list_backend.altcha.AltchaService;
 import com.pimvanleeuwen.the_harry_list_backend.config.SecurityConfig;
 import com.pimvanleeuwen.the_harry_list_backend.dto.PublicReservationRequest;
@@ -15,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -69,8 +70,7 @@ class PublicReservationControllerTest {
         Reservation responseReservation = sampleRequest.toReservation();
         responseReservation.setId(1L);
         responseReservation.setConfirmationNumber("ABC123");
-        when(createReservationService.execute(any(Reservation.class)))
-                .thenReturn(ResponseEntity.status(201).body(responseReservation));
+        when(createReservationService.create(any(Reservation.class))).thenReturn(responseReservation);
 
         mockMvc.perform(post("/api/public/reservations")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -88,8 +88,7 @@ class PublicReservationControllerTest {
         Reservation responseReservation = sampleRequest.toReservation();
         responseReservation.setId(42L);
         responseReservation.setConfirmationNumber("XYZ789");
-        when(createReservationService.execute(any(Reservation.class)))
-                .thenReturn(ResponseEntity.status(201).body(responseReservation));
+        when(createReservationService.create(any(Reservation.class))).thenReturn(responseReservation);
 
         mockMvc.perform(post("/api/public/reservations")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -106,11 +105,17 @@ class PublicReservationControllerTest {
     void submitReservation_shouldFailWhenAltchaVerificationFails() throws Exception {
         when(altchaService.verify(any())).thenReturn(false);
 
-        mockMvc.perform(post("/api/public/reservations")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sampleRequest)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Captcha verification failed. Please try again."));
+        try (LogCapture logs = LogCapture.start()) {
+            mockMvc.perform(post("/api/public/reservations")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(sampleRequest)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.detail").value("Captcha verification failed. Please try again."));
+
+            // The failed attempt is logged, but without the requester's email.
+            assertFalse(logs.isEmpty());
+            logs.assertNeverLogged("john@example.com", "John Doe");
+        }
     }
 
     @Test
@@ -120,8 +125,7 @@ class PublicReservationControllerTest {
         Reservation responseReservation = sampleRequest.toReservation();
         responseReservation.setId(1L);
         responseReservation.setConfirmationNumber("ABC123");
-        when(createReservationService.execute(any(Reservation.class)))
-                .thenReturn(ResponseEntity.status(201).body(responseReservation));
+        when(createReservationService.create(any(Reservation.class))).thenReturn(responseReservation);
 
         sampleRequest.setAltcha("valid-altcha-payload");
 
@@ -132,8 +136,13 @@ class PublicReservationControllerTest {
                 .andExpect(jsonPath("$.confirmationNumber").value("ABC123"));
     }
 
+    /** Distinct client address per call, so these validation tests never hit the rate limit. */
+    private static final java.util.concurrent.atomic.AtomicInteger CLIENT = new java.util.concurrent.atomic.AtomicInteger();
+
     private org.springframework.test.web.servlet.ResultActions submit(PublicReservationRequest request) throws Exception {
+        String clientIp = "203.0.113." + (CLIENT.incrementAndGet() % 250 + 1);
         return mockMvc.perform(post("/api/public/reservations")
+                .with(r -> { r.setRemoteAddr(clientIp); return r; })
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)));
     }
@@ -144,14 +153,14 @@ class PublicReservationControllerTest {
         sampleRequest.setTermsAccepted(null);
         submit(sampleRequest)
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("termsAccepted: You must accept the terms"));
+                .andExpect(jsonPath("$.detail").value("termsAccepted: You must accept the terms"));
 
         sampleRequest.setTermsAccepted(false);
         submit(sampleRequest)
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("termsAccepted: You must accept the terms"));
+                .andExpect(jsonPath("$.detail").value("termsAccepted: You must accept the terms"));
 
-        verify(createReservationService, never()).execute(any());
+        verify(createReservationService, never()).create(any());
     }
 
     @Test
@@ -159,8 +168,10 @@ class PublicReservationControllerTest {
         sampleRequest.setPaymentOption(PaymentOption.INVOICE);
         submit(sampleRequest)
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("invoiceType: Please select an invoice type"));
-        verify(createReservationService, never()).execute(any());
+                .andExpect(jsonPath("$.detail").value("invoiceType: Please select an invoice type"))
+                .andExpect(jsonPath("$.errors[0].field").value("invoiceType"))
+                .andExpect(jsonPath("$.errors[0].message").value("Please select an invoice type"));
+        verify(createReservationService, never()).create(any());
     }
 
     @Test
@@ -169,7 +180,7 @@ class PublicReservationControllerTest {
         sampleRequest.setInvoiceType(InvoiceType.TUE);
         submit(sampleRequest)
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("costCenter: Kostenplaats is required"));
+                .andExpect(jsonPath("$.detail").value("costCenter: Kostenplaats is required"));
     }
 
     @Test
@@ -179,7 +190,24 @@ class PublicReservationControllerTest {
         sampleRequest.setInvoiceName("Acme B.V.");
         submit(sampleRequest)
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("invoiceAddress: Address is required"));
+                .andExpect(jsonPath("$.detail").value("invoiceAddress: Address is required"));
+    }
+
+    @Test
+    void submitReservation_tooLongText_isA400NotA500() throws Exception {
+        // The database limits used to be checked only on save, which surfaced as a 500.
+        sampleRequest.setEventTitle("x".repeat(256));
+        submit(sampleRequest)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("eventTitle: Event title must not exceed 255 characters"));
+
+        sampleRequest.setEventTitle("x".repeat(255));
+        sampleRequest.setComments("x".repeat(5001));
+        submit(sampleRequest)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("comments"));
+
+        verify(createReservationService, never()).create(any());
     }
 
     @Test
@@ -187,7 +215,7 @@ class PublicReservationControllerTest {
         Reservation saved = sampleRequest.toReservation();
         saved.setId(2L);
         saved.setConfirmationNumber("INV123");
-        when(createReservationService.execute(any(Reservation.class))).thenReturn(ResponseEntity.status(201).body(saved));
+        when(createReservationService.create(any(Reservation.class))).thenReturn(saved);
         sampleRequest.setPaymentOption(PaymentOption.INVOICE);
         sampleRequest.setInvoiceType(InvoiceType.TUE);
         sampleRequest.setCostCenter("12345");

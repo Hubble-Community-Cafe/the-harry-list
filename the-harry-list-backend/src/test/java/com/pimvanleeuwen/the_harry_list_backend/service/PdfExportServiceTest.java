@@ -9,6 +9,7 @@ import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.model.SpecialActivity;
 import com.pimvanleeuwen.the_harry_list_backend.repository.CalendarAppointmentRepository;
+import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationFilter;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
@@ -43,6 +45,14 @@ class PdfExportServiceTest {
 
     private static final LocalDate REPORT_DATE = LocalDate.of(2026, 2, 15);
 
+    /** Stores these reservations; the repository answers each query by applying its filter to them. */
+    private void givenStored(java.util.List<Reservation> stored) {
+        lenient().when(reservationRepository.findMatching(any())).thenAnswer(invocation -> {
+            ReservationFilter filter = invocation.getArgument(0);
+            return stored.stream().filter(filter::matches).toList();
+        });
+    }
+
     @BeforeEach
     void setUp() {
         // Uses the real recurrence resolver — its behaviour is covered by its own unit test.
@@ -61,7 +71,7 @@ class PdfExportServiceTest {
                 ReservationStatus.CONFIRMED, Set.of(SpecialActivity.EAT_CATERING));
         Reservation nonCatering = reservation("Plain Drinks", LocalTime.of(20, 0),
                 ReservationStatus.CONFIRMED, Set.of(SpecialActivity.PRIVATE_EVENT));
-        when(reservationRepository.findAll()).thenReturn(List.of(catering, nonCatering));
+        givenStored(List.of(catering, nonCatering));
 
         // When
         byte[] pdf = pdfExportService.generateDailyReport(REPORT_DATE, BarLocation.HUBBLE, false, true);
@@ -79,7 +89,7 @@ class PdfExportServiceTest {
                 ReservationStatus.CONFIRMED, Set.of(SpecialActivity.EAT_A_LA_CARTE));
         Reservation nonCatering = reservation("Plain Drinks", LocalTime.of(20, 0),
                 ReservationStatus.CONFIRMED, Set.of(SpecialActivity.PRIVATE_EVENT));
-        when(reservationRepository.findAll()).thenReturn(List.of(catering, nonCatering));
+        givenStored(List.of(catering, nonCatering));
 
         // When
         byte[] pdf = pdfExportService.generateDailyReport(REPORT_DATE, BarLocation.HUBBLE, false, false);
@@ -101,8 +111,7 @@ class PdfExportServiceTest {
                 ReservationStatus.CONFIRMED, Set.of(SpecialActivity.CATERING_CORONA_ROOM));
         Reservation graduation = reservation("Graduation Only", LocalTime.of(19, 0),
                 ReservationStatus.CONFIRMED, Set.of(SpecialActivity.GRADUATION));
-        when(reservationRepository.findAll())
-                .thenReturn(List.of(alaCarte, cateringEvent, coronaRoom, graduation));
+        givenStored(List.of(alaCarte, cateringEvent, coronaRoom, graduation));
 
         // When
         byte[] pdf = pdfExportService.generateDailyReport(REPORT_DATE, BarLocation.HUBBLE, false, true);
@@ -122,7 +131,7 @@ class PdfExportServiceTest {
                 ReservationStatus.CONFIRMED, Set.of(SpecialActivity.EAT_CATERING));
         Reservation pendingCatering = reservation("Pending Catering", LocalTime.of(20, 0),
                 ReservationStatus.PENDING, Set.of(SpecialActivity.EAT_CATERING));
-        when(reservationRepository.findAll()).thenReturn(List.of(confirmedCatering, pendingCatering));
+        givenStored(List.of(confirmedCatering, pendingCatering));
 
         // When: both filters active
         byte[] pdf = pdfExportService.generateDailyReport(REPORT_DATE, BarLocation.HUBBLE, true, true);
@@ -138,7 +147,7 @@ class PdfExportServiceTest {
         // Given: only non-catering reservations
         Reservation nonCatering = reservation("Plain Drinks", LocalTime.of(20, 0),
                 ReservationStatus.CONFIRMED, Set.of(SpecialActivity.PRIVATE_EVENT));
-        when(reservationRepository.findAll()).thenReturn(List.of(nonCatering));
+        givenStored(List.of(nonCatering));
 
         // When
         byte[] pdf = pdfExportService.generateDailyReport(REPORT_DATE, BarLocation.HUBBLE, false, true);
@@ -158,7 +167,7 @@ class PdfExportServiceTest {
         // Given: a reservation and an appointment on the report date/location
         Reservation res = reservation("Evening Drinks", LocalTime.of(20, 0),
                 ReservationStatus.CONFIRMED, Set.of(SpecialActivity.PRIVATE_EVENT));
-        when(reservationRepository.findAll()).thenReturn(List.of(res));
+        givenStored(List.of(res));
         CalendarAppointment appt = appointment("Staff Meeting", "Discuss the roster",
                 LocalTime.of(9, 0), LocalTime.of(10, 0), BarLocation.HUBBLE);
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appt));
@@ -177,7 +186,7 @@ class PdfExportServiceTest {
 
     @Test
     void generateDailyReport_excludesAppointmentsForOtherLocations() throws Exception {
-        when(reservationRepository.findAll()).thenReturn(List.of());
+        givenStored(List.of());
         CalendarAppointment meteorAppt = appointment("Meteor Only", null,
                 LocalTime.of(9, 0), LocalTime.of(10, 0), BarLocation.METEOR);
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(meteorAppt));
@@ -193,7 +202,7 @@ class PdfExportServiceTest {
 
     @Test
     void generateDailyReport_excludesAppointmentsNotOccurringOnTheDate() throws Exception {
-        when(reservationRepository.findAll()).thenReturn(List.of());
+        givenStored(List.of());
         // A one-off appointment on a different day
         CalendarAppointment otherDay = appointment("Other Day", null,
                 LocalTime.of(9, 0), LocalTime.of(10, 0), BarLocation.HUBBLE);
@@ -208,7 +217,7 @@ class PdfExportServiceTest {
 
     @Test
     void generateDailyReport_includesRecurringAppointmentOnAnOccurrence() throws Exception {
-        when(reservationRepository.findAll()).thenReturn(List.of());
+        givenStored(List.of());
         // Weekly appointment starting two weeks before the report date — should recur onto it
         CalendarAppointment weekly = appointment("Weekly Standup", null,
                 LocalTime.of(9, 0), LocalTime.of(9, 30), BarLocation.HUBBLE);
@@ -226,7 +235,7 @@ class PdfExportServiceTest {
     void generateDailyReport_showsAppointmentsEvenWithConfirmedAndCateringOnlyFilters() throws Exception {
         // Given: no reservations match, but an appointment exists. The filters only apply to
         // reservations, so the appointment must still appear.
-        when(reservationRepository.findAll()).thenReturn(List.of());
+        givenStored(List.of());
         CalendarAppointment appt = appointment("Always Visible", null,
                 LocalTime.of(8, 0), null, BarLocation.HUBBLE);
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appt));
@@ -239,7 +248,7 @@ class PdfExportServiceTest {
 
     @Test
     void generateDailyReport_rendersAllDayAppointmentTime() throws Exception {
-        when(reservationRepository.findAll()).thenReturn(List.of());
+        givenStored(List.of());
         CalendarAppointment allDay = appointment("Closed for Holiday", null, null, null, BarLocation.HUBBLE);
         allDay.setAllDay(true);
         when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(allDay));

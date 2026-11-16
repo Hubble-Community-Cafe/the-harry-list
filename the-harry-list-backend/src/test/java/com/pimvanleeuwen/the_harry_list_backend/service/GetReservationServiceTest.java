@@ -1,6 +1,7 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
 import com.pimvanleeuwen.the_harry_list_backend.dto.Reservation;
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.model.*;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,8 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -48,7 +47,7 @@ class GetReservationServiceTest {
     }
 
     @Test
-    void execute_shouldReturnAllReservations() {
+    void findAll_shouldReturnAllReservations() {
         // Given
         List<com.pimvanleeuwen.the_harry_list_backend.model.Reservation> entities =
                 Arrays.asList(sampleEntity, createAnotherEntity());
@@ -57,55 +56,52 @@ class GetReservationServiceTest {
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         // When
-        ResponseEntity<List<Reservation>> response = getReservationService.execute(null);
+        List<Reservation> response = getReservationService.findAll();
 
         // Then
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(2, response.getBody().size());
+        assertNotNull(response);
+        assertEquals(2, response.size());
         verify(reservationRepository, times(1)).findAll();
     }
 
     @Test
-    void execute_shouldReturnEmptyListWhenNoReservations() {
+    void findAll_shouldReturnEmptyListWhenNoReservations() {
         // Given
         when(reservationRepository.findAll()).thenReturn(Arrays.asList());
 
         // When
-        ResponseEntity<List<Reservation>> response = getReservationService.execute(null);
+        List<Reservation> response = getReservationService.findAll();
 
         // Then
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().isEmpty());
+        assertNotNull(response);
+        assertTrue(response.isEmpty());
     }
 
     @Test
-    void getById_shouldReturnReservationWhenFound() {
+    void findById_shouldReturnReservationWhenFound() {
         // Given
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleEntity));
         when(reservationMapper.toDto(sampleEntity)).thenReturn(sampleDto);
 
         // When
-        ResponseEntity<Reservation> response = getReservationService.getById(1L);
+        Reservation response = getReservationService.findById(1L);
 
         // Then
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(sampleDto.getContactName(), response.getBody().getContactName());
+        assertNotNull(response);
+        assertEquals(sampleDto.getContactName(), response.getContactName());
     }
 
     @Test
-    void getById_shouldReturnNotFoundWhenReservationDoesNotExist() {
+    void findById_shouldThrowNotFoundWhenReservationDoesNotExist() {
         // Given
         when(reservationRepository.findById(999L)).thenReturn(Optional.empty());
 
         // When
-        ResponseEntity<Reservation> response = getReservationService.getById(999L);
+        NotFoundException thrown = assertThrows(NotFoundException.class,
+                () -> getReservationService.findById(999L));
 
         // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
+        assertEquals("Reservation 999 not found", thrown.getMessage());
     }
 
     private Reservation createSampleDto() {

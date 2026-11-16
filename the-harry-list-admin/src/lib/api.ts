@@ -1,12 +1,13 @@
 import { PublicClientApplication } from '@azure/msal-browser';
 import * as Sentry from '@sentry/react';
+import { apiErrorMessage, configuredValue } from 'the-harry-list-shared';
 import { getE2eAuth } from './e2eAuth';
 // Note: Window.__RUNTIME_CONFIG__ type is declared in authConfig.ts
 
 // Get API URL from runtime config or fall back to build-time env
 const getApiUrl = (): string => {
-  const runtimeUrl = window.__RUNTIME_CONFIG__?.API_URL;
-  if (runtimeUrl && !runtimeUrl.startsWith('__')) {
+  const runtimeUrl = configuredValue(window.__RUNTIME_CONFIG__?.API_URL);
+  if (runtimeUrl) {
     return runtimeUrl;
   }
   const envUrl = import.meta.env.VITE_API_URL;
@@ -125,23 +126,10 @@ async function fetchJsonWithAuth(url: string, options: RequestInit = {}): Promis
   const response = await fetchWithAuth(url, options);
 
   if (!response.ok) {
-    let errorMessage: string;
-    try {
-      const errorData = await response.json();
-      // Handle Spring Boot validation errors
-      if (errorData.errors && Array.isArray(errorData.errors)) {
-        errorMessage = errorData.errors.map((e: { defaultMessage?: string; message?: string }) => e.defaultMessage || e.message).join(', ');
-      } else if (errorData.message) {
-        errorMessage = errorData.message;
-      } else if (errorData.error) {
-        errorMessage = errorData.error;
-      } else {
-        errorMessage = JSON.stringify(errorData);
-      }
-    } catch {
-      errorMessage = `Request failed with status ${response.status}`;
-    }
-    throw new Error(errorMessage);
+    // The backend answers errors as problem responses; apiErrorMessage reads their detail.
+    const fallback = `Request failed with status ${response.status}`;
+    const errorData = await response.json().catch(() => null);
+    throw new Error(apiErrorMessage(errorData, fallback));
   }
 
   // Handle empty responses (e.g., DELETE)
@@ -411,12 +399,3 @@ export async function fetchAuditLog(filters: AuditLogFilters = {}): Promise<Audi
   return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/audit${qs ? `?${qs}` : ''}`) as Promise<AuditLogPageResponse>;
 }
 
-// Test if authentication is working
-export async function testAuth(): Promise<boolean> {
-  try {
-    await fetchJsonWithAuth(`${API_BASE_URL}/api/reservations`);
-    return true;
-  } catch {
-    return false;
-  }
-}
