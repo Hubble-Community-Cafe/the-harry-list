@@ -109,9 +109,11 @@ public class AdminEmailTemplateController {
                 "status", "sent",
                 "message", "Test email sent to " + request.getToEmail()));
         } catch (Exception e) {
+            // Mail provider error text can hold internal details, so staff get a generic message;
+            // the cause is logged by the email service.
             return ResponseEntity.ok(Map.of(
                 "status", "error",
-                "message", "Failed to send: " + e.getMessage()));
+                "message", "The test email could not be sent. Please try again later."));
         }
     }
 }

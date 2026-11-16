@@ -203,6 +203,24 @@ class AdminEmailTemplateControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
+    void sendTestEmail_shouldNotLeakMailProviderErrorText() throws Exception {
+        // Provider errors can contain internal details; staff get a generic message instead.
+        when(emailTemplateService.buildSampleVariables(EmailTemplateType.SUBMITTED)).thenReturn(Map.of());
+        doThrow(new RuntimeException("Graph 401: token for tenant abc expired"))
+                .when(emailNotificationService).sendRawEmail(any(), any(), any());
+
+        mockMvc.perform(post("/api/admin/email-templates/SUBMITTED/test")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("toEmail", "test@example.com"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("The test email could not be sent. Please try again later."))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("tenant abc"))));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
     void sendTestEmail_shouldRejectInvalidEmail() throws Exception {
         Map<String, String> request = Map.of("toEmail", "not-an-email");
 
