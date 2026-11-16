@@ -1,8 +1,10 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
+import com.pimvanleeuwen.the_harry_list_backend.repository.AuditLogRepository;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,17 +12,21 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DataRetentionServiceTest {
 
+    private final AuditLogRepository auditRepo = mock(AuditLogRepository.class);
+
     private DataRetentionService serviceWithDays(ReservationRepository repo, int days) {
-        return new DataRetentionService(repo, days);
+        return new DataRetentionService(repo, auditRepo, days);
     }
 
     private Reservation reservation(long id, LocalDate eventDate) {
@@ -118,7 +124,32 @@ class DataRetentionServiceTest {
 
         serviceWithDays(repo, 0).purgeExpiredReservations();
 
-        verifyNoInteractions(repo);
+        verifyNoInteractions(repo, auditRepo);
+    }
+
+    @Test
+    void purge_shouldRemoveTheAuditHistoryOfPurgedReservations() {
+        var repo = mock(ReservationRepository.class);
+        LocalDate cutoff = LocalDate.now().minusDays(457);
+        when(repo.findByEventDateBefore(any())).thenReturn(List.of(
+                reservation(1L, cutoff.minusDays(1)), reservation(2L, cutoff.minusDays(30))));
+
+        serviceWithDays(repo, 457).purgeExpiredReservations();
+
+        verify(auditRepo).deleteHistoryOf(AuditEntityType.RESERVATION, List.of(1L, 2L));
+    }
+
+    @Test
+    void purge_shouldRemoveOtherAuditEntriesOlderThanTheRetentionPeriod() {
+        var repo = mock(ReservationRepository.class);
+        when(repo.findByEventDateBefore(any())).thenReturn(List.of());
+
+        serviceWithDays(repo, 457).purgeExpiredReservations();
+
+        ArgumentCaptor<LocalDateTime> cutoff = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(auditRepo).deleteOlderThanExceptLiveReservations(cutoff.capture(), eq(AuditEntityType.RESERVATION));
+        assertEquals(LocalDate.now().minusDays(457), cutoff.getValue().toLocalDate());
+        verify(auditRepo, never()).deleteHistoryOf(any(), any());
     }
 
     @Test

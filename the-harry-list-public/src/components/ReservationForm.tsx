@@ -16,35 +16,37 @@ import { checkBlockedDate } from '../lib/blockedPeriods';
 import { noticeApplies, requiresConfirmation } from '../lib/activityNotices';
 import { useRestoreAfterLock } from '../lib/useRestoreAfterLock';
 import type { ReservationFormData, FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
+import { MAX_LENGTH, tooLongMessage } from '../lib/fieldLimits';
 
 // Phone number validation - allows international formats
 const phoneRegex = /^(\+?[0-9]{1,4}[\s.-]?)?(\(?[0-9]{1,4}\)?[\s.-]?)?[0-9]{1,4}[\s.-]?[0-9]{1,4}[\s.-]?[0-9]{1,9}$/;
 
 const formSchema = z.object({
-  contactName: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email'),
+  contactName: z.string().min(2, 'Name must be at least 2 characters').max(MAX_LENGTH.contactName, tooLongMessage('Name', 'contactName')),
+  email: z.string().email('Please enter a valid email').max(MAX_LENGTH.email, tooLongMessage('Email', 'email')),
   phoneNumber: z.string()
+    .max(MAX_LENGTH.phoneNumber, tooLongMessage('Phone number', 'phoneNumber'))
     .optional()
     .refine(val => !val || phoneRegex.test(val), 'Please enter a valid phone number'),
-  organizationName: z.string().optional(),
-  eventTitle: z.string().min(2, 'Event title is required'),
-  description: z.string().min(1, 'Please describe your event'),
+  organizationName: z.string().max(MAX_LENGTH.organizationName, tooLongMessage('Organization name', 'organizationName')).optional(),
+  eventTitle: z.string().min(2, 'Event title is required').max(MAX_LENGTH.eventTitle, tooLongMessage('Event title', 'eventTitle')),
+  description: z.string().min(1, 'Please describe your event').max(MAX_LENGTH.description, tooLongMessage('Description', 'description')),
   specialActivities: z.array(z.string()),
   expectedGuests: z.number().min(1, 'Minimum reservation size is 1 person').max(500, 'Please contact us directly for groups over 500 people'),
   eventDate: z.string().min(1, 'Please select a date'),
   startTime: z.string().min(1, 'Please select a start time'),
   endTime: z.string().min(1, 'Please select an end time'),
-  longReservationReason: z.string().optional(),
+  longReservationReason: z.string().max(MAX_LENGTH.longReservationReason, tooLongMessage('Long reservation reason', 'longReservationReason')).optional(),
   location: z.string().nullable().optional(),
   seatingArea: z.string().min(1, 'Please select a seating area'),
   paymentOption: z.string().min(1, 'Please select a payment option'),
   invoiceType: z.string().optional(),
-  costCenter: z.string().optional(),
-  invoiceName: z.string().optional(),
-  invoiceAddress: z.string().optional(),
-  invoiceRemarks: z.string().optional(),
-  cateringDietaryNotes: z.string().optional(),
-  comments: z.string().optional(),
+  costCenter: z.string().max(MAX_LENGTH.costCenter, tooLongMessage('Cost center', 'costCenter')).optional(),
+  invoiceName: z.string().max(MAX_LENGTH.invoiceName, tooLongMessage('Invoice name', 'invoiceName')).optional(),
+  invoiceAddress: z.string().max(MAX_LENGTH.invoiceAddress, tooLongMessage('Invoice address', 'invoiceAddress')).optional(),
+  invoiceRemarks: z.string().max(MAX_LENGTH.invoiceRemarks, tooLongMessage('Invoice remarks', 'invoiceRemarks')).optional(),
+  cateringDietaryNotes: z.string().max(MAX_LENGTH.cateringDietaryNotes, tooLongMessage('Catering dietary notes', 'cateringDietaryNotes')).optional(),
+  comments: z.string().max(MAX_LENGTH.comments, tooLongMessage('Comments', 'comments')).optional(),
   termsAccepted: z.boolean().refine(val => val === true, 'You must accept the terms'),
 }).superRefine((data, ctx) => {
   // Invoice type required when payment is INVOICE
@@ -746,7 +748,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
                     type="text"
-                    {...register('contactName')} id="contactName"
+                    {...register('contactName')} maxLength={MAX_LENGTH.contactName} id="contactName"
                     data-testid="contact-name"
                     className="input-field pl-10"
                     placeholder="John Doe"
@@ -762,7 +764,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
                     type="email"
-                    {...register('email')} id="email"
+                    {...register('email')} maxLength={MAX_LENGTH.email} id="email"
                     data-testid="contact-email"
                     className="input-field pl-10"
                     placeholder="john@example.com"
@@ -778,7 +780,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
                     type="tel"
-                    {...register('phoneNumber')} id="phoneNumber"
+                    {...register('phoneNumber')} maxLength={MAX_LENGTH.phoneNumber} id="phoneNumber"
                     className="input-field pl-10"
                     placeholder="+31 6 12345678"
                     aria-describedby={errors.phoneNumber ? 'phoneNumber-error' : undefined}
@@ -793,7 +795,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                   <input
                     type="text"
-                    {...register('organizationName')} id="organizationName"
+                    {...register('organizationName')} maxLength={MAX_LENGTH.organizationName} id="organizationName"
                     className="input-field pl-10"
                     placeholder="Your organization name"
                   />
@@ -822,7 +824,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                 <label htmlFor="eventTitle" className="label">Event Title *</label>
                 <input
                   type="text"
-                  {...register('eventTitle')} id="eventTitle"
+                  {...register('eventTitle')} maxLength={MAX_LENGTH.eventTitle} id="eventTitle"
                   data-testid="event-title"
                   className="input-field"
                   placeholder="Annual Association Drinks"
@@ -1216,7 +1218,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
               <label htmlFor="comments" className="label">Additional Location/Seating Remarks (optional)</label>
               <input
                 type="text"
-                {...register('comments')} id="comments"
+                {...register('comments')} maxLength={MAX_LENGTH.comments} id="comments"
                 className="input-field"
                 placeholder="e.g., Near the window, quiet corner..."
               />
@@ -1235,7 +1237,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                   Reservations over 3 hours require a reason.
                 </p>
                 <textarea
-                  {...register('longReservationReason')}
+                  {...register('longReservationReason')} maxLength={MAX_LENGTH.longReservationReason}
                   className="input-field min-h-[80px] resize-none"
                   placeholder="Please explain why you need more than 3 hours..."
                 />
@@ -1248,7 +1250,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
               <div className="form-group">
                 <label htmlFor="cateringDietaryNotes" className="label">Catering Dietary Notes</label>
                 <textarea
-                  {...register('cateringDietaryNotes')} id="cateringDietaryNotes"
+                  {...register('cateringDietaryNotes')} maxLength={MAX_LENGTH.cateringDietaryNotes} id="cateringDietaryNotes"
                   className="input-field min-h-[80px] resize-none"
                   placeholder="Allergies, dietary requirements, or other catering notes..."
                 />
@@ -1259,7 +1261,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
             <div className="form-group">
               <label htmlFor="description" className="label">Event Description *</label>
               <textarea
-                {...register('description')} id="description"
+                {...register('description')} maxLength={MAX_LENGTH.description} id="description"
                 className="input-field min-h-[100px] resize-none"
                 placeholder="Tell us more about your event..."
               />
@@ -1347,7 +1349,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                     <label htmlFor="costCenter" className="label">Kostenplaats *</label>
                     <input
                       type="text"
-                      {...register('costCenter')} id="costCenter"
+                      {...register('costCenter')} maxLength={MAX_LENGTH.costCenter} id="costCenter"
                       className="input-field"
                       placeholder="e.g., CC-12345"
                     />
@@ -1362,7 +1364,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                       <label htmlFor="invoiceName" className="label">Company Name *</label>
                       <input
                         type="text"
-                        {...register('invoiceName')} id="invoiceName"
+                        {...register('invoiceName')} maxLength={MAX_LENGTH.invoiceName} id="invoiceName"
                         className="input-field"
                         placeholder="Company or organization name"
                       />
@@ -1372,7 +1374,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                     <div className="form-group">
                       <label htmlFor="invoiceAddress" className="label">Invoice Address *</label>
                       <textarea
-                        {...register('invoiceAddress')} id="invoiceAddress"
+                        {...register('invoiceAddress')} maxLength={MAX_LENGTH.invoiceAddress} id="invoiceAddress"
                         className="input-field min-h-[80px] resize-none"
                         placeholder="Full billing address..."
                       />
@@ -1382,7 +1384,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
                     <div className="form-group">
                       <label htmlFor="invoiceRemarks" className="label">Invoice Remarks</label>
                       <textarea
-                        {...register('invoiceRemarks')} id="invoiceRemarks"
+                        {...register('invoiceRemarks')} maxLength={MAX_LENGTH.invoiceRemarks} id="invoiceRemarks"
                         className="input-field min-h-[60px] resize-none"
                         placeholder="Any additional remarks for the invoice..."
                       />

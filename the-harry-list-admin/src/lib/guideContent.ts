@@ -424,7 +424,13 @@ At the bottom of the page, you'll see the **Data Retention** settings. This show
 ### Important
 Data retention settings can **only be changed** through the server configuration (Docker Compose). Staff cannot modify these settings from the admin panel — they are displayed here for transparency only.
 
-This is a privacy and compliance measure to ensure old personal data (names, emails, phone numbers) is not kept longer than necessary.`,
+This is a privacy and compliance measure to ensure old personal data (names, emails, phone numbers) is not kept longer than necessary.
+
+### The audit log is cleaned up too
+The **Audit Log** also contains personal data (for example a changed name or email address), so it follows the same rule:
+
+- When a reservation is deleted by the cleanup, its change history goes with it.
+- Other entries (settings, users, and reservations someone already removed by hand) are deleted once they are older than the same retention period.`,
   },
 ];
 
