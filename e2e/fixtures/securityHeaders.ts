@@ -42,7 +42,7 @@ export async function expectSecurityHeadersEverywhere(request: APIRequestContext
 }
 
 /** Unhashed files both apps serve: the runtime config and public/ folder files. */
-const UNHASHED_FILES = ['/config.js', '/favicon.svg', '/fonts/AXIS.woff2'];
+const UNHASHED_FILES = ['/config.js', '/favicon.svg', '/logo.svg'];
 
 /**
  * Unhashed files (the runtime config written at container startup, and the public/ folder files)

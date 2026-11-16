@@ -48,7 +48,6 @@ RUN echo '#!/bin/sh' > /docker-entrypoint.d/40-inject-config.sh && \
     echo 'cat > /usr/share/nginx/html/config.js << EOF' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo 'window.__RUNTIME_CONFIG__ = {' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '  API_URL: "${API_URL:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
-    echo '  RECAPTCHA_SITE_KEY: "${RECAPTCHA_SITE_KEY:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '  SENTRY_DSN: "${SENTRY_DSN:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '  SENDER_EMAIL: "${SENDER_EMAIL:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '};' >> /docker-entrypoint.d/40-inject-config.sh && \

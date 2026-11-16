@@ -30,10 +30,6 @@ services:
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MariaDBDialect
       - SPRING_JPA_SHOW_SQL=false
 
-      # Basic Auth for Admin API endpoints
-      - SPRING_SECURITY_USER_NAME=__API_USERNAME__
-      - SPRING_SECURITY_USER_PASSWORD=__API_PASSWORD__
-
       # Email Configuration (Microsoft Graph for Microsoft 365)
       # Set APP_MAIL_ENABLED=false to disable email notifications
       - APP_MAIL_ENABLED=true
