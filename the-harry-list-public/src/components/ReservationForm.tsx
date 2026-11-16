@@ -17,6 +17,7 @@ import { noticeApplies, requiresConfirmation } from '../lib/activityNotices';
 import { useRestoreAfterLock } from '../lib/useRestoreAfterLock';
 import type { ReservationFormData, FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
 import { MAX_LENGTH, tooLongMessage } from '../lib/fieldLimits';
+import { evaluateFormRules, isActivityBlocked as isActivityBlockedBy, LONG_RESERVATION_MINUTES, minBookingDate } from '../lib/formRules';
 
 // Phone number validation - allows international formats
 const phoneRegex = /^(\+?[0-9]{1,4}[\s.-]?)?(\(?[0-9]{1,4}\)?[\s.-]?)?[0-9]{1,4}[\s.-]?[0-9]{1,4}[\s.-]?[0-9]{1,9}$/;
@@ -97,7 +98,7 @@ const formSchema = z.object({
     const startMins = sh * 60 + sm;
     let endMins = eh * 60 + em;
     if (endMins <= startMins) endMins += 24 * 60; // next day
-    if (endMins - startMins > 180 && (!data.longReservationReason || data.longReservationReason.trim() === '')) {
+    if (endMins - startMins > LONG_RESERVATION_MINUTES && (!data.longReservationReason || data.longReservationReason.trim() === '')) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Please explain why you need more than 3 hours',
@@ -202,47 +203,23 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
   const watchEndTime = watch('endTime');
   const watchExpectedGuests = watch('expectedGuests');
 
-  // Constraint: location lock derived from dynamic constraints or guest count
-  const locationLocked = useMemo(() => {
-    for (const c of constraints) {
-      if (c.constraintType === 'LOCATION_LOCK' && watchSpecialActivities.includes(c.triggerActivity)) {
-        return c.targetValue || null;
-      }
-    }
-    // Fewer than 8 guests requires Meteor (location-specific minimum)
-    if (watchExpectedGuests !== undefined && watchExpectedGuests >= 1 && watchExpectedGuests < 8) {
-      return 'METEOR';
-    }
-    return null;
-  }, [watchSpecialActivities, constraints, watchExpectedGuests]);
-
-  // Conflict: guests require Meteor, but an activity locks to a different location
-  const locationConflict = useMemo(() => {
-    if (!watchExpectedGuests || watchExpectedGuests >= 8) return null;
-    for (const c of constraints) {
-      if (c.constraintType === 'LOCATION_LOCK' && watchSpecialActivities.includes(c.triggerActivity)) {
-        if (c.targetValue && c.targetValue !== 'METEOR') {
-          return `Reservations under 8 guests are only available at Meteor, but the selected activity requires ${c.targetValue}. Please increase the number of guests or remove the incompatible activity.`;
-        }
-      }
-    }
-    return null;
-  }, [watchExpectedGuests, constraints, watchSpecialActivities]);
+  // The form's rules (locks, limits, time slots) as plain values; see lib/formRules.
+  const rules = useMemo(() => evaluateFormRules(constraints, {
+    activities: watchSpecialActivities,
+    guests: watchExpectedGuests,
+    location: watchLocation,
+    startTime: watchStartTime,
+    endTime: watchEndTime,
+  }), [constraints, watchSpecialActivities, watchExpectedGuests, watchLocation, watchStartTime, watchEndTime]);
+  const {
+    locationLock: locationLocked, locationConflict, seatingLock: seatingLocked, guestLimitWarning, minGuests,
+    advanceBookingDays, startTimes, endTimes, startTimeWarning, durationMinutes, activityConflicts,
+  } = rules;
 
   // Auto-set location when locked, and give the guest their own choice back once the lock
   // lifts. Otherwise typing "12" guests passes through "1", flips a Hubble booking to Meteor
   // and silently leaves it there.
   useRestoreAfterLock('location', locationLocked, getValues, setValue);
-
-  // Constraint: seating lock derived from dynamic constraints
-  const seatingLocked = useMemo(() => {
-    for (const c of constraints) {
-      if (c.constraintType === 'SEATING_LOCK' && watchSpecialActivities.includes(c.triggerActivity)) {
-        return c.targetValue || null;
-      }
-    }
-    return null;
-  }, [watchSpecialActivities, constraints]);
 
   // Auto-set seating area when locked, and restore the guest's choice when the activity goes.
   useRestoreAfterLock('seatingArea', seatingLocked, getValues, setValue);
@@ -283,62 +260,6 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       }
     }
   }, [pendingNotice, watchSpecialActivities, confirmNoticeFor]);
-
-  // Calculate duration for long reservation warning
-  const durationMinutes = useMemo(() => {
-    if (!watchStartTime || !watchEndTime) return 0;
-    const [sh, sm] = watchStartTime.split(':').map(Number);
-    const [eh, em] = watchEndTime.split(':').map(Number);
-    const startMins = sh * 60 + sm;
-    let endMins = eh * 60 + em;
-    if (endMins <= startMins) endMins += 24 * 60;
-    return endMins - startMins;
-  }, [watchStartTime, watchEndTime]);
-
-  // Check if catering activities selected
-  const hasCateringActivity = watchSpecialActivities.includes('EAT_CATERING') ||
-    watchSpecialActivities.includes('CATERING_CORONA_ROOM');
-
-  // Guest limit warnings from dynamic constraints
-  const guestLimitWarning = useMemo(() => {
-    for (const c of constraints) {
-      if (c.constraintType === 'GUEST_LIMIT'
-          && watchSpecialActivities.includes(c.triggerActivity)
-          && c.numericValue
-          && watchExpectedGuests > c.numericValue) {
-        return c.message;
-      }
-    }
-    return null;
-  }, [constraints, watchSpecialActivities, watchExpectedGuests]);
-
-  // Minimum guests from dynamic constraints (location-specific)
-  const minGuests = useMemo(() => {
-    let min = 1; // default minimum
-    for (const c of constraints) {
-      if (c.constraintType === 'GUEST_MINIMUM' && c.numericValue !== undefined) {
-        const appliesToLocation = !c.targetValue || c.targetValue === watchLocation;
-        if (appliesToLocation && c.numericValue < min) {
-          min = c.numericValue;
-        }
-      }
-    }
-    return min;
-  }, [constraints, watchLocation]);
-
-  // Advance booking from dynamic constraints
-  const advanceBookingDays = useMemo(() => {
-    let maxDays = 0;
-    for (const c of constraints) {
-      if (c.constraintType === 'ADVANCE_BOOKING'
-          && watchSpecialActivities.includes(c.triggerActivity)
-          && c.numericValue
-          && c.numericValue > maxDays) {
-        maxDays = c.numericValue;
-      }
-    }
-    return maxDays;
-  }, [constraints, watchSpecialActivities]);
 
   // Blocked period check for selected date
   const watchEventDate = watch('eventDate');
@@ -407,82 +328,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
   );
 
   const requiresAdvanceBooking = advanceBookingDays > 0;
-  const minDateForBooking = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    if (advanceBookingDays > 0) d.setDate(d.getDate() + advanceBookingDays);
-    return d.toISOString().split('T')[0];
-  }, [advanceBookingDays]);
-
-  // Generate 15-min interval time slots
-  const generateTimeSlots = useCallback((startHour: number, endHour: number, crossesMidnight: boolean) => {
-    const times: string[] = [];
-    if (crossesMidnight) {
-      for (let h = startHour; h <= 23; h++) {
-        for (let m = 0; m < 60; m += 15) {
-          times.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
-        }
-      }
-      for (let h = 0; h <= endHour; h++) {
-        const maxM = h === endHour ? 0 : 45;
-        for (let m = 0; m <= maxM; m += 15) {
-          times.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
-        }
-      }
-    } else {
-      for (let h = startHour; h <= endHour; h++) {
-        const maxM = h === endHour ? 0 : 45;
-        for (let m = 0; m <= maxM; m += 15) {
-          times.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
-        }
-      }
-    }
-    return times;
-  }, []);
-
-  // Start times: derived from TIME_RESTRICTION constraints
-  const startTimes = useMemo(() => {
-    let hasEarlyAccess = false;
-    for (const c of constraints) {
-      if (c.constraintType === 'TIME_RESTRICTION'
-          && c.targetValue === 'EARLY_ACCESS'
-          && watchSpecialActivities.includes(c.triggerActivity)) {
-        hasEarlyAccess = true;
-        break;
-      }
-    }
-    const startHour = hasEarlyAccess ? 9 : 11;
-    return generateTimeSlots(startHour, 2, true);
-  }, [watchSpecialActivities, constraints, generateTimeSlots]);
-
-  // End times: only show slots strictly after the selected start time
-  const endTimes = useMemo(() => {
-    const all = generateTimeSlots(9, 2, true);
-    if (!watchStartTime) return all;
-    const [sh, sm] = watchStartTime.split(':').map(Number);
-    const startNorm = sh < 9 ? sh * 60 + sm + 1440 : sh * 60 + sm;
-    return all.filter(t => {
-      const [eh, em] = t.split(':').map(Number);
-      const endNorm = eh < 9 ? eh * 60 + em + 1440 : eh * 60 + em;
-      return endNorm > startNorm;
-    });
-  }, [watchStartTime, generateTimeSlots]);
-
-  // Start time warnings
-  const startTimeWarning = useMemo(() => {
-    if (!watchStartTime) return null;
-    const [h, m] = watchStartTime.split(':').map(Number);
-    const mins = h * 60 + m;
-    // The kitchen warnings used to be skipped for private events, the one Meteor-only
-    // activity. That activity was retired, so every bookable event can now use a kitchen.
-    if (mins >= 11 * 60 && mins < 12 * 60) {
-      return 'Kitchen opens at 12:00 - food may not be available at this time.';
-    }
-    if (mins >= 19 * 60 + 30 || (h < 3 && mins >= 0)) {
-      return 'Kitchen is closed from 19:30 to 20:30 and only open for snacks after that.';
-    }
-    return null;
-  }, [watchStartTime]);
+  const minDateForBooking = useMemo(() => minBookingDate(advanceBookingDays), [advanceBookingDays]);
 
   const validateStep = async (step: number) => {
     const paymentFields: (keyof ReservationFormData)[] = ['paymentOption'];
@@ -528,7 +374,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
     }
 
     // Block step 2 advance if long reservation reason is missing
-    if (step === 2 && durationMinutes > 180 && !getValues('longReservationReason')?.trim()) {
+    if (step === 2 && rules.needsLongReservationReason && !getValues('longReservationReason')?.trim()) {
       await trigger('longReservationReason');
       return false;
     }
@@ -559,20 +405,8 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
     }
   };
 
-  // Activity conflicts derived from dynamic constraints
-  const activityConflicts = useMemo(() => {
-    const conflicts: Record<string, string[]> = {};
-    for (const c of constraints) {
-      if (c.constraintType === 'ACTIVITY_CONFLICT' && c.targetValue) {
-        if (!conflicts[c.triggerActivity]) conflicts[c.triggerActivity] = [];
-        conflicts[c.triggerActivity].push(c.targetValue);
-      }
-    }
-    return conflicts;
-  }, [constraints]);
-
   const isActivityBlocked = (activity: string, current: string[]): boolean =>
-    (activityConflicts[activity] || []).some(conflict => current.includes(conflict));
+    isActivityBlockedBy(activityConflicts, activity, current);
 
   const selectActivity = (activity: string) => {
     const current = getValues('specialActivities') || [];
@@ -1226,7 +1060,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
             </div>
 
             {/* Long reservation reason */}
-            {durationMinutes > 180 && (
+            {rules.needsLongReservationReason && (
               <div className="form-group">
                 <label className="label flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-400" />
@@ -1246,7 +1080,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
             )}
 
             {/* Catering dietary notes */}
-            {hasCateringActivity && (
+            {rules.asksForDietaryNotes && (
               <div className="form-group">
                 <label htmlFor="cateringDietaryNotes" className="label">Catering Dietary Notes</label>
                 <textarea
