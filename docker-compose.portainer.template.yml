@@ -80,7 +80,9 @@ services:
         condition: on-failure
         delay: 5s
     ports:
-      - "9803:80"
+      # Localhost only, like the backend: the reverse proxy reaches it on 127.0.0.1. Without the
+      # address Docker publishes on every interface (bypassing ufw), serving plain HTTP on the host IP.
+      - "127.0.0.1:9803:80"
     networks:
       - harry-list
     environment:
@@ -103,7 +105,8 @@ services:
         condition: on-failure
         delay: 5s
     ports:
-      - "9804:80"
+      # Localhost only, like the backend and the public site.
+      - "127.0.0.1:9804:80"
     networks:
       - harry-list
     environment:
