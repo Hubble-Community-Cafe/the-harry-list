@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ReservationFormPage } from '../../pages/ReservationFormPage';
 import { resetBackend, seedBlockedPeriod } from '../../fixtures/backend';
+import { BACKEND_URL } from '../../playwright.config';
 import { captureScreenshot } from '../../fixtures/evidence';
 
 /**
@@ -42,5 +43,15 @@ test.describe('public: hard-blocked period', () => {
     // Continue does not advance.
     await form.continue();
     await form.expectStep('Event Details');
+  });
+
+  test('never sends the staff-only reason to the public form', async ({ request }) => {
+    const res = await request.get(`${BACKEND_URL}/api/options/blocked-periods`);
+    expect(res.ok()).toBeTruthy();
+    const periods = await res.json();
+    expect(periods).toHaveLength(1);
+    expect(periods[0].publicMessage).toBe('Closed for renovation.');
+    expect(periods[0]).not.toHaveProperty('reason');
+    expect(JSON.stringify(periods)).not.toContain('Renovation');
   });
 });

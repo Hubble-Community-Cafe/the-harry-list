@@ -681,7 +681,6 @@ describe('ReservationForm', () => {
         {
           id: 1,
           ...wideRange,
-          reason: 'Summer closing',
           publicMessage: 'The bar is closed by default this summer.',
           softBlock: true,
           acknowledgementText: 'I understand the bar may be closed',
@@ -719,7 +718,6 @@ describe('ReservationForm', () => {
           id: 3,
           location: 'HUBBLE',
           ...wideRange,
-          reason: 'Hubble summer closing',
           publicMessage: 'Hubble is closed by default this summer.',
           softBlock: true,
           acknowledgementText: 'I understand Hubble may be closed',
@@ -755,7 +753,6 @@ describe('ReservationForm', () => {
         {
           id: 2,
           ...wideRange,
-          reason: 'Renovation',
           publicMessage: 'Closed for renovation.',
           softBlock: false,
           enabled: true,

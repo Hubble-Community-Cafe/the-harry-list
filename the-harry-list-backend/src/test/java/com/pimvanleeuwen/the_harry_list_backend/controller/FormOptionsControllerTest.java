@@ -1,6 +1,8 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
 import com.pimvanleeuwen.the_harry_list_backend.config.SecurityConfig;
+import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
+import com.pimvanleeuwen.the_harry_list_backend.model.BlockedPeriod;
 import com.pimvanleeuwen.the_harry_list_backend.model.FormConstraint;
 import com.pimvanleeuwen.the_harry_list_backend.model.FormConstraintType;
 import com.pimvanleeuwen.the_harry_list_backend.repository.BlockedPeriodRepository;
@@ -13,6 +15,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.Mockito.when;
@@ -99,5 +102,35 @@ class FormOptionsControllerTest {
                 .andExpect(jsonPath("$[0].targetValue").value("CONFIRM"))
                 .andExpect(jsonPath("$[0].secondaryValue").value("METEOR"))
                 .andExpect(jsonPath("$[0].numericValue").value(8));
+    }
+
+    @Test
+    void getActiveBlockedPeriods_shouldNeverExposeTheStaffOnlyReason() throws Exception {
+        // The endpoint is anonymous, so internal notes such as who booked a private party
+        // must stay in the admin panel.
+        when(blockedPeriodRepository.findByEnabledTrue()).thenReturn(List.of(BlockedPeriod.builder()
+                .id(7L)
+                .location(BarLocation.HUBBLE)
+                .startDate(LocalDate.of(2026, 12, 24))
+                .endDate(LocalDate.of(2026, 12, 26))
+                .reason("Private party for the board")
+                .publicMessage("Closed for Christmas")
+                .softBlock(true)
+                .acknowledgementText("I understand")
+                .enabled(true)
+                .build()));
+
+        mockMvc.perform(get("/api/options/blocked-periods"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].reason").doesNotExist())
+                .andExpect(jsonPath("$[0].updatedAt").doesNotExist())
+                .andExpect(jsonPath("$[0].id").value(7))
+                .andExpect(jsonPath("$[0].location").value("HUBBLE"))
+                .andExpect(jsonPath("$[0].startDate").value("2026-12-24"))
+                .andExpect(jsonPath("$[0].endDate").value("2026-12-26"))
+                .andExpect(jsonPath("$[0].publicMessage").value("Closed for Christmas"))
+                .andExpect(jsonPath("$[0].softBlock").value(true))
+                .andExpect(jsonPath("$[0].acknowledgementText").value("I understand"))
+                .andExpect(jsonPath("$[0].enabled").value(true));
     }
 }

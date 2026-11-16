@@ -77,7 +77,7 @@ export interface BlockedPeriod {
   endDate: string;
   startTime?: string;
   endTime?: string;
-  reason: string;
+  // The staff-only reason is deliberately not sent to the public form.
   publicMessage?: string;
   /** When true, the period warns but does not block reservations. */
   softBlock?: boolean;
