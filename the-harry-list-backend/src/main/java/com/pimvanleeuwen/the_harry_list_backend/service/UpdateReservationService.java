@@ -1,21 +1,20 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
 import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
+import com.pimvanleeuwen.the_harry_list_backend.exception.BusinessRuleException;
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
-public class UpdateReservationService implements Command<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation, com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> {
+public class UpdateReservationService {
 
     private static final Logger log = LoggerFactory.getLogger(UpdateReservationService.class);
 
@@ -34,40 +33,25 @@ public class UpdateReservationService implements Command<com.pimvanleeuwen.the_h
         this.auditService = auditService;
     }
 
-    @Override
-    public ResponseEntity<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> execute(com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input) {
-        return executeWithEmail(input, true);
-    }
-
-    public ResponseEntity<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> executeWithEmail(
-            com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input, boolean sendEmail) {
-        return executeWithEmail(input, sendEmail, null);
-    }
-
     /**
      * Update a reservation with optional email notification and an optional custom message.
      * @param input The reservation DTO
      * @param sendEmail Whether to send email notification
      * @param customMessage Optional free-text note added to the update email; may be null/blank to omit.
+     * @return the saved reservation
+     * @throws NotFoundException when no reservation has the input's id
      */
-    public ResponseEntity<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> executeWithEmail(
-            com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input, boolean sendEmail, String customMessage) {
+    public com.pimvanleeuwen.the_harry_list_backend.dto.Reservation update(com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input, boolean sendEmail, String customMessage) {
         if (input.getId() == null) {
-            log.error("Cannot update reservation without ID");
-            return ResponseEntity.badRequest().build();
+            throw new BusinessRuleException("Reservation id is required");
         }
 
         log.info("LOGGING reservation.update.started id={}", input.getId());
 
-        Optional<Reservation> existingReservation = reservationRepository.findById(input.getId());
-
-        if (existingReservation.isEmpty()) {
-            log.warn("Reservation with ID {} not found", input.getId());
-            return ResponseEntity.notFound().build();
-        }
+        Reservation existing = reservationRepository.findById(input.getId())
+                .orElseThrow(() -> NotFoundException.of("Reservation", input.getId()));
 
         // Convert DTO to entity, preserving the existing entity's metadata
-        Reservation existing = existingReservation.get();
         Reservation entity = reservationMapper.toEntity(input);
         entity.setId(input.getId());
 
@@ -108,7 +92,7 @@ public class UpdateReservationService implements Command<com.pimvanleeuwen.the_h
             }
         }
 
-        return ResponseEntity.ok(reservationMapper.toDto(savedEntity));
+        return reservationMapper.toDto(savedEntity);
     }
 
     private static String label(Reservation r) {

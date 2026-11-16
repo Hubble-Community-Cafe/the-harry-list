@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -69,8 +68,7 @@ class PublicReservationControllerTest {
         Reservation responseReservation = sampleRequest.toReservation();
         responseReservation.setId(1L);
         responseReservation.setConfirmationNumber("ABC123");
-        when(createReservationService.execute(any(Reservation.class)))
-                .thenReturn(ResponseEntity.status(201).body(responseReservation));
+        when(createReservationService.create(any(Reservation.class))).thenReturn(responseReservation);
 
         mockMvc.perform(post("/api/public/reservations")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -88,8 +86,7 @@ class PublicReservationControllerTest {
         Reservation responseReservation = sampleRequest.toReservation();
         responseReservation.setId(42L);
         responseReservation.setConfirmationNumber("XYZ789");
-        when(createReservationService.execute(any(Reservation.class)))
-                .thenReturn(ResponseEntity.status(201).body(responseReservation));
+        when(createReservationService.create(any(Reservation.class))).thenReturn(responseReservation);
 
         mockMvc.perform(post("/api/public/reservations")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -120,8 +117,7 @@ class PublicReservationControllerTest {
         Reservation responseReservation = sampleRequest.toReservation();
         responseReservation.setId(1L);
         responseReservation.setConfirmationNumber("ABC123");
-        when(createReservationService.execute(any(Reservation.class)))
-                .thenReturn(ResponseEntity.status(201).body(responseReservation));
+        when(createReservationService.create(any(Reservation.class))).thenReturn(responseReservation);
 
         sampleRequest.setAltcha("valid-altcha-payload");
 
@@ -151,7 +147,7 @@ class PublicReservationControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("termsAccepted: You must accept the terms"));
 
-        verify(createReservationService, never()).execute(any());
+        verify(createReservationService, never()).create(any());
     }
 
     @Test
@@ -162,7 +158,7 @@ class PublicReservationControllerTest {
                 .andExpect(jsonPath("$.detail").value("invoiceType: Please select an invoice type"))
                 .andExpect(jsonPath("$.errors[0].field").value("invoiceType"))
                 .andExpect(jsonPath("$.errors[0].message").value("Please select an invoice type"));
-        verify(createReservationService, never()).execute(any());
+        verify(createReservationService, never()).create(any());
     }
 
     @Test
@@ -189,7 +185,7 @@ class PublicReservationControllerTest {
         Reservation saved = sampleRequest.toReservation();
         saved.setId(2L);
         saved.setConfirmationNumber("INV123");
-        when(createReservationService.execute(any(Reservation.class))).thenReturn(ResponseEntity.status(201).body(saved));
+        when(createReservationService.create(any(Reservation.class))).thenReturn(saved);
         sampleRequest.setPaymentOption(PaymentOption.INVOICE);
         sampleRequest.setInvoiceType(InvoiceType.TUE);
         sampleRequest.setCostCenter("12345");

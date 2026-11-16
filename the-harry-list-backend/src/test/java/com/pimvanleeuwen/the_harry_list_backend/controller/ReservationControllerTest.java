@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.pimvanleeuwen.the_harry_list_backend.config.SecurityConfig;
 import com.pimvanleeuwen.the_harry_list_backend.dto.Reservation;
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.model.*;
 import com.pimvanleeuwen.the_harry_list_backend.service.AdminUserService;
 import com.pimvanleeuwen.the_harry_list_backend.service.CreateReservationService;
@@ -16,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -29,6 +29,7 @@ import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -77,7 +78,7 @@ class ReservationControllerTest {
     void getReservations_shouldReturnListOfReservations() throws Exception {
         // Given
         List<Reservation> reservations = Arrays.asList(sampleReservation);
-        when(getReservationService.execute(null)).thenReturn(ResponseEntity.ok(reservations));
+        when(getReservationService.findAll()).thenReturn(reservations);
 
         // When & Then
         mockMvc.perform(get("/api/reservations"))
@@ -91,7 +92,7 @@ class ReservationControllerTest {
     @WithMockUser(roles = "VIEWER")
     void getReservationById_shouldReturnReservation() throws Exception {
         // Given
-        when(getReservationService.getById(1L)).thenReturn(ResponseEntity.ok(sampleReservation));
+        when(getReservationService.findById(1L)).thenReturn(sampleReservation);
 
         // When & Then
         mockMvc.perform(get("/api/reservations/1"))
@@ -104,11 +105,12 @@ class ReservationControllerTest {
     @WithMockUser(roles = "VIEWER")
     void getReservationById_shouldReturnNotFoundWhenNotExists() throws Exception {
         // Given
-        when(getReservationService.getById(999L)).thenReturn(ResponseEntity.notFound().build());
+        when(getReservationService.findById(999L)).thenThrow(NotFoundException.of("Reservation", 999L));
 
         // When & Then
         mockMvc.perform(get("/api/reservations/999"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("Reservation 999 not found"));
     }
 
     @Test
@@ -116,8 +118,7 @@ class ReservationControllerTest {
     void createReservation_shouldCreateAndReturnReservation() throws Exception {
         // Given
         sampleReservation.setId(1L);
-        when(createReservationService.execute(any(Reservation.class)))
-                .thenReturn(ResponseEntity.status(201).body(sampleReservation));
+        when(createReservationService.create(any(Reservation.class))).thenReturn(sampleReservation);
 
         // When & Then
         mockMvc.perform(post("/api/reservations")
@@ -135,8 +136,7 @@ class ReservationControllerTest {
         // Given
         sampleReservation.setId(1L);
         sampleReservation.setContactName("Updated Name");
-        when(updateReservationService.executeWithEmail(any(Reservation.class), anyBoolean(), any()))
-                .thenReturn(ResponseEntity.ok(sampleReservation));
+        when(updateReservationService.update(any(Reservation.class), anyBoolean(), any())).thenReturn(sampleReservation);
 
         // When & Then
         mockMvc.perform(put("/api/reservations/1")
@@ -162,7 +162,7 @@ class ReservationControllerTest {
                         .content(objectMapper.writeValueAsString(sampleReservation)))
                 .andExpect(status().isBadRequest());
 
-        verify(updateReservationService, never()).executeWithEmail(any(), anyBoolean(), any());
+        verify(updateReservationService, never()).update(any(), anyBoolean(), any());
     }
 
     @Test
@@ -177,31 +177,30 @@ class ReservationControllerTest {
                         .content(objectMapper.writeValueAsString(sampleReservation)))
                 .andExpect(status().isBadRequest());
 
-        verify(updateReservationService, never()).executeWithEmail(any(), anyBoolean(), any());
+        verify(updateReservationService, never()).update(any(), anyBoolean(), any());
     }
 
     @Test
     @WithMockUser(roles = "EDITOR")
     void deleteReservation_shouldReturnNoContent() throws Exception {
-        // Given
-        when(deleteReservationService.executeWithEmail(1L, true)).thenReturn(ResponseEntity.noContent().build());
-
-        // When & Then
         mockMvc.perform(delete("/api/reservations/1")
                         .with(csrf()))
                 .andExpect(status().isNoContent());
+
+        verify(deleteReservationService).delete(1L, true);
     }
 
     @Test
     @WithMockUser(roles = "EDITOR")
     void deleteReservation_shouldReturnNotFoundWhenNotExists() throws Exception {
         // Given
-        when(deleteReservationService.executeWithEmail(999L, true)).thenReturn(ResponseEntity.notFound().build());
+        doThrow(NotFoundException.of("Reservation", 999L)).when(deleteReservationService).delete(999L, true);
 
         // When & Then
         mockMvc.perform(delete("/api/reservations/999")
                         .with(csrf()))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("Reservation 999 not found"));
     }
 
     @Test
@@ -219,7 +218,7 @@ class ReservationControllerTest {
                         .content(objectMapper.writeValueAsString(sampleReservation)))
                 .andExpect(status().isForbidden());
 
-        verify(createReservationService, never()).execute(any());
+        verify(createReservationService, never()).create(any());
     }
 
     @Test
@@ -233,7 +232,7 @@ class ReservationControllerTest {
                         .content(objectMapper.writeValueAsString(sampleReservation)))
                 .andExpect(status().isForbidden());
 
-        verify(updateReservationService, never()).executeWithEmail(any(), anyBoolean(), any());
+        verify(updateReservationService, never()).update(any(), anyBoolean(), any());
     }
 
     @Test
@@ -243,7 +242,7 @@ class ReservationControllerTest {
                         .with(csrf()))
                 .andExpect(status().isForbidden());
 
-        verify(deleteReservationService, never()).executeWithEmail(any(), anyBoolean());
+        verify(deleteReservationService, never()).delete(any(), anyBoolean());
     }
 
     @Test
@@ -253,18 +252,18 @@ class ReservationControllerTest {
         mockMvc.perform(get("/api/reservations"))
                 .andExpect(status().isForbidden());
 
-        verify(getReservationService, never()).execute(any());
+        verify(getReservationService, never()).findAll();
     }
 
     @Test
     @WithMockUser(roles = {"VIEWER", "EDITOR", "ADMIN"})
     void admin_canDeleteReservation() throws Exception {
-        when(deleteReservationService.executeWithEmail(1L, false)).thenReturn(ResponseEntity.noContent().build());
-
         mockMvc.perform(delete("/api/reservations/1")
                         .param("sendEmail", "false")
                         .with(csrf()))
                 .andExpect(status().isNoContent());
+
+        verify(deleteReservationService).delete(1L, false);
     }
 
     private Reservation createSampleReservation() {

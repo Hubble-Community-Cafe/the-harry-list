@@ -8,14 +8,12 @@ import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class CreateReservationService implements Command<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation, com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> {
+public class CreateReservationService {
 
     private static final Logger log = LoggerFactory.getLogger(CreateReservationService.class);
     /**
@@ -42,18 +40,13 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
         this.auditService = auditService;
     }
 
-    @Override
-    public ResponseEntity<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> execute(com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input) {
-        return executeWithEmail(input, true);
-    }
-
     /**
-     * Create a reservation with optional email notification.
+     * Create a reservation in PENDING status and email the requester.
      * @param input The reservation DTO
-     * @param sendEmail Whether to send email notification
+     * @return the saved reservation
+     * @throws BusinessRuleException when the request breaks a form rule or uses a retired activity
      */
-    public ResponseEntity<com.pimvanleeuwen.the_harry_list_backend.dto.Reservation> executeWithEmail(
-            com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input, boolean sendEmail) {
+    public com.pimvanleeuwen.the_harry_list_backend.dto.Reservation create(com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input) {
         // Note: never log name/email/phone here. These logs are centralized (Loki), so guest
         // PII must not be written. Event/date/location/guests are operational context only.
         log.info("LOGGING reservation.submitted event='{}' date={} location={} guests={}",
@@ -110,7 +103,7 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
                 List.of(), "Reservation created");
 
         // Send email notification if enabled
-        if (sendEmail && emailService != null) {
+        if (emailService != null) {
             try {
                 emailService.sendReservationSubmittedEmail(savedEntity);
             } catch (Exception e) {
@@ -119,6 +112,6 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
         }
 
         // Convert back to DTO and return
-        return ResponseEntity.status(HttpStatus.CREATED).body(reservationMapper.toDto(savedEntity));
+        return reservationMapper.toDto(savedEntity);
     }
 }

@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
 
 /**
  * Public controller for reservation submissions.
@@ -48,27 +47,23 @@ public class PublicReservationController {
                       "After submission, you will receive a confirmation with your reservation ID. " +
                       "You cannot view or edit the reservation — staff will contact you via email."
     )
-    public ResponseEntity<?> submitReservation(@Valid @RequestBody PublicReservationRequest request) {
+    public ResponseEntity<ReservationSubmissionResponse> submitReservation(@Valid @RequestBody PublicReservationRequest request) {
         if (!altchaService.verify(request.getAltcha())) {
             logger.warn("ALTCHA verification failed for reservation request from: {}", request.getEmail());
             throw new BusinessRuleException("Captcha verification failed. Please try again.");
         }
 
         Reservation reservation = request.toReservation();
-        ResponseEntity<Reservation> result = createReservationService.execute(reservation);
+        Reservation saved = createReservationService.create(reservation);
 
-        if (result.getBody() != null) {
-            ReservationSubmissionResponse response = new ReservationSubmissionResponse(
-                result.getBody().getConfirmationNumber(),
-                result.getBody().getEventTitle(),
-                result.getBody().getContactName(),
-                result.getBody().getEmail(),
-                "Your reservation request has been submitted successfully. " +
-                "We will review your request and contact you at " + result.getBody().getEmail() + " soon."
-            );
-            return ResponseEntity.status(result.getStatusCode()).body(response);
-        }
-
-        return ResponseEntity.status(result.getStatusCode()).build();
+        ReservationSubmissionResponse response = new ReservationSubmissionResponse(
+            saved.getConfirmationNumber(),
+            saved.getEventTitle(),
+            saved.getContactName(),
+            saved.getEmail(),
+            "Your reservation request has been submitted successfully. " +
+            "We will review your request and contact you at " + saved.getEmail() + " soon."
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

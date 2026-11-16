@@ -1,19 +1,16 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
-public class DeleteReservationService implements Command<Long, Void> {
+public class DeleteReservationService {
 
     private static final Logger log = LoggerFactory.getLogger(DeleteReservationService.class);
 
@@ -28,36 +25,27 @@ public class DeleteReservationService implements Command<Long, Void> {
         this.auditService = auditService;
     }
 
-    @Override
-    public ResponseEntity<Void> execute(Long id) {
-        return executeWithEmail(id, true);
-    }
-
     /**
      * Delete a reservation with optional email notification.
      * @param id The reservation ID
      * @param sendEmail Whether to send email notification
+     * @throws NotFoundException when no reservation has this id
      */
-    public ResponseEntity<Void> executeWithEmail(Long id, boolean sendEmail) {
+    public void delete(Long id, boolean sendEmail) {
         log.info("LOGGING reservation.cancel.started id={}", id);
 
-        Optional<Reservation> reservation = reservationRepository.findById(id);
-
-        if (reservation.isEmpty()) {
-            log.warn("Reservation with ID {} not found", id);
-            return ResponseEntity.notFound().build();
-        }
+        Reservation r = reservationRepository.findById(id)
+                .orElseThrow(() -> NotFoundException.of("Reservation", id));
 
         // Send email notification before deleting if enabled
         if (sendEmail && emailService != null) {
             try {
-                emailService.sendReservationCancelledEmail(reservation.get());
+                emailService.sendReservationCancelledEmail(r);
             } catch (Exception e) {
                 log.error("Failed to send cancellation email, but proceeding with deletion", e);
             }
         }
 
-        com.pimvanleeuwen.the_harry_list_backend.model.Reservation r = reservation.get();
         log.info("LOGGING reservation.cancelled id={} confirmation='{}' event='{}' date={} contact='{}' email='{}'",
                 id, r.getConfirmationNumber(), r.getEventTitle(),
                 r.getEventDate(), r.getContactName(), r.getEmail());
@@ -67,7 +55,5 @@ public class DeleteReservationService implements Command<Long, Void> {
         auditService.recordDelete(AuditEntityType.RESERVATION, id,
                 r.getConfirmationNumber() + " - " + r.getEventTitle(),
                 "Reservation deleted (contact: " + r.getContactName() + ")");
-
-        return ResponseEntity.noContent().build();
     }
 }

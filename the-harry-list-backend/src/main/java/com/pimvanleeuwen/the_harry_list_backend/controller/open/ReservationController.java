@@ -8,7 +8,7 @@ import com.pimvanleeuwen.the_harry_list_backend.service.UpdateReservationService
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,43 +43,45 @@ public class ReservationController {
     @GetMapping
     @PreAuthorize("hasRole('VIEWER')")
     @Operation(summary = "Get all reservations", description = "Retrieve a list of all reservations (staff only)")
-    public ResponseEntity<List<Reservation>> getReservations() {
-        return getReservationService.execute(null);
+    public List<Reservation> getReservations() {
+        return getReservationService.findAll();
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('VIEWER')")
     @Operation(summary = "Get reservation by ID", description = "Retrieve a single reservation by its ID (staff only)")
-    public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
-        return getReservationService.getById(id);
+    public Reservation getReservationById(@PathVariable Long id) {
+        return getReservationService.findById(id);
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Create a reservation (staff)", description = "Create a new reservation as staff member")
-    public ResponseEntity<Reservation> createReservation(@Valid @RequestBody Reservation reservation) {
-        return createReservationService.execute(reservation);
+    public Reservation createReservation(@Valid @RequestBody Reservation reservation) {
+        return createReservationService.create(reservation);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Update a reservation", description = "Update an existing reservation (staff only). Set sendEmail=false to skip email notification. Optionally pass customMessage to add a note to the update email.")
-    public ResponseEntity<Reservation> updateReservation(
+    public Reservation updateReservation(
             @PathVariable Long id,
             @Valid @RequestBody Reservation reservation,
             @RequestParam(required = false, defaultValue = "true") boolean sendEmail,
             @RequestParam(required = false) String customMessage) {
         reservation.setId(id);
-        return updateReservationService.executeWithEmail(reservation, sendEmail, customMessage);
+        return updateReservationService.update(reservation, sendEmail, customMessage);
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Delete a reservation", description = "Delete a reservation by its ID (staff only). Set sendEmail=false to skip email notification.")
-    public ResponseEntity<Void> deleteReservation(
+    public void deleteReservation(
             @PathVariable Long id,
             @RequestParam(required = false, defaultValue = "true") boolean sendEmail) {
-        return deleteReservationService.executeWithEmail(id, sendEmail);
+        deleteReservationService.delete(id, sendEmail);
     }
 
 }
