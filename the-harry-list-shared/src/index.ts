@@ -6,3 +6,4 @@ export { installChunkReload } from './lib/chunkReload';
 export { SENTRY_EXTENSION_DENY_URLS, SENTRY_EXTENSION_ERRORS } from './lib/sentryFilters';
 export { installTranslationCrashGuard } from './lib/translationCrashGuard';
 export { cn } from './lib/utils';
+export { apiErrorMessage } from './lib/apiError';

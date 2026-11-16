@@ -45,10 +45,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
             if (isRateLimited(clientIp)) {
                 logger.warn("Rate limit exceeded for IP: {}", clientIp);
                 response.setStatus(429);
-                response.setContentType("application/json");
-                response.getWriter().write(
-                    "{\"error\":\"RATE_LIMIT_EXCEEDED\",\"message\":\"Too many requests. Please try again later.\"}"
-                );
+                // Same problem+json shape as GlobalExceptionHandler, plus a machine-readable code.
+                response.setContentType("application/problem+json");
+                response.getWriter().write("{\"type\":\"about:blank\",\"title\":\"Too Many Requests\",\"status\":429,"
+                        + "\"detail\":\"Too many requests. Please try again later.\",\"code\":\"RATE_LIMIT_EXCEEDED\"}");
                 return;
             }
         }

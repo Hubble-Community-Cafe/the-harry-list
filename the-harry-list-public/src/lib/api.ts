@@ -1,3 +1,4 @@
+import { apiErrorMessage } from 'the-harry-list-shared';
 // Runtime configuration interface
 declare global {
   interface Window {
@@ -111,8 +112,9 @@ export async function submitReservation(data: ReservationFormData, altchaPayload
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Failed to submit reservation' }));
-    throw new Error(error.message || 'Failed to submit reservation');
+    // Problem response from the backend: its detail is the reason (constraint, captcha, validation).
+    const error = await response.json().catch(() => null);
+    throw new Error(apiErrorMessage(error, 'Failed to submit reservation'));
   }
 
   return response.json();

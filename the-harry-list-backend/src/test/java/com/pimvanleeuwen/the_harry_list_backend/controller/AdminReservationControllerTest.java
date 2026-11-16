@@ -275,7 +275,43 @@ class AdminReservationControllerTest {
         mockMvc.perform(patch("/api/admin/reservations/999/status")
                 .with(csrf())
                 .param("status", "CONFIRMED"))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound())
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.detail").value("Reservation 999 not found"));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldRefuseToConfirmWithoutLocation() throws Exception {
+        sampleReservation.setLocation(BarLocation.NO_PREFERENCE);
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "CONFIRMED"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.detail").value("Location must be set before confirming"));
+
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void sendCustomEmail_shouldNotLeakMailProviderErrorText() throws Exception {
+        // Provider errors can contain internal details; staff get a generic message instead.
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        doThrow(new RuntimeException("Graph 401: token for tenant abc expired"))
+                .when(emailNotificationService).sendCustomEmail(any(), any(), any());
+
+        mockMvc.perform(post("/api/admin/reservations/1/email")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"subject\":\"Hi\",\"message\":\"Hello\"}"))
+            .andExpect(status().isInternalServerError())
+            .andExpect(jsonPath("$.detail").value("The email could not be sent. Please try again later."))
+            .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("tenant abc"))));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.BusinessRuleException;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
@@ -169,7 +170,7 @@ class CreateReservationServiceTest {
         when(constraintValidationService.validate(any(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of("violation"));
 
-        assertThrows(IllegalArgumentException.class, () -> createReservationService.execute(sampleDto));
+        assertThrows(BusinessRuleException.class, () -> createReservationService.execute(sampleDto));
         verifyNoInteractions(auditService);
     }
 
@@ -208,7 +209,7 @@ class CreateReservationServiceTest {
         // constraint check, since no constraint references the retired activity any more.
         sampleDto.setSpecialActivities(Set.of(SpecialActivity.PRIVATE_EVENT));
 
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+        BusinessRuleException thrown = assertThrows(BusinessRuleException.class,
                 () -> createReservationService.execute(sampleDto));
 
         assertEquals("Private event is no longer available", thrown.getMessage());
@@ -240,7 +241,7 @@ class CreateReservationServiceTest {
                 .thenReturn(List.of("Catering and à la carte dining cannot be combined"));
 
         // When / Then
-        assertThrows(IllegalArgumentException.class, () -> createReservationService.execute(sampleDto));
+        assertThrows(BusinessRuleException.class, () -> createReservationService.execute(sampleDto));
         verify(reservationRepository, never()).save(any());
     }
 

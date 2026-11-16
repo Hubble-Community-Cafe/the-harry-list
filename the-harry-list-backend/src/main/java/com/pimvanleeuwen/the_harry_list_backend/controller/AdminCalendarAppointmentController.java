@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditAction;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
@@ -44,7 +45,7 @@ public class AdminCalendarAppointmentController {
     public ResponseEntity<CalendarAppointment> getById(@PathVariable Long id) {
         return repository.findById(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Calendar appointment", id));
     }
 
     @PostMapping
@@ -82,7 +83,7 @@ public class AdminCalendarAppointmentController {
                             diffs, "Appointment updated");
                     return ResponseEntity.ok(saved);
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Calendar appointment", id));
     }
 
     @PatchMapping("/{id}/toggle")
@@ -100,7 +101,7 @@ public class AdminCalendarAppointmentController {
                             "Appointment " + (saved.getEnabled() ? "enabled" : "disabled"));
                     return ResponseEntity.ok(saved);
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Calendar appointment", id));
     }
 
     @DeleteMapping("/{id}")
@@ -114,6 +115,6 @@ public class AdminCalendarAppointmentController {
                             "Appointment deleted");
                     return ResponseEntity.ok(Map.of("status", "deleted"));
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Calendar appointment", id));
     }
 }

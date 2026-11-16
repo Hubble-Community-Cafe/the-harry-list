@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.dto.EmailTemplateDto;
 import com.pimvanleeuwen.the_harry_list_backend.dto.TestEmailRequest;
 import com.pimvanleeuwen.the_harry_list_backend.dto.UpdateEmailTemplateRequest;
@@ -48,7 +49,7 @@ public class AdminEmailTemplateController {
     public ResponseEntity<EmailTemplateDto> getByType(@PathVariable EmailTemplateType type) {
         return emailTemplateService.findByType(type)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Email template", type));
     }
 
     @PutMapping("/{type}")

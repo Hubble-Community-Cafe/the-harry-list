@@ -1,5 +1,7 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.BusinessRuleException;
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.dto.EmailAttachmentDto;
 import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditAction;
@@ -53,16 +55,16 @@ public class AdminEmailAttachmentController {
             @RequestParam("name") String name) {
 
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "File is empty"));
+            throw new BusinessRuleException("File is empty");
         }
 
         String contentType = file.getContentType();
         if (contentType == null || !contentType.equals("application/pdf")) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Only PDF files are allowed"));
+            throw new BusinessRuleException("Only PDF files are allowed");
         }
 
         if (file.getSize() > MAX_FILE_SIZE) {
-            return ResponseEntity.badRequest().body(Map.of("message", "File size exceeds 3MB limit"));
+            throw new BusinessRuleException("File size exceeds 3MB limit");
         }
 
         try {
@@ -81,8 +83,8 @@ public class AdminEmailAttachmentController {
                     "Attachment uploaded (" + saved.getFilename() + ")");
             return ResponseEntity.ok(EmailAttachmentDto.fromEntity(saved));
         } catch (IOException e) {
-            log.error("Failed to read uploaded file", e);
-            return ResponseEntity.internalServerError().body(Map.of("message", "Failed to process file"));
+            // Rethrown so the global handler answers 500 and reports it to Sentry.
+            throw new IllegalStateException("Failed to read uploaded file", e);
         }
     }
 
@@ -98,7 +100,7 @@ public class AdminEmailAttachmentController {
                             "Attachment: " + attachment.getName(), "Attachment deleted");
                     return ResponseEntity.ok().<Void>build();
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Attachment", id));
     }
 
     @PatchMapping("/{id}/active")
@@ -117,6 +119,6 @@ public class AdminEmailAttachmentController {
                             "Attachment " + (active ? "activated" : "deactivated"));
                     return ResponseEntity.ok(EmailAttachmentDto.fromEntity(saved));
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Attachment", id));
     }
 }

@@ -2,6 +2,7 @@ package com.pimvanleeuwen.the_harry_list_backend.controller.open;
 
 import com.pimvanleeuwen.the_harry_list_backend.altcha.AltchaService;
 import com.pimvanleeuwen.the_harry_list_backend.dto.PublicReservationRequest;
+import com.pimvanleeuwen.the_harry_list_backend.exception.BusinessRuleException;
 import com.pimvanleeuwen.the_harry_list_backend.dto.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.dto.ReservationSubmissionResponse;
 import com.pimvanleeuwen.the_harry_list_backend.service.CreateReservationService;
@@ -50,8 +51,7 @@ public class PublicReservationController {
     public ResponseEntity<?> submitReservation(@Valid @RequestBody PublicReservationRequest request) {
         if (!altchaService.verify(request.getAltcha())) {
             logger.warn("ALTCHA verification failed for reservation request from: {}", request.getEmail());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("message", "Captcha verification failed. Please try again."));
+            throw new BusinessRuleException("Captcha verification failed. Please try again.");
         }
 
         Reservation reservation = request.toReservation();

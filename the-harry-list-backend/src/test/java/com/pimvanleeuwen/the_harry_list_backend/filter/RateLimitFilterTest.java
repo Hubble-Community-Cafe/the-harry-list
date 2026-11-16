@@ -99,10 +99,10 @@ class RateLimitFilterTest {
         filter.doFilter(request, response, filterChain);
 
         assertEquals(429, response.getStatus());
-        assertEquals("application/json", response.getContentType());
+        assertEquals("application/problem+json", response.getContentType());
         String body = response.getContentAsString();
         assertTrue(body.contains("RATE_LIMIT_EXCEEDED"));
-        assertTrue(body.contains("Too many requests"));
+        assertTrue(body.contains("\"detail\":\"Too many requests"));
     }
 
     @Test

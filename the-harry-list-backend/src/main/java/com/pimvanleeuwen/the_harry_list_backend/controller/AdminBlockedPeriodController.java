@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditAction;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
@@ -44,7 +45,7 @@ public class AdminBlockedPeriodController {
     public ResponseEntity<BlockedPeriod> getById(@PathVariable Long id) {
         return repository.findById(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Blocked period", id));
     }
 
     @PostMapping
@@ -80,7 +81,7 @@ public class AdminBlockedPeriodController {
                             diffs, "Blocked period updated");
                     return ResponseEntity.ok(saved);
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Blocked period", id));
     }
 
     @PatchMapping("/{id}/toggle")
@@ -98,7 +99,7 @@ public class AdminBlockedPeriodController {
                             "Blocked period " + (saved.getEnabled() ? "enabled" : "disabled"));
                     return ResponseEntity.ok(saved);
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Blocked period", id));
     }
 
     @DeleteMapping("/{id}")
@@ -112,6 +113,6 @@ public class AdminBlockedPeriodController {
                             "Blocked period deleted");
                     return ResponseEntity.ok(Map.of("status", "deleted"));
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Blocked period", id));
     }
 }

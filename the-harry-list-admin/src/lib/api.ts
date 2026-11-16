@@ -1,5 +1,6 @@
 import { PublicClientApplication } from '@azure/msal-browser';
 import * as Sentry from '@sentry/react';
+import { apiErrorMessage } from 'the-harry-list-shared';
 import { getE2eAuth } from './e2eAuth';
 // Note: Window.__RUNTIME_CONFIG__ type is declared in authConfig.ts
 
@@ -125,23 +126,10 @@ async function fetchJsonWithAuth(url: string, options: RequestInit = {}): Promis
   const response = await fetchWithAuth(url, options);
 
   if (!response.ok) {
-    let errorMessage: string;
-    try {
-      const errorData = await response.json();
-      // Handle Spring Boot validation errors
-      if (errorData.errors && Array.isArray(errorData.errors)) {
-        errorMessage = errorData.errors.map((e: { defaultMessage?: string; message?: string }) => e.defaultMessage || e.message).join(', ');
-      } else if (errorData.message) {
-        errorMessage = errorData.message;
-      } else if (errorData.error) {
-        errorMessage = errorData.error;
-      } else {
-        errorMessage = JSON.stringify(errorData);
-      }
-    } catch {
-      errorMessage = `Request failed with status ${response.status}`;
-    }
-    throw new Error(errorMessage);
+    // The backend answers errors as problem responses; apiErrorMessage reads their detail.
+    const fallback = `Request failed with status ${response.status}`;
+    const errorData = await response.json().catch(() => null);
+    throw new Error(apiErrorMessage(errorData, fallback));
   }
 
   // Handle empty responses (e.g., DELETE)

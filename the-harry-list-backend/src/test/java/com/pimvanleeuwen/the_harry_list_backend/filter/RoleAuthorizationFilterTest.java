@@ -172,6 +172,7 @@ class RoleAuthorizationFilterTest {
 
         assertEquals(403, response.getStatus());
         assertTrue(response.getContentAsString().contains("NOT_IN_STAFF_GROUP"));
+        assertTrue(response.getContentAsString().contains("\"detail\":\"You are not a member of the staff group"));
         verify(filterChain, never()).doFilter(any(), any());
         // No admin_user row may be created for someone outside the staff group.
         verify(adminUserService, never()).getOrCreateUser(anyString(), anyString(), anyString());

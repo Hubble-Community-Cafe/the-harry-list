@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.BusinessRuleException;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
@@ -70,7 +71,7 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
 
         if (!retired.isEmpty()) {
             log.warn("Reservation rejected due to retired activities: {}", retired);
-            throw new IllegalArgumentException(String.join("; ", retired));
+            throw new BusinessRuleException(String.join("; ", retired));
         }
 
         // Validate against dynamic constraints
@@ -84,7 +85,7 @@ public class CreateReservationService implements Command<com.pimvanleeuwen.the_h
 
         if (!violations.isEmpty()) {
             log.warn("Reservation rejected due to constraint violations: {}", violations);
-            throw new IllegalArgumentException(String.join("; ", violations));
+            throw new BusinessRuleException(String.join("; ", violations));
         }
 
         // Convert DTO to entity

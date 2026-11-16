@@ -131,9 +131,11 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         // _claim_names pointer instead (above 200 groups). Such a user is refused, which fails safe.
         log.warn("Rejected token for oid={}: not a member of the allowed staff group", oid);
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        response.setContentType("application/json");
-        response.getWriter().write("{\"error\":\"NOT_IN_STAFF_GROUP\","
-                + "\"message\":\"You are not a member of the staff group for this application.\"}");
+        // Same problem+json shape as GlobalExceptionHandler, plus a machine-readable code.
+        response.setContentType("application/problem+json");
+        response.getWriter().write("{\"type\":\"about:blank\",\"title\":\"Forbidden\",\"status\":403,"
+                + "\"detail\":\"You are not a member of the staff group for this application.\","
+                + "\"code\":\"NOT_IN_STAFF_GROUP\"}");
     }
 
     /**

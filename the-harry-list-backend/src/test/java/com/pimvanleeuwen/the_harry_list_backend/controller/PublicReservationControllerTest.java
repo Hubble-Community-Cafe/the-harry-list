@@ -110,7 +110,7 @@ class PublicReservationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(sampleRequest)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Captcha verification failed. Please try again."));
+                .andExpect(jsonPath("$.detail").value("Captcha verification failed. Please try again."));
     }
 
     @Test
@@ -144,12 +144,12 @@ class PublicReservationControllerTest {
         sampleRequest.setTermsAccepted(null);
         submit(sampleRequest)
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("termsAccepted: You must accept the terms"));
+                .andExpect(jsonPath("$.detail").value("termsAccepted: You must accept the terms"));
 
         sampleRequest.setTermsAccepted(false);
         submit(sampleRequest)
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("termsAccepted: You must accept the terms"));
+                .andExpect(jsonPath("$.detail").value("termsAccepted: You must accept the terms"));
 
         verify(createReservationService, never()).execute(any());
     }
@@ -159,7 +159,9 @@ class PublicReservationControllerTest {
         sampleRequest.setPaymentOption(PaymentOption.INVOICE);
         submit(sampleRequest)
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("invoiceType: Please select an invoice type"));
+                .andExpect(jsonPath("$.detail").value("invoiceType: Please select an invoice type"))
+                .andExpect(jsonPath("$.errors[0].field").value("invoiceType"))
+                .andExpect(jsonPath("$.errors[0].message").value("Please select an invoice type"));
         verify(createReservationService, never()).execute(any());
     }
 
@@ -169,7 +171,7 @@ class PublicReservationControllerTest {
         sampleRequest.setInvoiceType(InvoiceType.TUE);
         submit(sampleRequest)
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("costCenter: Kostenplaats is required"));
+                .andExpect(jsonPath("$.detail").value("costCenter: Kostenplaats is required"));
     }
 
     @Test
@@ -179,7 +181,7 @@ class PublicReservationControllerTest {
         sampleRequest.setInvoiceName("Acme B.V.");
         submit(sampleRequest)
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("invoiceAddress: Address is required"));
+                .andExpect(jsonPath("$.detail").value("invoiceAddress: Address is required"));
     }
 
     @Test

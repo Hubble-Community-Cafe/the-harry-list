@@ -1,5 +1,7 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
+import com.pimvanleeuwen.the_harry_list_backend.exception.BusinessRuleException;
+import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.dto.CateringEmailRequest;
 import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
 import com.pimvanleeuwen.the_harry_list_backend.dto.Reservation;
@@ -22,6 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -94,8 +98,7 @@ public class AdminReservationController {
                     // Block confirm when location is NO_PREFERENCE
                     if (status == ReservationStatus.CONFIRMED
                             && (reservation.getLocation() == null || reservation.getLocation() == BarLocation.NO_PREFERENCE)) {
-                        return ResponseEntity.badRequest()
-                                .body(Map.of("message", "Location must be set before confirming"));
+                        throw new BusinessRuleException("Location must be set before confirming");
                     }
 
                     ReservationStatus oldStatus = reservation.getStatus();
@@ -137,7 +140,7 @@ public class AdminReservationController {
 
                     return ResponseEntity.ok(reservationMapper.toDto(saved));
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Reservation", id));
     }
 
     @PatchMapping("/{id}/catering-arranged")
@@ -164,7 +167,7 @@ public class AdminReservationController {
 
                     return ResponseEntity.ok(reservationMapper.toDto(saved));
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Reservation", id));
     }
 
     @PatchMapping("/{id}/notes")
@@ -189,13 +192,13 @@ public class AdminReservationController {
 
                     return ResponseEntity.ok(reservationMapper.toDto(saved));
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Reservation", id));
     }
 
     @PostMapping("/{id}/email")
     @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Send custom email", description = "Send a custom email to the reservation contact")
-    public ResponseEntity<Map<String, String>> sendCustomEmail(
+    public ResponseEntity<?> sendCustomEmail(
             @PathVariable Long id,
             @RequestBody Map<String, String> emailRequest,
             Principal principal) {
@@ -217,14 +220,13 @@ public class AdminReservationController {
                             return ResponseEntity.ok(Map.of("status", "sent", "message", "Email sent successfully"));
                         } catch (Exception e) {
                             log.error("Failed to send custom email", e);
-                            return ResponseEntity.internalServerError()
-                                    .body(Map.of("status", "error", "message", "Failed to send email: " + e.getMessage()));
+                            return emailFailed();
                         }
                     } else {
                         return ResponseEntity.ok(Map.of("status", "disabled", "message", "Email service is disabled"));
                     }
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Reservation", id));
     }
 
     @GetMapping("/{id}/catering-email/preview")
@@ -237,13 +239,13 @@ public class AdminReservationController {
                     String body = emailTemplateService.getRenderedBody(EmailTemplateType.CATERING_OPTIONS, vars);
                     return ResponseEntity.ok(Map.of("subject", subject, "body", body, "defaultReplyTo", staffEmail));
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Reservation", id));
     }
 
     @PostMapping("/{id}/catering-email")
     @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Send catering options email", description = "Send catering email with PDF attachments to reservation contact")
-    public ResponseEntity<Map<String, String>> sendCateringEmail(
+    public ResponseEntity<?> sendCateringEmail(
             @PathVariable Long id,
             @RequestBody CateringEmailRequest request,
             Principal principal) {
@@ -287,11 +289,19 @@ public class AdminReservationController {
                         return ResponseEntity.ok(Map.of("status", "sent", "message", "Catering email sent successfully"));
                     } catch (Exception e) {
                         log.error("Failed to send catering email", e);
-                        return ResponseEntity.internalServerError()
-                                .body(Map.of("status", "error", "message", "Failed to send email: " + e.getMessage()));
+                        return emailFailed();
                     }
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> NotFoundException.of("Reservation", id));
+    }
+
+    /**
+     * 500 problem response for a failed send. The cause stays in the logs: mail provider error
+     * text can contain internal details, so staff get a generic message.
+     */
+    private static ResponseEntity<ProblemDetail> emailFailed() {
+        return ResponseEntity.internalServerError().body(GlobalExceptionHandler.problem(
+                HttpStatus.INTERNAL_SERVER_ERROR, "The email could not be sent. Please try again later."));
     }
 
     private Map<String, String> buildCateringVars(com.pimvanleeuwen.the_harry_list_backend.model.Reservation reservation) {

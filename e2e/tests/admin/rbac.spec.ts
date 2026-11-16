@@ -47,6 +47,9 @@ test.describe('admin: RBAC is enforced by the backend', () => {
 
     expect(viewerRead.status()).toBe(200); // reads are allowed
     expect(viewerWrite.status()).toBe(403); // viewers cannot mutate
+    // Every API error is a problem response with a readable detail.
+    expect(viewerWrite.headers()['content-type']).toContain('application/problem+json');
+    expect((await viewerWrite.json()).detail).toBe('You do not have permission to perform this action');
     expect(editorWrite.status(), `editor create response: ${editorWriteBody}`).toBe(201); // editors can
   });
 

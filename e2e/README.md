@@ -161,6 +161,7 @@ faster layers.
 | Status-change email + custom message | — | `AdminReservationControllerTest` | `admin/status-email` |
 | Editable email templates | — | `EmailTemplateServiceTest` | `admin/email-template` |
 | RBAC (viewer/editor/admin), incl. staff reservation endpoints and the backend staff-group check | `usePermissions` | filter tests, `ReservationControllerTest`, `EndpointAuthorizationGuardTest` | `admin/rbac` |
+| API error responses: one problem+json shape (`detail`, validation `errors`) | shared `apiErrorMessage`, public `lib/api` | `AdminReservationControllerTest`, `PublicReservationControllerTest`, `AdminEmailAttachmentControllerTest`, filter tests | `admin/rbac` |
 | Audit log | `AuditDiff`/`AuditService` | controller tests | `admin/audit-log` |
 | Catering-only export (#280) | — | `PdfExportServiceTest` | `admin/catering-export` |
 | Appointments on the PDF export (#303) | — | `PdfExportServiceTest`, `AppointmentRecurrenceServiceTest` | `admin/appointments-export` |
