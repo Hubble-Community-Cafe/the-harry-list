@@ -87,11 +87,6 @@ export const loginRequest = {
   ],
 };
 
-// Request for checking group membership
-export const groupMembershipRequest = {
-  scopes: ['GroupMember.Read.All'],
-};
-
 export const graphConfig = {
   graphMeEndpoint: 'https://graph.microsoft.com/v1.0/me',
   graphMemberOfEndpoint: 'https://graph.microsoft.com/v1.0/me/memberOf',

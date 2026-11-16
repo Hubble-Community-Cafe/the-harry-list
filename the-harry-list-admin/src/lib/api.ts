@@ -411,12 +411,3 @@ export async function fetchAuditLog(filters: AuditLogFilters = {}): Promise<Audi
   return fetchJsonWithAuth(`${API_BASE_URL}/api/admin/audit${qs ? `?${qs}` : ''}`) as Promise<AuditLogPageResponse>;
 }
 
-// Test if authentication is working
-export async function testAuth(): Promise<boolean> {
-  try {
-    await fetchJsonWithAuth(`${API_BASE_URL}/api/reservations`);
-    return true;
-  } catch {
-    return false;
-  }
-}
