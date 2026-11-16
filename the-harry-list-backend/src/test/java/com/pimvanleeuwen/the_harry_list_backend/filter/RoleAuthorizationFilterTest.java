@@ -232,4 +232,24 @@ class RoleAuthorizationFilterTest {
     private boolean hasAuthority(java.util.Collection<? extends GrantedAuthority> authorities, String authority) {
         return authorities.stream().anyMatch(a -> a.getAuthority().equals(authority));
     }
+
+    @Test
+    void constructor_shouldRefuseToStartWithoutGroupWhenRequired() {
+        // Production sets azure.require-allowed-group=true: a missing staff group would let every
+        // tenant user read all reservations, so startup must fail instead of only warning.
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> new RoleAuthorizationFilter(adminUserService, "  ", true));
+        assertTrue(ex.getMessage().contains("ALLOWED_GROUP_ID"));
+    }
+
+    @Test
+    void constructor_shouldStartWhenGroupIsRequiredAndSet() {
+        assertDoesNotThrow(() -> new RoleAuthorizationFilter(adminUserService, STAFF_GROUP, true));
+    }
+
+    @Test
+    void constructor_shouldOnlyWarnWithoutGroupWhenNotRequired() {
+        // Dev and tests keep working without a group; only production enforces it.
+        assertDoesNotThrow(() -> new RoleAuthorizationFilter(adminUserService, "", false));
+    }
 }

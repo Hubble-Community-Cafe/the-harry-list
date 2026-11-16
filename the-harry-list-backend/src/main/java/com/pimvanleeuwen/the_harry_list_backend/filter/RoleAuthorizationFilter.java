@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -44,11 +45,26 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
     private final AdminUserService adminUserService;
     private final String allowedGroupId;
 
+    public RoleAuthorizationFilter(AdminUserService adminUserService, String allowedGroupId) {
+        this(adminUserService, allowedGroupId, false);
+    }
+
+    /**
+     * @param requireAllowedGroup when true (production), refuse to start without a staff group,
+     *                            because otherwise every user of the tenant gets VIEWER access to
+     *                            all reservation data.
+     */
+    @Autowired
     public RoleAuthorizationFilter(AdminUserService adminUserService,
-                                   @Value("${azure.allowed-group-id:}") String allowedGroupId) {
+                                   @Value("${azure.allowed-group-id:}") String allowedGroupId,
+                                   @Value("${azure.require-allowed-group:false}") boolean requireAllowedGroup) {
         this.adminUserService = adminUserService;
         this.allowedGroupId = allowedGroupId == null ? "" : allowedGroupId.trim();
         if (this.allowedGroupId.isEmpty()) {
+            if (requireAllowedGroup) {
+                throw new IllegalStateException("ALLOWED_GROUP_ID must be set: without it every user of the "
+                        + "tenant can read all reservations. Set it to the Entra staff group id.");
+            }
             log.warn("ALLOWED_GROUP_ID is not set: the backend accepts every user of the tenant. "
                     + "Staff group membership is then only checked by the admin UI.");
         }

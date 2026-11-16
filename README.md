@@ -91,7 +91,7 @@ See [`e2e/README.md`](e2e/README.md) for the architecture, how to read the evide
    | `AZURE_TENANT_ID` | Azure AD tenant ID |
    | `AZURE_CLIENT_ID` | Azure AD client ID |
    | `AZURE_CLIENT_SECRET` | Azure AD client secret (for Graph API email) |
-   | `ALLOWED_GROUP_ID` | Azure AD group ID for admin access. On the admin container it gates the UI; on the backend it also rejects API tokens without that group (403). Set it on the backend only after the groups claim is enabled, see [Azure AD App Registration](#azure-ad-app-registration). |
+   | `ALLOWED_GROUP_ID` | Azure AD group ID for admin access. On the admin container it gates the UI; on the backend it also rejects API tokens without that group (403). **Required on the backend in production**: under the `prod` profile it refuses to start without it, because otherwise every tenant user can read all reservations. Enable the groups claim first, see [Azure AD App Registration](#azure-ad-app-registration). |
    | `CALENDAR_FEED_TOKEN` | Token for public calendar feed. Required: without it the public feed is disabled (503) |
    | `CALENDAR_FEED_STAFF_TOKEN` | Token for staff calendar feed (with contact details). Required: without it the staff feed is disabled (503) |
    | `RECAPTCHA_ENABLED` | Set to `true` to enable reCAPTCHA (recommended for production) |
