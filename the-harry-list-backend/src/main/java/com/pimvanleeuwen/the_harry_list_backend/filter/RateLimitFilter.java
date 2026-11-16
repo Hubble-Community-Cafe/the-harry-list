@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -85,13 +87,36 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
     }
 
-    private String getClientIp(HttpServletRequest request) {
-        // Prefer X-Real-IP (set by reverse proxy, not spoofable by clients)
+    /**
+     * The client IP to count against. X-Real-IP is only trusted when the direct peer is our own
+     * reverse proxy (loopback or a private network address such as the Docker network); a client
+     * connecting directly could otherwise send a fresh X-Real-IP with every request and never hit
+     * the limit.
+     */
+    String getClientIp(HttpServletRequest request) {
+        String remoteAddr = request.getRemoteAddr();
         String realIp = request.getHeader("X-Real-IP");
-        if (realIp != null && !realIp.isBlank()) {
+        if (realIp != null && !realIp.isBlank() && isTrustedProxy(remoteAddr)) {
             return realIp.trim();
         }
-        // Fall back to remoteAddr (direct connection IP)
-        return request.getRemoteAddr();
+        return remoteAddr;
+    }
+
+    static boolean isTrustedProxy(String remoteAddr) {
+        if (remoteAddr == null || remoteAddr.isBlank()) {
+            return false;
+        }
+        InetAddress address;
+        try {
+            // ofLiteral never does a DNS lookup; anything that is not an IP literal is untrusted.
+            address = InetAddress.ofLiteral(remoteAddr.trim());
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+        if (address.isLoopbackAddress() || address.isSiteLocalAddress()) {
+            return true;
+        }
+        // IPv6 unique local addresses (fc00::/7), the IPv6 counterpart of private networks.
+        return address instanceof Inet6Address && (address.getAddress()[0] & 0xFE) == 0xFC;
     }
 }

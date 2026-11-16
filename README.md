@@ -135,6 +135,7 @@ The public reservation endpoint is rate-limited to 10 requests/minute per IP. If
 ```nginx
 proxy_set_header X-Real-IP $remote_addr;
 ```
+The backend only trusts `X-Real-IP` when the connection comes from loopback or a private network (such as the Docker network the proxy runs on); from any other address it uses the connection's own IP, so clients cannot dodge the limit by sending the header themselves. Keep the backend port bound to `127.0.0.1` (as in the Portainer template) so it is only reachable through the proxy.
 
 ### Logging
 Sensitive data (passwords, tokens) is never logged. Set these in production:

@@ -122,6 +122,44 @@ class RateLimitFilterTest {
     }
 
     @Test
+    void shouldIgnoreSpoofedXRealIpFromDirectClient() throws Exception {
+        // A client reaching the backend directly (not via the proxy on the Docker network) must
+        // not dodge the limit by sending a fresh X-Real-IP with every request.
+        for (int i = 0; i < 10; i++) {
+            MockHttpServletRequest spoofed = new MockHttpServletRequest();
+            spoofed.setMethod("POST");
+            spoofed.setRequestURI("/api/public/reservations");
+            spoofed.setRemoteAddr("198.51.100.7");
+            spoofed.addHeader("X-Real-IP", "203.0.113." + i);
+            filter.doFilter(spoofed, new MockHttpServletResponse(), filterChain);
+        }
+
+        request.setMethod("POST");
+        request.setRequestURI("/api/public/reservations");
+        request.setRemoteAddr("198.51.100.7");
+        request.addHeader("X-Real-IP", "203.0.113.99");
+        filter.doFilter(request, response, filterChain);
+        assertEquals(429, response.getStatus());
+    }
+
+    @Test
+    void shouldTrustXRealIpOnlyFromLoopbackOrPrivatePeers() {
+        assertTrue(RateLimitFilter.isTrustedProxy("127.0.0.1"));
+        assertTrue(RateLimitFilter.isTrustedProxy("::1"));
+        assertTrue(RateLimitFilter.isTrustedProxy("10.0.0.1"));
+        assertTrue(RateLimitFilter.isTrustedProxy("172.18.0.5"));   // Docker network
+        assertTrue(RateLimitFilter.isTrustedProxy("192.168.1.10"));
+        assertTrue(RateLimitFilter.isTrustedProxy("fd12:3456::1")); // IPv6 unique local
+
+        assertFalse(RateLimitFilter.isTrustedProxy("198.51.100.7"));
+        assertFalse(RateLimitFilter.isTrustedProxy("2001:db8::1"));
+        assertFalse(RateLimitFilter.isTrustedProxy("172.32.0.1"));   // just outside 172.16/12
+        assertFalse(RateLimitFilter.isTrustedProxy("proxy.example.com")); // never resolved
+        assertFalse(RateLimitFilter.isTrustedProxy(""));
+        assertFalse(RateLimitFilter.isTrustedProxy(null));
+    }
+
+    @Test
     void shouldIgnoreXForwardedForHeader() throws Exception {
         request.setMethod("POST");
         request.setRequestURI("/api/public/reservations");

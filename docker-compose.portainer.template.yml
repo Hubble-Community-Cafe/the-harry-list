@@ -12,7 +12,9 @@ services:
         condition: on-failure
         delay: 5s
     ports:
-      - "9802:8080"
+      # Localhost only: the reverse proxy reaches the backend over the Docker network, and the
+      # rate limiter only trusts X-Real-IP from private peers, so the API must not be exposed directly.
+      - "127.0.0.1:9802:8080"
     networks:
       - harry-list
       - mariadb_mariadb-network
@@ -72,7 +74,7 @@ services:
 
       # Logging
       - LOGGING_LEVEL_ROOT=INFO
-      - LOGGING_LEVEL_COM_PIMVANLEEUWEN=DEBUG
+      - LOGGING_LEVEL_COM_PIMVANLEEUWEN=INFO
 
   # Public Reservation Form Frontend
   the-harry-list-public:
