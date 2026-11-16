@@ -17,6 +17,8 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionSynchronizationUtils;
 
 import java.util.List;
 
@@ -40,6 +42,27 @@ class AuditServiceTest {
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    @Test
+    void record_shouldWaitForTheCallersCommitAndKeepTheActor() {
+        setJwtAuthentication("oid-123", "staff@example.com", "Staff Member");
+        TransactionSynchronizationManager.initSynchronization();
+
+        auditService.recordDelete(AuditEntityType.RESERVATION, 7L, "ABC123", "deleted");
+        // A change that rolls back must not leave an audit entry behind.
+        verify(auditLogRepository, never()).save(any());
+
+        // The actor is captured when the change is made, not when the entry is written.
+        SecurityContextHolder.clearContext();
+        TransactionSynchronizationUtils.triggerAfterCommit();
+
+        ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
+        verify(auditLogRepository).save(captor.capture());
+        assertEquals("oid-123", captor.getValue().getActorOid());
     }
 
     @Test

@@ -102,7 +102,7 @@ class AdminReservationControllerTest {
     void updateStatus_shouldConfirmReservation() throws Exception {
         // Given
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         // When/Then
@@ -113,7 +113,7 @@ class AdminReservationControllerTest {
                 .param("sendEmail", "true"))
             .andExpect(status().isOk());
 
-        verify(reservationRepository).save(argThat(res ->
+        verify(reservationRepository).saveAndFlush(argThat(res ->
             res.getStatus() == ReservationStatus.CONFIRMED &&
             "Admin User".equals(res.getConfirmedBy())
         ));
@@ -123,7 +123,7 @@ class AdminReservationControllerTest {
     @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldRecordAuditEntry() throws Exception {
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         mockMvc.perform(patch("/api/admin/reservations/1/status")
@@ -142,7 +142,7 @@ class AdminReservationControllerTest {
     @WithMockUser(roles = "EDITOR")
     void updateInternalNotes_shouldRecordAuditEntry() throws Exception {
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         mockMvc.perform(patch("/api/admin/reservations/1/notes")
@@ -163,7 +163,7 @@ class AdminReservationControllerTest {
     void updateStatus_shouldRejectReservation() throws Exception {
         // Given
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         // When/Then
@@ -172,7 +172,7 @@ class AdminReservationControllerTest {
                 .param("status", "REJECTED"))
             .andExpect(status().isOk());
 
-        verify(reservationRepository).save(argThat(res ->
+        verify(reservationRepository).saveAndFlush(argThat(res ->
             res.getStatus() == ReservationStatus.REJECTED
         ));
     }
@@ -183,7 +183,7 @@ class AdminReservationControllerTest {
         // Given a previously rejected reservation
         sampleReservation.setStatus(ReservationStatus.REJECTED);
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         // When it is moved back to pending (e.g. to change date/location without re-submission)
@@ -194,7 +194,7 @@ class AdminReservationControllerTest {
             .andExpect(status().isOk());
 
         // Then the reservation is persisted as PENDING again...
-        verify(reservationRepository).save(argThat(res ->
+        verify(reservationRepository).saveAndFlush(argThat(res ->
             res.getStatus() == ReservationStatus.PENDING
         ));
         // ...and no customer email is sent for this internal correction.
@@ -207,7 +207,7 @@ class AdminReservationControllerTest {
         // Given a confirmed reservation (only those can be cancelled)
         sampleReservation.setStatus(ReservationStatus.CONFIRMED);
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         // When/Then
@@ -216,7 +216,7 @@ class AdminReservationControllerTest {
                 .param("status", "CANCELLED"))
             .andExpect(status().isOk());
 
-        verify(reservationRepository).save(argThat(res ->
+        verify(reservationRepository).saveAndFlush(argThat(res ->
             res.getStatus() == ReservationStatus.CANCELLED
         ));
     }
@@ -226,7 +226,7 @@ class AdminReservationControllerTest {
     void updateStatus_shouldReopenCancelledReservationToPending() throws Exception {
         sampleReservation.setStatus(ReservationStatus.CANCELLED);
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         mockMvc.perform(patch("/api/admin/reservations/1/status")
@@ -235,7 +235,7 @@ class AdminReservationControllerTest {
                 .param("sendEmail", "false"))
             .andExpect(status().isOk());
 
-        verify(reservationRepository).save(argThat(res -> res.getStatus() == ReservationStatus.PENDING));
+        verify(reservationRepository).saveAndFlush(argThat(res -> res.getStatus() == ReservationStatus.PENDING));
     }
 
     @Test
@@ -251,7 +251,7 @@ class AdminReservationControllerTest {
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
             .andExpect(jsonPath("$.detail").value("A pending reservation cannot be moved to cancelled"));
 
-        verify(reservationRepository, never()).save(any());
+        verify(reservationRepository, never()).saveAndFlush(any());
         verifyNoInteractions(auditService, emailNotificationService);
         assertTrue(analyticsAppender.list.isEmpty());
     }
@@ -268,14 +268,14 @@ class AdminReservationControllerTest {
                 .param("status", "COMPLETED"))
             .andExpect(status().isBadRequest());
 
-        verify(reservationRepository, never()).save(any());
+        verify(reservationRepository, never()).saveAndFlush(any());
     }
 
     @Test
     @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldEmitPrivacySafeAnalyticsLineOnConfirm() throws Exception {
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         mockMvc.perform(patch("/api/admin/reservations/1/status")
@@ -294,7 +294,7 @@ class AdminReservationControllerTest {
         // A rejected reservation moved back to PENDING is internal churn — no analytics line.
         sampleReservation.setStatus(ReservationStatus.REJECTED);
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         mockMvc.perform(patch("/api/admin/reservations/1/status")
@@ -335,7 +335,7 @@ class AdminReservationControllerTest {
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
             .andExpect(jsonPath("$.detail").value("Location must be set before confirming"));
 
-        verify(reservationRepository, never()).save(any());
+        verify(reservationRepository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -360,7 +360,7 @@ class AdminReservationControllerTest {
     void updateStatus_shouldSendEmailWhenEnabled() throws Exception {
         // Given
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         // When
@@ -379,7 +379,7 @@ class AdminReservationControllerTest {
     void updateStatus_shouldNotSendEmailWhenDisabled() throws Exception {
         // Given
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         // When
@@ -398,7 +398,7 @@ class AdminReservationControllerTest {
     void updateStatus_shouldForwardCustomMessageToEmail() throws Exception {
         // Given
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         // When
@@ -417,7 +417,7 @@ class AdminReservationControllerTest {
     @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldNoteCustomMessageInAuditWhenProvided() throws Exception {
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         mockMvc.perform(patch("/api/admin/reservations/1/status")
@@ -438,7 +438,7 @@ class AdminReservationControllerTest {
     void updateInternalNotes_shouldUpdateNotes() throws Exception {
         // Given
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
 
         // When/Then
@@ -448,7 +448,7 @@ class AdminReservationControllerTest {
                 .content("\"These are internal notes\""))
             .andExpect(status().isOk());
 
-        verify(reservationRepository).save(any());
+        verify(reservationRepository).saveAndFlush(any());
     }
 
     @Test
@@ -461,14 +461,14 @@ class AdminReservationControllerTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.detail").value("Internal notes must not exceed 5000 characters"));
 
-        verify(reservationRepository, never()).save(any());
+        verify(reservationRepository, never()).saveAndFlush(any());
     }
 
     @Test
     @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldNotLetConfirmedByForgeALogLine() throws Exception {
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
-        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
         sampleReservation.setEventTitle("Party\nAUDIT reservation.deleted id=7");
 

@@ -12,7 +12,7 @@ import java.util.HashSet;
 public class ReservationMapper {
 
     /**
-     * Convert DTO to Entity for creating/updating.
+     * Convert DTO to a new Entity, for creating a reservation.
      */
     public Reservation toEntity(com.pimvanleeuwen.the_harry_list_backend.dto.Reservation dto) {
         if (dto == null) {
@@ -20,12 +20,27 @@ public class ReservationMapper {
         }
 
         Reservation entity = new Reservation();
-
-        // ID (only for updates)
         if (dto.getId() != null) {
             entity.setId(dto.getId());
         }
+        applyEditableFields(dto, entity);
 
+        // Set once on creation; an edit keeps the stored values.
+        if (dto.getCateringArranged() != null) {
+            entity.setCateringArranged(dto.getCateringArranged());
+        }
+        entity.setTermsAccepted(dto.getTermsAccepted());
+
+        return entity;
+    }
+
+    /**
+     * Copy the fields staff can change in the edit form onto an entity, so an edit updates the
+     * stored record in place. Everything else (id, status, confirmation number, confirmedBy,
+     * created/updated timestamps, terms accepted, catering arranged) is left as stored, including
+     * any field added to the entity later.
+     */
+    public void applyEditableFields(com.pimvanleeuwen.the_harry_list_backend.dto.Reservation dto, Reservation entity) {
         // Contact Information
         entity.setContactName(dto.getContactName());
         entity.setEmail(dto.getEmail());
@@ -58,21 +73,13 @@ public class ReservationMapper {
 
         // Catering
         entity.setCateringDietaryNotes(dto.getCateringDietaryNotes());
-        if (dto.getCateringArranged() != null) {
-            entity.setCateringArranged(dto.getCateringArranged());
-        }
 
         // Additional
         entity.setComments(dto.getComments());
-        entity.setTermsAccepted(dto.getTermsAccepted());
+        // Internal notes are optional in the payload; leaving them out keeps the stored notes.
         if (dto.getInternalNotes() != null) {
             entity.setInternalNotes(dto.getInternalNotes());
         }
-        if (dto.getInternalNotes() != null) {
-            entity.setInternalNotes(dto.getInternalNotes());
-        }
-
-        return entity;
     }
 
     /**

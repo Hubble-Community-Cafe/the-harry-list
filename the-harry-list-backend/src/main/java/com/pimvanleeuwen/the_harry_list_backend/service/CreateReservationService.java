@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -46,6 +47,7 @@ public class CreateReservationService {
      * @return the saved reservation
      * @throws BusinessRuleException when the request breaks a form rule or uses a retired activity
      */
+    @Transactional
     public com.pimvanleeuwen.the_harry_list_backend.dto.Reservation create(com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input) {
         // Note: never log name/email/phone here. These logs are centralized (Loki), so guest
         // PII must not be written. Event/date/location/guests are operational context only.
@@ -96,19 +98,14 @@ public class CreateReservationService {
 
         // Privacy-safe analytics line scraped into Loki (job=app-analytics). PII-free by
         // contract: only coarse buckets (bar, weekday, time slot, guest band, lead time).
-        analyticsLog.info(ReservationAnalytics.reservationCreatedLine(savedEntity));
+        AfterCommit.run(() -> analyticsLog.info(ReservationAnalytics.reservationCreatedLine(savedEntity)));
 
         auditService.recordCreate(AuditEntityType.RESERVATION, savedEntity.getId(),
                 savedEntity.getConfirmationNumber() + " - " + savedEntity.getEventTitle(),
                 List.of(), "Reservation created");
 
-        // Send email notification if enabled
         if (emailService != null) {
-            try {
-                emailService.sendReservationSubmittedEmail(savedEntity);
-            } catch (Exception e) {
-                log.error("Failed to send confirmation email, but reservation was created successfully", e);
-            }
+            AfterCommit.run(() -> emailService.sendReservationSubmittedEmail(savedEntity));
         }
 
         // Convert back to DTO and return

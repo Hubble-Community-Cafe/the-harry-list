@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -44,6 +45,7 @@ public class UpdateReservationService {
      * @return the saved reservation
      * @throws NotFoundException when no reservation has the input's id
      */
+    @Transactional
     public com.pimvanleeuwen.the_harry_list_backend.dto.Reservation update(com.pimvanleeuwen.the_harry_list_backend.dto.Reservation input, boolean sendEmail, String customMessage) {
         if (input.getId() == null) {
             throw new BusinessRuleException("Reservation id is required");
@@ -54,29 +56,13 @@ public class UpdateReservationService {
         Reservation existing = reservationRepository.findById(input.getId())
                 .orElseThrow(() -> NotFoundException.of("Reservation", input.getId()));
 
-        // Convert DTO to entity, preserving the existing entity's metadata
-        Reservation entity = reservationMapper.toEntity(input);
-        entity.setId(input.getId());
-
-        // Preserve fields that should not be changed via update
-        entity.setStatus(existing.getStatus());
-        entity.setCreatedAt(existing.getCreatedAt());
-        entity.setConfirmationNumber(existing.getConfirmationNumber());
-        entity.setConfirmedBy(existing.getConfirmedBy());
-        // These are not part of the edit form and must not be wiped on update:
-        // - termsAccepted is set by the customer at submission time
-        // - cateringArranged is managed via its own dedicated endpoint
-        entity.setTermsAccepted(existing.getTermsAccepted());
-        entity.setCateringArranged(existing.isCateringArranged());
-        // Internal notes can be updated by staff; fall back to existing if not provided
-        entity.setInternalNotes(input.getInternalNotes() != null ? input.getInternalNotes() : existing.getInternalNotes());
-
-        // Compute the field-level diff BEFORE saving: persisting merges the new state
-        // onto the managed `existing` instance, after which they would compare equal.
-        List<FieldChange> diffs = AuditDiff.compare(existing, entity);
-
-        // Save updated entity
-        Reservation savedEntity = reservationRepository.save(entity);
+        // Edit the stored record in place: the mapper copies only the editable fields, so
+        // status, confirmation number, terms and any field added later are never wiped.
+        // The audit diff compares a snapshot taken before the edit with the result.
+        com.pimvanleeuwen.the_harry_list_backend.dto.Reservation before = reservationMapper.toDto(existing);
+        reservationMapper.applyEditableFields(input, existing);
+        Reservation savedEntity = reservationRepository.saveAndFlush(existing);
+        List<FieldChange> diffs = AuditDiff.compare(before, reservationMapper.toDto(savedEntity));
 
         log.info("LOGGING reservation.updated id={} confirmation='{}' event='{}' date={} location={} guests={}",
                 savedEntity.getId(), savedEntity.getConfirmationNumber(),
@@ -86,13 +72,8 @@ public class UpdateReservationService {
         auditService.recordUpdate(AuditEntityType.RESERVATION, savedEntity.getId(),
                 label(savedEntity), diffs, "Reservation updated");
 
-        // Send email notification if enabled
         if (sendEmail && emailService != null) {
-            try {
-                emailService.sendReservationUpdatedEmail(savedEntity, customMessage);
-            } catch (Exception e) {
-                log.error("Failed to send update email, but reservation was updated successfully", e);
-            }
+            AfterCommit.run(() -> emailService.sendReservationUpdatedEmail(savedEntity, customMessage));
         }
 
         return reservationMapper.toDto(savedEntity);
