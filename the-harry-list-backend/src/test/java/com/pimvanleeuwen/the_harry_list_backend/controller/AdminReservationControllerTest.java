@@ -13,6 +13,7 @@ import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository
 import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
+import com.pimvanleeuwen.the_harry_list_backend.service.ReservationLifecycleService;
 import com.pimvanleeuwen.the_harry_list_backend.service.ReservationMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -38,9 +40,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Unit tests for AdminReservationController.
+ * Tests for AdminReservationController. The lifecycle endpoints run through the real
+ * {@link ReservationLifecycleService}, so these tests cover the HTTP contract end to end.
  */
 @WebMvcTest(AdminReservationController.class)
+@Import(ReservationLifecycleService.class)
 class AdminReservationControllerTest {
 
     @Autowired

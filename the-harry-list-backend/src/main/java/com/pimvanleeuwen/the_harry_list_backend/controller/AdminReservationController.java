@@ -1,13 +1,10 @@
 package com.pimvanleeuwen.the_harry_list_backend.controller;
 
-import com.pimvanleeuwen.the_harry_list_backend.exception.BusinessRuleException;
 import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.dto.CateringEmailRequest;
-import com.pimvanleeuwen.the_harry_list_backend.dto.FieldChange;
 import com.pimvanleeuwen.the_harry_list_backend.dto.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditAction;
 import com.pimvanleeuwen.the_harry_list_backend.model.AuditEntityType;
-import com.pimvanleeuwen.the_harry_list_backend.model.BarLocation;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailAttachment;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
@@ -16,8 +13,7 @@ import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository
 import com.pimvanleeuwen.the_harry_list_backend.service.AuditService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailNotificationService;
 import com.pimvanleeuwen.the_harry_list_backend.service.EmailTemplateService;
-import com.pimvanleeuwen.the_harry_list_backend.service.ReservationAnalytics;
-import com.pimvanleeuwen.the_harry_list_backend.service.ReservationMapper;
+import com.pimvanleeuwen.the_harry_list_backend.service.ReservationLifecycleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -46,13 +42,11 @@ import java.util.Map;
 public class AdminReservationController {
 
     private static final Logger log = LoggerFactory.getLogger(AdminReservationController.class);
-    /** Dedicated, PII-free analytics logger scraped into Loki (job=app-analytics). */
-    private static final Logger analyticsLog = LoggerFactory.getLogger("analytics");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final ReservationRepository reservationRepository;
-    private final ReservationMapper reservationMapper;
+    private final ReservationLifecycleService lifecycleService;
     private final EmailTemplateService emailTemplateService;
     private final EmailAttachmentRepository emailAttachmentRepository;
     private final AuditService auditService;
@@ -63,14 +57,14 @@ public class AdminReservationController {
     private EmailNotificationService emailService;
 
     public AdminReservationController(ReservationRepository reservationRepository,
-                                      ReservationMapper reservationMapper,
+                                      ReservationLifecycleService lifecycleService,
                                       EmailTemplateService emailTemplateService,
                                       EmailAttachmentRepository emailAttachmentRepository,
                                       AuditService auditService,
                                       @Value("${app.bar.name:Hubble and Meteor Community Cafes}") String barName,
                                       @Value("${app.mail.staff}") String staffEmail) {
         this.reservationRepository = reservationRepository;
-        this.reservationMapper = reservationMapper;
+        this.lifecycleService = lifecycleService;
         this.emailTemplateService = emailTemplateService;
         this.emailAttachmentRepository = emailAttachmentRepository;
         this.auditService = auditService;
@@ -85,114 +79,38 @@ public class AdminReservationController {
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Update reservation status", description = "Update the status of a reservation (confirm, reject, cancel)")
-    public ResponseEntity<?> updateStatus(
+    public Reservation updateStatus(
             @PathVariable Long id,
             @RequestParam ReservationStatus status,
             @RequestParam(required = false) String confirmedBy,
             @RequestParam(required = false, defaultValue = "true") boolean sendEmail,
             @RequestParam(required = false) String customMessage,
             Principal principal) {
-
-        return reservationRepository.findById(id)
-                .map(reservation -> {
-                    // Block confirm when location is NO_PREFERENCE
-                    if (status == ReservationStatus.CONFIRMED
-                            && (reservation.getLocation() == null || reservation.getLocation() == BarLocation.NO_PREFERENCE)) {
-                        throw new BusinessRuleException("Location must be set before confirming");
-                    }
-
-                    ReservationStatus oldStatus = reservation.getStatus();
-                    reservation.setStatus(status);
-                    if (confirmedBy != null && status == ReservationStatus.CONFIRMED) {
-                        reservation.setConfirmedBy(confirmedBy);
-                    }
-                    com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
-
-                    // Privacy-safe analytics: a coarse note that a status transition happened, for
-                    // the terminal/meaningful states only (PENDING re-opens are internal churn).
-                    if (status != ReservationStatus.PENDING) {
-                        analyticsLog.info(ReservationAnalytics.reservationStatusChangedLine(status, saved.getLocation()));
-                    }
-
-                    log.info("AUDIT reservation.status_changed id={} confirmation='{}' event='{}' date={} status={}->{} user='{}'{}",
-                            id, saved.getConfirmationNumber(), saved.getEventTitle(), saved.getEventDate(),
-                            oldStatus, status, principal != null ? principal.getName() : "unknown",
-                            confirmedBy != null ? " confirmedBy='" + confirmedBy + "'" : "");
-
-                    // The message content itself is not stored in the audit log (may be long); we only
-                    // record that a custom message accompanied the status change.
-                    boolean hasCustomMessage = customMessage != null && !customMessage.isBlank();
-                    auditService.recordAction(AuditEntityType.RESERVATION, id, label(saved),
-                            AuditAction.STATUS_CHANGE,
-                            List.of(new FieldChange("status", String.valueOf(oldStatus), String.valueOf(status))),
-                            "Status changed"
-                                    + (confirmedBy != null ? " (confirmed by " + confirmedBy + ")" : "")
-                                    + (hasCustomMessage ? " (with message)" : ""));
-
-                    // Send email notification if enabled
-                    if (sendEmail && emailService != null) {
-                        try {
-                            emailService.sendStatusChangeEmail(saved, customMessage);
-                        } catch (Exception e) {
-                            log.error("Failed to send status change email, but status was updated successfully", e);
-                        }
-                    }
-
-                    return ResponseEntity.ok(reservationMapper.toDto(saved));
-                })
-                .orElseThrow(() -> NotFoundException.of("Reservation", id));
+        return lifecycleService.changeStatus(id, status, confirmedBy, sendEmail, customMessage, actor(principal));
     }
 
     @PatchMapping("/{id}/catering-arranged")
     @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Toggle catering arranged", description = "Mark catering as arranged (or undo) for a reservation")
-    public ResponseEntity<Reservation> updateCateringArranged(
+    public Reservation updateCateringArranged(
             @PathVariable Long id,
             @RequestParam boolean arranged,
             Principal principal) {
-
-        log.info("AUDIT reservation.catering_arranged id={} arranged={} user='{}'",
-                id, arranged, principal != null ? principal.getName() : "unknown");
-
-        return reservationRepository.findById(id)
-                .map(reservation -> {
-                    boolean previous = reservation.isCateringArranged();
-                    reservation.setCateringArranged(arranged);
-                    com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
-
-                    auditService.recordAction(AuditEntityType.RESERVATION, id, label(saved),
-                            AuditAction.CATERING_ARRANGED,
-                            List.of(new FieldChange("cateringArranged", String.valueOf(previous), String.valueOf(arranged))),
-                            arranged ? "Catering marked as arranged" : "Catering arranged unset");
-
-                    return ResponseEntity.ok(reservationMapper.toDto(saved));
-                })
-                .orElseThrow(() -> NotFoundException.of("Reservation", id));
+        return lifecycleService.setCateringArranged(id, arranged, actor(principal));
     }
 
     @PatchMapping("/{id}/notes")
     @PreAuthorize("hasRole('EDITOR')")
     @Operation(summary = "Update internal notes", description = "Add or update internal notes for a reservation")
-    public ResponseEntity<Reservation> updateInternalNotes(
+    public Reservation updateInternalNotes(
             @PathVariable Long id,
             @RequestBody String notes,
             Principal principal) {
+        return lifecycleService.updateInternalNotes(id, notes, actor(principal));
+    }
 
-        log.info("AUDIT reservation.notes_updated id={} user='{}'",
-                id, principal != null ? principal.getName() : "unknown");
-
-        return reservationRepository.findById(id)
-                .map(reservation -> {
-                    reservation.setInternalNotes(notes);
-                    com.pimvanleeuwen.the_harry_list_backend.model.Reservation saved = reservationRepository.save(reservation);
-
-                    // Note content is intentionally not stored in the audit log (may be long/sensitive).
-                    auditService.recordAction(AuditEntityType.RESERVATION, id, label(saved),
-                            AuditAction.NOTES_UPDATED, List.of(), "Internal notes updated");
-
-                    return ResponseEntity.ok(reservationMapper.toDto(saved));
-                })
-                .orElseThrow(() -> NotFoundException.of("Reservation", id));
+    private static String actor(Principal principal) {
+        return principal != null ? principal.getName() : "unknown";
     }
 
     @PostMapping("/{id}/email")
@@ -207,7 +125,7 @@ public class AdminReservationController {
         String message = emailRequest.get("message");
 
         log.info("AUDIT email.custom_sent id={} subject='{}' user='{}'",
-                id, subject, principal != null ? principal.getName() : "unknown");
+                id, subject, actor(principal));
 
         return reservationRepository.findById(id)
                 .map(reservation -> {
@@ -251,7 +169,7 @@ public class AdminReservationController {
             Principal principal) {
 
         log.info("AUDIT email.catering_sent id={} user='{}'",
-                id, principal != null ? principal.getName() : "unknown");
+                id, actor(principal));
 
         return reservationRepository.findById(id)
                 .map(reservation -> {
@@ -280,7 +198,7 @@ public class AdminReservationController {
 
                         log.info("AUDIT email.catering_delivered confirmation='{}' to='{}' attachments={} user='{}'",
                                 reservation.getConfirmationNumber(), reservation.getEmail(), attachments.size(),
-                                principal != null ? principal.getName() : "unknown");
+                                actor(principal));
 
                         auditService.recordAction(AuditEntityType.RESERVATION, id, label(reservation),
                                 AuditAction.EMAIL_SENT, List.of(),
