@@ -157,12 +157,12 @@ describe('ReservationDetailPage — custom email message', () => {
   });
 });
 
-describe('ReservationDetailPage — reopen rejected reservation', () => {
+describe('ReservationDetailPage: reopen rejected or cancelled reservation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('shows a "Move back to Pending" action only for rejected reservations', async () => {
+  it('shows a "Move back to Pending" action for rejected reservations', async () => {
     vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'REJECTED' });
 
     renderPage();
@@ -194,7 +194,28 @@ describe('ReservationDetailPage — reopen rejected reservation', () => {
     expect(screen.queryByRole('button', { name: /Send Catering Options/i })).not.toBeInTheDocument();
   });
 
-  it('does not show the reopen action for non-rejected reservations', async () => {
+  it('offers "Move back to Pending" for cancelled reservations too', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'CANCELLED' });
+    vi.mocked(updateReservationStatus).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+    fireEvent.click(screen.getByTestId('reopen-reservation'));
+    expect(screen.getByText(/Move this cancelled reservation back/)).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('reopen-dialog-submit'));
+
+    await waitFor(() =>
+      expect(updateReservationStatus).toHaveBeenCalledWith(1, 'PENDING', 'Staff Member', false, undefined));
+  });
+
+  it('does not show the reopen action for pending or confirmed reservations', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+    const { unmount } = renderPage();
+    await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+    expect(screen.queryByTestId('reopen-reservation')).not.toBeInTheDocument();
+    unmount();
+
     // sampleReservation defaults to CONFIRMED.
     renderPage();
     await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });

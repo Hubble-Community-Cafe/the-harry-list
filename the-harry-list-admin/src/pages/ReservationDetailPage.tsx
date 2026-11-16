@@ -399,10 +399,10 @@ export function ReservationDetailPage() {
             </button>
           )}
 
-          {/* A rejected event is often only rejected because the date or location needs to
-              change. Reopening it puts it back to PENDING so staff can edit the existing
-              details instead of asking the customer to submit everything again. */}
-          {reservation.status === 'REJECTED' && (
+          {/* A rejected or cancelled event often only needs a new date or location.
+              Reopening it puts it back to PENDING so staff can edit the existing details
+              instead of asking the customer to submit everything again. */}
+          {(reservation.status === 'REJECTED' || reservation.status === 'CANCELLED') && (
             <button
               onClick={() => { setActionMessage(''); setSendEmail(false); setShowReopenDialog(true); }}
               data-testid="reopen-reservation"
@@ -534,11 +534,12 @@ export function ReservationDetailPage() {
           </div>
         )}
 
-        {/* Reopen (Reject -> Pending) Dialog */}
+        {/* Reopen (Rejected or Cancelled -> Pending) Dialog */}
         {showReopenDialog && (
           <div className="mt-4 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/50">
             <p className="text-yellow-400 mb-3">
-              Move this rejected reservation back to <strong>Pending</strong>? You'll be able to
+              Move this {reservation.status === 'CANCELLED' ? 'cancelled' : 'rejected'} reservation back
+              to <strong>Pending</strong>? You'll be able to
               edit the date, location and other details, then confirm or reject it again.
               {sendEmail && ' A status-update email will be sent to the customer.'}
             </p>

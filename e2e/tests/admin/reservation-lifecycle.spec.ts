@@ -151,4 +151,41 @@ test.describe('admin: reservation lifecycle', () => {
     await expect(page.getByTestId('reservation-status')).toContainText('CONFIRMED');
     await captureScreenshot(testInfo, page, '3-confirmed-after-reopen');
   });
+
+  test('a cancelled reservation can be moved back to pending', async ({ page, request }, testInfo) => {
+    // The customer cancelled, then changed their mind: staff reopen the same reservation.
+    await seedReservation(request, {
+      contactName: 'Cancel Guest',
+      email: 'cancel.guest@example.com',
+      eventTitle: 'Cancelled Booking',
+      description: 'Cancelled, then revived',
+      eventDate: '2030-12-06',
+      startTime: '18:00',
+      endTime: '20:00',
+      expectedGuests: 20,
+      location: 'HUBBLE',
+      seatingArea: 'INSIDE',
+      paymentOption: 'INDIVIDUAL',
+      status: 'CONFIRMED',
+    });
+
+    await page.goto('/reservations');
+    await page.getByPlaceholder(/Search by name/).fill('Cancelled Booking');
+    const row = page.getByTestId('reservation-row').filter({ hasText: 'Cancelled Booking' });
+    await expect(row).toHaveCount(1);
+    await row.click();
+    await expect(page.getByTestId('reservation-status')).toContainText('CONFIRMED');
+
+    await page.getByTestId('cancel-reservation').click();
+    await page.getByTestId('cancel-dialog-submit').click();
+    await expect(page.getByTestId('reservation-status')).toContainText('CANCELLED');
+    await captureScreenshot(testInfo, page, '1-cancelled');
+
+    await page.getByTestId('reopen-reservation').click();
+    await expect(page.getByText(/Move this cancelled reservation back/)).toBeVisible();
+    await page.getByTestId('reopen-dialog-submit').click();
+    await expect(page.getByTestId('reservation-status')).toContainText('PENDING');
+    await expect(page.getByTestId('confirm-reservation')).toBeVisible();
+    await captureScreenshot(testInfo, page, '2-back-to-pending');
+  });
 });

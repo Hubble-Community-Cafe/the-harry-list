@@ -35,6 +35,9 @@ public class UpdateReservationService {
 
     /**
      * Update a reservation with optional email notification and an optional custom message.
+     * Staff edits deliberately skip the public form's rules (constraints, blocked periods,
+     * retired activities), so staff can make exceptions agreed with the guest; only new
+     * submissions are checked, in {@link CreateReservationService}.
      * @param input The reservation DTO
      * @param sendEmail Whether to send email notification
      * @param customMessage Optional free-text note added to the update email; may be null/blank to omit.

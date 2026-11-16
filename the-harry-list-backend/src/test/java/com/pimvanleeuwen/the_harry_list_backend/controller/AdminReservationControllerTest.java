@@ -203,7 +203,8 @@ class AdminReservationControllerTest {
     @Test
     @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldCancelReservation() throws Exception {
-        // Given
+        // Given a confirmed reservation (only those can be cancelled)
+        sampleReservation.setStatus(ReservationStatus.CONFIRMED);
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
         when(reservationRepository.save(any())).thenReturn(sampleReservation);
         when(reservationMapper.toDto(any())).thenReturn(sampleDto);
@@ -217,6 +218,41 @@ class AdminReservationControllerTest {
         verify(reservationRepository).save(argThat(res ->
             res.getStatus() == ReservationStatus.CANCELLED
         ));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldReopenCancelledReservationToPending() throws Exception {
+        sampleReservation.setStatus(ReservationStatus.CANCELLED);
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+        when(reservationRepository.save(any())).thenReturn(sampleReservation);
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "PENDING")
+                .param("sendEmail", "false"))
+            .andExpect(status().isOk());
+
+        verify(reservationRepository).save(argThat(res -> res.getStatus() == ReservationStatus.PENDING));
+    }
+
+    @Test
+    @WithMockUser(roles = "EDITOR")
+    void updateStatus_shouldRefuseTransitionTheUiDoesNotOffer() throws Exception {
+        // A pending request is confirmed or rejected; it cannot be cancelled directly.
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+
+        mockMvc.perform(patch("/api/admin/reservations/1/status")
+                .with(csrf())
+                .param("status", "CANCELLED"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.detail").value("A pending reservation cannot be moved to cancelled"));
+
+        verify(reservationRepository, never()).save(any());
+        verifyNoInteractions(auditService, emailNotificationService);
+        assertTrue(analyticsAppender.list.isEmpty());
     }
 
     @Test

@@ -42,6 +42,9 @@ class UpdateReservationServiceTest {
     @Mock
     private EmailNotificationService emailService;
 
+    @Mock
+    private ConstraintValidationService constraintValidationService;
+
     @InjectMocks
     private UpdateReservationService updateReservationService;
 
@@ -225,6 +228,24 @@ class UpdateReservationServiceTest {
         verify(auditService).recordUpdate(any(), any(), any(), captor.capture(), any());
         assertTrue(captor.getValue().stream().noneMatch(c ->
                 c.field().equals("termsAccepted") || c.field().equals("cateringArranged")));
+    }
+
+    @Test
+    void update_shouldNotApplyFormRules() {
+        // Policy: staff edits may override the public form's rules (constraints, blocked
+        // periods, retired activities), e.g. to fit a group in after talking to the guest.
+        // Only new submissions are checked, in CreateReservationService.
+        sampleDto.setId(1L);
+        sampleDto.setSpecialActivities(Set.of(SpecialActivity.PRIVATE_EVENT));
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(existingEntity));
+        when(reservationMapper.toEntity(sampleDto)).thenReturn(createExistingEntity());
+        when(reservationRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(reservationMapper.toDto(any())).thenReturn(sampleDto);
+
+        assertDoesNotThrow(() -> updateReservationService.update(sampleDto, false, null));
+
+        verify(reservationRepository).save(any());
+        verifyNoInteractions(constraintValidationService);
     }
 
     private Reservation createSampleDto() {

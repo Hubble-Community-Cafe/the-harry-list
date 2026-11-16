@@ -50,12 +50,18 @@ public class ReservationLifecycleService {
      * @param customMessage optional note added to that email; may be null/blank
      * @param actor the signed-in staff member, for the log line
      * @throws NotFoundException when no reservation has this id
-     * @throws BusinessRuleException when confirming a reservation without a location
+     * @throws BusinessRuleException when the change is not allowed from the current status
+     *         (see {@link ReservationStatus#canMoveTo}) or confirms a reservation without a location
      */
     public com.pimvanleeuwen.the_harry_list_backend.dto.Reservation changeStatus(
             Long id, ReservationStatus status, String confirmedBy,
             boolean sendEmail, String customMessage, String actor) {
         Reservation reservation = find(id);
+
+        if (reservation.getStatus() != null && !reservation.getStatus().canMoveTo(status)) {
+            throw new BusinessRuleException("A " + reservation.getStatus().name().toLowerCase()
+                    + " reservation cannot be moved to " + status.name().toLowerCase());
+        }
 
         if (status == ReservationStatus.CONFIRMED
                 && (reservation.getLocation() == null || reservation.getLocation() == BarLocation.NO_PREFERENCE)) {

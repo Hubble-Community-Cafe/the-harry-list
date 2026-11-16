@@ -463,9 +463,11 @@ The available actions depend on the current status:
 ### Confirmed Reservations
 - **Cancel** — cancel the reservation (e.g. customer called to cancel)
 
-### Rejected Reservations
-- **Move back to Pending** — reopen a rejected reservation. Use this when the event is going ahead after all (e.g. a different date or location frees up) so you can edit the existing details instead of asking the customer to fill everything in again. The reservation returns to **Pending**, ready to confirm or reject. The customer email is **off** by default for this action — tick the box only if you want to let them know it's being reconsidered.
-- **Remove** — permanently delete the rejected reservation (with confirmation dialog)
+### Rejected and Cancelled Reservations
+- **Move back to Pending**: reopen a rejected or cancelled reservation. Use this when the event is going ahead after all (e.g. a different date or location frees up, or the customer changes their mind) so you can edit the existing details instead of asking the customer to fill everything in again. The reservation returns to **Pending**, ready to confirm or reject. The customer email is **off** by default for this action; tick the box only if you want to let them know it's being reconsidered.
+- **Remove**: permanently delete the reservation (with confirmation dialog)
+
+Other status changes are refused, also when made outside these buttons: a pending reservation cannot be cancelled directly (reject it instead), and a confirmed one cannot go back to pending.
 
 ### All Reservations
 - **Edit** — open the edit form to change any field
