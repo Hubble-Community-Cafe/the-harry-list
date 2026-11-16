@@ -442,7 +442,7 @@ public class EmailTemplateService {
         if (template == null) return "";
         String result = template;
         for (Map.Entry<String, String> entry : variables.entrySet()) {
-            result = result.replace("{{" + entry.getKey() + "}}", escapeHtml(entry.getValue()));
+            result = result.replace("{{" + entry.getKey() + "}}", EmailTemplates.escapeHtml(entry.getValue()));
         }
         // Raw-HTML variables are pre-sanitized and substituted verbatim (no escaping).
         for (Map.Entry<String, String> entry : rawHtmlVariables.entrySet()) {
@@ -450,15 +450,5 @@ public class EmailTemplateService {
             result = result.replace("{{" + entry.getKey() + "}}", value);
         }
         return result;
-    }
-
-    private String escapeHtml(String input) {
-        if (input == null) return "";
-        return input
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;")
-                .replace("'", "&#x27;");
     }
 }
