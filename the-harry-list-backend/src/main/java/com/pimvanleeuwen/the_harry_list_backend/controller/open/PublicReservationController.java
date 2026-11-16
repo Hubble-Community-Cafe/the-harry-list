@@ -49,7 +49,7 @@ public class PublicReservationController {
     )
     public ResponseEntity<ReservationSubmissionResponse> submitReservation(@Valid @RequestBody PublicReservationRequest request) {
         if (!altchaService.verify(request.getAltcha())) {
-            logger.warn("ALTCHA verification failed for reservation request from: {}", request.getEmail());
+            logger.warn("ALTCHA verification failed for a reservation request");
             throw new BusinessRuleException("Captcha verification failed. Please try again.");
         }
 

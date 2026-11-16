@@ -1,6 +1,5 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
-import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.microsoft.graph.models.Attachment;
 import com.microsoft.graph.models.BodyType;
@@ -17,6 +16,7 @@ import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
 import com.pimvanleeuwen.the_harry_list_backend.model.SpecialActivity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -48,6 +48,7 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
     private final String staffEmail;
     private final String barName;
 
+    @Autowired
     public MicrosoftGraphEmailService(
             @Value("${app.mail.graph.tenant-id}") String tenantId,
             @Value("${app.mail.graph.client-id}") String clientId,
@@ -56,19 +57,22 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
             @Value("${app.mail.staff}") String staffEmail,
             @Value("${app.bar.name:Hubble and Meteor Community Cafes}") String barName,
             EmailTemplateService emailTemplateService) {
+        this(new GraphServiceClient(new ClientSecretCredentialBuilder()
+                        .clientId(clientId)
+                        .clientSecret(clientSecret)
+                        .tenantId(tenantId)
+                        .build()),
+                fromEmail, staffEmail, barName, emailTemplateService);
+    }
 
+    /** For tests: takes a ready-made Graph client instead of building one from credentials. */
+    MicrosoftGraphEmailService(GraphServiceClient graphClient, String fromEmail, String staffEmail,
+                               String barName, EmailTemplateService emailTemplateService) {
+        this.graphClient = graphClient;
         this.fromEmail = fromEmail;
         this.staffEmail = staffEmail;
         this.barName = barName;
         this.emailTemplateService = emailTemplateService;
-
-        ClientSecretCredential credential = new ClientSecretCredentialBuilder()
-                .clientId(clientId)
-                .clientSecret(clientSecret)
-                .tenantId(tenantId)
-                .build();
-
-        this.graphClient = new GraphServiceClient(credential);
 
         log.info("Microsoft Graph Email service initialized. Sending from: {}, Staff notifications to: {}",
                 fromEmail, staffEmail);
@@ -81,11 +85,11 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
             String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.SUBMITTED, vars);
             String body = emailTemplateService.getRenderedBody(EmailTemplateType.SUBMITTED, vars);
             sendEmail(reservation.getEmail(), subject, body);
-            log.info("LOGGING email.submitted_sent confirmation='{}' to='{}'",
-                    reservation.getConfirmationNumber(), reservation.getEmail());
+            log.info("LOGGING email.submitted_sent confirmation='{}'",
+                    reservation.getConfirmationNumber());
             notifyStaffNewReservation(reservation);
         } catch (Exception e) {
-            log.error("Failed to send reservation submitted email to: {}", reservation.getEmail(), e);
+            log.error("Failed to send reservation submitted email for confirmation={}", reservation.getConfirmationNumber(), e);
         }
     }
 
@@ -98,10 +102,10 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
             String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.STATUS_CHANGED, vars);
             String body = emailTemplateService.getRenderedBody(EmailTemplateType.STATUS_CHANGED, vars, rawHtmlVars);
             sendEmail(reservation.getEmail(), subject, body);
-            log.info("LOGGING email.status_change_sent confirmation='{}' to='{}' status={}",
-                    reservation.getConfirmationNumber(), reservation.getEmail(), reservation.getStatus());
+            log.info("LOGGING email.status_change_sent confirmation='{}' status={}",
+                    reservation.getConfirmationNumber(), reservation.getStatus());
         } catch (Exception e) {
-            log.error("Failed to send status change email to: {}", reservation.getEmail(), e);
+            log.error("Failed to send status change email for confirmation={}", reservation.getConfirmationNumber(), e);
         }
     }
 
@@ -115,10 +119,10 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
             String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.UPDATED, vars);
             String body = emailTemplateService.getRenderedBody(EmailTemplateType.UPDATED, vars, rawHtmlVars);
             sendEmail(reservation.getEmail(), subject, body);
-            log.info("LOGGING email.updated_sent confirmation='{}' to='{}'",
-                    reservation.getConfirmationNumber(), reservation.getEmail());
+            log.info("LOGGING email.updated_sent confirmation='{}'",
+                    reservation.getConfirmationNumber());
         } catch (Exception e) {
-            log.error("Failed to send reservation updated email to: {}", reservation.getEmail(), e);
+            log.error("Failed to send reservation updated email for confirmation={}", reservation.getConfirmationNumber(), e);
         }
     }
 
@@ -130,10 +134,10 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
             String subject = emailTemplateService.getRenderedSubject(EmailTemplateType.CANCELLED, vars);
             String body = emailTemplateService.getRenderedBody(EmailTemplateType.CANCELLED, vars);
             sendEmail(reservation.getEmail(), subject, body);
-            log.info("LOGGING email.cancelled_sent confirmation='{}' to='{}'",
-                    reservation.getConfirmationNumber(), reservation.getEmail());
+            log.info("LOGGING email.cancelled_sent confirmation='{}'",
+                    reservation.getConfirmationNumber());
         } catch (Exception e) {
-            log.error("Failed to send reservation cancelled email to: {}", reservation.getEmail(), e);
+            log.error("Failed to send reservation cancelled email for confirmation={}", reservation.getConfirmationNumber(), e);
         }
     }
 
@@ -142,7 +146,7 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
         try {
             sendEmail(to, subject, htmlBody);
         } catch (Exception e) {
-            log.error("Failed to send raw email to: {}", to, e);
+            log.error("Failed to send raw email", e);
             throw new RuntimeException("Failed to send email", e);
         }
     }
@@ -153,7 +157,7 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
             String htmlBody = EmailTemplates.buildCustomEmailBody(reservation, messageContent, barName, staffEmail);
             sendEmail(reservation.getEmail(), subject, htmlBody);
         } catch (Exception e) {
-            log.error("Failed to send custom email to: {}", reservation.getEmail(), e);
+            log.error("Failed to send custom email for confirmation={}", reservation.getConfirmationNumber(), e);
             throw new RuntimeException("Failed to send custom email", e);
         }
     }
@@ -296,10 +300,10 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
             requestBody.setSaveToSentItems(true);
 
             graphClient.users().byUserId(fromEmail).sendMail().post(requestBody);
-            log.info("Email with {} attachment(s) sent to: {} via Microsoft Graph",
-                    attachments != null ? attachments.size() : 0, to);
+            log.info("Email with {} attachment(s) sent via Microsoft Graph",
+                    attachments != null ? attachments.size() : 0);
         } catch (Exception e) {
-            log.error("Failed to send email with attachments to: {}", to, e);
+            log.error("Failed to send email with attachments", e);
             throw new RuntimeException("Failed to send email with attachments", e);
         }
     }
@@ -336,9 +340,9 @@ public class MicrosoftGraphEmailService implements EmailNotificationService {
 
         try {
             graphClient.users().byUserId(fromEmail).sendMail().post(requestBody);
-            log.info("Email sent successfully to: {} via Microsoft Graph", to);
+            log.info("Email sent successfully via Microsoft Graph");
         } catch (Exception e) {
-            log.error("Failed to send email to: {} via Microsoft Graph", to, e);
+            log.error("Failed to send email via Microsoft Graph", e);
             throw new RuntimeException("Failed to send email", e);
         }
     }

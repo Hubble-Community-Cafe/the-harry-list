@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.LogCapture;
 import com.pimvanleeuwen.the_harry_list_backend.model.EmailTemplateType;
 import com.pimvanleeuwen.the_harry_list_backend.model.Reservation;
 import com.pimvanleeuwen.the_harry_list_backend.model.ReservationStatus;
@@ -17,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -115,5 +117,18 @@ class SmtpEmailServiceTest {
 
         // One to the customer (SUBMITTED) + one to staff (STAFF_NOTIFICATION)
         verify(mailSender, org.mockito.Mockito.times(2)).send(any(MimeMessage.class));
+    }
+
+    @Test
+    void sendingNeverLogsTheRecipientAddress() {
+        when(emailTemplateService.getRenderedSubject(any(), anyMap())).thenReturn("Subject");
+        when(emailTemplateService.getRenderedBody(any(), anyMap())).thenReturn("<p>body</p>");
+
+        try (LogCapture logs = LogCapture.start()) {
+            service.sendReservationSubmittedEmail(sampleReservation());
+
+            assertFalse(logs.isEmpty());
+            logs.assertNeverLogged("jane@example.com", "Jane Smith");
+        }
     }
 }

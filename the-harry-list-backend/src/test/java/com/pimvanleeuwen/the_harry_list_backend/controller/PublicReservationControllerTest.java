@@ -2,6 +2,7 @@ package com.pimvanleeuwen.the_harry_list_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.pimvanleeuwen.the_harry_list_backend.LogCapture;
 import com.pimvanleeuwen.the_harry_list_backend.altcha.AltchaService;
 import com.pimvanleeuwen.the_harry_list_backend.config.SecurityConfig;
 import com.pimvanleeuwen.the_harry_list_backend.dto.PublicReservationRequest;
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -103,11 +105,17 @@ class PublicReservationControllerTest {
     void submitReservation_shouldFailWhenAltchaVerificationFails() throws Exception {
         when(altchaService.verify(any())).thenReturn(false);
 
-        mockMvc.perform(post("/api/public/reservations")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sampleRequest)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value("Captcha verification failed. Please try again."));
+        try (LogCapture logs = LogCapture.start()) {
+            mockMvc.perform(post("/api/public/reservations")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(sampleRequest)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.detail").value("Captcha verification failed. Please try again."));
+
+            // The failed attempt is logged, but without the requester's email.
+            assertFalse(logs.isEmpty());
+            logs.assertNeverLogged("john@example.com", "John Doe");
+        }
     }
 
     @Test

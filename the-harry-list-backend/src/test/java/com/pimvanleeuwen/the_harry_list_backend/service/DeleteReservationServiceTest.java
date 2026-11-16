@@ -1,5 +1,6 @@
 package com.pimvanleeuwen.the_harry_list_backend.service;
 
+import com.pimvanleeuwen.the_harry_list_backend.LogCapture;
 import com.pimvanleeuwen.the_harry_list_backend.exception.NotFoundException;
 import com.pimvanleeuwen.the_harry_list_backend.model.*;
 import com.pimvanleeuwen.the_harry_list_backend.repository.ReservationRepository;
@@ -52,6 +53,18 @@ class DeleteReservationServiceTest {
         // Then
         verify(reservationRepository, times(1)).deleteById(id);
         verify(auditService).recordDelete(eq(AuditEntityType.RESERVATION), eq(id), any(), any());
+    }
+
+    @Test
+    void delete_shouldNeverLogGuestPii() {
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
+
+        try (LogCapture logs = LogCapture.start()) {
+            deleteReservationService.delete(1L, false);
+
+            assertFalse(logs.isEmpty());
+            logs.assertNeverLogged("John Doe", "john@example.com", "+31612345678");
+        }
     }
 
     @Test

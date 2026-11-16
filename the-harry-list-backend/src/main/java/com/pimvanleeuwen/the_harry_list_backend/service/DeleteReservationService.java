@@ -46,9 +46,9 @@ public class DeleteReservationService {
             }
         }
 
-        log.info("LOGGING reservation.cancelled id={} confirmation='{}' event='{}' date={} contact='{}' email='{}'",
-                id, r.getConfirmationNumber(), r.getEventTitle(),
-                r.getEventDate(), r.getContactName(), r.getEmail());
+        // No contact name or email: these logs are centralized (Loki), so guest PII must not be written.
+        log.info("LOGGING reservation.cancelled id={} confirmation='{}' event='{}' date={}",
+                id, r.getConfirmationNumber(), r.getEventTitle(), r.getEventDate());
 
         reservationRepository.deleteById(id);
 

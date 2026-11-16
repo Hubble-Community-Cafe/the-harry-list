@@ -196,8 +196,8 @@ public class AdminReservationController {
                         emailService.sendEmailWithAttachments(
                                 reservation.getEmail(), subject, body, attachments, request.getReplyTo());
 
-                        log.info("AUDIT email.catering_delivered confirmation='{}' to='{}' attachments={} user='{}'",
-                                reservation.getConfirmationNumber(), reservation.getEmail(), attachments.size(),
+                        log.info("AUDIT email.catering_delivered confirmation='{}' attachments={} user='{}'",
+                                reservation.getConfirmationNumber(), attachments.size(),
                                 actor(principal));
 
                         auditService.recordAction(AuditEntityType.RESERVATION, id, label(reservation),

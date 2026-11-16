@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pimvanleeuwen.the_harry_list_backend.LogCapture;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.pimvanleeuwen.the_harry_list_backend.dto.CateringEmailRequest;
 import com.pimvanleeuwen.the_harry_list_backend.model.*;
@@ -515,12 +516,18 @@ class AdminReservationControllerTest {
         String requestBody = objectMapper.writeValueAsString(
                 new CateringEmailRequest() {{ setAttachmentIds(List.of(1L)); }});
 
-        mockMvc.perform(post("/api/admin/reservations/1/catering-email")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value("sent"));
+        try (LogCapture logs = LogCapture.start()) {
+            mockMvc.perform(post("/api/admin/reservations/1/catering-email")
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("sent"));
+
+            // The delivery is logged by confirmation number, never by the guest's address.
+            assertFalse(logs.isEmpty());
+            logs.assertNeverLogged("john@example.com", "John Doe");
+        }
 
         verify(emailNotificationService).sendEmailWithAttachments(
                 eq("john@example.com"), anyString(), anyString(), eq(List.of(attachment)), any());
