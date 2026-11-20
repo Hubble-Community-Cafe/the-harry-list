@@ -48,7 +48,7 @@ test.describe('public: booking with many options', () => {
     await form.acceptTerms();
     await form.submit();
 
-    await expect(page.getByText('Reservation Submitted!')).toBeVisible();
+    await expect(page.getByText('Request received')).toBeVisible();
     await captureScreenshot(testInfo, page, '2-confirmation');
 
     const email = await waitForEmailTo(request, CONTACT.email);

@@ -10,6 +10,7 @@ import { ActivityNoticeDialog } from './ActivityNoticeDialog';
 import { checkBlockedDate } from '../lib/blockedPeriods';
 import { noticeApplies, requiresConfirmation } from '../lib/activityNotices';
 import { useRestoreAfterLock } from '../lib/useRestoreAfterLock';
+import { REPLY_TIME, SHORT_NOTICE } from '../lib/replyTime';
 import type { ReservationFormData, FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
 import { formSchema } from './reservationForm/schema';
 import { ContactStep } from './reservationForm/ContactStep';
@@ -365,10 +366,10 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
             <span className="text-lg">📋</span> Please Note
           </h3>
           <ul className="text-xs text-dark-300 space-y-1.5">
-            <li>• This is a <span className="text-white font-medium">request form</span> – there are no obligations for you or us</li>
-            <li>• We generally cannot reply within 72 hours</li>
-            <li>• If you want to come in today, just walk in – we always save spots for walk-in guests</li>
-            <li>• Please do not call about reservations – they are not managed by phone</li>
+            <li>• This is a <span className="text-white font-medium">request form</span>: there are no obligations for you or us</li>
+            <li>• {REPLY_TIME} {SHORT_NOTICE}</li>
+            <li>• If you want to come in today, just walk in: we always save spots for walk-in guests</li>
+            <li>• Please don't call about reservations, as we don't handle them by phone</li>
           </ul>
         </div>
       )}

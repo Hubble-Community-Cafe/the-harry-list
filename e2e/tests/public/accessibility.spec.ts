@@ -38,7 +38,7 @@ for (const theme of THEMES) {
       await form.acceptTerms();
       await expectNoA11yViolations(page, testInfo, `${theme} 4 confirm`);
       await form.submit();
-      await expect(page.getByText('Reservation Submitted!')).toBeVisible();
+      await expect(page.getByText('Request received')).toBeVisible();
       await expectNoA11yViolations(page, testInfo, `${theme} 5 confirmation`);
 
       await form.openPrivacyFromFooter();

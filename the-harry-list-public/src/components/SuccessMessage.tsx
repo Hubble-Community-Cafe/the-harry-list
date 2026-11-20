@@ -1,5 +1,6 @@
 import { CheckCircle, PartyPopper, Mail, Calendar, MailWarning } from 'lucide-react';
 import { getSenderEmail } from '../lib/api';
+import { REPLY_TIME, SHORT_NOTICE } from '../lib/replyTime';
 
 interface SuccessMessageProps {
   result: {
@@ -25,17 +26,17 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
 
         {/* Title */}
         <h2 className="text-2xl md:text-3xl font-title font-bold text-white mb-2 tracking-tight">
-          Reservation Submitted!
+          Request received
         </h2>
         <p className="text-dark-400 font-light mb-8">
-          Thank you for your reservation request. We'll be in touch soon!
+          Thank you! We'll review your request and reply by email.
         </p>
 
         {/* Confirmation details */}
         <div className="bg-dark-800/50 rounded-xl p-6 mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <PartyPopper className="w-5 h-5 text-meteor-400" />
-            <span className="text-sm text-dark-400">Confirmation Number</span>
+            <span className="text-sm text-dark-400">Confirmation number</span>
           </div>
           <div className="text-4xl font-bold bg-gradient-to-r from-hubble-400 to-meteor-400 bg-clip-text text-transparent mb-4 tracking-wider">
             {result.confirmationNumber}
@@ -52,7 +53,7 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
             <div className="flex items-start gap-3 p-3 rounded-lg bg-dark-900/50">
               <Mail className="w-5 h-5 text-meteor-400 mt-0.5" />
               <div>
-                <div className="text-xs text-dark-500">Confirmation sent to</div>
+                <div className="text-xs text-dark-500">We've emailed a copy to</div>
                 <div className="text-sm text-white">{result.email}</div>
               </div>
             </div>
@@ -82,9 +83,8 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
             ⚠️ Important Notice
           </h3>
           <p className="text-sm text-dark-400">
-            This is <strong className="text-white">not a confirmation</strong>. Your reservation still awaits approval.
-            Please note that we generally respond within 72 hours. Reservations made less than 72 hours
-            in advance cannot always be confirmed in time.
+            This is <strong className="text-white">not a confirmation yet</strong>: your reservation still
+            awaits approval. {REPLY_TIME} {SHORT_NOTICE}
           </p>
         </div>
 

@@ -32,7 +32,7 @@ test('the reservation form works under the Content-Security-Policy', async ({ pa
   await expect(page.locator('altcha-widget [data-state="verified"]')).toBeVisible({ timeout: 20_000 });
   await form.acceptTerms();
   await form.submit();
-  await expect(page.getByText('Reservation Submitted!')).toBeVisible();
+  await expect(page.getByText('Request received')).toBeVisible();
 
   await expectNoCspViolations(violations, testInfo);
 });

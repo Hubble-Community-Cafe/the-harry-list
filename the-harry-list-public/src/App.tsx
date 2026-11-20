@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { ThemeProvider, SkipLink, MAIN_CONTENT_ID, ErrorBoundary } from 'the-harry-list-shared';
 import { PrivacyPolicy, SuccessMessage, prefetchDeferredChunks } from './lib/deferredChunks';
+import { REPLY_TIME } from './lib/replyTime';
 
 interface SubmissionResult {
   confirmationNumber: string;
@@ -65,7 +66,7 @@ function App() {
                 </h1>
                 <p className="text-lg md:text-xl text-dark-300 max-w-2xl mx-auto">
                   Book your next event at Hubble or Meteor Community Café.
-                  Fill out the form below and we'll try to get back to you within 72 hours.
+                  Fill out the form below. {REPLY_TIME}
                 </p>
               </div>
 

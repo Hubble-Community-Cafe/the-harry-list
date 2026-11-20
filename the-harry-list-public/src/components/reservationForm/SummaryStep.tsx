@@ -3,6 +3,7 @@ import { useFormContext } from 'react-hook-form';
 import { ClipboardCheck, AlertTriangle } from 'lucide-react';
 import { getAltchaChallengeUrl } from '../../lib/api';
 import { AltchaWidget } from '../../lib/deferredChunks';
+import { REPLY_TIME } from '../../lib/replyTime';
 import { SPECIAL_ACTIVITY_LABELS } from './labels';
 import type { ReservationFormData } from '../../types/reservation';
 
@@ -133,7 +134,7 @@ export function SummaryStep({ activityNotices, submitError, setAltchaPayload, on
                 <div className="font-medium text-white">I accept the terms and conditions *</div>
                 <div className="text-sm text-dark-400">
                   By submitting this form, I understand this is a reservation request and not a
-                  confirmation. I will receive a response within 72 hours.
+                  confirmation. {REPLY_TIME}
                 </div>
               </div>
             </label>

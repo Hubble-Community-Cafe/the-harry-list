@@ -953,6 +953,15 @@ describe('ReservationForm', () => {
       expect(screen.getByText(/This is a/)).toBeInTheDocument();
       expect(screen.getByText(/request form/)).toBeInTheDocument();
     });
+
+    it('makes the same reply-time promise as the rest of the form, with no dashes', async () => {
+      renderForm();
+      await waitForFormLoaded();
+      expect(screen.getByText(/We usually reply within 72 hours\./)).toBeInTheDocument();
+      expect(screen.queryByText(/cannot reply within 72 hours/i)).not.toBeInTheDocument();
+      const notes = screen.getByText(/request form/).closest('ul');
+      expect(notes?.textContent).not.toMatch(/[–—]/);
+    });
   });
 
   // ==================== LONG RESERVATION ====================

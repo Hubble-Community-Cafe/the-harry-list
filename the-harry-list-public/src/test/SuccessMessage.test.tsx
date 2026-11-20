@@ -32,8 +32,32 @@ describe('SuccessMessage', () => {
         onNewReservation={mockOnNewReservation}
       />
     );
-    // Should indicate success with specific heading text
-    expect(screen.getByText('Reservation Submitted!')).toBeInTheDocument();
+    // A request, not a booking: the heading must not suggest the reservation is confirmed.
+    expect(screen.getByRole('heading', { name: 'Request received' })).toBeInTheDocument();
+    expect(screen.queryByText(/Reservation Submitted/i)).not.toBeInTheDocument();
+  });
+
+  it('labels the email line as a copy, not as a confirmation', () => {
+    render(
+      <SuccessMessage
+        result={mockResult}
+        onNewReservation={mockOnNewReservation}
+      />
+    );
+    expect(screen.getByText("We've emailed a copy to")).toBeInTheDocument();
+    expect(screen.queryByText(/Confirmation sent to/i)).not.toBeInTheDocument();
+  });
+
+  it('states the shared reply-time promise', () => {
+    render(
+      <SuccessMessage
+        result={mockResult}
+        onNewReservation={mockOnNewReservation}
+      />
+    );
+    expect(screen.getByText(/We usually reply within 72 hours\./)).toHaveTextContent(
+      "For events less than 72 hours away we can't always reply in time."
+    );
   });
 
   it('shows the email address', () => {

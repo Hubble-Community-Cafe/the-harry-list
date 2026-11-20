@@ -32,7 +32,7 @@ test.describe('admin: reservation lifecycle', () => {
       seating: 'INSIDE',
       payment: 'People pay individually',
     });
-    await expect(page.getByText('Reservation Submitted!')).toBeVisible();
+    await expect(page.getByText('Request received')).toBeVisible();
     await clearMailbox(request); // isolate the confirmation email from the submission emails
 
     // 2) It shows up in the admin reservations list as PENDING.

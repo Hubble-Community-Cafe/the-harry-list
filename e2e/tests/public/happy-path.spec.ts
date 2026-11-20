@@ -55,7 +55,7 @@ test.describe('public: full booking happy path', () => {
     await form.submit();
 
     // Confirmation screen
-    await expect(page.getByText('Reservation Submitted!')).toBeVisible();
+    await expect(page.getByText('Request received')).toBeVisible();
     await expect(page.getByText(CONTACT.email)).toBeVisible();
 
     // The guest is told which address the confirmation comes from and to check spam.
