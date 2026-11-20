@@ -142,6 +142,7 @@ faster layers.
 | Area | Unit / component | Backend integration | E2E spec |
 |------|------------------|---------------------|----------|
 | Make a reservation (happy + many options) | form unit tests | `CreateReservationService*` | `public/happy-path`, `public/booking-options` |
+| Step navigation: one Continue click advances after fixing errors, opening the review step never submits or shows the terms error | `ReservationForm` tests | n/a | `public/step-navigation` |
 | Sender / spam-folder notice on confirmation (#310) | `SuccessMessage` test | — | `public/happy-path` |
 | Staff inbox comes only from `APP_MAIL_STAFF`: new reservation alert, guest Reply-To, catering default Reply-To | `ReservationDetailPage` test | `EmailMessagesTest`, `EmailTemplateServiceTest`, `AdminReservationControllerTest` | `public/happy-path` |
 | Soft / hard blocked periods | `blockedPeriods` + form tests | `ConstraintValidationServiceTest`, `FormOptionsControllerTest` (staff-only reason never public) | `public/soft-block`, `public/hard-block`, `admin/blocked-periods` |

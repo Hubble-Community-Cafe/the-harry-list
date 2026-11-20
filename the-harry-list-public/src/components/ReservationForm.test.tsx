@@ -269,6 +269,26 @@ describe('ReservationForm', () => {
       expect(screen.getByText('Contact Information')).toBeInTheDocument();
     });
 
+    it('clears a field error while the guest types the fix, before they leave the field', async () => {
+      // If the error only cleared on blur, it would vanish as the guest clicks Continue,
+      // the button would shift up mid-click and the click would be lost.
+      const { user } = renderForm();
+      await waitForFormLoaded();
+
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      await waitFor(() => expect(screen.getByText('Please enter a valid email')).toBeInTheDocument());
+
+      await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
+      const email = screen.getByPlaceholderText('john@example.com');
+      await user.type(email, 'jane@example.com');
+
+      expect(email).toHaveFocus();
+      await waitFor(() => {
+        expect(screen.queryByText('Please enter a valid email')).not.toBeInTheDocument();
+        expect(screen.queryByText('Name must be at least 2 characters')).not.toBeInTheDocument();
+      });
+    });
+
     it('back button is hidden on step 1', async () => {
       renderForm();
       await waitForFormLoaded();
@@ -864,6 +884,15 @@ describe('ReservationForm', () => {
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       await waitFor(() => expect(screen.getByText('Review & Confirm')).toBeInTheDocument());
     }
+
+    it('does not submit or show the terms error when Continue opens the review step', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await navigateToStep5(user);
+
+      expect(screen.queryByText('You must accept the terms')).not.toBeInTheDocument();
+      expect(submitReservation).not.toHaveBeenCalled();
+    });
 
     it('calls submitReservation and onSuccess on successful submit', async () => {
       const mockResult = {

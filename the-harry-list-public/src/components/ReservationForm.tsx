@@ -262,11 +262,26 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
     // Block step 2 advance if long reservation reason is missing
     if (step === 2 && rules.needsLongReservationReason && !getValues('longReservationReason')?.trim()) {
       await trigger('longReservationReason');
+      markTouched(['longReservationReason']);
       return false;
     }
 
-    const result = await trigger(fieldsToValidate[step - 1]);
+    const fields = fieldsToValidate[step - 1];
+    const result = await trigger(fields);
+    if (!result) markTouched(fields);
     return result;
+  };
+
+  // In 'onTouched' mode a field only re-validates while typing once it has been left.
+  // A field that failed on Continue was often never left, so its error would only clear
+  // on blur: as the guest clicks Continue, the error line vanishes, the button jumps up
+  // mid-click and the click is lost. Marking the fields touched clears errors as they type.
+  const markTouched = (fields: (keyof ReservationFormData)[]) => {
+    for (const field of fields) {
+      if (form.getFieldState(field).error) {
+        setValue(field, getValues(field), { shouldTouch: true });
+      }
+    }
   };
 
   const nextStep = async () => {
@@ -450,8 +465,12 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
             Back
           </button>
 
+          {/* Distinct keys keep React from reusing the Continue button as the Submit button.
+              Reused, it turns into type="submit" during the click that opens the last step,
+              and the browser then submits the form (showing "You must accept the terms"). */}
           {currentStep < steps.length ? (
             <button
+              key="continue"
               type="button"
               onClick={nextStep}
               className="btn-primary flex items-center gap-2"
@@ -461,6 +480,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
             </button>
           ) : (
             <button
+              key="submit"
               type="submit"
               data-testid="submit-reservation"
               disabled={isSubmitting || !!optionsError}
