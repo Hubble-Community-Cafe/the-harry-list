@@ -181,6 +181,9 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       behavior: prefersReduced ? 'auto' : 'smooth',
       block: 'start',
     });
+    // Move focus to the new step's heading so screen readers announce the step change
+    // (otherwise focus stays on Continue and nothing tells them the page moved on).
+    formRef.current?.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
   }, [currentStep]);
 
   // Notice rendered wherever a blocked period applies. Hard blocks show a red,

@@ -751,3 +751,11 @@ body.dark {
     border-color: var(--color-dark-400) !important;
   }
 }
+
+/* Choice cards (location, seating, payment) hide their radio with sr-only, so the keyboard
+   focus would be invisible. Show it on the card instead. hubble-400 flips per theme:
+   #3ebbc6 on the dark page, #1a6b7c on the light one, both well over 3:1. */
+label:has(> input.sr-only:focus-visible) {
+  outline: 2px solid var(--color-hubble-400);
+  outline-offset: 2px;
+}

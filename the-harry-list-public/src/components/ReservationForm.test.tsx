@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -231,8 +231,36 @@ describe('ReservationForm', () => {
     it('starts on step 1', async () => {
       renderForm();
       await waitForFormLoaded();
-      const step1Button = screen.getByRole('button', { name: /Step 1: Contact/ });
+      const step1Button = screen.getByRole('button', { name: 'Step 1 of 4: Contact' });
       expect(step1Button).toHaveAttribute('aria-current', 'step');
+    });
+
+    it('moves focus to the new step heading and marks earlier steps completed', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+
+      await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
+      await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Event Details' })).toHaveFocus());
+      expect(screen.getByRole('navigation', { name: 'Reservation progress' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Step 1 of 4: Contact, completed' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Step 2 of 4: Details' })).toHaveAttribute('aria-current', 'step');
+    });
+
+    it('marks a field with an error invalid and links it to the message', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+
+      const email = await screen.findByRole('textbox', { name: 'Email Address *' });
+      await waitFor(() => expect(email).toHaveAttribute('aria-invalid', 'true'));
+      expect(email).toHaveAccessibleDescription('Please enter a valid email');
+
+      await user.type(email, 'jane@example.com');
+      await waitFor(() => expect(email).not.toHaveAttribute('aria-invalid'));
     });
 
     it('does not navigate forward with empty required fields', async () => {
@@ -662,6 +690,32 @@ describe('ReservationForm', () => {
       await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
     }
 
+    it('names every field and choice group on the details step', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToDetails(user);
+
+      expect(screen.getByRole('spinbutton', { name: 'Expected Number of Guests *' })).toHaveAccessibleDescription(
+        /Minimum reservation size/
+      );
+      expect(screen.getByRole('group', { name: 'Special Activities' })).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: 'Catering' })).toHaveAccessibleDescription('Catered food for your event');
+      expect(screen.getByRole('radiogroup', { name: 'Location' })).toBeInTheDocument();
+      expect(screen.getByRole('radiogroup', { name: 'Seating Area *' })).toBeInTheDocument();
+    });
+
+    it('labels the long-reservation reason and links it to the duration hint', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToDetails(user);
+
+      fireEvent.change(getSelectByName('startTime'), { target: { value: '14:00' } });
+      fireEvent.change(getSelectByName('endTime'), { target: { value: '18:00' } });
+
+      const reason = await screen.findByRole('textbox', { name: 'Reason for Long Reservation *' });
+      expect(reason).toHaveAccessibleDescription(/Reservations over 3 hours require a reason/);
+    });
+
     it('shows the location sub-section on the same step as the event details', async () => {
       const { user } = renderForm();
       await waitForFormLoaded();
@@ -808,6 +862,19 @@ describe('ReservationForm', () => {
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       await waitFor(() => expect(screen.getByText('Payment Information')).toBeInTheDocument());
     }
+
+    it('groups the payment methods and links an unchosen method to its error', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep4(user);
+
+      const group = screen.getByRole('radiogroup', { name: 'Payment Method *' });
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+
+      const radios = within(group).getAllByRole('radio');
+      await waitFor(() => expect(radios[0]).toHaveAttribute('aria-invalid', 'true'));
+      expect(radios[0]).toHaveAccessibleDescription(/.+/);
+    });
 
     it('shows payment options', async () => {
       const { user } = renderForm();

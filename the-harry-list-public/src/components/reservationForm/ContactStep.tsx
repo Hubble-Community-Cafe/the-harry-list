@@ -1,4 +1,6 @@
 import { useFormContext } from 'react-hook-form';
+import { fieldA11y } from './fieldA11y';
+import { FieldError } from './FieldError';
 import { User, Mail, Phone, Building2 } from 'lucide-react';
 import { MAX_LENGTH } from '../../lib/fieldLimits';
 import type { ReservationFormData } from '../../types/reservation';
@@ -14,7 +16,7 @@ export function ContactStep() {
               <User className="w-5 h-5 text-hubble-400" />
             </div>
             <div>
-              <h2 className="text-xl font-title font-semibold text-white tracking-tight">Contact Information</h2>
+              <h2 tabIndex={-1} className="text-xl font-title font-semibold text-white tracking-tight outline-none">Contact Information</h2>
               <p className="text-sm text-dark-400 font-light">Tell us how to reach you</p>
             </div>
           </div>
@@ -30,10 +32,10 @@ export function ContactStep() {
                   data-testid="contact-name"
                   className="input-field pl-10"
                   placeholder="John Doe"
-                  aria-describedby={errors.contactName ? 'contactName-error' : undefined}
+                  {...fieldA11y(errors, 'contactName')}
                 />
               </div>
-              {errors.contactName && <p id="contactName-error" className="error-text">{errors.contactName.message}</p>}
+              <FieldError errors={errors} name="contactName" />
             </div>
 
             <div className="form-group">
@@ -46,10 +48,10 @@ export function ContactStep() {
                   data-testid="contact-email"
                   className="input-field pl-10"
                   placeholder="john@example.com"
-                  aria-describedby={errors.email ? 'email-error' : undefined}
+                  {...fieldA11y(errors, 'email')}
                 />
               </div>
-              {errors.email && <p id="email-error" className="error-text">{errors.email.message}</p>}
+              <FieldError errors={errors} name="email" />
             </div>
 
             <div className="form-group">
@@ -61,10 +63,10 @@ export function ContactStep() {
                   {...register('phoneNumber')} maxLength={MAX_LENGTH.phoneNumber} id="phoneNumber"
                   className="input-field pl-10"
                   placeholder="+31 6 12345678"
-                  aria-describedby={errors.phoneNumber ? 'phoneNumber-error' : undefined}
+                  {...fieldA11y(errors, 'phoneNumber')}
                 />
               </div>
-              {errors.phoneNumber && <p id="phoneNumber-error" className="error-text">{errors.phoneNumber.message}</p>}
+              <FieldError errors={errors} name="phoneNumber" />
             </div>
 
             <div className="form-group">

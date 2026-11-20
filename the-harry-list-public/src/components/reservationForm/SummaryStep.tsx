@@ -1,5 +1,7 @@
 import { Suspense } from 'react';
 import { useFormContext } from 'react-hook-form';
+import { fieldA11y } from './fieldA11y';
+import { FieldError } from './FieldError';
 import { ClipboardCheck, AlertTriangle } from 'lucide-react';
 import { getAltchaChallengeUrl } from '../../lib/api';
 import { AltchaWidget } from '../../lib/deferredChunks';
@@ -43,7 +45,7 @@ export function SummaryStep({ activityNotices, submitError, setAltchaPayload, on
               <ClipboardCheck className="w-5 h-5 text-hubble-400" />
             </div>
             <div>
-              <h2 className="text-xl font-title font-semibold text-white tracking-tight">Review & Confirm</h2>
+              <h2 tabIndex={-1} className="text-xl font-title font-semibold text-white tracking-tight outline-none">Review & Confirm</h2>
               <p className="text-sm text-dark-400 font-light">Please review your reservation details</p>
             </div>
           </div>
@@ -128,6 +130,7 @@ export function SummaryStep({ activityNotices, submitError, setAltchaPayload, on
                 type="checkbox"
                 {...register('termsAccepted')}
                 data-testid="terms-accepted"
+                {...fieldA11y(errors, 'termsAccepted')}
                 className="w-5 h-5 mt-0.5 rounded border-dark-600 bg-dark-700 text-hubble-500 focus:ring-hubble-500 focus:ring-offset-dark-900"
               />
               <div>
@@ -138,7 +141,7 @@ export function SummaryStep({ activityNotices, submitError, setAltchaPayload, on
                 </div>
               </div>
             </label>
-            {errors.termsAccepted && <p className="error-text mt-2">{errors.termsAccepted.message}</p>}
+            <FieldError errors={errors} name="termsAccepted" className="mt-2" />
             <p className="text-xs text-dark-500 mt-3">
               We use the details you provide only to handle your reservation. See our{' '}
               <button
