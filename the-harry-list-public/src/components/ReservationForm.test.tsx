@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ReservationForm } from './ReservationForm';
+import { formatEventDate } from '../lib/formatDate';
 import type { FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
 
 // Mock API module
@@ -328,6 +329,15 @@ describe('ReservationForm', () => {
   // ==================== STEP 1: CONTACT VALIDATION ====================
 
   describe('step 1 - contact validation', () => {
+    it('lets the browser autofill the contact fields', async () => {
+      renderForm();
+      await waitForFormLoaded();
+      expect(screen.getByPlaceholderText('John Doe')).toHaveAttribute('autocomplete', 'name');
+      expect(screen.getByPlaceholderText('john@example.com')).toHaveAttribute('autocomplete', 'email');
+      expect(screen.getByPlaceholderText('+31 6 12345678')).toHaveAttribute('autocomplete', 'tel');
+      expect(screen.getByPlaceholderText('Your organization name')).toHaveAttribute('autocomplete', 'organization');
+    });
+
     it('shows error for name shorter than 2 chars', async () => {
       const { user } = renderForm();
       await waitForFormLoaded();
@@ -515,6 +525,10 @@ describe('ReservationForm', () => {
 
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       expect(screen.getByText('Event Details')).toBeInTheDocument();
+      // The guest is told why: the limit notice is announced and gets focus.
+      const notice = screen.getByRole('alert');
+      expect(notice).toHaveTextContent('A la carte dining is limited to 15 guests.');
+      expect(notice).toHaveFocus();
     });
   });
 
@@ -775,6 +789,10 @@ describe('ReservationForm', () => {
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       expect(screen.getByText('Event Details')).toBeInTheDocument();
       expect(screen.getByText(/tick the box above to confirm/i)).toBeInTheDocument();
+      // Focus lands on the box to tick, which carries the prompt as its error.
+      expect(ack).toHaveFocus();
+      expect(ack).toHaveAttribute('aria-invalid', 'true');
+      expect(ack).toHaveAccessibleDescription(/tick the box above to confirm/i);
 
       // Acknowledge, then advance succeeds (and the prompt disappears)
       await user.click(ack);
@@ -843,6 +861,8 @@ describe('ReservationForm', () => {
 
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       expect(screen.getByText('Event Details')).toBeInTheDocument();
+      expect(screen.getByTestId('blocked-date-notice')).toHaveAttribute('role', 'alert');
+      expect(screen.getByTestId('blocked-date-notice')).toHaveFocus();
     });
   });
 
@@ -959,6 +979,20 @@ describe('ReservationForm', () => {
 
       expect(screen.queryByText('You must accept the terms')).not.toBeInTheDocument();
       expect(submitReservation).not.toHaveBeenCalled();
+    });
+
+    it('shows readable values on the review step, not raw codes', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await navigateToStep5(user);
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const iso = tomorrow.toISOString().split('T')[0];
+
+      expect(screen.getByText(formatEventDate(iso))).toBeInTheDocument();
+      expect(screen.queryByText(iso)).not.toBeInTheDocument();
+      expect(screen.getByText('No preference')).toBeInTheDocument();
     });
 
     it('calls submitReservation and onSuccess on successful submit', async () => {

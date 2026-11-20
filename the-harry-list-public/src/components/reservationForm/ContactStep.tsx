@@ -28,7 +28,7 @@ export function ContactStep() {
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                 <input
                   type="text"
-                  {...register('contactName')} maxLength={MAX_LENGTH.contactName} id="contactName"
+                  {...register('contactName')} maxLength={MAX_LENGTH.contactName} id="contactName" autoComplete="name"
                   data-testid="contact-name"
                   className="input-field pl-10"
                   placeholder="John Doe"
@@ -44,7 +44,7 @@ export function ContactStep() {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                 <input
                   type="email"
-                  {...register('email')} maxLength={MAX_LENGTH.email} id="email"
+                  {...register('email')} maxLength={MAX_LENGTH.email} id="email" autoComplete="email"
                   data-testid="contact-email"
                   className="input-field pl-10"
                   placeholder="john@example.com"
@@ -60,7 +60,7 @@ export function ContactStep() {
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                 <input
                   type="tel"
-                  {...register('phoneNumber')} maxLength={MAX_LENGTH.phoneNumber} id="phoneNumber"
+                  {...register('phoneNumber')} maxLength={MAX_LENGTH.phoneNumber} id="phoneNumber" autoComplete="tel"
                   className="input-field pl-10"
                   placeholder="+31 6 12345678"
                   {...fieldA11y(errors, 'phoneNumber')}
@@ -75,7 +75,7 @@ export function ContactStep() {
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                 <input
                   type="text"
-                  {...register('organizationName')} maxLength={MAX_LENGTH.organizationName} id="organizationName"
+                  {...register('organizationName')} maxLength={MAX_LENGTH.organizationName} id="organizationName" autoComplete="organization"
                   className="input-field pl-10"
                   placeholder="Your organization name"
                 />

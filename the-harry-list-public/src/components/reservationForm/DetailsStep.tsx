@@ -148,6 +148,7 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
                     type="number"
                     {...register('expectedGuests', { valueAsNumber: true })}
                     id="expectedGuests"
+                    inputMode="numeric"
                     {...fieldA11y(errors, 'expectedGuests', 'expectedGuests-hint')}
                     data-testid="expected-guests"
                     className="input-field text-center text-xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -169,13 +170,13 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
               </div>
               <FieldError errors={errors} name="expectedGuests" />
               {guestLimitWarning && (
-                <div className="mt-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
+                <div id="guest-limit-notice" role="alert" tabIndex={-1} className="mt-2 outline-none text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                   <span>{guestLimitWarning}</span>
                 </div>
               )}
               {locationConflict ? (
-                <div className="mt-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
+                <div id="location-conflict-notice" role="alert" tabIndex={-1} className="mt-2 outline-none text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                   <span>{locationConflict}</span>
                 </div>

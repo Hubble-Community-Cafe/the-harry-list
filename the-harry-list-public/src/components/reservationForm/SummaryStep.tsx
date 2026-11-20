@@ -6,7 +6,8 @@ import { ClipboardCheck, AlertTriangle } from 'lucide-react';
 import { getAltchaChallengeUrl } from '../../lib/api';
 import { AltchaWidget } from '../../lib/deferredChunks';
 import { REPLY_TIME } from '../../lib/replyTime';
-import { SPECIAL_ACTIVITY_LABELS } from './labels';
+import { SPECIAL_ACTIVITY_LABELS, locationLabel } from './labels';
+import { formatEventDate } from '../../lib/formatDate';
 import type { ReservationFormData } from '../../types/reservation';
 
 interface SummaryStepProps {
@@ -69,7 +70,7 @@ export function SummaryStep({ activityNotices, submitError, setAltchaPayload, on
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                 <div><span className="text-dark-400">Title:</span> <span className="text-white">{getValues('eventTitle')}</span></div>
                 <div><span className="text-dark-400">Guests:</span> <span className="text-white">{getValues('expectedGuests')}</span></div>
-                <div><span className="text-dark-400">Date:</span> <span className="text-white">{getValues('eventDate')}</span></div>
+                <div><span className="text-dark-400">Date:</span> <span className="text-white">{formatEventDate(getValues('eventDate'))}</span></div>
                 <div><span className="text-dark-400">Time:</span> <span className="text-white">{getValues('startTime')} - {getValues('endTime')}</span></div>
                 {watchSpecialActivities.length > 0 && (
                   <div className="md:col-span-2">
@@ -108,7 +109,7 @@ export function SummaryStep({ activityNotices, submitError, setAltchaPayload, on
             <div className="bg-dark-800/50 rounded-xl p-4">
               <h3 className="text-xs font-semibold text-hubble-400 mb-3 uppercase tracking-wider">Location</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                <div><span className="text-dark-400">Location:</span> <span className="text-white">{watchLocation || 'No Preference'}</span></div>
+                <div><span className="text-dark-400">Location:</span> <span className="text-white">{locationLabel(watchLocation)}</span></div>
                 <div><span className="text-dark-400">Seating:</span> <span className="text-white">{watch('seatingArea') === 'INSIDE' ? 'Inside' : 'Outside'}</span></div>
                 {getValues('comments') && <div className="md:col-span-2"><span className="text-dark-400">Remarks:</span> <span className="text-white">{getValues('comments')}</span></div>}
               </div>

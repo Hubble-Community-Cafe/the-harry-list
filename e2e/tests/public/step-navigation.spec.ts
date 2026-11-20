@@ -49,5 +49,9 @@ test.describe('public: step navigation', () => {
     await form.expectStep('Review & Confirm');
     await expect(page.getByText('You must accept the terms')).toBeHidden();
     expect(reservationPosts).toBe(0);
+
+    // The review reads like a person wrote it: no ISO dates or upper-case codes.
+    await expect(page.getByText('Tuesday 10 September 2030')).toBeVisible();
+    await expect(page.getByText('No preference')).toBeVisible();
   });
 });

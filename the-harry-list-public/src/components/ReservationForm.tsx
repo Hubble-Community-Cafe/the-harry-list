@@ -197,7 +197,10 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       <label className={`flex items-start gap-2 cursor-pointer rounded-md p-1 -m-1 ${softBlockAckError ? 'ring-1 ring-red-500/60 bg-red-500/10' : ''}`}>
         <input
           type="checkbox"
+          id="soft-block-ack"
           data-testid="soft-block-ack"
+          aria-invalid={softBlockAckError || undefined}
+          aria-describedby={softBlockAckError ? 'soft-block-ack-error' : undefined}
           checked={softBlockAcknowledged}
           onChange={e => {
             setSoftBlockAcknowledged(e.target.checked);
@@ -208,11 +211,11 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
         <span className={softBlockAckError ? 'text-red-300' : undefined}>{blockedDateInfo.acknowledgementText}</span>
       </label>
       {softBlockAckError && (
-        <p data-testid="soft-block-ack-error" className="text-red-300 font-medium">Please tick the box above to confirm before continuing.</p>
+        <p id="soft-block-ack-error" role="alert" data-testid="soft-block-ack-error" className="text-red-300 font-medium">Please tick the box above to confirm before continuing.</p>
       )}
     </div>
   ) : (
-    <div data-testid="blocked-date-notice" data-soft="false" className="mt-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
+    <div id="blocked-date-notice" role="alert" tabIndex={-1} data-testid="blocked-date-notice" data-soft="false" className="mt-2 outline-none text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
       <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
       <span>{blockedDateInfo.message}</span>
     </div>
@@ -220,7 +223,16 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
 
   const minDateForBooking = useMemo(() => minBookingDate(advanceBookingDays), [advanceBookingDays]);
 
-  const validateStep = async (step: number) => {
+  const focusById = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'center' });
+    el.focus({ preventScroll: true });
+  };
+
+  /** True when the step is valid; 'blocked' when a rule notice stopped it (and has focus). */
+  const validateStep = async (step: number): Promise<boolean | 'blocked'> => {
     const paymentFields: (keyof ReservationFormData)[] = ['paymentOption'];
     if (watchPaymentOption === 'INVOICE') {
       paymentFields.push('invoiceType');
@@ -240,26 +252,33 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       ['termsAccepted'], // Step 4: Confirm
     ];
 
+    // The rules below block step 2 with a notice instead of a field error. Bring that notice
+    // into view and focus it, so the guest (also on a phone, or with a screen reader) learns
+    // why Continue did nothing.
+
     // Block step 2 advance if guest limit constraint violated
     if (step === 2 && guestLimitWarning) {
-      return false;
+      focusById('guest-limit-notice');
+      return 'blocked';
     }
 
     // Block step 2 advance if guest count conflicts with activity location lock
     if (step === 2 && locationConflict) {
-      return false;
+      focusById('location-conflict-notice');
+      return 'blocked';
     }
 
     // Block advance if date/location is in a blocked period (all on the merged step 2 now).
     // Hard blocks always prevent advancing; soft blocks only until the guest acknowledges the warning.
     if (step === 2 && blockedDateInfo) {
       if (!blockedDateInfo.soft) {
-        return false;
+        focusById('blocked-date-notice');
+        return 'blocked';
       }
       if (!softBlockAcknowledged) {
-        // Surface why we're not advancing so the form doesn't feel broken.
         setSoftBlockAckError(true);
-        return false;
+        focusById('soft-block-ack');
+        return 'blocked';
       }
     }
 
@@ -290,6 +309,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
 
   const nextStep = async () => {
     const isValid = await validateStep(currentStep);
+    if (isValid === 'blocked') return; // the rule's notice already has focus
     if (isValid && currentStep < steps.length) {
       setSubmitError(null);
       setCurrentStep(currentStep + 1);

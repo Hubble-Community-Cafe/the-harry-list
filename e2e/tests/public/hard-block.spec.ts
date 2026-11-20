@@ -40,9 +40,12 @@ test.describe('public: hard-blocked period', () => {
     await expect(form.softAckCheckbox()).toHaveCount(0);
     await captureScreenshot(testInfo, page, '1-hard-block-shown');
 
-    // Continue does not advance.
+    // Continue does not advance, and tells the guest why: the notice scrolls into view and
+    // takes focus, so a screen reader reads it.
     await form.continue();
     await form.expectStep('Event Details');
+    await expect(form.blockedNotice()).toBeFocused();
+    await expect(form.blockedNotice()).toBeInViewport();
   });
 
   test('never sends the staff-only reason to the public form', async ({ request }) => {

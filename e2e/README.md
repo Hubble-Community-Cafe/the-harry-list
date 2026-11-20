@@ -142,10 +142,10 @@ faster layers.
 | Area | Unit / component | Backend integration | E2E spec |
 |------|------------------|---------------------|----------|
 | Make a reservation (happy + many options) | form unit tests | `CreateReservationService*` | `public/happy-path`, `public/booking-options` |
-| Step navigation: one Continue click advances after fixing errors, opening the review step never submits or shows the terms error | `ReservationForm` tests | n/a | `public/step-navigation` |
+| Step navigation: one Continue click advances after fixing errors, opening the review step never submits or shows the terms error, the review shows a readable date and location | `ReservationForm` + `formatDate` tests | n/a | `public/step-navigation` |
 | Sender / spam-folder notice on confirmation (#310) | `SuccessMessage` test | — | `public/happy-path` |
 | Staff inbox comes only from `APP_MAIL_STAFF`: new reservation alert, guest Reply-To, catering default Reply-To | `ReservationDetailPage` test | `EmailMessagesTest`, `EmailTemplateServiceTest`, `AdminReservationControllerTest` | `public/happy-path` |
-| Soft / hard blocked periods | `blockedPeriods` + form tests | `ConstraintValidationServiceTest`, `FormOptionsControllerTest` (staff-only reason never public) | `public/soft-block`, `public/hard-block`, `admin/blocked-periods` |
+| Soft / hard blocked periods, and a blocked Continue focusing the notice or box that explains why | `blockedPeriods` + form tests | `ConstraintValidationServiceTest`, `FormOptionsControllerTest` (staff-only reason never public) | `public/soft-block`, `public/hard-block`, `admin/blocked-periods` |
 | Form constraints (all types), and a forced location (small group or activity lock) or seating giving the guest's own choice back once it lifts | form tests | `ConstraintValidationServiceTest` | `public/constraints-blocking`, `public/constraints-dynamic`, `admin/constraints-roundtrip` |
 | Activity notice (advisory banner, opt-in confirmation dialog, optional location and minimum-guest conditions) | `ReservationForm` + `FormSettingsPage` tests | `ConstraintValidationServiceTest` | `public/activity-notice` |
 | Retired private-event activity (form, options API, direct submit) | `ReservationForm` + `ReservationDetailPage` tests | `FormOptionsControllerTest`, `CreateReservationServiceTest` | `public/retired-activity` |

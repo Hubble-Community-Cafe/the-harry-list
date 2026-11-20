@@ -110,7 +110,7 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
                     <label htmlFor="invoiceName" className="label">Company Name *</label>
                     <input
                       type="text"
-                      {...register('invoiceName')} maxLength={MAX_LENGTH.invoiceName} id="invoiceName" {...fieldA11y(errors, 'invoiceName')}
+                      {...register('invoiceName')} maxLength={MAX_LENGTH.invoiceName} id="invoiceName" autoComplete="organization" {...fieldA11y(errors, 'invoiceName')}
                       className="input-field"
                       placeholder="Company or organization name"
                     />
@@ -120,7 +120,7 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
                   <div className="form-group">
                     <label htmlFor="invoiceAddress" className="label">Invoice Address *</label>
                     <textarea
-                      {...register('invoiceAddress')} maxLength={MAX_LENGTH.invoiceAddress} id="invoiceAddress" {...fieldA11y(errors, 'invoiceAddress')}
+                      {...register('invoiceAddress')} maxLength={MAX_LENGTH.invoiceAddress} id="invoiceAddress" autoComplete="street-address" {...fieldA11y(errors, 'invoiceAddress')}
                       className="input-field min-h-[80px] resize-none"
                       placeholder="Full billing address..."
                     />
