@@ -10,3 +10,4 @@ export { configuredValue } from './lib/runtimeConfig';
 export { installTranslationCrashGuard } from './lib/translationCrashGuard';
 export { cn } from './lib/utils';
 export { apiErrorMessage } from './lib/apiError';
+export { Modal } from './components/Modal';

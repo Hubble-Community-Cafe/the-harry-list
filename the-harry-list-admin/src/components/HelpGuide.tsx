@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useId } from 'react';
 import { X, HelpCircle, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Modal } from 'the-harry-list-shared';
 
 export interface GuideSection {
   title: string;
@@ -123,15 +124,7 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
     setIsOpen(true);
   }, []);
 
-  // Close on Escape
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsOpen(false);
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [isOpen]);
+  const titleId = useId();
 
   const section = sections[currentSection];
   const hasPrev = currentSection > 0;
@@ -151,11 +144,13 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
 
       {/* Modal */}
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setIsOpen(false); }}
+        <Modal
+          labelledBy={titleId}
+          onClose={() => setIsOpen(false)}
+          closeOnBackdrop
+          overlayClassName="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl"
         >
-          <div className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
             {/* Header */}
             <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-dark-800">
               <div className="flex items-center gap-3">
@@ -163,7 +158,7 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
                   <HelpCircle className="w-4 h-4 text-hubble-400" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-white">{title}</h2>
+                  <h2 id={titleId} className="text-lg font-semibold text-white">{title}</h2>
                   {sections.length > 1 && (
                     <p className="text-xs text-dark-400">
                       Step {currentSection + 1} of {sections.length}
@@ -173,6 +168,7 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
               </div>
               <button
                 onClick={() => setIsOpen(false)}
+                aria-label="Close help"
                 className="p-2 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -283,8 +279,7 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
                 </button>
               </div>
             )}
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   );

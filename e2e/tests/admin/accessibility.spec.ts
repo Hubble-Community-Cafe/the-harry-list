@@ -54,3 +54,31 @@ test('keyboard: skip link to the content, and focus follows sidebar navigation',
   await page.locator('main h1').first().waitFor();
   await expect(page.locator('#main-content')).toBeFocused();
 });
+
+test('keyboard: a dialog keeps focus inside, closes on Escape and returns focus to its opener', async ({ page, request }) => {
+  await resetBackend(request);
+  await seedAdmin(request);
+  const seeded = await seedReservation(request, {
+    contactName: 'Kai Keys', email: 'kai.keys@example.com', eventTitle: 'Keyboard Booking', description: 'Dialog keyboard test',
+    eventDate: '2030-10-10', startTime: '15:00', endTime: '17:00', expectedGuests: 8,
+    location: 'HUBBLE', seatingArea: 'INSIDE', paymentOption: 'INDIVIDUAL', status: 'PENDING',
+  });
+  await page.goto(`/reservations/${seeded.id}`);
+
+  const opener = page.getByTestId('edit-reservation');
+  await opener.focus();
+  await page.keyboard.press('Enter');
+  const dialog = page.getByRole('dialog', { name: 'Edit Reservation' });
+  await expect(dialog).toBeVisible();
+  expect(await dialog.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+
+  // Tab through more stops than the dialog has: focus must never leave it.
+  for (let i = 0; i < 40; i++) {
+    await page.keyboard.press('Tab');
+    expect(await dialog.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+  }
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(opener).toBeFocused();
+});

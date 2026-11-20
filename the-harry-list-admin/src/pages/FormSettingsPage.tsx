@@ -17,6 +17,7 @@ import { formSettingsGuide } from '../lib/guideContent';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { usePermissions } from '../lib/usePermissions';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
+import { Modal } from 'the-harry-list-shared';
 import { UsersTab } from './UsersPage';
 
 const CONSTRAINT_TYPES = [
@@ -450,11 +451,15 @@ export function SettingsPage() {
 
       {/* ===== Constraint Edit Modal ===== */}
       {editingConstraint && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-dark-900 border border-dark-700 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <Modal
+          labelledBy="constraint-title"
+          onClose={() => confirmDiscard(() => setEditingConstraint(null))}
+          overlayClassName="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          className="bg-dark-900 border border-dark-700 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        >
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-white">
+                <h2 id="constraint-title" className="text-lg font-bold text-white">
                   {editingConstraint.id ? 'Edit Constraint' : 'New Constraint'}
                 </h2>
                 <button
@@ -668,17 +673,20 @@ export function SettingsPage() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* ===== Blocked Period Edit Modal ===== */}
       {editingPeriod && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-dark-900 border border-dark-700 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <Modal
+          labelledBy="blocked-period-title"
+          onClose={() => confirmDiscard(() => setEditingPeriod(null))}
+          overlayClassName="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          className="bg-dark-900 border border-dark-700 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        >
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-white">
+                <h2 id="blocked-period-title" className="text-lg font-bold text-white">
                   {editingPeriod.id ? 'Edit Blocked Period' : 'New Blocked Period'}
                 </h2>
                 <button
@@ -853,8 +861,7 @@ export function SettingsPage() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* ===== Data Retention Tab (Admin only) ===== */}

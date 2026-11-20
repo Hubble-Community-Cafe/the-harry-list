@@ -17,6 +17,7 @@ import type { Reservation, EmailAttachment } from '../types/reservation';
 import type { AuditLogEntry } from '../types/audit';
 import { usePermissions } from '../lib/usePermissions';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
+import { Modal } from 'the-harry-list-shared';
 import { HelpGuide } from '../components/HelpGuide';
 import { reservationDetailGuide } from '../lib/guideContent';
 
@@ -788,14 +789,18 @@ export function ReservationDetailPage() {
 
       {/* Catering Email Modal */}
       {showCateringEmail && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <Modal
+          labelledBy="catering-email-title"
+          onClose={() => setShowCateringEmail(false)}
+          overlayClassName="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        >
             <div className="flex items-center justify-between p-6 border-b border-dark-700">
-              <h2 className="text-xl font-title font-semibold text-white flex items-center gap-2">
+              <h2 id="catering-email-title" className="text-xl font-title font-semibold text-white flex items-center gap-2">
                 <UtensilsCrossed className="w-5 h-5 text-orange-400" />
                 Send Catering Options
               </h2>
-              <button onClick={() => setShowCateringEmail(false)} className="text-dark-400 hover:text-white">
+              <button onClick={() => setShowCateringEmail(false)} aria-label="Close" className="text-dark-400 hover:text-white">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -907,16 +912,19 @@ export function ReservationDetailPage() {
                 Send Email
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Edit Modal */}
       {isEditing && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <Modal
+          labelledBy="edit-reservation-title"
+          onClose={() => confirmDiscard(() => setIsEditing(false))}
+          overlayClassName="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+        >
             <div className="flex items-center justify-between p-6 border-b border-dark-700">
-              <h2 className="text-xl font-title font-semibold text-white tracking-tight">Edit Reservation</h2>
+              <h2 id="edit-reservation-title" className="text-xl font-title font-semibold text-white tracking-tight">Edit Reservation</h2>
               <button
                 onClick={() => confirmDiscard(() => setIsEditing(false))}
                 aria-label="Close editor"
@@ -1262,8 +1270,7 @@ export function ReservationDetailPage() {
                 Save Changes
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
       {unsavedChangesDialog}
     </div>

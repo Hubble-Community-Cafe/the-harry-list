@@ -451,6 +451,20 @@ describe('ReservationDetailPage: unsaved edits', () => {
     expect(screen.getByTestId('edit-guests')).toHaveValue(99);
   });
 
+  it('is a named dialog that asks on Escape after a change, and Escape on the question keeps editing', async () => {
+    await openEditor();
+    expect(screen.getByRole('dialog', { name: 'Edit Reservation' })).toHaveAttribute('aria-modal', 'true');
+    changeGuests();
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(screen.getByRole('alertdialog', { name: 'Discard unsaved changes?' })).toBeInTheDocument();
+
+    // Escape answers only the top dialog: the question closes, the editor and its input stay.
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.getByTestId('edit-guests')).toHaveValue(99);
+  });
+
   it('closes on "Discard changes"', async () => {
     await openEditor();
     changeGuests();

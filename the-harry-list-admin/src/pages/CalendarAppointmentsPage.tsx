@@ -10,6 +10,7 @@ import {
 import type { CalendarAppointment, RecurrenceType, DayOfWeek } from '../types/reservation';
 import { usePermissions } from '../lib/usePermissions';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
+import { Modal } from 'the-harry-list-shared';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import {
   FREQUENCY_OPTIONS, WEEK_OF_MONTH_OPTIONS, WEEKDAYS,
@@ -305,11 +306,15 @@ export function CalendarAppointmentsPage() {
 
       {/* Create/Edit Modal */}
       {editing && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-dark-900 border border-dark-700 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <Modal
+          labelledBy="appointment-title"
+          onClose={() => confirmDiscard(() => setEditing(null))}
+          overlayClassName="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          className="bg-dark-900 border border-dark-700 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        >
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 id="appointment-title" className="text-lg font-semibold text-white">
                   {editing.id ? 'Edit Appointment' : 'New Appointment'}
                 </h2>
                 <button
@@ -541,8 +546,7 @@ export function CalendarAppointmentsPage() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Delete Confirmation */}

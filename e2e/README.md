@@ -158,6 +158,7 @@ faster layers.
 | Public form semantics: fields marked invalid and linked to their errors, named choice groups, focus moves to the step heading on Continue, progress says which steps are completed, focused choice cards show a ring | `ReservationForm` tests | n/a | `public/accessibility` (keyboard tests) |
 | Pages and form parts load on demand; a stale tab reloads once after a deploy, without a reload loop (#459) | `chunkReload` + `App` tests | n/a | `admin/stale-deploy`, and every admin and form spec loads the chunks |
 | Unsaved changes: leaving via sidebar or browser back, closing a dialog with X, switching templates, closing the tab (#460) | `useUnsavedChanges` + page tests (reservation, templates, settings, appointments) | n/a | `admin/unsaved-changes` |
+| Dialogs (shared `Modal`, both apps): announced and named, focus moves in and stays inside, Escape closes only the top dialog, focus returns to the opener | `Modal` (shared), `ConfirmDialog` + `ReservationDetailPage` tests | n/a | `admin/accessibility` (keyboard test) |
 | Confirm a reservation (appears in admin) | `ReservationsPage`/detail tests | controller tests | `admin/reservation-lifecycle` #1 |
 | Edit / remove a reservation | `ReservationDetailPage` test | `Update`/`DeleteReservationServiceTest` | `admin/reservation-lifecycle` #2 |
 | Seating area (inside/outside) shown in detail (#292) | `ReservationDetailPage` test | — | `admin/reservation-lifecycle` #2 |
