@@ -126,6 +126,14 @@ describe('CalendarAppointmentsPage', () => {
     });
   });
 
+  it('names each row action after its appointment, and the enable toggle is a switch', async () => {
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Staff Meeting')).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Edit appointment: Staff Meeting' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete appointment: Staff Meeting' })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Appointment enabled: Staff Meeting' })).toHaveAttribute('aria-checked');
+  });
+
   it('opens create modal on Add Appointment click', async () => {
     renderPage();
     await waitFor(() => {

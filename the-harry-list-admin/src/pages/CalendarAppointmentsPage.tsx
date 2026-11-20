@@ -205,7 +205,7 @@ export function CalendarAppointmentsPage() {
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
           <span className="text-red-400 text-sm">{error}</span>
-          <button onClick={() => setError(null)} className="ml-auto">
+          <button onClick={() => setError(null)} aria-label="Dismiss error" className="ml-auto">
             <X className="w-4 h-4 text-red-400" />
           </button>
         </div>
@@ -277,6 +277,7 @@ export function CalendarAppointmentsPage() {
                   onClick={() => openEditor(normalizeForEditing(appointment))}
                   className="p-1.5 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800"
                   title="Edit"
+                  aria-label={`Edit appointment: ${appointment.title}`}
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
@@ -284,6 +285,9 @@ export function CalendarAppointmentsPage() {
                   onClick={() => appointment.id && handleToggle(appointment.id)}
                   className="p-1.5 rounded-lg"
                   title={appointment.enabled ? 'Disable' : 'Enable'}
+                  role="switch"
+                  aria-checked={!!appointment.enabled}
+                  aria-label={`Appointment enabled: ${appointment.title}`}
                 >
                   {appointment.enabled
                     ? <ToggleRight className="w-5 h-5 text-green-400" />
@@ -294,6 +298,7 @@ export function CalendarAppointmentsPage() {
                   onClick={() => appointment.id && setDeleteTarget(appointment.id)}
                   className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10"
                   title="Delete"
+                  aria-label={`Delete appointment: ${appointment.title}`}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

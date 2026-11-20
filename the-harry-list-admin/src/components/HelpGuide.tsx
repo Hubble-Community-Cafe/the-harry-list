@@ -195,7 +195,8 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
             )}
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+            {/* Scrollable: focusable and named, so keyboard users can scroll it too. */}
+            <div tabIndex={0} role="region" aria-label={section.title} className="flex-1 overflow-y-auto px-6 py-4 space-y-3 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-hubble-500">
               <h3 className="text-base font-semibold text-white">{section.title}</h3>
 
               {/* Screenshot or placeholder */}
@@ -242,15 +243,23 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
                 </button>
 
                 {/* Dots */}
-                <div className="flex gap-1.5">
-                  {sections.map((_, i) => (
+                <div className="flex">
+                  {sections.map((s, i) => (
+                    // A 24px target (WCAG 2.5.8) around the small visible dot.
                     <button
                       key={i}
                       onClick={() => setCurrentSection(i)}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        i === currentSection ? 'bg-hubble-400 w-4' : 'bg-dark-600 hover:bg-dark-500'
-                      }`}
-                    />
+                      aria-label={`Go to ${s.title}`}
+                      aria-current={i === currentSection ? 'step' : undefined}
+                      className="group w-6 h-6 flex items-center justify-center rounded-full"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`h-2 rounded-full transition-all ${
+                          i === currentSection ? 'bg-hubble-400 w-4' : 'w-2 bg-dark-600 group-hover:bg-dark-500'
+                        }`}
+                      />
+                    </button>
                   ))}
                 </div>
 

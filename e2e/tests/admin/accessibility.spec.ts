@@ -90,8 +90,57 @@ for (const theme of THEMES) {
     await page.getByRole('button', { name: 'Add Blocked Period' }).click();
     await expect(page.getByRole('dialog', { name: 'New Blocked Period' })).toBeVisible();
     await expectNoA11yViolations(page, testInfo, `${theme} blocked period dialog`);
+    await page.keyboard.press('Escape');
+
+    await page.getByRole('button', { name: /Help/ }).first().click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expectNoA11yViolations(page, testInfo, `${theme} help dialog`);
   });
 }
+
+/** Phone width: the layout switches to a header with a menu button and a slide-in drawer. */
+for (const theme of THEMES) {
+  test(`admin at phone width is accessible (${theme})`, async ({ page, request }, testInfo) => {
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await resetBackend(request);
+    await seedAdmin(request);
+    await useTheme(page, theme);
+
+    for (const route of ['/', '/reservations', '/week-overview', '/settings']) {
+      await page.goto(route);
+      await page.locator('main h1').first().waitFor();
+      await page.waitForTimeout(750);
+      await expectNoA11yViolations(page, testInfo, `${theme} phone ${route}`);
+    }
+    await page.getByRole('button', { name: 'Open menu' }).click();
+    await expect(page.getByRole('link', { name: 'Dashboard' })).toBeFocused();
+    await expectNoA11yViolations(page, testInfo, `${theme} phone open menu`);
+  });
+}
+
+test('keyboard at phone width: the closed menu is out of the tab order, Escape closes it', async ({ page, request }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await resetBackend(request);
+  await seedAdmin(request);
+  await page.goto('/');
+  await page.locator('main h1').first().waitFor();
+
+  const menu = page.getByRole('button', { name: 'Open menu' });
+  await expect(menu).toHaveAttribute('aria-expanded', 'false');
+  // Tab through the start of the page: focus never lands in the hidden drawer.
+  for (let i = 0; i < 6; i++) {
+    await page.keyboard.press('Tab');
+    expect(await page.evaluate(() => !!document.activeElement?.closest('#admin-sidebar'))).toBe(false);
+  }
+
+  await menu.click();
+  await expect(menu).toHaveAttribute('aria-expanded', 'true');
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveAttribute('aria-expanded', 'false');
+  await expect(menu).toBeFocused();
+  await expect(page).toHaveTitle('Dashboard · The Harry List Admin');
+});
 
 test('keyboard: a dialog keeps focus inside, closes on Escape and returns focus to its opener', async ({ page, request }) => {
   await resetBackend(request);
