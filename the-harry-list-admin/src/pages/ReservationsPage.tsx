@@ -111,6 +111,7 @@ export function ReservationsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="input-field pl-10"
               placeholder="Search by name, email, confirmation number, or event..."
+              aria-label="Search reservations"
             />
           </div>
 

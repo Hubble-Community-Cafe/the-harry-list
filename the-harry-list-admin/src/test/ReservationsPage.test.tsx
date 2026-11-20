@@ -98,6 +98,11 @@ describe('ReservationsPage', () => {
     }, { timeout: 3000 });
   });
 
+  it('names the search box for screen readers, not only by its placeholder', async () => {
+    renderWithRouter(<ReservationsPage />);
+    expect(await screen.findByRole('textbox', { name: 'Search reservations' })).toBeInTheDocument();
+  });
+
   it('displays reservations after loading', async () => {
     renderWithRouter(<ReservationsPage />);
 

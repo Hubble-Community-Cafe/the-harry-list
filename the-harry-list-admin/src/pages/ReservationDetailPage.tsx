@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
@@ -58,13 +58,15 @@ function EmailMessageField({
   onChange: (v: string) => void;
   show: boolean;
 }) {
+  const id = useId();
   if (!show) return null;
   return (
     <div className="mt-3">
-      <label className="block text-sm text-dark-300 mb-1">
+      <label htmlFor={id} className="block text-sm text-dark-300 mb-1">
         Add a message to the email <span className="text-dark-500">(optional)</span>
       </label>
       <textarea
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="input-field min-h-[80px] w-full"
@@ -842,14 +844,14 @@ export function ReservationDetailPage() {
 
                 {/* Attachments */}
                 <div>
-                  <label className="label flex items-center gap-2 mb-2">
+                  <p id="catering-attachments-label" className="label flex items-center gap-2 mb-2">
                     <Paperclip className="w-4 h-4" />
                     PDF Attachments
-                  </label>
+                  </p>
                   {cateringAttachments.length === 0 ? (
                     <p className="text-sm text-dark-500">No active attachments available. Upload PDFs in Email Templates &gt; PDF Attachments.</p>
                   ) : (
-                    <div className="space-y-2">
+                    <div role="group" aria-labelledby="catering-attachments-label" className="space-y-2">
                       {cateringAttachments.map((att) => (
                         <label key={att.id} className="flex items-center gap-3 p-2 rounded-lg bg-dark-800 hover:bg-dark-750 cursor-pointer">
                           <input
@@ -875,8 +877,8 @@ export function ReservationDetailPage() {
 
                 {/* Subject */}
                 <div className="form-group">
-                  <label className="label">Subject</label>
-                  <input
+                  <label htmlFor="catering-subject" className="label">Subject</label>
+                  <input id="catering-subject"
                     type="text"
                     value={cateringSubject}
                     onChange={(e) => setCateringSubject(e.target.value)}
@@ -886,8 +888,8 @@ export function ReservationDetailPage() {
 
                 {/* Body */}
                 <div className="form-group">
-                  <label className="label">Email Body (HTML)</label>
-                  <textarea
+                  <label htmlFor="catering-email-body" className="label">Email Body (HTML)</label>
+                  <textarea id="catering-email-body"
                     value={cateringBody}
                     onChange={(e) => setCateringBody(e.target.value)}
                     className="input-field min-h-[200px] font-mono text-xs"
@@ -955,8 +957,8 @@ export function ReservationDetailPage() {
                 <h3 className="text-sm font-semibold text-hubble-400 mb-3">Contact Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group">
-                    <label className="label">Contact Name</label>
-                    <input
+                    <label htmlFor="edit-contact-name" className="label">Contact Name</label>
+                    <input id="edit-contact-name"
                       type="text"
                       value={editData.contactName || ''}
                       onChange={(e) => setEditData({ ...editData, contactName: e.target.value })}
@@ -964,8 +966,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">Email</label>
-                    <input
+                    <label htmlFor="edit-email" className="label">Email</label>
+                    <input id="edit-email"
                       type="email"
                       value={editData.email || ''}
                       onChange={(e) => setEditData({ ...editData, email: e.target.value })}
@@ -973,8 +975,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">Phone</label>
-                    <input
+                    <label htmlFor="edit-phone" className="label">Phone</label>
+                    <input id="edit-phone"
                       type="tel"
                       value={editData.phoneNumber || ''}
                       onChange={(e) => setEditData({ ...editData, phoneNumber: e.target.value })}
@@ -982,8 +984,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">Organization</label>
-                    <input
+                    <label htmlFor="edit-organization" className="label">Organization</label>
+                    <input id="edit-organization"
                       type="text"
                       value={editData.organizationName || ''}
                       onChange={(e) => setEditData({ ...editData, organizationName: e.target.value })}
@@ -998,8 +1000,8 @@ export function ReservationDetailPage() {
                 <h3 className="text-sm font-semibold text-meteor-400 mb-3">Event Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group md:col-span-2">
-                    <label className="label">Event Title</label>
-                    <input
+                    <label htmlFor="edit-event-title" className="label">Event Title</label>
+                    <input id="edit-event-title"
                       type="text"
                       value={editData.eventTitle || ''}
                       onChange={(e) => setEditData({ ...editData, eventTitle: e.target.value })}
@@ -1007,14 +1009,15 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group md:col-span-2">
-                    <label className="label">Special Activities</label>
-                    <div className="flex flex-wrap gap-2">
+                    <p id="edit-special-activities" className="label">Special Activities</p>
+                    <div role="group" aria-labelledby="edit-special-activities" className="flex flex-wrap gap-2">
                       {editableActivities(editData.specialActivities || []).map((activity) => {
                         const selected = (editData.specialActivities || []).includes(activity);
                         return (
                           <button
                             key={activity}
                             type="button"
+                            aria-pressed={selected}
                             onClick={() => {
                               const current = editData.specialActivities || [];
                               setEditData({
@@ -1037,8 +1040,8 @@ export function ReservationDetailPage() {
                     </div>
                   </div>
                   <div className="form-group">
-                    <label className="label">Expected Guests</label>
-                    <input
+                    <label htmlFor="edit-expected-guests" className="label">Expected Guests</label>
+                    <input id="edit-expected-guests"
                       type="number"
                       min={1}
                       step={1}
@@ -1058,8 +1061,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">Event Date</label>
-                    <input
+                    <label htmlFor="edit-event-date" className="label">Event Date</label>
+                    <input id="edit-event-date"
                       type="date"
                       value={editData.eventDate || ''}
                       onChange={(e) => setEditData({ ...editData, eventDate: e.target.value })}
@@ -1067,8 +1070,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">Start Time</label>
-                    <input
+                    <label htmlFor="edit-start-time" className="label">Start Time</label>
+                    <input id="edit-start-time"
                       type="time"
                       value={editData.startTime?.slice(0, 5) || ''}
                       onChange={(e) => setEditData({ ...editData, startTime: e.target.value })}
@@ -1076,8 +1079,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">End Time</label>
-                    <input
+                    <label htmlFor="edit-end-time" className="label">End Time</label>
+                    <input id="edit-end-time"
                       type="time"
                       value={editData.endTime?.slice(0, 5) || ''}
                       onChange={(e) => setEditData({ ...editData, endTime: e.target.value })}
@@ -1085,8 +1088,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group md:col-span-2">
-                    <label className="label">Description</label>
-                    <textarea
+                    <label htmlFor="edit-description" className="label">Description</label>
+                    <textarea id="edit-description"
                       value={editData.description || ''}
                       onChange={(e) => setEditData({ ...editData, description: e.target.value })}
                       className="input-field min-h-[80px]"
@@ -1100,8 +1103,8 @@ export function ReservationDetailPage() {
                 <h3 className="text-sm font-semibold text-hubble-400 mb-3">Location</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group">
-                    <label className="label">Location</label>
-                    <select
+                    <label htmlFor="edit-location" className="label">Location</label>
+                    <select id="edit-location"
                       value={editData.location || ''}
                       onChange={(e) => setEditData({ ...editData, location: e.target.value })}
                       className="select-field"
@@ -1112,8 +1115,8 @@ export function ReservationDetailPage() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="label">Seating Area</label>
-                    <select
+                    <label htmlFor="edit-seating-area" className="label">Seating Area</label>
+                    <select id="edit-seating-area"
                       value={editData.seatingArea || ''}
                       onChange={(e) => setEditData({ ...editData, seatingArea: e.target.value })}
                       className="select-field"
@@ -1130,8 +1133,8 @@ export function ReservationDetailPage() {
                 <h3 className="text-sm font-semibold text-meteor-400 mb-3">Payment</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group">
-                    <label className="label">Payment Method</label>
-                    <select
+                    <label htmlFor="edit-payment-method" className="label">Payment Method</label>
+                    <select id="edit-payment-method"
                       value={editData.paymentOption || ''}
                       onChange={(e) => setEditData({ ...editData, paymentOption: e.target.value })}
                       className="select-field"
@@ -1144,8 +1147,8 @@ export function ReservationDetailPage() {
                   {editData.paymentOption === 'INVOICE' && (
                     <>
                       <div className="form-group">
-                        <label className="label">Invoice Type</label>
-                        <select
+                        <label htmlFor="edit-invoice-type" className="label">Invoice Type</label>
+                        <select id="edit-invoice-type"
                           value={editData.invoiceType || ''}
                           onChange={(e) => setEditData({ ...editData, invoiceType: e.target.value })}
                           className="select-field"
@@ -1158,8 +1161,8 @@ export function ReservationDetailPage() {
                       </div>
                       {(editData.invoiceType === 'TUE' || editData.invoiceType === 'FONTYS') && (
                         <div className="form-group">
-                          <label className="label">Kostenplaats</label>
-                          <input
+                          <label htmlFor="edit-kostenplaats" className="label">Kostenplaats</label>
+                          <input id="edit-kostenplaats"
                             type="text"
                             value={editData.costCenter || ''}
                             onChange={(e) => setEditData({ ...editData, costCenter: e.target.value })}
@@ -1170,8 +1173,8 @@ export function ReservationDetailPage() {
                       {editData.invoiceType === 'EXTERNAL' && (
                         <>
                           <div className="form-group">
-                            <label className="label">Invoice Name</label>
-                            <input
+                            <label htmlFor="edit-invoice-name" className="label">Invoice Name</label>
+                            <input id="edit-invoice-name"
                               type="text"
                               value={editData.invoiceName || ''}
                               onChange={(e) => setEditData({ ...editData, invoiceName: e.target.value })}
@@ -1179,8 +1182,8 @@ export function ReservationDetailPage() {
                             />
                           </div>
                           <div className="form-group">
-                            <label className="label">Invoice Address</label>
-                            <input
+                            <label htmlFor="edit-invoice-address" className="label">Invoice Address</label>
+                            <input id="edit-invoice-address"
                               type="text"
                               value={editData.invoiceAddress || ''}
                               onChange={(e) => setEditData({ ...editData, invoiceAddress: e.target.value })}
@@ -1188,8 +1191,8 @@ export function ReservationDetailPage() {
                             />
                           </div>
                           <div className="form-group md:col-span-2">
-                            <label className="label">Invoice Remarks</label>
-                            <textarea
+                            <label htmlFor="edit-invoice-remarks" className="label">Invoice Remarks</label>
+                            <textarea id="edit-invoice-remarks"
                               value={editData.invoiceRemarks || ''}
                               onChange={(e) => setEditData({ ...editData, invoiceRemarks: e.target.value })}
                               className="input-field min-h-[60px]"
@@ -1207,8 +1210,8 @@ export function ReservationDetailPage() {
                 <h3 className="text-sm font-semibold text-hubble-400 mb-3">Catering & Other</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group md:col-span-2">
-                    <label className="label">Catering Dietary Notes</label>
-                    <textarea
+                    <label htmlFor="edit-catering-dietary-notes" className="label">Catering Dietary Notes</label>
+                    <textarea id="edit-catering-dietary-notes"
                       value={editData.cateringDietaryNotes || ''}
                       onChange={(e) => setEditData({ ...editData, cateringDietaryNotes: e.target.value })}
                       className="input-field min-h-[60px]"
@@ -1216,8 +1219,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group md:col-span-2">
-                    <label className="label">Long Reservation Reason</label>
-                    <textarea
+                    <label htmlFor="edit-long-reservation-reason" className="label">Long Reservation Reason</label>
+                    <textarea id="edit-long-reservation-reason"
                       value={editData.longReservationReason || ''}
                       onChange={(e) => setEditData({ ...editData, longReservationReason: e.target.value })}
                       className="input-field min-h-[60px]"
@@ -1232,8 +1235,8 @@ export function ReservationDetailPage() {
                 <h3 className="text-sm font-semibold text-meteor-400 mb-3">Additional</h3>
                 <div className="space-y-4">
                   <div className="form-group">
-                    <label className="label">Comments</label>
-                    <textarea
+                    <label htmlFor="edit-comments" className="label">Comments</label>
+                    <textarea id="edit-comments"
                       value={editData.comments || ''}
                       onChange={(e) => setEditData({ ...editData, comments: e.target.value })}
                       className="input-field min-h-[80px]"
@@ -1241,8 +1244,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">Internal Notes <span className="text-yellow-400 text-xs">(staff only, not sent to customer)</span></label>
-                    <textarea
+                    <label htmlFor="edit-internal-notes" className="label">Internal Notes <span className="text-yellow-400 text-xs">(staff only, not sent to customer)</span></label>
+                    <textarea id="edit-internal-notes"
                       value={editData.internalNotes || ''}
                       onChange={(e) => setEditData({ ...editData, internalNotes: e.target.value })}
                       className="input-field min-h-[80px]"

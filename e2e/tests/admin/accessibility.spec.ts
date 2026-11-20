@@ -55,6 +55,44 @@ test('keyboard: skip link to the content, and focus follows sidebar navigation',
   await expect(page.locator('#main-content')).toBeFocused();
 });
 
+/** The edit dialogs: axe never saw them before, since no page scan opened one. */
+for (const theme of THEMES) {
+  test(`admin edit dialogs are accessible (${theme})`, async ({ page, request }, testInfo) => {
+    test.setTimeout(90_000);
+    await resetBackend(request);
+    await seedAdmin(request);
+    const seeded = await seedReservation(request, {
+      contactName: 'Ada Access', email: 'ada.a11y@example.com', eventTitle: 'Dialog Booking',
+      description: 'Dialogs under axe', eventDate: '2030-10-09', startTime: '15:00', endTime: '17:00',
+      expectedGuests: 8, location: 'HUBBLE', seatingArea: 'INSIDE', paymentOption: 'INDIVIDUAL', status: 'PENDING',
+    });
+    await useTheme(page, theme);
+
+    await page.goto(`/reservations/${seeded.id}`);
+    await page.getByTestId('edit-reservation').click();
+    await expect(page.getByRole('dialog', { name: 'Edit Reservation' })).toBeVisible();
+    await expectNoA11yViolations(page, testInfo, `${theme} edit reservation dialog`);
+    await page.keyboard.press('Escape');
+
+    await page.goto('/calendar-appointments');
+    await page.getByRole('button', { name: 'Add Appointment' }).click();
+    await expect(page.getByRole('dialog', { name: 'New Appointment' })).toBeVisible();
+    await expectNoA11yViolations(page, testInfo, `${theme} appointment dialog`);
+    await page.keyboard.press('Escape');
+
+    await page.goto('/settings');
+    await page.getByRole('button', { name: 'Add Constraint' }).click();
+    await expect(page.getByRole('dialog', { name: 'New Constraint' })).toBeVisible();
+    await expectNoA11yViolations(page, testInfo, `${theme} constraint dialog`);
+    await page.keyboard.press('Escape');
+
+    await page.getByRole('button', { name: /Blocked Periods/ }).click();
+    await page.getByRole('button', { name: 'Add Blocked Period' }).click();
+    await expect(page.getByRole('dialog', { name: 'New Blocked Period' })).toBeVisible();
+    await expectNoA11yViolations(page, testInfo, `${theme} blocked period dialog`);
+  });
+}
+
 test('keyboard: a dialog keeps focus inside, closes on Escape and returns focus to its opener', async ({ page, request }) => {
   await resetBackend(request);
   await seedAdmin(request);

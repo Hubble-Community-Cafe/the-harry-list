@@ -357,6 +357,25 @@ describe('ReservationDetailPage — edit email default', () => {
     expect(sendEmailCheckbox).not.toBeChecked();
   });
 
+  it('names every edit field by its label and says which activities are selected', async () => {
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('edit-reservation')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('edit-reservation'));
+    await screen.findByTestId('edit-save');
+
+    for (const label of ['Contact Name', 'Email', 'Phone', 'Organization', 'Event Title', 'Expected Guests',
+      'Event Date', 'Start Time', 'End Time', 'Description', 'Location', 'Seating Area', 'Payment Method',
+      'Comments']) {
+      expect(screen.getByLabelText(label)).toBeInTheDocument();
+    }
+    expect(screen.getByLabelText(/Internal Notes/)).toBeInTheDocument();
+
+    const activities = screen.getByRole('group', { name: 'Special Activities' });
+    for (const toggle of within(activities).getAllByRole('button')) {
+      expect(toggle).toHaveAttribute('aria-pressed');
+    }
+  });
+
   it('saves an edit with sendEmail=false unless the box is ticked', async () => {
     vi.mocked(updateReservation).mockResolvedValueOnce(sampleReservation);
 

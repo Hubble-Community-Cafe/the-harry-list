@@ -92,13 +92,14 @@ export function ExportPage() {
 
           {/* Location Selection */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-dark-300 mb-2">
+            <p id="export-location-label" className="flex items-center gap-2 text-sm font-medium text-dark-300 mb-2">
               <MapPin className="w-4 h-4" />
               Select Location
-            </label>
-            <div className="grid grid-cols-2 gap-3">
+            </p>
+            <div role="group" aria-labelledby="export-location-label" className="grid grid-cols-2 gap-3">
               <button
                 type="button"
+                aria-pressed={selectedLocation === 'HUBBLE'}
                 onClick={() => setSelectedLocation('HUBBLE')}
                 className={`
                   relative flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200
@@ -108,7 +109,7 @@ export function ExportPage() {
                   }
                 `}
               >
-                <span className="text-2xl mb-1">🦆</span>
+                <span aria-hidden="true" className="text-2xl mb-1">🦆</span>
                 <span className="text-sm font-medium text-white">Hubble</span>
                 {selectedLocation === 'HUBBLE' && (
                   <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-hubble-500 flex items-center justify-center">
@@ -121,6 +122,7 @@ export function ExportPage() {
 
               <button
                 type="button"
+                aria-pressed={selectedLocation === 'METEOR'}
                 onClick={() => setSelectedLocation('METEOR')}
                 className={`
                   relative flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200
@@ -130,7 +132,7 @@ export function ExportPage() {
                   }
                 `}
               >
-                <span className="text-2xl mb-1">🐻</span>
+                <span aria-hidden="true" className="text-2xl mb-1">🐻</span>
                 <span className="text-sm font-medium text-white">Meteor</span>
                 {selectedLocation === 'METEOR' && (
                   <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-meteor-500 flex items-center justify-center">
@@ -145,11 +147,11 @@ export function ExportPage() {
 
           {/* Filter Option */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-dark-300 mb-2">
+            <p id="export-filter-label" className="flex items-center gap-2 text-sm font-medium text-dark-300 mb-2">
               <Filter className="w-4 h-4" />
               Filter
-            </label>
-            <div className="space-y-3">
+            </p>
+            <div role="group" aria-labelledby="export-filter-label" className="space-y-3">
               <label className="flex items-center gap-3 p-4 bg-dark-800/50 border border-dark-700 rounded-xl cursor-pointer hover:border-dark-600 transition-colors">
                 <input
                   type="checkbox"

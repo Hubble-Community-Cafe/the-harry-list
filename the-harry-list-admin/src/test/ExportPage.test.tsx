@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { ExportPage } from '../pages/ExportPage';
 
@@ -27,6 +27,15 @@ describe('ExportPage', () => {
     renderWithRouter(<ExportPage />);
     expect(screen.getByText(/hubble/i)).toBeInTheDocument();
     expect(screen.getByText(/meteor/i)).toBeInTheDocument();
+  });
+
+  it('groups the location toggles under a name and says which one is selected', () => {
+    renderWithRouter(<ExportPage />);
+    const group = screen.getByRole('group', { name: 'Select Location' });
+    // The emoji are decorative (aria-hidden), so the names are just the café names.
+    const toggles = [within(group).getByRole('button', { name: 'Hubble' }), within(group).getByRole('button', { name: 'Meteor' })];
+    expect(toggles.filter((t) => t.getAttribute('aria-pressed') === 'true')).toHaveLength(1);
+    expect(screen.getByRole('group', { name: 'Filter' })).toBeInTheDocument();
   });
 
   it('has a download button', () => {

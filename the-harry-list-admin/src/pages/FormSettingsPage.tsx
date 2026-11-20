@@ -473,8 +473,8 @@ export function SettingsPage() {
 
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm text-dark-400 mb-1">Constraint Type</label>
-                  <select
+                  <label htmlFor="constraint-constraint-type" className="block text-sm text-dark-400 mb-1">Constraint Type</label>
+                  <select id="constraint-constraint-type"
                     data-testid="constraint-type"
                     value={editingConstraint.constraintType}
                     onChange={e => setEditingConstraint({
@@ -492,8 +492,8 @@ export function SettingsPage() {
 
                 {editingConstraint.constraintType !== 'GUEST_MINIMUM' && (
                   <div>
-                    <label className="block text-sm text-dark-400 mb-1">Trigger Activity</label>
-                    <select
+                    <label htmlFor="constraint-trigger-activity" className="block text-sm text-dark-400 mb-1">Trigger Activity</label>
+                    <select id="constraint-trigger-activity"
                       data-testid="constraint-trigger"
                       value={editingConstraint.triggerActivity}
                       onChange={e => setEditingConstraint({ ...editingConstraint, triggerActivity: e.target.value })}
@@ -581,8 +581,8 @@ export function SettingsPage() {
 
                 {editingConstraint.constraintType !== 'ACTIVITY_NOTICE' && (
                   <div>
-                    <label className="block text-sm text-dark-400 mb-1">Target Value</label>
-                    <input
+                    <label htmlFor="constraint-target-value" className="block text-sm text-dark-400 mb-1">Target Value</label>
+                    <input id="constraint-target-value"
                       type="text"
                       data-testid="constraint-target"
                       value={editingConstraint.targetValue || ''}
@@ -606,12 +606,13 @@ export function SettingsPage() {
                   editingConstraint.constraintType === 'GUEST_LIMIT' ||
                   editingConstraint.constraintType === 'GUEST_MINIMUM') && (
                   <div>
-                    <label className="block text-sm text-dark-400 mb-1">
+                    <label htmlFor="constraint-number" className="block text-sm text-dark-400 mb-1">
                       {editingConstraint.constraintType === 'ADVANCE_BOOKING' && 'Days in advance'}
                       {editingConstraint.constraintType === 'GUEST_LIMIT' && 'Max guests'}
                       {editingConstraint.constraintType === 'GUEST_MINIMUM' && 'Min guests'}
                     </label>
                     <input
+                      id="constraint-number"
                       type="number"
                       data-testid="constraint-numeric"
                       value={editingConstraint.numericValue ?? ''}
@@ -626,8 +627,8 @@ export function SettingsPage() {
 
                 {editingConstraint.constraintType === 'TIME_RESTRICTION' && (
                   <div>
-                    <label className="block text-sm text-dark-400 mb-1">Time Range</label>
-                    <input
+                    <label htmlFor="constraint-time-range" className="block text-sm text-dark-400 mb-1">Time Range</label>
+                    <input id="constraint-time-range"
                       type="text"
                       value={editingConstraint.secondaryValue || ''}
                       onChange={e => setEditingConstraint({ ...editingConstraint, secondaryValue: e.target.value })}
@@ -638,8 +639,8 @@ export function SettingsPage() {
                 )}
 
                 <div>
-                  <label className="block text-sm text-dark-400 mb-1">Message (shown to users)</label>
-                  <textarea
+                  <label htmlFor="constraint-message" className="block text-sm text-dark-400 mb-1">Message (shown to users)</label>
+                  <textarea id="constraint-message"
                     data-testid="constraint-message"
                     value={editingConstraint.message}
                     onChange={e => setEditingConstraint({ ...editingConstraint, message: e.target.value })}
@@ -700,8 +701,8 @@ export function SettingsPage() {
 
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm text-dark-400 mb-1">Location (optional)</label>
-                  <select
+                  <label htmlFor="period-location" className="block text-sm text-dark-400 mb-1">Location (optional)</label>
+                  <select id="period-location"
                     value={editingPeriod.location || ''}
                     onChange={e => setEditingPeriod({ ...editingPeriod, location: e.target.value || undefined })}
                     className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
@@ -715,8 +716,8 @@ export function SettingsPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
-                    <label className="block text-sm text-dark-400 mb-1">Start Date *</label>
-                    <input
+                    <label htmlFor="period-start-date" className="block text-sm text-dark-400 mb-1">Start Date *</label>
+                    <input id="period-start-date"
                       type="date"
                       value={editingPeriod.startDate}
                       onChange={e => setEditingPeriod({ ...editingPeriod, startDate: e.target.value })}
@@ -724,8 +725,8 @@ export function SettingsPage() {
                     />
                   </div>
                   <div className="min-w-0">
-                    <label className="block text-sm text-dark-400 mb-1">End Date *</label>
-                    <input
+                    <label htmlFor="period-end-date" className="block text-sm text-dark-400 mb-1">End Date *</label>
+                    <input id="period-end-date"
                       type="date"
                       value={editingPeriod.endDate}
                       onChange={e => setEditingPeriod({ ...editingPeriod, endDate: e.target.value })}
@@ -736,9 +737,9 @@ export function SettingsPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
-                    <label className="block text-sm text-dark-400 mb-1">Start Time (optional)</label>
+                    <label htmlFor="period-start-time" className="block text-sm text-dark-400 mb-1">Start Time (optional)</label>
                     <div className="flex items-center gap-1">
-                      <input
+                      <input id="period-start-time"
                         type="time"
                         value={editingPeriod.startTime || ''}
                         onChange={e => setEditingPeriod({ ...editingPeriod, startTime: e.target.value || undefined })}
@@ -758,9 +759,9 @@ export function SettingsPage() {
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <label className="block text-sm text-dark-400 mb-1">End Time (optional)</label>
+                    <label htmlFor="period-end-time" className="block text-sm text-dark-400 mb-1">End Time (optional)</label>
                     <div className="flex items-center gap-1">
-                      <input
+                      <input id="period-end-time"
                         type="time"
                         value={editingPeriod.endTime || ''}
                         onChange={e => setEditingPeriod({ ...editingPeriod, endTime: e.target.value || undefined })}
@@ -782,8 +783,8 @@ export function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-dark-400 mb-1">Reason (staff only) *</label>
-                  <input
+                  <label htmlFor="period-reason" className="block text-sm text-dark-400 mb-1">Reason (staff only) *</label>
+                  <input id="period-reason"
                     type="text"
                     value={editingPeriod.reason}
                     onChange={e => setEditingPeriod({ ...editingPeriod, reason: e.target.value })}
@@ -793,8 +794,8 @@ export function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-dark-400 mb-1">Public Message (shown to users)</label>
-                  <input
+                  <label htmlFor="period-public-message" className="block text-sm text-dark-400 mb-1">Public Message (shown to users)</label>
+                  <input id="period-public-message"
                     type="text"
                     value={editingPeriod.publicMessage || ''}
                     onChange={e => setEditingPeriod({ ...editingPeriod, publicMessage: e.target.value })}
@@ -829,8 +830,8 @@ export function SettingsPage() {
 
                   {editingPeriod.softBlock && (
                     <div>
-                      <label className="block text-sm text-dark-400 mb-1">Acknowledgement text (checkbox label)</label>
-                      <input
+                      <label htmlFor="period-acknowledgement-text" className="block text-sm text-dark-400 mb-1">Acknowledgement text (checkbox label)</label>
+                      <input id="period-acknowledgement-text"
                         type="text"
                         data-testid="ack-text-input"
                         value={editingPeriod.acknowledgementText || ''}
