@@ -9,6 +9,8 @@ interface ConfirmDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   loading?: boolean;
+  /** data-testid for the confirm button, for end-to-end tests. */
+  confirmTestId?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -20,6 +22,7 @@ export function ConfirmDialog({
   confirmLabel = 'Delete',
   cancelLabel = 'Cancel',
   loading = false,
+  confirmTestId,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -64,6 +67,7 @@ export function ConfirmDialog({
             </button>
             <button
               onClick={onConfirm}
+              data-testid={confirmTestId}
               disabled={loading}
               className="px-4 py-2 text-sm bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 rounded-lg transition-colors flex items-center gap-2"
             >

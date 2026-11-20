@@ -19,6 +19,7 @@ import { usePermissions } from '../lib/usePermissions';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { Modal } from 'the-harry-list-shared';
 import { HelpGuide } from '../components/HelpGuide';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { reservationDetailGuide } from '../lib/guideContent';
 
 // Pre-filled (editable) default shown when rejecting a reservation. Staff can edit or clear it.
@@ -41,6 +42,14 @@ const ACTIVITY_LABELS: Record<string, string> = {
  * this reservation was booked with. Retired ones stay visible so staff can see and remove
  * them, rather than carrying an invisible value through every save.
  */
+/** The line shown after a status change, before the email note. */
+const STATUS_CHANGED: Record<string, string> = {
+  CONFIRMED: 'Reservation confirmed.',
+  REJECTED: 'Reservation rejected.',
+  CANCELLED: 'Reservation cancelled.',
+  PENDING: 'Reservation moved back to Pending.',
+};
+
 function editableActivities(selected: string[]): string[] {
   return [...SELECTABLE_ACTIVITIES, ...selected.filter((a) => !SELECTABLE_ACTIVITIES.includes(a))];
 }
@@ -93,6 +102,12 @@ export function ReservationDetailPage() {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showReopenDialog, setShowReopenDialog] = useState(false);
   const [sendEmail, setSendEmail] = useState(true);
+  // What happened with the last action, shown in the Actions card. A failed action never
+  // replaces the page: the reservation and anything typed stay on screen.
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
+  // Reopening suggests "no email"; the editor's own choice comes back when the dialog closes.
+  const [emailBeforeReopen, setEmailBeforeReopen] = useState<boolean | null>(null);
   // Optional free-text message added to the status-change email (pre-filled for rejections).
   const [actionMessage, setActionMessage] = useState('');
 
@@ -100,6 +115,8 @@ export function ReservationDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<Reservation>>({});
   const [sendEditEmail, setSendEditEmail] = useState(false);
+  // A failed save keeps the editor open with everything typed, and says why.
+  const [editError, setEditError] = useState<string | null>(null);
   // Optional free-text message added to the "reservation updated" email.
   const [editMessage, setEditMessage] = useState('');
   // The edit form's starting values, to tell real changes from merely opening the editor.
@@ -145,31 +162,45 @@ export function ReservationDetailPage() {
       .finally(() => setLoadingAudit(false));
   }, [id]);
 
+  const emailNote = (emailed: boolean) =>
+    emailed ? ` An email goes to ${reservation?.email}.` : ' No email was sent.';
+
   const handleStatusChange = async (newStatus: string) => {
     if (!reservation) return;
 
     setIsUpdating(true);
+    setActionError(null);
+    setActionNotice(null);
     try {
       await updateReservationStatus(
         reservation.id, newStatus, userName, sendEmail, sendEmail ? actionMessage : undefined);
       setReservation({ ...reservation, status: newStatus });
+      setActionNotice(`${STATUS_CHANGED[newStatus] ?? 'Status updated.'}${emailNote(sendEmail)}`);
       loadAuditLog();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update status');
+      setActionError(err instanceof Error ? err.message : 'Failed to update status');
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const closeReopenDialog = () => {
+    setShowReopenDialog(false);
+    if (emailBeforeReopen !== null) setSendEmail(emailBeforeReopen);
+    setEmailBeforeReopen(null);
   };
 
   const handleDelete = async () => {
     if (!reservation) return;
 
     setIsUpdating(true);
+    setActionError(null);
     try {
       await deleteReservation(reservation.id, sendEmail);
       navigate('/reservations');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete reservation');
+      setShowDeleteConfirm(false);
+      setActionError(err instanceof Error ? err.message : 'Failed to delete reservation');
       setIsUpdating(false);
     }
   };
@@ -210,6 +241,7 @@ export function ReservationDetailPage() {
     setEditData(initial);
     setEditBaseline(JSON.stringify(initial));
     setEditMessage('');
+    setEditError(null);
     setIsEditing(true);
   };
 
@@ -217,15 +249,18 @@ export function ReservationDetailPage() {
     if (!reservation) return;
 
     setIsUpdating(true);
+    setEditError(null);
+    setActionNotice(null);
     try {
       const updatedReservation = await updateReservation(
         reservation.id, editData, sendEditEmail, sendEditEmail ? editMessage : undefined);
       setReservation(updatedReservation);
       setIsEditing(false);
       setEditData({});
+      setActionNotice(`Changes saved.${sendEditEmail ? ` An email goes to ${updatedReservation.email}.` : ''}`);
       loadAuditLog();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update reservation');
+      setEditError(err instanceof Error ? err.message : 'Failed to update reservation');
     } finally {
       setIsUpdating(false);
     }
@@ -329,6 +364,20 @@ export function ReservationDetailPage() {
       <div className="card">
         <h2 className="text-lg font-title font-semibold text-white mb-4">Actions</h2>
 
+        {/* Result of the last action. role=status/alert so screen readers hear it too. */}
+        {actionNotice && (
+          <p role="status" data-testid="action-notice" className="mb-4 flex items-start gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-400">
+            <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            {actionNotice}
+          </p>
+        )}
+        {actionError && (
+          <p role="alert" data-testid="action-error" className="mb-4 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            {actionError}
+          </p>
+        )}
+
         <div className="flex items-center gap-3 mb-4">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -407,7 +456,12 @@ export function ReservationDetailPage() {
               instead of asking the customer to submit everything again. */}
           {(reservation.status === 'REJECTED' || reservation.status === 'CANCELLED') && (
             <button
-              onClick={() => { setActionMessage(''); setSendEmail(false); setShowReopenDialog(true); }}
+              onClick={() => {
+                setActionMessage('');
+                setEmailBeforeReopen(sendEmail);
+                setSendEmail(false);
+                setShowReopenDialog(true);
+              }}
               data-testid="reopen-reservation"
               disabled={isUpdating}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-colors"
@@ -425,33 +479,23 @@ export function ReservationDetailPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/50 text-red-400 hover:bg-red-500/10 transition-colors ml-auto"
             >
               <Trash2 className="w-4 h-4" />
-              Remove
+              Delete permanently
             </button>
           )}
         </div>
 
         {/* Delete Confirmation */}
-        {showDeleteConfirm && (
-          <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/50">
-            <p className="text-red-400 mb-3">Are you sure you want to delete this reservation? This action cannot be undone.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={handleDelete}
-                data-testid="delete-dialog-submit"
-                disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
-              >
-                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Yes, Delete'}
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
+        <ConfirmDialog
+          open={showDeleteConfirm}
+          title="Delete this reservation permanently?"
+          message={`"${reservation.eventTitle}" and its history are removed for good. This cannot be undone.${
+            sendEmail ? ` The customer gets a cancellation email at ${reservation.email}.` : ' No email is sent.'}`}
+          confirmLabel="Delete permanently"
+          confirmTestId="delete-dialog-submit"
+          loading={isUpdating}
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
 
         {/* Confirm Reservation Dialog */}
         {showConfirmDialog && (
@@ -551,7 +595,7 @@ export function ReservationDetailPage() {
               <button
                 onClick={() => {
                   handleStatusChange('PENDING');
-                  setShowReopenDialog(false);
+                  closeReopenDialog();
                 }}
                 data-testid="reopen-dialog-submit"
                 disabled={isUpdating}
@@ -561,7 +605,7 @@ export function ReservationDetailPage() {
                 Yes, Move to Pending
               </button>
               <button
-                onClick={() => setShowReopenDialog(false)}
+                onClick={closeReopenDialog}
                 className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
               >
                 Go Back
@@ -1256,6 +1300,12 @@ export function ReservationDetailPage() {
               </div>
             </div>
 
+            {editError && (
+              <p role="alert" data-testid="edit-error" className="mx-6 mt-4 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                Not saved: {editError}
+              </p>
+            )}
             <div className="flex justify-end gap-3 p-6 border-t border-dark-700">
               <button
                 onClick={() => setIsEditing(false)}

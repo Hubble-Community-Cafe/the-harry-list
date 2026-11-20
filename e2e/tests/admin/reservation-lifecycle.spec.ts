@@ -49,6 +49,8 @@ test.describe('admin: reservation lifecycle', () => {
     await page.getByTestId('confirm-reservation').click();
     await page.getByTestId('confirm-dialog-submit').click();
     await expect(page.getByTestId('reservation-status')).toContainText('CONFIRMED');
+    // Staff see what happened, including that the guest is emailed.
+    await expect(page.getByTestId('action-notice')).toContainText('Reservation confirmed. An email goes to');
     await captureScreenshot(testInfo, page, '2-confirmed-in-admin');
 
     // 4) The guest receives the confirmation email.
@@ -105,6 +107,7 @@ test.describe('admin: reservation lifecycle', () => {
     await page.getByTestId('reject-dialog-submit').click();
     await expect(page.getByTestId('reservation-status')).toContainText('REJECTED');
     await page.getByTestId('remove-reservation').click();
+    await expect(page.getByRole('alertdialog', { name: 'Delete this reservation permanently?' })).toBeVisible();
     await page.getByTestId('delete-dialog-submit').click();
 
     // Back on the list and the reservation is gone.

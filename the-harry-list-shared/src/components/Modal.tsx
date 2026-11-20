@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 
 const FOCUSABLE =
   'a[href], area[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), ' +
@@ -44,6 +45,10 @@ interface ModalProps {
  * An accessible modal dialog (WCAG 2.1.2, 2.4.3, 4.1.2): announced as a dialog and named by
  * its heading, focus moves in on open, Tab and Shift+Tab stay inside, Escape closes it, and
  * focus returns to whatever opened it. Render it only while the dialog is open.
+ *
+ * It renders into document.body (a portal), so it always covers the whole page: inside an
+ * element with a transform or backdrop-filter (like .card), position: fixed would otherwise
+ * be relative to that element and the dialog would be clipped to it.
  */
 export function Modal({
   onClose,
@@ -110,7 +115,7 @@ export function Modal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return (
+  return createPortal(
     <div
       className={overlayClassName}
       data-testid={backdropTestId}
@@ -128,6 +133,7 @@ export function Modal({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

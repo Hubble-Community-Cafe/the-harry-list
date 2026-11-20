@@ -533,3 +533,81 @@ describe('ReservationDetailPage — catering email reply-to', () => {
     expect(replyTo).not.toHaveAttribute('placeholder', expect.stringContaining('events@'));
   });
 });
+
+describe('ReservationDetailPage: action feedback', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const waitForActions = () =>
+    waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
+
+  it('says what happened after a status change, including who gets an email', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+    vi.mocked(updateReservationStatus).mockResolvedValueOnce({ ...sampleReservation, status: 'CONFIRMED' });
+    renderPage();
+    await waitForActions();
+
+    fireEvent.click(screen.getByTestId('confirm-reservation'));
+    fireEvent.click(screen.getByTestId('confirm-dialog-submit'));
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Reservation confirmed. An email goes to john@example.com.');
+  });
+
+  it('keeps the page and shows the error inline when a status change fails', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
+    vi.mocked(updateReservationStatus).mockRejectedValueOnce(new Error('Server unavailable'));
+    renderPage();
+    await waitForActions();
+
+    fireEvent.click(screen.getByTestId('confirm-reservation'));
+    fireEvent.click(screen.getByTestId('confirm-dialog-submit'));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Server unavailable');
+    // The reservation is still on screen, not replaced by an error card.
+    expect(screen.getByText('Birthday Party')).toBeInTheDocument();
+    expect(screen.getByTestId('confirm-reservation')).toBeInTheDocument();
+  });
+
+  it('gives the email setting back after the reopen dialog closes', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'REJECTED' });
+    renderPage();
+    await waitForActions();
+    const emailBox = screen.getByRole('checkbox', { name: /send email notification to customer/i });
+    expect(emailBox).toBeChecked();
+
+    fireEvent.click(screen.getByTestId('reopen-reservation'));
+    expect(emailBox).not.toBeChecked(); // reopening suggests no email
+    fireEvent.click(screen.getByRole('button', { name: 'Go Back' }));
+
+    expect(emailBox).toBeChecked();
+  });
+
+  it('asks before a permanent delete, says it is permanent and whether an email goes out', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'CANCELLED' });
+    renderPage();
+    await waitForActions();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete permanently' }));
+    const dialog = screen.getByRole('alertdialog', { name: 'Delete this reservation permanently?' });
+    expect(dialog).toHaveTextContent('"Birthday Party" and its history are removed for good. This cannot be undone.');
+    expect(dialog).toHaveTextContent('The customer gets a cancellation email at john@example.com.');
+    expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus();
+  });
+
+  it('keeps the editor open with the input and the reason when saving fails', async () => {
+    vi.mocked(updateReservation).mockRejectedValueOnce(new Error('Guest count too high'));
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('edit-reservation')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId('edit-reservation'));
+    await screen.findByTestId('edit-save');
+    fireEvent.change(screen.getByTestId('edit-guests'), { target: { value: '99' } });
+
+    fireEvent.click(screen.getByTestId('edit-save'));
+
+    expect(await screen.findByTestId('edit-error')).toHaveTextContent('Not saved: Guest count too high');
+    expect(screen.getByTestId('edit-guests')).toHaveValue(99);
+    expect(screen.getByText('Birthday Party')).toBeInTheDocument();
+  });
+});

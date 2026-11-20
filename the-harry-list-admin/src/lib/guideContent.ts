@@ -102,7 +102,7 @@ Click any reservation card to open its **detail page**. Here you can:
 ### Other Actions
 - **Edit** — modify any field (event details, contact info, dates, location, etc.)
 - **Send Catering Options** — if the reservation includes catering, send an email with PDF menu attachments
-- **Delete** — permanently remove the reservation
+- **Delete permanently**: only for rejected or cancelled reservations; asks first, and says whether the contact gets an email
 
 ### Email Notifications
 Most status changes can optionally send an email to the contact person. Use the **"Send email notification"** checkbox to control this.`,
@@ -470,17 +470,18 @@ The available actions depend on the current status:
 - **Cancel** — cancel the reservation (e.g. customer called to cancel)
 
 ### Rejected and Cancelled Reservations
-- **Move back to Pending**: reopen a rejected or cancelled reservation. Use this when the event is going ahead after all (e.g. a different date or location frees up, or the customer changes their mind) so you can edit the existing details instead of asking the customer to fill everything in again. The reservation returns to **Pending**, ready to confirm or reject. The customer email is **off** by default for this action; tick the box only if you want to let them know it's being reconsidered.
-- **Remove**: permanently delete the reservation (with confirmation dialog)
+- **Move back to Pending**: reopen a rejected or cancelled reservation. Use this when the event is going ahead after all (e.g. a different date or location frees up, or the customer changes their mind) so you can edit the existing details instead of asking the customer to fill everything in again. The reservation returns to **Pending**, ready to confirm or reject. The customer email is **off** by default for this action; tick the box only if you want to let them know it's being reconsidered. When the dialog closes, the box goes back to how you had it.
+- **Delete permanently**: remove the reservation and its history for good. A confirmation dialog asks first and says whether the customer gets a cancellation email (that follows the **"Send email notification"** checkbox).
 
 Other status changes are refused, also when made outside these buttons: a pending reservation cannot be cancelled directly (reject it instead), and a confirmed one cannot go back to pending.
 
 ### All Reservations
 - **Edit** — open the edit form to change any field
-- **Delete** — permanently remove (with confirmation dialog)
 
 ### Email Notifications
 Each status change dialog (and the edit form) has a **"Send email notification"** checkbox. For most status changes it is **on** by default — uncheck it only if you've already communicated with the customer directly. For the **edit form** and the **Move back to Pending** action it is **off** by default, since those are usually internal corrections; tick it when the change is worth notifying the customer about.
+
+After each action, a line at the top of the **Actions** box says what happened and whether an email went out. If something goes wrong, the reason appears there too, and nothing you typed is lost.
 
 ### Adding a Message to the Email
 When the email notification is on, every status dialog and the edit form shows an optional **"Add a message to the email"** box. Anything you type here appears as a highlighted note in that email — use it to clarify things the standard template doesn't cover, e.g. *"We read your special request and will keep a shaded spot for you."* For **Reject**, this box is pre-filled with a default reason that you can edit, replace, or clear before sending.`,

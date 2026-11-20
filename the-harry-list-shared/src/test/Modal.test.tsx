@@ -105,3 +105,16 @@ describe('Modal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('Modal placement', () => {
+  it('renders into document.body, so a transformed or blurred parent cannot clip it', () => {
+    render(
+      <div data-testid="card" style={{ transform: 'translateZ(0)' }}>
+        <Modal labelledBy="t" onClose={vi.fn()} className="panel"><h2 id="t">Inside a card</h2></Modal>
+      </div>,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Inside a card' });
+    expect(screen.getByTestId('card')).not.toContainElement(dialog);
+    expect(dialog.parentElement?.parentElement).toBe(document.body);
+  });
+});
