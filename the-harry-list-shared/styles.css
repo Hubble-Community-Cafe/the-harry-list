@@ -126,7 +126,7 @@
   --color-meteor-100: #c5d9d0;
   --color-meteor-200: #9fc1b3;
   --color-meteor-300: #78a996;
-  --color-meteor-400: #52917a;
+  --color-meteor-400: #62a38a; /* lighter than #52917a so it stays at least 4.9:1 on the petrol cards */
   --color-meteor-500: #053826;
   --color-meteor-600: #042d1e;
   --color-meteor-700: #032217;
@@ -134,18 +134,20 @@
   --color-meteor-900: #010b08;
   --color-meteor-950: #343436;
 
-  /* Shared dark background colors (lightened for better readability) */
+  /* Dark mode: deep petrol, built on Hubble teal #0f4d64 (the housestyle colour that wins when
+     one must), replacing the old cold navy. Text steps 300 to 500 are at least 5.5:1 on the
+     page (950), card (900) and input (800) backgrounds (WCAG AA needs 4.5:1). */
   --color-dark-50: #e8f7f9;
   --color-dark-100: #bde8ec;
   --color-dark-200: #98dce3;
-  --color-dark-300: #94a3b8;
-  --color-dark-400: #818fa4; /* 4.6:1 on every dark page and card background (WCAG AA); was #64748b */
-  --color-dark-500: #7e8fa7; /* 4.6:1 on every dark page and card background (WCAG AA); was #475569 */
-  --color-dark-600: #334155;
-  --color-dark-700: #1e293b;
-  --color-dark-800: #1a2332;
-  --color-dark-900: #111827;
-  --color-dark-950: #0c1220;
+  --color-dark-300: #a9c3ca; /* 7.8:1 or more */
+  --color-dark-400: #8badb6; /* 6.0:1 or more */
+  --color-dark-500: #84a5ae; /* 5.5:1 or more */
+  --color-dark-600: #2a505c;
+  --color-dark-700: #173a45;
+  --color-dark-800: #0f2d37;
+  --color-dark-900: #0a222a;
+  --color-dark-950: #06191f;
 
   /* Fonts */
   --font-sans: 'Lato', system-ui, sans-serif;
@@ -849,16 +851,16 @@ body.dark {
 }
 
 .dark ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: var(--color-dark-900);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--color-dark-600);
   border-radius: 4px;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--color-dark-500);
 }
 
 /* Custom scrollbar - light mode */
