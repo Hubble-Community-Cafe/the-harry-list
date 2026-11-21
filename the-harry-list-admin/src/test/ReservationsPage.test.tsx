@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { ReservationsPage } from '../pages/ReservationsPage';
 
@@ -62,6 +62,8 @@ vi.mock('../lib/api', () => ({
       endTime: '11:00:00',
       location: 'HUBBLE',
       expectedGuests: 30,
+      specialActivities: ['EAT_CATERING'],
+      cateringArranged: false,
     },
     {
       id: 4,
@@ -76,7 +78,10 @@ vi.mock('../lib/api', () => ({
       expectedGuests: 5,
     },
   ]),
+  updateCateringArranged: vi.fn(),
 }));
+
+import { updateCateringArranged } from '../lib/api';
 
 const renderWithRouter = (component: React.ReactNode) => {
   return render(
@@ -89,6 +94,35 @@ const renderWithRouter = (component: React.ReactNode) => {
 describe('ReservationsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('lists the locations in the filter by name, not by code', async () => {
+    renderWithRouter(<ReservationsPage />);
+    const filter = await screen.findByRole('combobox', { name: 'Filter by location' }, { timeout: 3000 });
+    expect(within(filter).getByRole('option', { name: 'Hubble' })).toBeInTheDocument();
+    expect(within(filter).queryByRole('option', { name: 'HUBBLE' })).not.toBeInTheDocument();
+  });
+
+  it('makes the title the card link and keeps the catering toggle out of it', async () => {
+    renderWithRouter(<ReservationsPage />);
+    const toggle = await screen.findByRole('button', { name: 'Catering to arrange for Workshop' }, { timeout: 3000 });
+    expect(toggle.closest('a')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Workshop' })).toHaveAttribute('href', '/reservations/3');
+  });
+
+  it('shows the reason under the card when saving the catering status fails', async () => {
+    vi.mocked(updateCateringArranged).mockRejectedValueOnce(new Error('Server unavailable'));
+    renderWithRouter(<ReservationsPage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Catering to arrange for Workshop' }, { timeout: 3000 }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Catering status not saved: Server unavailable');
+  });
+
+  it('marks catering arranged when the toggle works', async () => {
+    vi.mocked(updateCateringArranged).mockResolvedValueOnce({ cateringArranged: true } as never);
+    renderWithRouter(<ReservationsPage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Catering to arrange for Workshop' }, { timeout: 3000 }));
+    expect(await screen.findByRole('button', { name: 'Catering arranged for Workshop' })).toBeInTheDocument();
+    expect(updateCateringArranged).toHaveBeenCalledWith(3, true);
   });
 
   it('renders the reservations page title after loading', async () => {

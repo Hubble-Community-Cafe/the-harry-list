@@ -56,6 +56,8 @@ const STATUS_BADGE: Record<string, string> = {
 export function WeekOverviewPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  // A failed catering toggle, shown on that reservation's card.
+  const [cateringError, setCateringError] = useState<{ id: number; message: string } | null>(null);
   const [appointments, setAppointments] = useState<CalendarAppointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -293,12 +295,17 @@ export function WeekOverviewPage() {
                         key={reservation.id}
                         reservation={reservation}
                         canEdit={canUpdateReservations}
+                        cateringError={cateringError?.id === reservation.id ? cateringError.message : undefined}
                         onCateringToggle={async (id, newValue) => {
+                          setCateringError(null);
                           try {
                             const updated = await updateCateringArranged(id, newValue);
                             setReservations(prev => prev.map(r => r.id === id ? { ...r, cateringArranged: updated.cateringArranged } : r));
                           } catch (error) {
-                            console.error('Failed to update catering status:', error);
+                            setCateringError({
+                              id,
+                              message: `Not saved: ${error instanceof Error ? error.message : 'please try again'}`,
+                            });
                           }
                         }}
                       />
@@ -329,19 +336,22 @@ function WeekReservationCard({
   reservation,
   canEdit,
   onCateringToggle,
+  cateringError,
 }: {
   reservation: Reservation;
   canEdit: boolean;
   onCateringToggle: (id: number, newValue: boolean) => Promise<void>;
+  /** Why the last catering toggle on this card failed, if it did. */
+  cateringError?: string;
 }) {
   const needsCatering = hasCatering(reservation.specialActivities);
   const isHubble = reservation.location === 'HUBBLE';
 
   return (
-    <Link
-      to={`/reservations/${reservation.id}`}
+    // The title link stretches over the card; the catering toggle sits on top as its own control.
+    <div
       data-testid="week-reservation"
-      className={`block rounded-lg bg-dark-800/80 hover:bg-dark-800 border-l-2 p-2 transition-colors ${STATUS_COLORS[reservation.status] || 'border-l-dark-600'}`}
+      className={`relative block rounded-lg bg-dark-800/80 hover:bg-dark-800 border-l-2 p-2 transition-colors has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-hubble-500 ${STATUS_COLORS[reservation.status] || 'border-l-dark-600'}`}
     >
       {/* Status badge */}
       <div className="mb-1">
@@ -352,7 +362,12 @@ function WeekReservationCard({
 
       {/* Title */}
       <div className="mb-1">
-        <span className="text-xs font-medium text-white truncate leading-snug block">{reservation.eventTitle}</span>
+        <Link
+          to={`/reservations/${reservation.id}`}
+          className="text-xs font-medium text-white truncate leading-snug block outline-none after:absolute after:inset-0 after:rounded-lg"
+        >
+          {reservation.eventTitle}
+        </Link>
       </div>
 
       {/* Time */}
@@ -382,12 +397,10 @@ function WeekReservationCard({
         {needsCatering && (canEdit ? (
           <button
             type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onCateringToggle(reservation.id, !reservation.cateringArranged);
-            }}
-            className={`flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded transition-colors ${
+            data-testid="catering-toggle"
+            aria-label={`Catering ${reservation.cateringArranged ? 'arranged' : 'to arrange'} for ${reservation.eventTitle}`}
+            onClick={() => onCateringToggle(reservation.id, !reservation.cateringArranged)}
+            className={`relative z-10 flex items-center gap-0.5 min-h-6 text-[10px] font-medium px-1.5 py-0.5 rounded transition-colors ${
               reservation.cateringArranged
                 ? 'bg-green-500/20 text-green-400'
                 : 'bg-orange-500/20 text-orange-400'
@@ -395,7 +408,7 @@ function WeekReservationCard({
             title={reservation.cateringArranged ? 'Catering arranged (click to undo)' : 'Catering needed (click to mark arranged)'}
           >
             <UtensilsCrossed className="w-3 h-3" />
-            {reservation.cateringArranged ? 'OK' : '!'}
+            {reservation.cateringArranged ? 'Arranged' : 'To arrange'}
           </button>
         ) : (
           <span className={`flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded ${
@@ -404,11 +417,17 @@ function WeekReservationCard({
                 : 'bg-orange-500/20 text-orange-400'
             }`}>
             <UtensilsCrossed className="w-3 h-3" />
-            {reservation.cateringArranged ? 'OK' : '!'}
+            <span className="sr-only">Catering </span>
+            {reservation.cateringArranged ? 'Arranged' : 'To arrange'}
           </span>
         ))}
       </div>
-    </Link>
+      {cateringError && (
+        <p role="alert" data-testid="catering-error" className="relative z-10 mt-1 text-[11px] text-red-400">
+          {cateringError}
+        </p>
+      )}
+    </div>
   );
 }
 

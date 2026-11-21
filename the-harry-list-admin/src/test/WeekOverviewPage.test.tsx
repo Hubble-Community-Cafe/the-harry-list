@@ -256,6 +256,21 @@ describe('WeekOverviewPage', () => {
     expect(screen.getByText(/10:00.*12:00/)).toBeInTheDocument();
   });
 
+  it('names the catering toggle by its state and event, and keeps it out of the card link', async () => {
+    renderPage();
+    const toggle = await screen.findByRole('button', { name: 'Catering to arrange for Hubble Birthday' }, { timeout: 3000 });
+    expect(toggle.closest('a')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Hubble Birthday' })).toHaveAttribute('href', '/reservations/1');
+    expect(screen.getByRole('button', { name: 'Catering arranged for Wednesday Workshop' })).toBeInTheDocument();
+  });
+
+  it('says so on the card when saving the catering status fails', async () => {
+    mockUpdateCateringArranged.mockRejectedValueOnce(new Error('Server unavailable'));
+    renderPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Catering to arrange for Hubble Birthday' }, { timeout: 3000 }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Not saved: Server unavailable');
+  });
+
   it('toggles catering arranged on click', async () => {
     renderPage();
     await waitFor(() => {

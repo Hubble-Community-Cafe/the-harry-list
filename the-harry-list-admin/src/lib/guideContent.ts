@@ -84,7 +84,7 @@ Each reservation card shows:
 - **Catering icon** — a fork/knife icon appears if the reservation includes catering activities
 
 ### Catering Toggle
-If a reservation has catering, you'll see a catering status button. Click it to toggle whether catering has been arranged. This helps track which reservations still need catering follow-up.`,
+If a reservation has catering, you'll see a catering status button: **Catering to arrange** or **Catering arranged**. Click it to switch between the two; this does not open the reservation. Click anywhere else on the card to open it. If saving fails, a message under the card says so.`,
   },
   {
     title: 'Managing a Reservation',
@@ -145,8 +145,8 @@ At the top of the page you can filter by:
 
 Reservations with catering activities show a **fork/knife icon**. You can toggle the catering status directly from the week overview:
 
-- **Orange icon** — catering not yet arranged
-- **Green icon** — catering has been arranged
+- **Orange, "To arrange"**: catering not yet arranged
+- **Green, "Arranged"**: catering has been arranged
 
 This is the fastest way to track catering prep for the week ahead.
 
