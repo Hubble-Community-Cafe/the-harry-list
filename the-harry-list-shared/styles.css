@@ -149,10 +149,9 @@
 
   /* Fonts */
   --font-sans: 'Lato', system-ui, sans-serif;
-  --font-display: 'AXIS', 'Lato', system-ui, sans-serif;
   --font-title: 'AXIS', 'Lato', system-ui, sans-serif;
-  --font-body: 'Lato', system-ui, sans-serif;
-  --font-light: 'Lato', system-ui, sans-serif;
+  /* No --font-light here: Tailwind would turn the font-light class into a font family
+     instead of weight 300, and the bundled Lato Light would never be used. */
 
   /* Motion. Strong curves: the CSS built-ins are too weak to read as
      intentional. Durations stay under 300ms so UI never feels sluggish. */

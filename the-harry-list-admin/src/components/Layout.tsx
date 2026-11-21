@@ -121,7 +121,7 @@ export function Layout() {
             <div>
               {/* Not a heading: each page has its own h1. */}
               <p className="font-title font-bold text-white">The Harry List</p>
-              <p className="text-xs text-dark-400 font-light">Admin Portal</p>
+              <p className="text-xs text-dark-400">Admin Portal</p>
             </div>
           </div>
 

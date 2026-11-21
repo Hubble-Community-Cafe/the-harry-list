@@ -834,7 +834,7 @@ export function SettingsPage() {
                     </button>
                     <span className="text-sm text-white">
                       Soft block (allow bookings with a warning)
-                      <span className="block text-xs text-dark-400 font-light mt-0.5">
+                      <span className="block text-xs text-dark-400 mt-0.5">
                         Guests can still book during this period, but must acknowledge a warning first.
                         Use this for e.g. a summer closing where the bar opens on request.
                       </span>
