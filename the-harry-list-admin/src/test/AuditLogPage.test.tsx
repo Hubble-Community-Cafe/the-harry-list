@@ -51,9 +51,11 @@ describe('AuditLogPage', () => {
 
     expect(screen.getByText('Status changed')).toBeInTheDocument();
     expect(screen.getByText('Staff Member')).toBeInTheDocument();
-    expect(screen.getByText('status')).toBeInTheDocument();
-    expect(screen.getByText('PENDING')).toBeInTheDocument();
-    expect(screen.getByText('CONFIRMED')).toBeInTheDocument();
+    // Field names and values in words, not the stored codes.
+    expect(screen.getAllByText('Status').length).toBeGreaterThan(0);
+    expect(screen.getByText('Pending')).toBeInTheDocument();
+    expect(screen.getByText('Confirmed')).toBeInTheDocument();
+    expect(screen.queryByText('PENDING')).not.toBeInTheDocument();
   });
 
   it('passes the selected entity type filter to the API and resets to page 0', async () => {

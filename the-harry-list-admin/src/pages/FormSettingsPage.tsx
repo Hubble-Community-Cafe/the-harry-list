@@ -19,6 +19,7 @@ import { usePermissions } from '../lib/usePermissions';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { Modal } from 'the-harry-list-shared';
 import { UsersTab } from './UsersPage';
+import { activityLabel, constraintValueLabel, locationLabel } from '../lib/labels';
 
 const CONSTRAINT_TYPES = [
   { value: 'ACTIVITY_CONFLICT', label: 'Activity Conflict' },
@@ -319,11 +320,11 @@ export function SettingsPage() {
                         {CONSTRAINT_TYPES.find(t => t.value === c.constraintType)?.label || c.constraintType}
                       </span>
                       <span className="text-xs text-dark-500">
-                        {c.triggerActivity}
-                        {c.targetValue && ` → ${c.targetValue}`}
+                        {activityLabel(c.triggerActivity)}
+                        {c.targetValue && ` → ${constraintValueLabel(c.targetValue)}`}
                         {c.constraintType === 'ACTIVITY_NOTICE'
                           ? [
-                              c.secondaryValue && ` at ${c.secondaryValue}`,
+                              c.secondaryValue && ` at ${locationLabel(c.secondaryValue)}`,
                               c.numericValue != null && `, ${c.numericValue}+ guests`,
                             ].filter(Boolean).join('')
                           : c.numericValue !== null && c.numericValue !== undefined && ` (${c.numericValue})`}
@@ -409,7 +410,7 @@ export function SettingsPage() {
                       )}
                       {bp.location && (
                         <span className="text-xs font-mono px-2 py-0.5 rounded bg-dark-800 text-amber-400">
-                          {bp.location}
+                          {locationLabel(bp.location)}
                         </span>
                       )}
                       {bp.startTime && bp.endTime && (
@@ -512,7 +513,7 @@ export function SettingsPage() {
                       className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
                     >
                       {ACTIVITIES.map(a => (
-                        <option key={a} value={a}>{a}</option>
+                        <option key={a} value={a}>{activityLabel(a)}</option>
                       ))}
                     </select>
                   </div>
@@ -561,7 +562,7 @@ export function SettingsPage() {
                       >
                         <option value="">Any location</option>
                         {LOCATIONS.map(l => (
-                          <option key={l} value={l}>{l}</option>
+                          <option key={l} value={l}>{locationLabel(l)}</option>
                         ))}
                       </select>
                     </div>
@@ -721,7 +722,7 @@ export function SettingsPage() {
                   >
                     <option value="">All locations</option>
                     {LOCATIONS.map(l => (
-                      <option key={l} value={l}>{l}</option>
+                      <option key={l} value={l}>{locationLabel(l)}</option>
                     ))}
                   </select>
                 </div>

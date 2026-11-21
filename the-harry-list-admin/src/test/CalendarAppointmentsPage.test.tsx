@@ -100,8 +100,8 @@ describe('CalendarAppointmentsPage', () => {
   it('shows location badges', async () => {
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText('HUBBLE')).toBeInTheDocument();
-      expect(screen.getByText('METEOR')).toBeInTheDocument();
+      expect(screen.getAllByText('Hubble').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Meteor').length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -387,8 +387,8 @@ describe('CalendarAppointmentsPage - viewer permissions', () => {
     await waitFor(() => {
       expect(screen.getByText('Staff Meeting')).toBeInTheDocument();
       expect(screen.getByText('Holiday Closure')).toBeInTheDocument();
-      expect(screen.getByText('HUBBLE')).toBeInTheDocument();
-      expect(screen.getByText('METEOR')).toBeInTheDocument();
+      expect(screen.getAllByText('Hubble').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Meteor').length).toBeGreaterThanOrEqual(1);
     });
   });
 });

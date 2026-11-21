@@ -80,10 +80,10 @@ describe('ReservationDetailPage — change history', () => {
     expect(screen.getByText('Status changed')).toBeInTheDocument();
     expect(screen.getByText('Staff Member')).toBeInTheDocument();
     // Field-level diff: status PENDING -> CONFIRMED
-    expect(screen.getByText('status')).toBeInTheDocument();
-    expect(screen.getByText('PENDING')).toBeInTheDocument();
+    expect(screen.getAllByText('Status').length).toBeGreaterThan(0);
+    expect(screen.getByText('Pending')).toBeInTheDocument();
     // CONFIRMED also appears in the status badge, so assert at least one occurrence (the diff).
-    expect(screen.getAllByText('CONFIRMED').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Confirmed').length).toBeGreaterThan(0);
   });
 
   it('shows an empty state and never crashes when the audit log fails to load', async () => {
@@ -240,7 +240,7 @@ describe('ReservationDetailPage: reopen rejected or cancelled reservation', () =
       expect(updateReservationStatus).toHaveBeenCalledWith(1, 'PENDING', 'Staff Member', false, undefined));
 
     // The badge reflects the new status.
-    await waitFor(() => expect(screen.getByTestId('reservation-status')).toHaveTextContent('PENDING'));
+    await waitFor(() => expect(screen.getByTestId('reservation-status')).toHaveTextContent('Pending'));
   });
 
   it('sends a status email and message when the editor opts in', async () => {
@@ -609,5 +609,27 @@ describe('ReservationDetailPage: action feedback', () => {
     expect(await screen.findByTestId('edit-error')).toHaveTextContent('Not saved: Guest count too high');
     expect(screen.getByTestId('edit-guests')).toHaveValue(99);
     expect(screen.getByText('Birthday Party')).toBeInTheDocument();
+  });
+});
+
+describe('ReservationDetailPage: readable values', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('shows words, not the stored codes, for status, location, payment and activities', async () => {
+    vi.mocked(fetchReservation).mockResolvedValueOnce({
+      ...sampleReservation, status: 'CONFIRMED', location: 'HUBBLE', paymentOption: 'ONE_PERSON',
+      specialActivities: ['EAT_A_LA_CARTE'],
+    });
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('reservation-status')).toHaveTextContent('Confirmed'));
+
+    expect(screen.getByText('One person pays at the end')).toBeInTheDocument();
+    expect(screen.getAllByText('Hubble').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Eat a la Carte')).toBeInTheDocument();
+    for (const code of ['CONFIRMED', 'HUBBLE', 'ONE_PERSON', 'EAT A LA CARTE']) {
+      expect(screen.queryByText(code)).not.toBeInTheDocument();
+    }
   });
 });

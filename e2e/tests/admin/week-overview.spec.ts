@@ -34,7 +34,7 @@ test.describe('admin: week overview shows reservations', () => {
 
     const card = page.getByTestId('week-reservation').filter({ hasText: 'Week Overview Event' });
     await expect(card).toHaveCount(1);
-    await expect(card).toContainText('CONFIRMED');
+    await expect(card).toContainText('Confirmed');
     await captureScreenshot(testInfo, page, '1-week-overview-event');
   });
 });

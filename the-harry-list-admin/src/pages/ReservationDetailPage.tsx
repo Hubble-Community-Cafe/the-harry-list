@@ -20,6 +20,7 @@ import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { Modal } from 'the-harry-list-shared';
 import { HelpGuide } from '../components/HelpGuide';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { activityLabel, changeValueLabel, fieldLabel, invoiceTypeLabel, locationLabel, paymentLabel, statusLabel } from '../lib/labels';
 import { reservationDetailGuide } from '../lib/guideContent';
 
 // Pre-filled (editable) default shown when rejecting a reservation. Staff can edit or clear it.
@@ -29,13 +30,6 @@ const DEFAULT_REJECTION_MESSAGE =
 /** Activities that can still be added to a reservation. Mirrors SpecialActivity.selectableValues(). */
 const SELECTABLE_ACTIVITIES = ['GRADUATION', 'EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM'];
 
-const ACTIVITY_LABELS: Record<string, string> = {
-  GRADUATION: 'Graduation / PhD Defense',
-  EAT_A_LA_CARTE: 'Eat a la Carte',
-  EAT_CATERING: 'Eat Catering',
-  CATERING_CORONA_ROOM: 'Catering Corona Room',
-  PRIVATE_EVENT: 'Private Event (retired)',
-};
 
 /**
  * Activity toggles to render while editing: the selectable ones, plus any retired activity
@@ -652,7 +646,7 @@ export function ReservationDetailPage() {
           <div className="space-y-4">
             <InfoRow icon={Calendar} label="Date" value={new Date(reservation.eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} />
             <InfoRow icon={Clock} label="Time" value={`${reservation.startTime.slice(0, 5)} - ${reservation.endTime.slice(0, 5)}`} />
-            <InfoRow icon={MapPin} label="Location" value={reservation.location} />
+            <InfoRow icon={MapPin} label="Location" value={locationLabel(reservation.location)} />
             {/* Inside/outside is set on booking and editable, but was previously only visible
                 in edit mode — surface it here so staff can see it at a glance. */}
             {(reservation.seatingArea === 'INSIDE' || reservation.seatingArea === 'OUTSIDE') && (
@@ -676,7 +670,7 @@ export function ReservationDetailPage() {
                   {reservation.specialActivities && reservation.specialActivities.length > 0
                     ? reservation.specialActivities.map((activity) => (
                         <span key={activity} className="px-2 py-0.5 rounded-full bg-hubble-500/20 text-hubble-400 text-xs">
-                          {activity.replace(/_/g, ' ')}
+                          {activityLabel(activity)}
                         </span>
                       ))
                     : <span className="text-dark-400 text-sm">None</span>
@@ -697,11 +691,11 @@ export function ReservationDetailPage() {
             Payment Information
           </h2>
           <div className="space-y-4">
-            <InfoRow label="Payment Method" value={reservation.paymentOption} />
+            <InfoRow label="Payment Method" value={paymentLabel(reservation.paymentOption)} />
             <InfoRow label="Cost Center" value={reservation.costCenter} />
             <InfoRow label="Invoice Name" value={reservation.invoiceName} />
             <InfoRow label="Invoice Address" value={reservation.invoiceAddress} />
-            <InfoRow label="Invoice Type" value={reservation.invoiceType} />
+            <InfoRow label="Invoice Type" value={invoiceTypeLabel(reservation.invoiceType)} />
             <InfoRow label="Invoice Remarks" value={reservation.invoiceRemarks} />
           </div>
         </div>
@@ -812,10 +806,10 @@ export function ReservationDetailPage() {
                   <ul className="mt-2 space-y-1">
                     {entry.changes.map((change, i) => (
                       <li key={i} className="text-xs text-dark-400">
-                        <code className="text-dark-300">{change.field}</code>:{' '}
-                        <span className="line-through text-red-400/70">{change.oldValue ?? '—'}</span>
+                        <span className="text-dark-300">{fieldLabel(change.field)}</span>:{' '}
+                        <span className="line-through text-red-400/70">{changeValueLabel(change.field, change.oldValue)}</span>
                         {' → '}
-                        <span className="text-green-400/80">{change.newValue ?? '—'}</span>
+                        <span className="text-green-400/80">{changeValueLabel(change.field, change.newValue)}</span>
                       </li>
                     ))}
                   </ul>
@@ -1077,7 +1071,7 @@ export function ReservationDetailPage() {
                                 : 'bg-dark-800 text-dark-400 border border-dark-700 hover:border-dark-600'
                             }`}
                           >
-                            {ACTIVITY_LABELS[activity] ?? activity.replace(/_/g, ' ')}
+                            {activityLabel(activity)}
                           </button>
                         );
                       })}
@@ -1400,7 +1394,7 @@ function StatusBadge({ status, large }: { status: string; large?: boolean }) {
       {status === 'CONFIRMED' && <CheckCircle className="w-4 h-4" />}
       {status === 'REJECTED' && <XCircle className="w-4 h-4" />}
       {status === 'CANCELLED' && <XCircle className="w-4 h-4" />}
-      {status}
+      {statusLabel(status)}
     </span>
   );
 }

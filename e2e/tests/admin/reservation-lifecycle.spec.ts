@@ -40,15 +40,15 @@ test.describe('admin: reservation lifecycle', () => {
     await page.getByPlaceholder(/Search by name/).fill(title);
     const row = page.getByTestId('reservation-row').filter({ hasText: title });
     await expect(row).toHaveCount(1);
-    await expect(row).toContainText('PENDING');
+    await expect(row).toContainText('Pending');
     await captureScreenshot(testInfo, page, '1-appears-in-admin-list');
 
     // 3) Open it and confirm via the UI.
     await row.click();
-    await expect(page.getByTestId('reservation-status')).toContainText('PENDING');
+    await expect(page.getByTestId('reservation-status')).toContainText('Pending');
     await page.getByTestId('confirm-reservation').click();
     await page.getByTestId('confirm-dialog-submit').click();
-    await expect(page.getByTestId('reservation-status')).toContainText('CONFIRMED');
+    await expect(page.getByTestId('reservation-status')).toContainText('Confirmed');
     // Staff see what happened, including that the guest is emailed.
     await expect(page.getByTestId('action-notice')).toContainText('Reservation confirmed. An email goes to');
     await captureScreenshot(testInfo, page, '2-confirmed-in-admin');
@@ -81,7 +81,7 @@ test.describe('admin: reservation lifecycle', () => {
     const row = page.getByTestId('reservation-row').filter({ hasText: 'Editable Booking' });
     await expect(row).toHaveCount(1);
     await row.click();
-    await expect(page.getByTestId('reservation-status')).toContainText('PENDING');
+    await expect(page.getByTestId('reservation-status')).toContainText('Pending');
 
     // The inside/outside seating area is visible in read mode (#292) — staff no longer
     // have to open the editor to find out where the reservation is seated.
@@ -105,7 +105,7 @@ test.describe('admin: reservation lifecycle', () => {
     // Remove it: reject (PENDING -> REJECTED), then delete.
     await page.getByTestId('reject-reservation').click();
     await page.getByTestId('reject-dialog-submit').click();
-    await expect(page.getByTestId('reservation-status')).toContainText('REJECTED');
+    await expect(page.getByTestId('reservation-status')).toContainText('Rejected');
     await page.getByTestId('remove-reservation').click();
     await expect(page.getByRole('alertdialog', { name: 'Delete this reservation permanently?' })).toBeVisible();
     await page.getByTestId('delete-dialog-submit').click();
@@ -139,19 +139,19 @@ test.describe('admin: reservation lifecycle', () => {
     const row = page.getByTestId('reservation-row').filter({ hasText: 'Reopenable Booking' });
     await expect(row).toHaveCount(1);
     await row.click();
-    await expect(page.getByTestId('reservation-status')).toContainText('REJECTED');
+    await expect(page.getByTestId('reservation-status')).toContainText('Rejected');
     await captureScreenshot(testInfo, page, '1-rejected');
 
     // Move it back to pending (email stays off — internal correction).
     await page.getByTestId('reopen-reservation').click();
     await page.getByTestId('reopen-dialog-submit').click();
-    await expect(page.getByTestId('reservation-status')).toContainText('PENDING');
+    await expect(page.getByTestId('reservation-status')).toContainText('Pending');
     await captureScreenshot(testInfo, page, '2-back-to-pending');
 
     // Now pending, it offers confirm/reject again and can be confirmed straight away.
     await page.getByTestId('confirm-reservation').click();
     await page.getByTestId('confirm-dialog-submit').click();
-    await expect(page.getByTestId('reservation-status')).toContainText('CONFIRMED');
+    await expect(page.getByTestId('reservation-status')).toContainText('Confirmed');
     await captureScreenshot(testInfo, page, '3-confirmed-after-reopen');
   });
 
@@ -177,17 +177,17 @@ test.describe('admin: reservation lifecycle', () => {
     const row = page.getByTestId('reservation-row').filter({ hasText: 'Cancelled Booking' });
     await expect(row).toHaveCount(1);
     await row.click();
-    await expect(page.getByTestId('reservation-status')).toContainText('CONFIRMED');
+    await expect(page.getByTestId('reservation-status')).toContainText('Confirmed');
 
     await page.getByTestId('cancel-reservation').click();
     await page.getByTestId('cancel-dialog-submit').click();
-    await expect(page.getByTestId('reservation-status')).toContainText('CANCELLED');
+    await expect(page.getByTestId('reservation-status')).toContainText('Cancelled');
     await captureScreenshot(testInfo, page, '1-cancelled');
 
     await page.getByTestId('reopen-reservation').click();
     await expect(page.getByText(/Move this cancelled reservation back/)).toBeVisible();
     await page.getByTestId('reopen-dialog-submit').click();
-    await expect(page.getByTestId('reservation-status')).toContainText('PENDING');
+    await expect(page.getByTestId('reservation-status')).toContainText('Pending');
     await expect(page.getByTestId('confirm-reservation')).toBeVisible();
     await captureScreenshot(testInfo, page, '2-back-to-pending');
   });

@@ -10,6 +10,7 @@ import { usePermissions } from '../lib/usePermissions';
 import { HelpGuide } from '../components/HelpGuide';
 import { weekOverviewGuide } from '../lib/guideContent';
 import { expandOccurrences } from '../lib/recurrence';
+import { locationLabel, statusLabel } from '../lib/labels';
 
 const CATERING_ACTIVITIES = ['EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM'];
 
@@ -344,8 +345,8 @@ function WeekReservationCard({
     >
       {/* Status badge */}
       <div className="mb-1">
-        <span className={`inline-block text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded ${STATUS_BADGE[reservation.status] || 'bg-dark-600/30 text-dark-400'}`}>
-          {reservation.status}
+        <span className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded ${STATUS_BADGE[reservation.status] || 'bg-dark-600/30 text-dark-400'}`}>
+          {statusLabel(reservation.status)}
         </span>
       </div>
 
@@ -368,7 +369,7 @@ function WeekReservationCard({
             ? 'bg-hubble-500/20 text-hubble-400'
             : 'bg-meteor-500/20 text-meteor-400'
         }`}>
-          {reservation.location}
+          {locationLabel(reservation.location)}
         </span>
 
         {/* Guest count */}
@@ -453,7 +454,7 @@ function WeekAppointmentCard({ appointment }: { appointment: CalendarAppointment
             ? 'bg-hubble-500/20 text-hubble-400'
             : 'bg-meteor-500/20 text-meteor-400'
         }`}>
-          {appointment.location}
+          {locationLabel(appointment.location)}
         </span>
       </div>
     </Link>

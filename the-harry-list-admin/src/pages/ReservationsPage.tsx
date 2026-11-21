@@ -10,6 +10,7 @@ import type { Reservation } from '../types/reservation';
 import { usePermissions } from '../lib/usePermissions';
 import { HelpGuide } from '../components/HelpGuide';
 import { reservationsGuide } from '../lib/guideContent';
+import { locationLabel, statusLabel } from '../lib/labels';
 
 const statusOptions = ['ALL', 'PENDING', 'CONFIRMED', 'REJECTED', 'CANCELLED'];
 const locationOptions = ['ALL', 'HUBBLE', 'METEOR'];
@@ -126,7 +127,7 @@ export function ReservationsPage() {
             >
               {statusOptions.map((status) => (
                 <option key={status} value={status}>
-                  {status === 'ALL' ? 'All Status' : status}
+                  {status === 'ALL' ? 'All Statuses' : statusLabel(status)}
                 </option>
               ))}
             </select>
@@ -304,7 +305,7 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${color}`}>
       <Icon className="w-3 h-3" />
-      {status}
+      {statusLabel(status)}
     </span>
   );
 }
@@ -321,7 +322,7 @@ function LocationBadge({ location }: { location: string }) {
       }
     `}>
       <span className={`w-2 h-2 rounded-full ${isHubble ? 'bg-hubble-400' : 'bg-meteor-400'}`} />
-      {location}
+      {locationLabel(location)}
     </span>
   );
 }

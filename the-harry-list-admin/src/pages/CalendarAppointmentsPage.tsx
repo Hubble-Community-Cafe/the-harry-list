@@ -16,6 +16,7 @@ import {
   FREQUENCY_OPTIONS, WEEK_OF_MONTH_OPTIONS, WEEKDAYS,
   recurrenceSummary, nthWeekdayFromDate,
 } from '../lib/recurrence';
+import { locationLabel } from '../lib/labels';
 
 /** The frequency family shown in the builder (the nth-weekday mode is derived detail). */
 type Frequency = 'NONE' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
@@ -236,7 +237,7 @@ export function CalendarAppointmentsPage() {
                       ? 'bg-hubble-500/20 text-hubble-400'
                       : 'bg-meteor-500/20 text-meteor-400'
                   }`}>
-                    {appointment.location}
+                    {locationLabel(appointment.location)}
                   </span>
                   {/* All-day or time badge */}
                   {appointment.allDay ? (

@@ -170,7 +170,7 @@ describe('FormSettingsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('2026-04-01 — 2026-04-03')).toBeInTheDocument();
-      expect(screen.getByText('HUBBLE')).toBeInTheDocument();
+      expect(screen.getAllByText('Hubble').length).toBeGreaterThanOrEqual(1);
     });
   });
 

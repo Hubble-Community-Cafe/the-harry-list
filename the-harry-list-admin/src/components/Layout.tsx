@@ -10,6 +10,7 @@ import { usePermissions } from '../lib/usePermissions';
 import { useRole } from '../lib/RoleContext';
 import { ThemeToggle, SkipLink, MAIN_CONTENT_ID } from 'the-harry-list-shared';
 import { version } from '../../package.json';
+import { roleLabel } from '../lib/labels';
 
 export function Layout() {
   const { instance, accounts } = useMsal();
@@ -170,7 +171,7 @@ export function Layout() {
                       role === 'ADMIN' ? 'bg-red-500/20 text-red-400' :
                       role === 'EDITOR' ? 'bg-hubble-500/20 text-hubble-400' :
                       'bg-dark-700 text-dark-400'
-                    }`}>{role}</span>
+                    }`}>{roleLabel(role)}</span>
                   )}
                 </div>
               </div>

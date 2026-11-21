@@ -243,8 +243,8 @@ describe('WeekOverviewPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Hubble Birthday')).toBeInTheDocument();
     });
-    expect(screen.getAllByText('HUBBLE').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('METEOR').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Hubble').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Meteor').length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows time on reservation cards', async () => {
@@ -279,8 +279,8 @@ describe('WeekOverviewPage', () => {
       expect(screen.getByText('Hubble Birthday')).toBeInTheDocument();
     });
     // Each card should have a visible status badge
-    expect(screen.getAllByText('PENDING').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('CONFIRMED').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Pending').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Confirmed').length).toBeGreaterThanOrEqual(1);
   });
 
   it('filters by status when Pending is selected', async () => {
