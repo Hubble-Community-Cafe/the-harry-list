@@ -1,9 +1,13 @@
 import { Suspense } from 'react';
 import { useFormContext } from 'react-hook-form';
+import { fieldA11y } from './fieldA11y';
+import { FieldError } from './FieldError';
 import { ClipboardCheck, AlertTriangle } from 'lucide-react';
 import { getAltchaChallengeUrl } from '../../lib/api';
 import { AltchaWidget } from '../../lib/deferredChunks';
-import { SPECIAL_ACTIVITY_LABELS } from './labels';
+import { REPLY_TIME } from '../../lib/replyTime';
+import { SPECIAL_ACTIVITY_LABELS, locationLabel } from './labels';
+import { formatEventDate } from '../../lib/formatDate';
 import type { ReservationFormData } from '../../types/reservation';
 
 interface SummaryStepProps {
@@ -42,7 +46,7 @@ export function SummaryStep({ activityNotices, submitError, setAltchaPayload, on
               <ClipboardCheck className="w-5 h-5 text-hubble-400" />
             </div>
             <div>
-              <h2 className="text-xl font-title font-semibold text-white tracking-tight">Review & Confirm</h2>
+              <h2 tabIndex={-1} className="text-xl font-title font-semibold text-white tracking-tight outline-none">Review & Confirm</h2>
               <p className="text-sm text-dark-400 font-light">Please review your reservation details</p>
             </div>
           </div>
@@ -66,7 +70,7 @@ export function SummaryStep({ activityNotices, submitError, setAltchaPayload, on
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                 <div><span className="text-dark-400">Title:</span> <span className="text-white">{getValues('eventTitle')}</span></div>
                 <div><span className="text-dark-400">Guests:</span> <span className="text-white">{getValues('expectedGuests')}</span></div>
-                <div><span className="text-dark-400">Date:</span> <span className="text-white">{getValues('eventDate')}</span></div>
+                <div><span className="text-dark-400">Date:</span> <span className="text-white">{formatEventDate(getValues('eventDate'))}</span></div>
                 <div><span className="text-dark-400">Time:</span> <span className="text-white">{getValues('startTime')} - {getValues('endTime')}</span></div>
                 {watchSpecialActivities.length > 0 && (
                   <div className="md:col-span-2">
@@ -105,7 +109,7 @@ export function SummaryStep({ activityNotices, submitError, setAltchaPayload, on
             <div className="bg-dark-800/50 rounded-xl p-4">
               <h3 className="text-xs font-semibold text-hubble-400 mb-3 uppercase tracking-wider">Location</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                <div><span className="text-dark-400">Location:</span> <span className="text-white">{watchLocation || 'No Preference'}</span></div>
+                <div><span className="text-dark-400">Location:</span> <span className="text-white">{locationLabel(watchLocation)}</span></div>
                 <div><span className="text-dark-400">Seating:</span> <span className="text-white">{watch('seatingArea') === 'INSIDE' ? 'Inside' : 'Outside'}</span></div>
                 {getValues('comments') && <div className="md:col-span-2"><span className="text-dark-400">Remarks:</span> <span className="text-white">{getValues('comments')}</span></div>}
               </div>
@@ -127,17 +131,18 @@ export function SummaryStep({ activityNotices, submitError, setAltchaPayload, on
                 type="checkbox"
                 {...register('termsAccepted')}
                 data-testid="terms-accepted"
+                {...fieldA11y(errors, 'termsAccepted')}
                 className="w-5 h-5 mt-0.5 rounded border-dark-600 bg-dark-700 text-hubble-500 focus:ring-hubble-500 focus:ring-offset-dark-900"
               />
               <div>
                 <div className="font-medium text-white">I accept the terms and conditions *</div>
                 <div className="text-sm text-dark-400">
                   By submitting this form, I understand this is a reservation request and not a
-                  confirmation. I will receive a response within 72 hours.
+                  confirmation. {REPLY_TIME}
                 </div>
               </div>
             </label>
-            {errors.termsAccepted && <p className="error-text mt-2">{errors.termsAccepted.message}</p>}
+            <FieldError errors={errors} name="termsAccepted" className="mt-2" />
             <p className="text-xs text-dark-500 mt-3">
               We use the details you provide only to handle your reservation. See our{' '}
               <button

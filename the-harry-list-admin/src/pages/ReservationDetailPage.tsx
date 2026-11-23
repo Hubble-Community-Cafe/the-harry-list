@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
@@ -17,7 +17,10 @@ import type { Reservation, EmailAttachment } from '../types/reservation';
 import type { AuditLogEntry } from '../types/audit';
 import { usePermissions } from '../lib/usePermissions';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
+import { Modal } from 'the-harry-list-shared';
 import { HelpGuide } from '../components/HelpGuide';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { activityLabel, changeValueLabel, fieldLabel, invoiceTypeLabel, locationLabel, paymentLabel, statusLabel } from '../lib/labels';
 import { reservationDetailGuide } from '../lib/guideContent';
 
 // Pre-filled (editable) default shown when rejecting a reservation. Staff can edit or clear it.
@@ -27,19 +30,20 @@ const DEFAULT_REJECTION_MESSAGE =
 /** Activities that can still be added to a reservation. Mirrors SpecialActivity.selectableValues(). */
 const SELECTABLE_ACTIVITIES = ['GRADUATION', 'EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM'];
 
-const ACTIVITY_LABELS: Record<string, string> = {
-  GRADUATION: 'Graduation / PhD Defense',
-  EAT_A_LA_CARTE: 'Eat a la Carte',
-  EAT_CATERING: 'Eat Catering',
-  CATERING_CORONA_ROOM: 'Catering Corona Room',
-  PRIVATE_EVENT: 'Private Event (retired)',
-};
 
 /**
  * Activity toggles to render while editing: the selectable ones, plus any retired activity
  * this reservation was booked with. Retired ones stay visible so staff can see and remove
  * them, rather than carrying an invisible value through every save.
  */
+/** The line shown after a status change, before the email note. */
+const STATUS_CHANGED: Record<string, string> = {
+  CONFIRMED: 'Reservation confirmed.',
+  REJECTED: 'Reservation rejected.',
+  CANCELLED: 'Reservation cancelled.',
+  PENDING: 'Reservation moved back to Pending.',
+};
+
 function editableActivities(selected: string[]): string[] {
   return [...SELECTABLE_ACTIVITIES, ...selected.filter((a) => !SELECTABLE_ACTIVITIES.includes(a))];
 }
@@ -57,13 +61,15 @@ function EmailMessageField({
   onChange: (v: string) => void;
   show: boolean;
 }) {
+  const id = useId();
   if (!show) return null;
   return (
     <div className="mt-3">
-      <label className="block text-sm text-dark-300 mb-1">
+      <label htmlFor={id} className="block text-sm text-dark-300 mb-1">
         Add a message to the email <span className="text-dark-500">(optional)</span>
       </label>
       <textarea
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="input-field min-h-[80px] w-full"
@@ -90,6 +96,12 @@ export function ReservationDetailPage() {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showReopenDialog, setShowReopenDialog] = useState(false);
   const [sendEmail, setSendEmail] = useState(true);
+  // What happened with the last action, shown in the Actions card. A failed action never
+  // replaces the page: the reservation and anything typed stay on screen.
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
+  // Reopening suggests "no email"; the editor's own choice comes back when the dialog closes.
+  const [emailBeforeReopen, setEmailBeforeReopen] = useState<boolean | null>(null);
   // Optional free-text message added to the status-change email (pre-filled for rejections).
   const [actionMessage, setActionMessage] = useState('');
 
@@ -97,6 +109,8 @@ export function ReservationDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<Reservation>>({});
   const [sendEditEmail, setSendEditEmail] = useState(false);
+  // A failed save keeps the editor open with everything typed, and says why.
+  const [editError, setEditError] = useState<string | null>(null);
   // Optional free-text message added to the "reservation updated" email.
   const [editMessage, setEditMessage] = useState('');
   // The edit form's starting values, to tell real changes from merely opening the editor.
@@ -142,31 +156,45 @@ export function ReservationDetailPage() {
       .finally(() => setLoadingAudit(false));
   }, [id]);
 
+  const emailNote = (emailed: boolean) =>
+    emailed ? ` An email goes to ${reservation?.email}.` : ' No email was sent.';
+
   const handleStatusChange = async (newStatus: string) => {
     if (!reservation) return;
 
     setIsUpdating(true);
+    setActionError(null);
+    setActionNotice(null);
     try {
       await updateReservationStatus(
         reservation.id, newStatus, userName, sendEmail, sendEmail ? actionMessage : undefined);
       setReservation({ ...reservation, status: newStatus });
+      setActionNotice(`${STATUS_CHANGED[newStatus] ?? 'Status updated.'}${emailNote(sendEmail)}`);
       loadAuditLog();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update status');
+      setActionError(err instanceof Error ? err.message : 'Failed to update status');
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const closeReopenDialog = () => {
+    setShowReopenDialog(false);
+    if (emailBeforeReopen !== null) setSendEmail(emailBeforeReopen);
+    setEmailBeforeReopen(null);
   };
 
   const handleDelete = async () => {
     if (!reservation) return;
 
     setIsUpdating(true);
+    setActionError(null);
     try {
       await deleteReservation(reservation.id, sendEmail);
       navigate('/reservations');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete reservation');
+      setShowDeleteConfirm(false);
+      setActionError(err instanceof Error ? err.message : 'Failed to delete reservation');
       setIsUpdating(false);
     }
   };
@@ -207,6 +235,7 @@ export function ReservationDetailPage() {
     setEditData(initial);
     setEditBaseline(JSON.stringify(initial));
     setEditMessage('');
+    setEditError(null);
     setIsEditing(true);
   };
 
@@ -214,15 +243,18 @@ export function ReservationDetailPage() {
     if (!reservation) return;
 
     setIsUpdating(true);
+    setEditError(null);
+    setActionNotice(null);
     try {
       const updatedReservation = await updateReservation(
         reservation.id, editData, sendEditEmail, sendEditEmail ? editMessage : undefined);
       setReservation(updatedReservation);
       setIsEditing(false);
       setEditData({});
+      setActionNotice(`Changes saved.${sendEditEmail ? ` An email goes to ${updatedReservation.email}.` : ''}`);
       loadAuditLog();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update reservation');
+      setEditError(err instanceof Error ? err.message : 'Failed to update reservation');
     } finally {
       setIsUpdating(false);
     }
@@ -326,6 +358,20 @@ export function ReservationDetailPage() {
       <div className="card">
         <h2 className="text-lg font-title font-semibold text-white mb-4">Actions</h2>
 
+        {/* Result of the last action. role=status/alert so screen readers hear it too. */}
+        {actionNotice && (
+          <p role="status" data-testid="action-notice" className="mb-4 flex items-start gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-400">
+            <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            {actionNotice}
+          </p>
+        )}
+        {actionError && (
+          <p role="alert" data-testid="action-error" className="mb-4 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            {actionError}
+          </p>
+        )}
+
         <div className="flex items-center gap-3 mb-4">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -404,7 +450,12 @@ export function ReservationDetailPage() {
               instead of asking the customer to submit everything again. */}
           {(reservation.status === 'REJECTED' || reservation.status === 'CANCELLED') && (
             <button
-              onClick={() => { setActionMessage(''); setSendEmail(false); setShowReopenDialog(true); }}
+              onClick={() => {
+                setActionMessage('');
+                setEmailBeforeReopen(sendEmail);
+                setSendEmail(false);
+                setShowReopenDialog(true);
+              }}
               data-testid="reopen-reservation"
               disabled={isUpdating}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-colors"
@@ -422,33 +473,23 @@ export function ReservationDetailPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/50 text-red-400 hover:bg-red-500/10 transition-colors ml-auto"
             >
               <Trash2 className="w-4 h-4" />
-              Remove
+              Delete permanently
             </button>
           )}
         </div>
 
         {/* Delete Confirmation */}
-        {showDeleteConfirm && (
-          <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/50">
-            <p className="text-red-400 mb-3">Are you sure you want to delete this reservation? This action cannot be undone.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={handleDelete}
-                data-testid="delete-dialog-submit"
-                disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
-              >
-                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Yes, Delete'}
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
+        <ConfirmDialog
+          open={showDeleteConfirm}
+          title="Delete this reservation permanently?"
+          message={`"${reservation.eventTitle}" and its history are removed for good. This cannot be undone.${
+            sendEmail ? ` The customer gets a cancellation email at ${reservation.email}.` : ' No email is sent.'}`}
+          confirmLabel="Delete permanently"
+          confirmTestId="delete-dialog-submit"
+          loading={isUpdating}
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
 
         {/* Confirm Reservation Dialog */}
         {showConfirmDialog && (
@@ -548,7 +589,7 @@ export function ReservationDetailPage() {
               <button
                 onClick={() => {
                   handleStatusChange('PENDING');
-                  setShowReopenDialog(false);
+                  closeReopenDialog();
                 }}
                 data-testid="reopen-dialog-submit"
                 disabled={isUpdating}
@@ -558,7 +599,7 @@ export function ReservationDetailPage() {
                 Yes, Move to Pending
               </button>
               <button
-                onClick={() => setShowReopenDialog(false)}
+                onClick={closeReopenDialog}
                 className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
               >
                 Go Back
@@ -605,7 +646,7 @@ export function ReservationDetailPage() {
           <div className="space-y-4">
             <InfoRow icon={Calendar} label="Date" value={new Date(reservation.eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} />
             <InfoRow icon={Clock} label="Time" value={`${reservation.startTime.slice(0, 5)} - ${reservation.endTime.slice(0, 5)}`} />
-            <InfoRow icon={MapPin} label="Location" value={reservation.location} />
+            <InfoRow icon={MapPin} label="Location" value={locationLabel(reservation.location)} />
             {/* Inside/outside is set on booking and editable, but was previously only visible
                 in edit mode — surface it here so staff can see it at a glance. */}
             {(reservation.seatingArea === 'INSIDE' || reservation.seatingArea === 'OUTSIDE') && (
@@ -629,7 +670,7 @@ export function ReservationDetailPage() {
                   {reservation.specialActivities && reservation.specialActivities.length > 0
                     ? reservation.specialActivities.map((activity) => (
                         <span key={activity} className="px-2 py-0.5 rounded-full bg-hubble-500/20 text-hubble-400 text-xs">
-                          {activity.replace(/_/g, ' ')}
+                          {activityLabel(activity)}
                         </span>
                       ))
                     : <span className="text-dark-400 text-sm">None</span>
@@ -650,11 +691,11 @@ export function ReservationDetailPage() {
             Payment Information
           </h2>
           <div className="space-y-4">
-            <InfoRow label="Payment Method" value={reservation.paymentOption} />
+            <InfoRow label="Payment Method" value={paymentLabel(reservation.paymentOption)} />
             <InfoRow label="Cost Center" value={reservation.costCenter} />
             <InfoRow label="Invoice Name" value={reservation.invoiceName} />
             <InfoRow label="Invoice Address" value={reservation.invoiceAddress} />
-            <InfoRow label="Invoice Type" value={reservation.invoiceType} />
+            <InfoRow label="Invoice Type" value={invoiceTypeLabel(reservation.invoiceType)} />
             <InfoRow label="Invoice Remarks" value={reservation.invoiceRemarks} />
           </div>
         </div>
@@ -765,10 +806,10 @@ export function ReservationDetailPage() {
                   <ul className="mt-2 space-y-1">
                     {entry.changes.map((change, i) => (
                       <li key={i} className="text-xs text-dark-400">
-                        <code className="text-dark-300">{change.field}</code>:{' '}
-                        <span className="line-through text-red-400/70">{change.oldValue ?? '—'}</span>
+                        <span className="text-dark-300">{fieldLabel(change.field)}</span>:{' '}
+                        <span className="line-through text-red-400/70">{changeValueLabel(change.field, change.oldValue)}</span>
                         {' → '}
-                        <span className="text-green-400/80">{change.newValue ?? '—'}</span>
+                        <span className="text-green-400/80">{changeValueLabel(change.field, change.newValue)}</span>
                       </li>
                     ))}
                   </ul>
@@ -788,14 +829,18 @@ export function ReservationDetailPage() {
 
       {/* Catering Email Modal */}
       {showCateringEmail && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <Modal
+          labelledBy="catering-email-title"
+          onClose={() => setShowCateringEmail(false)}
+          overlayClassName="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        >
             <div className="flex items-center justify-between p-6 border-b border-dark-700">
-              <h2 className="text-xl font-title font-semibold text-white flex items-center gap-2">
+              <h2 id="catering-email-title" className="text-xl font-title font-semibold text-white flex items-center gap-2">
                 <UtensilsCrossed className="w-5 h-5 text-orange-400" />
                 Send Catering Options
               </h2>
-              <button onClick={() => setShowCateringEmail(false)} className="text-dark-400 hover:text-white">
+              <button onClick={() => setShowCateringEmail(false)} aria-label="Close" className="text-dark-400 hover:text-white">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -837,14 +882,14 @@ export function ReservationDetailPage() {
 
                 {/* Attachments */}
                 <div>
-                  <label className="label flex items-center gap-2 mb-2">
+                  <p id="catering-attachments-label" className="label flex items-center gap-2 mb-2">
                     <Paperclip className="w-4 h-4" />
                     PDF Attachments
-                  </label>
+                  </p>
                   {cateringAttachments.length === 0 ? (
                     <p className="text-sm text-dark-500">No active attachments available. Upload PDFs in Email Templates &gt; PDF Attachments.</p>
                   ) : (
-                    <div className="space-y-2">
+                    <div role="group" aria-labelledby="catering-attachments-label" className="space-y-2">
                       {cateringAttachments.map((att) => (
                         <label key={att.id} className="flex items-center gap-3 p-2 rounded-lg bg-dark-800 hover:bg-dark-750 cursor-pointer">
                           <input
@@ -870,8 +915,8 @@ export function ReservationDetailPage() {
 
                 {/* Subject */}
                 <div className="form-group">
-                  <label className="label">Subject</label>
-                  <input
+                  <label htmlFor="catering-subject" className="label">Subject</label>
+                  <input id="catering-subject"
                     type="text"
                     value={cateringSubject}
                     onChange={(e) => setCateringSubject(e.target.value)}
@@ -881,8 +926,8 @@ export function ReservationDetailPage() {
 
                 {/* Body */}
                 <div className="form-group">
-                  <label className="label">Email Body (HTML)</label>
-                  <textarea
+                  <label htmlFor="catering-email-body" className="label">Email Body (HTML)</label>
+                  <textarea id="catering-email-body"
                     value={cateringBody}
                     onChange={(e) => setCateringBody(e.target.value)}
                     className="input-field min-h-[200px] font-mono text-xs"
@@ -907,16 +952,19 @@ export function ReservationDetailPage() {
                 Send Email
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Edit Modal */}
       {isEditing && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <Modal
+          labelledBy="edit-reservation-title"
+          onClose={() => confirmDiscard(() => setIsEditing(false))}
+          overlayClassName="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+        >
             <div className="flex items-center justify-between p-6 border-b border-dark-700">
-              <h2 className="text-xl font-title font-semibold text-white tracking-tight">Edit Reservation</h2>
+              <h2 id="edit-reservation-title" className="text-xl font-title font-semibold text-white tracking-tight">Edit Reservation</h2>
               <button
                 onClick={() => confirmDiscard(() => setIsEditing(false))}
                 aria-label="Close editor"
@@ -947,8 +995,8 @@ export function ReservationDetailPage() {
                 <h3 className="text-sm font-semibold text-hubble-400 mb-3">Contact Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group">
-                    <label className="label">Contact Name</label>
-                    <input
+                    <label htmlFor="edit-contact-name" className="label">Contact Name</label>
+                    <input id="edit-contact-name"
                       type="text"
                       value={editData.contactName || ''}
                       onChange={(e) => setEditData({ ...editData, contactName: e.target.value })}
@@ -956,8 +1004,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">Email</label>
-                    <input
+                    <label htmlFor="edit-email" className="label">Email</label>
+                    <input id="edit-email"
                       type="email"
                       value={editData.email || ''}
                       onChange={(e) => setEditData({ ...editData, email: e.target.value })}
@@ -965,8 +1013,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">Phone</label>
-                    <input
+                    <label htmlFor="edit-phone" className="label">Phone</label>
+                    <input id="edit-phone"
                       type="tel"
                       value={editData.phoneNumber || ''}
                       onChange={(e) => setEditData({ ...editData, phoneNumber: e.target.value })}
@@ -974,8 +1022,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">Organization</label>
-                    <input
+                    <label htmlFor="edit-organization" className="label">Organization</label>
+                    <input id="edit-organization"
                       type="text"
                       value={editData.organizationName || ''}
                       onChange={(e) => setEditData({ ...editData, organizationName: e.target.value })}
@@ -990,8 +1038,8 @@ export function ReservationDetailPage() {
                 <h3 className="text-sm font-semibold text-meteor-400 mb-3">Event Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group md:col-span-2">
-                    <label className="label">Event Title</label>
-                    <input
+                    <label htmlFor="edit-event-title" className="label">Event Title</label>
+                    <input id="edit-event-title"
                       type="text"
                       value={editData.eventTitle || ''}
                       onChange={(e) => setEditData({ ...editData, eventTitle: e.target.value })}
@@ -999,14 +1047,15 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group md:col-span-2">
-                    <label className="label">Special Activities</label>
-                    <div className="flex flex-wrap gap-2">
+                    <p id="edit-special-activities" className="label">Special Activities</p>
+                    <div role="group" aria-labelledby="edit-special-activities" className="flex flex-wrap gap-2">
                       {editableActivities(editData.specialActivities || []).map((activity) => {
                         const selected = (editData.specialActivities || []).includes(activity);
                         return (
                           <button
                             key={activity}
                             type="button"
+                            aria-pressed={selected}
                             onClick={() => {
                               const current = editData.specialActivities || [];
                               setEditData({
@@ -1022,15 +1071,15 @@ export function ReservationDetailPage() {
                                 : 'bg-dark-800 text-dark-400 border border-dark-700 hover:border-dark-600'
                             }`}
                           >
-                            {ACTIVITY_LABELS[activity] ?? activity.replace(/_/g, ' ')}
+                            {activityLabel(activity)}
                           </button>
                         );
                       })}
                     </div>
                   </div>
                   <div className="form-group">
-                    <label className="label">Expected Guests</label>
-                    <input
+                    <label htmlFor="edit-expected-guests" className="label">Expected Guests</label>
+                    <input id="edit-expected-guests"
                       type="number"
                       min={1}
                       step={1}
@@ -1050,8 +1099,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">Event Date</label>
-                    <input
+                    <label htmlFor="edit-event-date" className="label">Event Date</label>
+                    <input id="edit-event-date"
                       type="date"
                       value={editData.eventDate || ''}
                       onChange={(e) => setEditData({ ...editData, eventDate: e.target.value })}
@@ -1059,8 +1108,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">Start Time</label>
-                    <input
+                    <label htmlFor="edit-start-time" className="label">Start Time</label>
+                    <input id="edit-start-time"
                       type="time"
                       value={editData.startTime?.slice(0, 5) || ''}
                       onChange={(e) => setEditData({ ...editData, startTime: e.target.value })}
@@ -1068,8 +1117,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">End Time</label>
-                    <input
+                    <label htmlFor="edit-end-time" className="label">End Time</label>
+                    <input id="edit-end-time"
                       type="time"
                       value={editData.endTime?.slice(0, 5) || ''}
                       onChange={(e) => setEditData({ ...editData, endTime: e.target.value })}
@@ -1077,8 +1126,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group md:col-span-2">
-                    <label className="label">Description</label>
-                    <textarea
+                    <label htmlFor="edit-description" className="label">Description</label>
+                    <textarea id="edit-description"
                       value={editData.description || ''}
                       onChange={(e) => setEditData({ ...editData, description: e.target.value })}
                       className="input-field min-h-[80px]"
@@ -1092,8 +1141,8 @@ export function ReservationDetailPage() {
                 <h3 className="text-sm font-semibold text-hubble-400 mb-3">Location</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group">
-                    <label className="label">Location</label>
-                    <select
+                    <label htmlFor="edit-location" className="label">Location</label>
+                    <select id="edit-location"
                       value={editData.location || ''}
                       onChange={(e) => setEditData({ ...editData, location: e.target.value })}
                       className="select-field"
@@ -1104,8 +1153,8 @@ export function ReservationDetailPage() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="label">Seating Area</label>
-                    <select
+                    <label htmlFor="edit-seating-area" className="label">Seating Area</label>
+                    <select id="edit-seating-area"
                       value={editData.seatingArea || ''}
                       onChange={(e) => setEditData({ ...editData, seatingArea: e.target.value })}
                       className="select-field"
@@ -1122,8 +1171,8 @@ export function ReservationDetailPage() {
                 <h3 className="text-sm font-semibold text-meteor-400 mb-3">Payment</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group">
-                    <label className="label">Payment Method</label>
-                    <select
+                    <label htmlFor="edit-payment-method" className="label">Payment Method</label>
+                    <select id="edit-payment-method"
                       value={editData.paymentOption || ''}
                       onChange={(e) => setEditData({ ...editData, paymentOption: e.target.value })}
                       className="select-field"
@@ -1136,8 +1185,8 @@ export function ReservationDetailPage() {
                   {editData.paymentOption === 'INVOICE' && (
                     <>
                       <div className="form-group">
-                        <label className="label">Invoice Type</label>
-                        <select
+                        <label htmlFor="edit-invoice-type" className="label">Invoice Type</label>
+                        <select id="edit-invoice-type"
                           value={editData.invoiceType || ''}
                           onChange={(e) => setEditData({ ...editData, invoiceType: e.target.value })}
                           className="select-field"
@@ -1150,8 +1199,8 @@ export function ReservationDetailPage() {
                       </div>
                       {(editData.invoiceType === 'TUE' || editData.invoiceType === 'FONTYS') && (
                         <div className="form-group">
-                          <label className="label">Kostenplaats</label>
-                          <input
+                          <label htmlFor="edit-kostenplaats" className="label">Kostenplaats</label>
+                          <input id="edit-kostenplaats"
                             type="text"
                             value={editData.costCenter || ''}
                             onChange={(e) => setEditData({ ...editData, costCenter: e.target.value })}
@@ -1162,8 +1211,8 @@ export function ReservationDetailPage() {
                       {editData.invoiceType === 'EXTERNAL' && (
                         <>
                           <div className="form-group">
-                            <label className="label">Invoice Name</label>
-                            <input
+                            <label htmlFor="edit-invoice-name" className="label">Invoice Name</label>
+                            <input id="edit-invoice-name"
                               type="text"
                               value={editData.invoiceName || ''}
                               onChange={(e) => setEditData({ ...editData, invoiceName: e.target.value })}
@@ -1171,8 +1220,8 @@ export function ReservationDetailPage() {
                             />
                           </div>
                           <div className="form-group">
-                            <label className="label">Invoice Address</label>
-                            <input
+                            <label htmlFor="edit-invoice-address" className="label">Invoice Address</label>
+                            <input id="edit-invoice-address"
                               type="text"
                               value={editData.invoiceAddress || ''}
                               onChange={(e) => setEditData({ ...editData, invoiceAddress: e.target.value })}
@@ -1180,8 +1229,8 @@ export function ReservationDetailPage() {
                             />
                           </div>
                           <div className="form-group md:col-span-2">
-                            <label className="label">Invoice Remarks</label>
-                            <textarea
+                            <label htmlFor="edit-invoice-remarks" className="label">Invoice Remarks</label>
+                            <textarea id="edit-invoice-remarks"
                               value={editData.invoiceRemarks || ''}
                               onChange={(e) => setEditData({ ...editData, invoiceRemarks: e.target.value })}
                               className="input-field min-h-[60px]"
@@ -1199,8 +1248,8 @@ export function ReservationDetailPage() {
                 <h3 className="text-sm font-semibold text-hubble-400 mb-3">Catering & Other</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group md:col-span-2">
-                    <label className="label">Catering Dietary Notes</label>
-                    <textarea
+                    <label htmlFor="edit-catering-dietary-notes" className="label">Catering Dietary Notes</label>
+                    <textarea id="edit-catering-dietary-notes"
                       value={editData.cateringDietaryNotes || ''}
                       onChange={(e) => setEditData({ ...editData, cateringDietaryNotes: e.target.value })}
                       className="input-field min-h-[60px]"
@@ -1208,8 +1257,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group md:col-span-2">
-                    <label className="label">Long Reservation Reason</label>
-                    <textarea
+                    <label htmlFor="edit-long-reservation-reason" className="label">Long Reservation Reason</label>
+                    <textarea id="edit-long-reservation-reason"
                       value={editData.longReservationReason || ''}
                       onChange={(e) => setEditData({ ...editData, longReservationReason: e.target.value })}
                       className="input-field min-h-[60px]"
@@ -1224,8 +1273,8 @@ export function ReservationDetailPage() {
                 <h3 className="text-sm font-semibold text-meteor-400 mb-3">Additional</h3>
                 <div className="space-y-4">
                   <div className="form-group">
-                    <label className="label">Comments</label>
-                    <textarea
+                    <label htmlFor="edit-comments" className="label">Comments</label>
+                    <textarea id="edit-comments"
                       value={editData.comments || ''}
                       onChange={(e) => setEditData({ ...editData, comments: e.target.value })}
                       className="input-field min-h-[80px]"
@@ -1233,8 +1282,8 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">Internal Notes <span className="text-yellow-400 text-xs">(staff only, not sent to customer)</span></label>
-                    <textarea
+                    <label htmlFor="edit-internal-notes" className="label">Internal Notes <span className="text-yellow-400 text-xs">(staff only, not sent to customer)</span></label>
+                    <textarea id="edit-internal-notes"
                       value={editData.internalNotes || ''}
                       onChange={(e) => setEditData({ ...editData, internalNotes: e.target.value })}
                       className="input-field min-h-[80px]"
@@ -1245,6 +1294,12 @@ export function ReservationDetailPage() {
               </div>
             </div>
 
+            {editError && (
+              <p role="alert" data-testid="edit-error" className="mx-6 mt-4 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                Not saved: {editError}
+              </p>
+            )}
             <div className="flex justify-end gap-3 p-6 border-t border-dark-700">
               <button
                 onClick={() => setIsEditing(false)}
@@ -1262,8 +1317,7 @@ export function ReservationDetailPage() {
                 Save Changes
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
       {unsavedChangesDialog}
     </div>
@@ -1340,7 +1394,7 @@ function StatusBadge({ status, large }: { status: string; large?: boolean }) {
       {status === 'CONFIRMED' && <CheckCircle className="w-4 h-4" />}
       {status === 'REJECTED' && <XCircle className="w-4 h-4" />}
       {status === 'CANCELLED' && <XCircle className="w-4 h-4" />}
-      {status}
+      {statusLabel(status)}
     </span>
   );
 }

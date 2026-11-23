@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useId } from 'react';
 import { X, HelpCircle, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Modal } from 'the-harry-list-shared';
 
 export interface GuideSection {
   title: string;
@@ -123,15 +124,7 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
     setIsOpen(true);
   }, []);
 
-  // Close on Escape
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsOpen(false);
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [isOpen]);
+  const titleId = useId();
 
   const section = sections[currentSection];
   const hasPrev = currentSection > 0;
@@ -151,11 +144,13 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
 
       {/* Modal */}
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setIsOpen(false); }}
+        <Modal
+          labelledBy={titleId}
+          onClose={() => setIsOpen(false)}
+          closeOnBackdrop
+          overlayClassName="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl"
         >
-          <div className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
             {/* Header */}
             <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-dark-800">
               <div className="flex items-center gap-3">
@@ -163,7 +158,7 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
                   <HelpCircle className="w-4 h-4 text-hubble-400" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-white">{title}</h2>
+                  <h2 id={titleId} className="text-lg font-semibold text-white">{title}</h2>
                   {sections.length > 1 && (
                     <p className="text-xs text-dark-400">
                       Step {currentSection + 1} of {sections.length}
@@ -173,6 +168,7 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
               </div>
               <button
                 onClick={() => setIsOpen(false)}
+                aria-label="Close help"
                 className="p-2 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -199,7 +195,8 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
             )}
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+            {/* Scrollable: focusable and named, so keyboard users can scroll it too. */}
+            <div tabIndex={0} role="region" aria-label={section.title} className="flex-1 overflow-y-auto px-6 py-4 space-y-3 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-hubble-500">
               <h3 className="text-base font-semibold text-white">{section.title}</h3>
 
               {/* Screenshot or placeholder */}
@@ -246,15 +243,23 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
                 </button>
 
                 {/* Dots */}
-                <div className="flex gap-1.5">
-                  {sections.map((_, i) => (
+                <div className="flex">
+                  {sections.map((s, i) => (
+                    // A 24px target (WCAG 2.5.8) around the small visible dot.
                     <button
                       key={i}
                       onClick={() => setCurrentSection(i)}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        i === currentSection ? 'bg-hubble-400 w-4' : 'bg-dark-600 hover:bg-dark-500'
-                      }`}
-                    />
+                      aria-label={`Go to ${s.title}`}
+                      aria-current={i === currentSection ? 'step' : undefined}
+                      className="group w-6 h-6 flex items-center justify-center rounded-full"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`h-2 rounded-full transition-all ${
+                          i === currentSection ? 'bg-hubble-400 w-4' : 'w-2 bg-dark-600 group-hover:bg-dark-500'
+                        }`}
+                      />
+                    </button>
                   ))}
                 </div>
 
@@ -283,8 +288,7 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
                 </button>
               </div>
             )}
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   );

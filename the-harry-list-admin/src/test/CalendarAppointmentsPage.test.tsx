@@ -100,8 +100,8 @@ describe('CalendarAppointmentsPage', () => {
   it('shows location badges', async () => {
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText('HUBBLE')).toBeInTheDocument();
-      expect(screen.getByText('METEOR')).toBeInTheDocument();
+      expect(screen.getAllByText('Hubble').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Meteor').length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -126,6 +126,14 @@ describe('CalendarAppointmentsPage', () => {
     });
   });
 
+  it('names each row action after its appointment, and the enable toggle is a switch', async () => {
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Staff Meeting')).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Edit appointment: Staff Meeting' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete appointment: Staff Meeting' })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Appointment enabled: Staff Meeting' })).toHaveAttribute('aria-checked');
+  });
+
   it('opens create modal on Add Appointment click', async () => {
     renderPage();
     await waitFor(() => {
@@ -133,6 +141,21 @@ describe('CalendarAppointmentsPage', () => {
     });
     fireEvent.click(screen.getByText('Add Appointment'));
     expect(screen.getByText('New Appointment')).toBeInTheDocument();
+  });
+
+  it('names the create dialog and every field in it by its label', async () => {
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Staff Meeting')).toBeInTheDocument());
+    fireEvent.click(screen.getByText('Add Appointment'));
+
+    expect(screen.getByRole('dialog', { name: 'New Appointment' })).toBeInTheDocument();
+    for (const label of ['Title *', 'Description', 'Date *', 'Start Time *', 'End Time *', 'Location *', 'Recurrence']) {
+      expect(screen.getByLabelText(label)).toBeInTheDocument();
+    }
+    const allDay = screen.getByRole('switch', { name: 'All-day event' });
+    expect(allDay).toHaveAttribute('aria-checked', 'false');
+    fireEvent.click(allDay);
+    expect(allDay).toHaveAttribute('aria-checked', 'true');
   });
 
   it('opens edit modal when edit button clicked', async () => {
@@ -364,8 +387,8 @@ describe('CalendarAppointmentsPage - viewer permissions', () => {
     await waitFor(() => {
       expect(screen.getByText('Staff Meeting')).toBeInTheDocument();
       expect(screen.getByText('Holiday Closure')).toBeInTheDocument();
-      expect(screen.getByText('HUBBLE')).toBeInTheDocument();
-      expect(screen.getByText('METEOR')).toBeInTheDocument();
+      expect(screen.getAllByText('Hubble').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Meteor').length).toBeGreaterThanOrEqual(1);
     });
   });
 });

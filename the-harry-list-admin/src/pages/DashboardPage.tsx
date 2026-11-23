@@ -8,6 +8,7 @@ import { fetchReservations } from '../lib/api';
 import type { Reservation } from '../types/reservation';
 import { HelpGuide } from '../components/HelpGuide';
 import { dashboardGuide } from '../lib/guideContent';
+import { locationLabel, statusLabel } from '../lib/labels';
 
 interface Stats {
   total: number;
@@ -190,7 +191,7 @@ export function DashboardPage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="font-medium text-white">{reservation.eventTitle}</div>
-                      <div className="text-sm text-dark-400">{reservation.location}</div>
+                      <div className="text-sm text-dark-400">{locationLabel(reservation.location)}</div>
                     </div>
                     <StatusBadge status={reservation.status} />
                   </div>
@@ -217,7 +218,7 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${color}`}>
       <Icon className="w-3 h-3" />
-      {status}
+      {statusLabel(status)}
     </span>
   );
 }

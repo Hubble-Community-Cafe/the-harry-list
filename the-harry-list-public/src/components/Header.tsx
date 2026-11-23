@@ -20,7 +20,7 @@ export function Header() {
               <h1 className="text-lg md:text-xl font-title font-bold text-white">
                 The Harry List
               </h1>
-              <p className="text-xs text-dark-400 font-light hidden sm:block">
+              <p className="text-xs text-dark-400 hidden sm:block">
                 Event Reservations
               </p>
             </div>

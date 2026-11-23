@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { X, ShieldCheck } from 'lucide-react';
+import { Modal } from 'the-harry-list-shared';
 
 /*
  * Privacy policy shown to guests before they submit personal data.
@@ -19,33 +20,20 @@ const LAST_UPDATED = '2026-06-25';
 export function PrivacyPolicy({ open, onClose }: PrivacyPolicyProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  // Close on Escape and move focus to the dialog when it opens.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKey);
-    closeRef.current?.focus();
-    return () => document.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
-
   if (!open) return null;
 
+  // Escape and the backdrop close it; focus starts on the close button.
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-overlay"
-      onClick={onClose}
-      data-testid="privacy-policy-backdrop"
+    <Modal
+      labelledBy="privacy-policy-title"
+      onClose={onClose}
+      closeOnBackdrop
+      initialFocusRef={closeRef}
+      overlayClassName="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-overlay"
+      backdropTestId="privacy-policy-backdrop"
+      testId="privacy-policy"
+      className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border border-dark-700 bg-dark-900 p-6 md:p-8 shadow-2xl animate-modal"
     >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="privacy-policy-title"
-        data-testid="privacy-policy"
-        onClick={e => e.stopPropagation()}
-        className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border border-dark-700 bg-dark-900 p-6 md:p-8 shadow-2xl animate-modal"
-      >
         <button
           ref={closeRef}
           type="button"
@@ -117,7 +105,6 @@ export function PrivacyPolicy({ open, onClose }: PrivacyPolicyProps) {
             </p>
           </section>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

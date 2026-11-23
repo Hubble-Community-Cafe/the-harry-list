@@ -10,6 +10,7 @@ import { ActivityNoticeDialog } from './ActivityNoticeDialog';
 import { checkBlockedDate } from '../lib/blockedPeriods';
 import { noticeApplies, requiresConfirmation } from '../lib/activityNotices';
 import { useRestoreAfterLock } from '../lib/useRestoreAfterLock';
+import { REPLY_TIME, SHORT_NOTICE } from '../lib/replyTime';
 import type { ReservationFormData, FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
 import { formSchema } from './reservationForm/schema';
 import { ContactStep } from './reservationForm/ContactStep';
@@ -180,6 +181,9 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       behavior: prefersReduced ? 'auto' : 'smooth',
       block: 'start',
     });
+    // Move focus to the new step's heading so screen readers announce the step change
+    // (otherwise focus stays on Continue and nothing tells them the page moved on).
+    formRef.current?.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
   }, [currentStep]);
 
   // Notice rendered wherever a blocked period applies. Hard blocks show a red,
@@ -193,7 +197,10 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       <label className={`flex items-start gap-2 cursor-pointer rounded-md p-1 -m-1 ${softBlockAckError ? 'ring-1 ring-red-500/60 bg-red-500/10' : ''}`}>
         <input
           type="checkbox"
+          id="soft-block-ack"
           data-testid="soft-block-ack"
+          aria-invalid={softBlockAckError || undefined}
+          aria-describedby={softBlockAckError ? 'soft-block-ack-error' : undefined}
           checked={softBlockAcknowledged}
           onChange={e => {
             setSoftBlockAcknowledged(e.target.checked);
@@ -204,11 +211,11 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
         <span className={softBlockAckError ? 'text-red-300' : undefined}>{blockedDateInfo.acknowledgementText}</span>
       </label>
       {softBlockAckError && (
-        <p data-testid="soft-block-ack-error" className="text-red-300 font-medium">Please tick the box above to confirm before continuing.</p>
+        <p id="soft-block-ack-error" role="alert" data-testid="soft-block-ack-error" className="text-red-300 font-medium">Please tick the box above to confirm before continuing.</p>
       )}
     </div>
   ) : (
-    <div data-testid="blocked-date-notice" data-soft="false" className="mt-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
+    <div id="blocked-date-notice" role="alert" tabIndex={-1} data-testid="blocked-date-notice" data-soft="false" className="mt-2 outline-none text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
       <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
       <span>{blockedDateInfo.message}</span>
     </div>
@@ -216,7 +223,16 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
 
   const minDateForBooking = useMemo(() => minBookingDate(advanceBookingDays), [advanceBookingDays]);
 
-  const validateStep = async (step: number) => {
+  const focusById = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'center' });
+    el.focus({ preventScroll: true });
+  };
+
+  /** True when the step is valid; 'blocked' when a rule notice stopped it (and has focus). */
+  const validateStep = async (step: number): Promise<boolean | 'blocked'> => {
     const paymentFields: (keyof ReservationFormData)[] = ['paymentOption'];
     if (watchPaymentOption === 'INVOICE') {
       paymentFields.push('invoiceType');
@@ -236,41 +252,64 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       ['termsAccepted'], // Step 4: Confirm
     ];
 
+    // The rules below block step 2 with a notice instead of a field error. Bring that notice
+    // into view and focus it, so the guest (also on a phone, or with a screen reader) learns
+    // why Continue did nothing.
+
     // Block step 2 advance if guest limit constraint violated
     if (step === 2 && guestLimitWarning) {
-      return false;
+      focusById('guest-limit-notice');
+      return 'blocked';
     }
 
     // Block step 2 advance if guest count conflicts with activity location lock
     if (step === 2 && locationConflict) {
-      return false;
+      focusById('location-conflict-notice');
+      return 'blocked';
     }
 
     // Block advance if date/location is in a blocked period (all on the merged step 2 now).
     // Hard blocks always prevent advancing; soft blocks only until the guest acknowledges the warning.
     if (step === 2 && blockedDateInfo) {
       if (!blockedDateInfo.soft) {
-        return false;
+        focusById('blocked-date-notice');
+        return 'blocked';
       }
       if (!softBlockAcknowledged) {
-        // Surface why we're not advancing so the form doesn't feel broken.
         setSoftBlockAckError(true);
-        return false;
+        focusById('soft-block-ack');
+        return 'blocked';
       }
     }
 
     // Block step 2 advance if long reservation reason is missing
     if (step === 2 && rules.needsLongReservationReason && !getValues('longReservationReason')?.trim()) {
       await trigger('longReservationReason');
+      markTouched(['longReservationReason']);
       return false;
     }
 
-    const result = await trigger(fieldsToValidate[step - 1]);
+    const fields = fieldsToValidate[step - 1];
+    const result = await trigger(fields);
+    if (!result) markTouched(fields);
     return result;
+  };
+
+  // In 'onTouched' mode a field only re-validates while typing once it has been left.
+  // A field that failed on Continue was often never left, so its error would only clear
+  // on blur: as the guest clicks Continue, the error line vanishes, the button jumps up
+  // mid-click and the click is lost. Marking the fields touched clears errors as they type.
+  const markTouched = (fields: (keyof ReservationFormData)[]) => {
+    for (const field of fields) {
+      if (form.getFieldState(field).error) {
+        setValue(field, getValues(field), { shouldTouch: true });
+      }
+    }
   };
 
   const nextStep = async () => {
     const isValid = await validateStep(currentStep);
+    if (isValid === 'blocked') return; // the rule's notice already has focus
     if (isValid && currentStep < steps.length) {
       setSubmitError(null);
       setCurrentStep(currentStep + 1);
@@ -350,10 +389,10 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
             <span className="text-lg">📋</span> Please Note
           </h3>
           <ul className="text-xs text-dark-300 space-y-1.5">
-            <li>• This is a <span className="text-white font-medium">request form</span> – there are no obligations for you or us</li>
-            <li>• We generally cannot reply within 72 hours</li>
-            <li>• If you want to come in today, just walk in – we always save spots for walk-in guests</li>
-            <li>• Please do not call about reservations – they are not managed by phone</li>
+            <li>• This is a <span className="text-white font-medium">request form</span>: there are no obligations for you or us</li>
+            <li>• {REPLY_TIME} {SHORT_NOTICE}</li>
+            <li>• If you want to come in today, just walk in: we always save spots for walk-in guests</li>
+            <li>• Please don't call about reservations, as we don't handle them by phone</li>
           </ul>
         </div>
       )}
@@ -450,8 +489,12 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
             Back
           </button>
 
+          {/* Distinct keys keep React from reusing the Continue button as the Submit button.
+              Reused, it turns into type="submit" during the click that opens the last step,
+              and the browser then submits the form (showing "You must accept the terms"). */}
           {currentStep < steps.length ? (
             <button
+              key="continue"
               type="button"
               onClick={nextStep}
               className="btn-primary flex items-center gap-2"
@@ -461,6 +504,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
             </button>
           ) : (
             <button
+              key="submit"
               type="submit"
               data-testid="submit-reservation"
               disabled={isSubmitting || !!optionsError}

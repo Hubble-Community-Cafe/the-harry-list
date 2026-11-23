@@ -4,17 +4,21 @@ import {
   LayoutDashboard, Calendar, CalendarDays, LogOut,
   User, Menu, CalendarSync, CalendarPlus, FileDown, Mail, Settings, History, Loader2
 } from 'lucide-react';
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { clearAuth} from '../lib/api';
 import { usePermissions } from '../lib/usePermissions';
 import { useRole } from '../lib/RoleContext';
 import { ThemeToggle, SkipLink, MAIN_CONTENT_ID } from 'the-harry-list-shared';
 import { version } from '../../package.json';
+import { roleLabel } from '../lib/labels';
 
 export function Layout() {
   const { instance, accounts } = useMsal();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const isDesktop = useMediaQuery(DESKTOP_QUERY);
+  const sidebarRef = useRef<HTMLElement>(null);
   const { canEditEmailTemplates, canManageAttachments, canEditFormSettings, canViewAuditLog } = usePermissions();
   const { role } = useRole();
 
@@ -34,6 +38,26 @@ export function Layout() {
     main.scrollTop = 0;
     main.focus({ preventScroll: true });
   }, [pathname]);
+
+  // The mobile drawer: on open, focus moves to its first link and Escape closes it; on close,
+  // focus goes back to the menu button. (On desktop the sidebar is always shown and never "opens".)
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (sidebarOpen) {
+      wasOpen.current = true;
+      sidebarRef.current?.querySelector<HTMLElement>('nav a')?.focus();
+      const onKey = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') setSidebarOpen(false);
+      };
+      document.addEventListener('keydown', onKey);
+      return () => document.removeEventListener('keydown', onKey);
+    }
+    if (wasOpen.current) {
+      wasOpen.current = false;
+      // Only when focus is not already somewhere useful (a nav link moves it to <main>).
+      if (!mainRef.current?.contains(document.activeElement)) menuButtonRef.current?.focus();
+    }
+  }, [sidebarOpen]);
 
   const handleLogout = () => {
     clearAuth();
@@ -57,6 +81,11 @@ export function Layout() {
     ...(canEditFormSettings ? [{ to: '/settings', icon: Settings, label: 'Settings' }] : []),
   ];
 
+  // Each page gets its own tab title, so screen readers, tabs and history say where you are.
+  useEffect(() => {
+    document.title = `${pageTitle(pathname, navItems)} · The Harry List Admin`;
+  });
+
   return (
     <div className="h-screen bg-dark-950 flex overflow-hidden">
       <SkipLink />
@@ -69,7 +98,13 @@ export function Layout() {
       )}
 
       {/* Sidebar — fixed, does not scroll with content */}
-      <aside className={`
+      {/* Closed on a phone, the drawer is inert (not just moved off-screen), so its links leave
+          the tab order and the screen reader's view. On desktop the sidebar is always there. */}
+      <aside
+        id="admin-sidebar"
+        ref={sidebarRef}
+        inert={!sidebarOpen && !isDesktop}
+        className={`
         fixed lg:static inset-y-0 left-0 z-50
         w-64 bg-dark-900 border-r border-dark-800
         transform transition-transform duration-200 ease-in-out flex-shrink-0
@@ -84,8 +119,9 @@ export function Layout() {
               className="w-10 h-10 rounded-xl"
             />
             <div>
-              <h1 className="font-title font-bold text-white">The Harry List</h1>
-              <p className="text-xs text-dark-400 font-light">Admin Portal</p>
+              {/* Not a heading: each page has its own h1. */}
+              <p className="font-title font-bold text-white">The Harry List</p>
+              <p className="text-xs text-dark-400">Admin Portal</p>
             </div>
           </div>
 
@@ -135,7 +171,7 @@ export function Layout() {
                       role === 'ADMIN' ? 'bg-red-500/20 text-red-400' :
                       role === 'EDITOR' ? 'bg-hubble-500/20 text-hubble-400' :
                       'bg-dark-700 text-dark-400'
-                    }`}>{role}</span>
+                    }`}>{roleLabel(role)}</span>
                   )}
                 </div>
               </div>
@@ -159,16 +195,20 @@ export function Layout() {
         {/* Mobile header */}
         <header className="lg:hidden flex items-center justify-between p-4 border-b border-dark-800 bg-dark-900">
           <button
+            ref={menuButtonRef}
             onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+            aria-expanded={sidebarOpen}
+            aria-controls="admin-sidebar"
             className="p-2 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800"
           >
             <Menu className="w-6 h-6" />
           </button>
           <div className="flex items-center gap-2">
-            <img src="/logo.svg" alt="Logo" className="w-6 h-6 rounded" />
+            <img src="/logo.svg" alt="" className="w-6 h-6 rounded" />
             <span className="font-semibold text-white">The Harry List</span>
           </div>
-          <div className="w-10" /> {/* Spacer */}
+          <div className="w-10" aria-hidden="true" /> {/* Spacer */}
         </header>
 
         {/* Page content — scrollable */}
@@ -189,3 +229,23 @@ export function Layout() {
   );
 }
 
+/** The tab title for a route: the sidebar label, or a fixed name for pages without one. */
+function pageTitle(pathname: string, navItems: { to: string; label: string }[]): string {
+  if (/^\/reservations\/[^/]+$/.test(pathname)) return 'Reservation';
+  if (pathname === '/form-settings') return 'Settings';
+  return navItems.find((item) => item.to === pathname)?.label ?? 'Dashboard';
+}
+
+/** Tailwind's lg breakpoint: from here the sidebar is always shown instead of a drawer. */
+const DESKTOP_QUERY = '(min-width: 64rem)';
+
+function useMediaQuery(query: string): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const list = window.matchMedia(query);
+      list.addEventListener('change', onChange);
+      return () => list.removeEventListener('change', onChange);
+    },
+    () => window.matchMedia(query).matches,
+  );
+}

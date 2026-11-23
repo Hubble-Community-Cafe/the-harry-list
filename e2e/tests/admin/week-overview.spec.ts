@@ -34,7 +34,49 @@ test.describe('admin: week overview shows reservations', () => {
 
     const card = page.getByTestId('week-reservation').filter({ hasText: 'Week Overview Event' });
     await expect(card).toHaveCount(1);
-    await expect(card).toContainText('CONFIRMED');
+    await expect(card).toContainText('Confirmed');
     await captureScreenshot(testInfo, page, '1-week-overview-event');
+  });
+});
+
+/**
+ * The catering toggle sits on top of the card link, not inside it: toggling stays on the page,
+ * clicking the rest of the card still opens the reservation.
+ */
+test.describe('admin: catering toggle on reservation cards', () => {
+  const EVENT_DATE = '2030-10-16';
+
+  test.beforeEach(async ({ request }) => {
+    await resetBackend(request);
+    await seedAdmin(request);
+    await seedReservation(request, {
+      contactName: 'Catering Guest', email: 'catering.toggle@example.com', eventTitle: 'Catering Toggle Event',
+      description: 'Has catering', eventDate: EVENT_DATE, startTime: '14:00', endTime: '16:00',
+      expectedGuests: 15, location: 'HUBBLE', seatingArea: 'INSIDE', paymentOption: 'INDIVIDUAL',
+      status: 'CONFIRMED', specialActivities: ['EAT_CATERING'],
+    });
+  });
+
+  test('in the week overview: toggling stays on the page, the card still opens the reservation', async ({ page }) => {
+    await page.goto(`/week-overview?week=${EVENT_DATE}`);
+    const toggle = page.getByRole('button', { name: 'Catering to arrange for Catering Toggle Event' });
+    await toggle.click();
+    await expect(page.getByRole('button', { name: 'Catering arranged for Catering Toggle Event' })).toBeVisible();
+    await expect(page).toHaveURL(/\/week-overview/);
+
+    await page.getByTestId('week-reservation').filter({ hasText: 'Catering Toggle Event' }).click({ position: { x: 10, y: 10 } });
+    await expect(page).toHaveURL(/\/reservations\/\d+$/);
+  });
+
+  test('in the reservations list: the same, and the toggle is reachable with the keyboard', async ({ page }) => {
+    await page.goto('/reservations');
+    const toggle = page.getByRole('button', { name: 'Catering to arrange for Catering Toggle Event' });
+    await toggle.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('button', { name: 'Catering arranged for Catering Toggle Event' })).toBeVisible();
+    await expect(page).toHaveURL(/\/reservations$/);
+
+    await page.getByTestId('reservation-row').filter({ hasText: 'Catering Toggle Event' }).click({ position: { x: 10, y: 10 } });
+    await expect(page).toHaveURL(/\/reservations\/\d+$/);
   });
 });

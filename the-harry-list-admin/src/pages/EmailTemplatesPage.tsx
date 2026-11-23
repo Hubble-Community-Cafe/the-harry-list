@@ -298,8 +298,8 @@ export function EmailTemplatesPage() {
 
                   {/* Subject */}
                   <div>
-                    <label className="label">Subject line</label>
-                    <input
+                    <label htmlFor="template-subject-line" className="label">Subject line</label>
+                    <input id="template-subject-line"
                       type="text"
                       value={editSubject}
                       onChange={(e) => setEditSubject(e.target.value)}
@@ -310,8 +310,8 @@ export function EmailTemplatesPage() {
 
                   {/* Body */}
                   <div>
-                    <label className="label">Email body (HTML)</label>
-                    <textarea
+                    <label htmlFor="template-email-body" className="label">Email body (HTML)</label>
+                    <textarea id="template-email-body"
                       value={editBody}
                       onChange={(e) => setEditBody(e.target.value)}
                       rows={20}

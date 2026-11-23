@@ -1,8 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ReservationForm } from './ReservationForm';
+import { formatEventDate } from '../lib/formatDate';
 import type { FormOptions, FormConstraint, BlockedPeriod } from '../types/reservation';
 
 // Mock API module
@@ -231,8 +232,36 @@ describe('ReservationForm', () => {
     it('starts on step 1', async () => {
       renderForm();
       await waitForFormLoaded();
-      const step1Button = screen.getByRole('button', { name: /Step 1: Contact/ });
+      const step1Button = screen.getByRole('button', { name: 'Step 1 of 4: Contact' });
       expect(step1Button).toHaveAttribute('aria-current', 'step');
+    });
+
+    it('moves focus to the new step heading and marks earlier steps completed', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+
+      await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
+      await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Event Details' })).toHaveFocus());
+      expect(screen.getByRole('navigation', { name: 'Reservation progress' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Step 1 of 4: Contact, completed' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Step 2 of 4: Details' })).toHaveAttribute('aria-current', 'step');
+    });
+
+    it('marks a field with an error invalid and links it to the message', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+
+      const email = await screen.findByRole('textbox', { name: 'Email Address *' });
+      await waitFor(() => expect(email).toHaveAttribute('aria-invalid', 'true'));
+      expect(email).toHaveAccessibleDescription('Please enter a valid email');
+
+      await user.type(email, 'jane@example.com');
+      await waitFor(() => expect(email).not.toHaveAttribute('aria-invalid'));
     });
 
     it('does not navigate forward with empty required fields', async () => {
@@ -269,6 +298,26 @@ describe('ReservationForm', () => {
       expect(screen.getByText('Contact Information')).toBeInTheDocument();
     });
 
+    it('clears a field error while the guest types the fix, before they leave the field', async () => {
+      // If the error only cleared on blur, it would vanish as the guest clicks Continue,
+      // the button would shift up mid-click and the click would be lost.
+      const { user } = renderForm();
+      await waitForFormLoaded();
+
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      await waitFor(() => expect(screen.getByText('Please enter a valid email')).toBeInTheDocument());
+
+      await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
+      const email = screen.getByPlaceholderText('john@example.com');
+      await user.type(email, 'jane@example.com');
+
+      expect(email).toHaveFocus();
+      await waitFor(() => {
+        expect(screen.queryByText('Please enter a valid email')).not.toBeInTheDocument();
+        expect(screen.queryByText('Name must be at least 2 characters')).not.toBeInTheDocument();
+      });
+    });
+
     it('back button is hidden on step 1', async () => {
       renderForm();
       await waitForFormLoaded();
@@ -280,6 +329,15 @@ describe('ReservationForm', () => {
   // ==================== STEP 1: CONTACT VALIDATION ====================
 
   describe('step 1 - contact validation', () => {
+    it('lets the browser autofill the contact fields', async () => {
+      renderForm();
+      await waitForFormLoaded();
+      expect(screen.getByPlaceholderText('John Doe')).toHaveAttribute('autocomplete', 'name');
+      expect(screen.getByPlaceholderText('john@example.com')).toHaveAttribute('autocomplete', 'email');
+      expect(screen.getByPlaceholderText('+31 6 12345678')).toHaveAttribute('autocomplete', 'tel');
+      expect(screen.getByPlaceholderText('Your organization name')).toHaveAttribute('autocomplete', 'organization');
+    });
+
     it('shows error for name shorter than 2 chars', async () => {
       const { user } = renderForm();
       await waitForFormLoaded();
@@ -467,6 +525,10 @@ describe('ReservationForm', () => {
 
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       expect(screen.getByText('Event Details')).toBeInTheDocument();
+      // The guest is told why: the limit notice is announced and gets focus.
+      const notice = screen.getByRole('alert');
+      expect(notice).toHaveTextContent('A la carte dining is limited to 15 guests.');
+      expect(notice).toHaveFocus();
     });
   });
 
@@ -642,6 +704,32 @@ describe('ReservationForm', () => {
       await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
     }
 
+    it('names every field and choice group on the details step', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToDetails(user);
+
+      expect(screen.getByRole('spinbutton', { name: 'Expected Number of Guests *' })).toHaveAccessibleDescription(
+        /Minimum reservation size/
+      );
+      expect(screen.getByRole('group', { name: 'Special Activities' })).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: 'Catering' })).toHaveAccessibleDescription('Catered food for your event');
+      expect(screen.getByRole('radiogroup', { name: 'Location' })).toBeInTheDocument();
+      expect(screen.getByRole('radiogroup', { name: 'Seating Area *' })).toBeInTheDocument();
+    });
+
+    it('labels the long-reservation reason and links it to the duration hint', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToDetails(user);
+
+      fireEvent.change(getSelectByName('startTime'), { target: { value: '14:00' } });
+      fireEvent.change(getSelectByName('endTime'), { target: { value: '18:00' } });
+
+      const reason = await screen.findByRole('textbox', { name: 'Reason for Long Reservation *' });
+      expect(reason).toHaveAccessibleDescription(/Reservations over 3 hours require a reason/);
+    });
+
     it('shows the location sub-section on the same step as the event details', async () => {
       const { user } = renderForm();
       await waitForFormLoaded();
@@ -701,6 +789,10 @@ describe('ReservationForm', () => {
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       expect(screen.getByText('Event Details')).toBeInTheDocument();
       expect(screen.getByText(/tick the box above to confirm/i)).toBeInTheDocument();
+      // Focus lands on the box to tick, which carries the prompt as its error.
+      expect(ack).toHaveFocus();
+      expect(ack).toHaveAttribute('aria-invalid', 'true');
+      expect(ack).toHaveAccessibleDescription(/tick the box above to confirm/i);
 
       // Acknowledge, then advance succeeds (and the prompt disappears)
       await user.click(ack);
@@ -769,6 +861,8 @@ describe('ReservationForm', () => {
 
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       expect(screen.getByText('Event Details')).toBeInTheDocument();
+      expect(screen.getByTestId('blocked-date-notice')).toHaveAttribute('role', 'alert');
+      expect(screen.getByTestId('blocked-date-notice')).toHaveFocus();
     });
   });
 
@@ -788,6 +882,19 @@ describe('ReservationForm', () => {
       await user.click(screen.getByRole('button', { name: 'Continue' }));
       await waitFor(() => expect(screen.getByText('Payment Information')).toBeInTheDocument());
     }
+
+    it('groups the payment methods and links an unchosen method to its error', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await goToStep4(user);
+
+      const group = screen.getByRole('radiogroup', { name: 'Payment Method *' });
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+
+      const radios = within(group).getAllByRole('radio');
+      await waitFor(() => expect(radios[0]).toHaveAttribute('aria-invalid', 'true'));
+      expect(radios[0]).toHaveAccessibleDescription(/.+/);
+    });
 
     it('shows payment options', async () => {
       const { user } = renderForm();
@@ -865,6 +972,29 @@ describe('ReservationForm', () => {
       await waitFor(() => expect(screen.getByText('Review & Confirm')).toBeInTheDocument());
     }
 
+    it('does not submit or show the terms error when Continue opens the review step', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await navigateToStep5(user);
+
+      expect(screen.queryByText('You must accept the terms')).not.toBeInTheDocument();
+      expect(submitReservation).not.toHaveBeenCalled();
+    });
+
+    it('shows readable values on the review step, not raw codes', async () => {
+      const { user } = renderForm();
+      await waitForFormLoaded();
+      await navigateToStep5(user);
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const iso = tomorrow.toISOString().split('T')[0];
+
+      expect(screen.getByText(formatEventDate(iso))).toBeInTheDocument();
+      expect(screen.queryByText(iso)).not.toBeInTheDocument();
+      expect(screen.getByText('No preference')).toBeInTheDocument();
+    });
+
     it('calls submitReservation and onSuccess on successful submit', async () => {
       const mockResult = {
         confirmationNumber: 'ABC-123',
@@ -923,6 +1053,15 @@ describe('ReservationForm', () => {
       await waitForFormLoaded();
       expect(screen.getByText(/This is a/)).toBeInTheDocument();
       expect(screen.getByText(/request form/)).toBeInTheDocument();
+    });
+
+    it('makes the same reply-time promise as the rest of the form, with no dashes', async () => {
+      renderForm();
+      await waitForFormLoaded();
+      expect(screen.getByText(/We usually reply within 72 hours\./)).toBeInTheDocument();
+      expect(screen.queryByText(/cannot reply within 72 hours/i)).not.toBeInTheDocument();
+      const notes = screen.getByText(/request form/).closest('ul');
+      expect(notes?.textContent).not.toMatch(/[–—]/);
     });
   });
 

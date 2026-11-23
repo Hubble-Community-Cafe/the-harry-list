@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Loader2, AlertCircle, X, Users, Shield } from 'lucide-react';
 import { fetchAllUsers, updateUserRole, type AdminUser } from '../lib/api';
 import { useRole } from '../lib/RoleContext';
+import { roleLabel } from '../lib/labels';
 
 const ROLE_OPTIONS = ['VIEWER', 'EDITOR', 'ADMIN'] as const;
 
@@ -64,7 +65,7 @@ export function UsersTab() {
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
           <span className="text-red-400 text-sm">{error}</span>
-          <button onClick={() => setError(null)} className="ml-auto">
+          <button onClick={() => setError(null)} aria-label="Dismiss error" className="ml-auto">
             <X className="w-4 h-4 text-red-400" />
           </button>
         </div>
@@ -80,7 +81,7 @@ export function UsersTab() {
           {ROLE_OPTIONS.map(role => (
             <div key={role} className="flex items-start gap-2">
               <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded mt-0.5 ${ROLE_STYLES[role]}`}>
-                {role}
+                {roleLabel(role)}
               </span>
               <span className="text-xs text-dark-500">{ROLE_DESCRIPTIONS[role]}</span>
             </div>
@@ -127,7 +128,7 @@ export function UsersTab() {
                 <div className="flex items-center gap-2 shrink-0">
                   {isSelf ? (
                     <span className={`text-xs font-semibold px-2 py-1 rounded ${ROLE_STYLES[user.role]}`}>
-                      {user.role}
+                      {roleLabel(user.role)}
                     </span>
                   ) : (
                     <div className="relative">
@@ -138,7 +139,7 @@ export function UsersTab() {
                         className="bg-dark-800 border border-dark-700 rounded-lg px-3 py-1.5 text-white text-sm appearance-none pr-8 cursor-pointer disabled:opacity-50"
                       >
                         {ROLE_OPTIONS.map(role => (
-                          <option key={role} value={role}>{role}</option>
+                          <option key={role} value={role}>{roleLabel(role)}</option>
                         ))}
                       </select>
                       {saving === user.id && (

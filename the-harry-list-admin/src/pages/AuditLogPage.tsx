@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, History, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { fetchAuditLog } from '../lib/api';
 import type { AuditAction, AuditEntityType, AuditLogEntry } from '../types/audit';
+import { changeValueLabel, fieldLabel, humanize } from '../lib/labels';
 
 const ENTITY_TYPES: AuditEntityType[] = [
   'RESERVATION', 'BLOCKED_PERIOD', 'CALENDAR_APPOINTMENT',
@@ -91,7 +92,7 @@ export function AuditLogPage() {
               className="select-field"
             >
               <option value="">All</option>
-              {ENTITY_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
+              {ENTITY_TYPES.map(t => <option key={t} value={t}>{humanize(t)}</option>)}
             </select>
           </div>
           <div className="form-group">
@@ -103,7 +104,7 @@ export function AuditLogPage() {
               className="select-field"
             >
               <option value="">All</option>
-              {ACTIONS.map(a => <option key={a} value={a}>{a.replace(/_/g, ' ')}</option>)}
+              {ACTIONS.map(a => <option key={a} value={a}>{humanize(a)}</option>)}
             </select>
           </div>
           <div className="form-group">
@@ -169,7 +170,7 @@ export function AuditLogPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <AuditActionBadge action={entry.action} />
                     <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-dark-700 text-dark-300">
-                      {entry.entityType.replace(/_/g, ' ')}
+                      {humanize(entry.entityType)}
                     </span>
                     <span className="text-white text-sm">{entry.entityLabel || `#${entry.entityId ?? '—'}`}</span>
                   </div>
@@ -183,10 +184,10 @@ export function AuditLogPage() {
                   <ul className="mt-2 space-y-1">
                     {entry.changes.map((change, i) => (
                       <li key={i} className="text-xs text-dark-400">
-                        <code className="text-dark-300">{change.field}</code>:{' '}
-                        <span className="line-through text-red-400/70">{change.oldValue ?? '—'}</span>
+                        <span className="text-dark-300">{fieldLabel(change.field)}</span>:{' '}
+                        <span className="line-through text-red-400/70">{changeValueLabel(change.field, change.oldValue)}</span>
                         {' → '}
-                        <span className="text-green-400/80">{change.newValue ?? '—'}</span>
+                        <span className="text-green-400/80">{changeValueLabel(change.field, change.newValue)}</span>
                       </li>
                     ))}
                   </ul>

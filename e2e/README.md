@@ -142,22 +142,26 @@ faster layers.
 | Area | Unit / component | Backend integration | E2E spec |
 |------|------------------|---------------------|----------|
 | Make a reservation (happy + many options) | form unit tests | `CreateReservationService*` | `public/happy-path`, `public/booking-options` |
+| Step navigation: one Continue click advances after fixing errors, opening the review step never submits or shows the terms error, the review shows a readable date and location | `ReservationForm` + `formatDate` tests | n/a | `public/step-navigation` |
 | Sender / spam-folder notice on confirmation (#310) | `SuccessMessage` test | — | `public/happy-path` |
 | Staff inbox comes only from `APP_MAIL_STAFF`: new reservation alert, guest Reply-To, catering default Reply-To | `ReservationDetailPage` test | `EmailMessagesTest`, `EmailTemplateServiceTest`, `AdminReservationControllerTest` | `public/happy-path` |
-| Soft / hard blocked periods | `blockedPeriods` + form tests | `ConstraintValidationServiceTest`, `FormOptionsControllerTest` (staff-only reason never public) | `public/soft-block`, `public/hard-block`, `admin/blocked-periods` |
+| Soft / hard blocked periods, and a blocked Continue focusing the notice or box that explains why | `blockedPeriods` + form tests | `ConstraintValidationServiceTest`, `FormOptionsControllerTest` (staff-only reason never public) | `public/soft-block`, `public/hard-block`, `admin/blocked-periods` |
 | Form constraints (all types), and a forced location (small group or activity lock) or seating giving the guest's own choice back once it lifts | form tests | `ConstraintValidationServiceTest` | `public/constraints-blocking`, `public/constraints-dynamic`, `admin/constraints-roundtrip` |
 | Activity notice (advisory banner, opt-in confirmation dialog, optional location and minimum-guest conditions) | `ReservationForm` + `FormSettingsPage` tests | `ConstraintValidationServiceTest` | `public/activity-notice` |
 | Retired private-event activity (form, options API, direct submit) | `ReservationForm` + `ReservationDetailPage` tests | `FormOptionsControllerTest`, `CreateReservationServiceTest` | `public/retired-activity` |
 | Privacy policy (GDPR notice + dialog) | `PrivacyPolicy` + `Footer` tests | — | `public/privacy-policy` |
-| Self-hosted fonts, no requests to Google Fonts (#449) | n/a | n/a | `public/self-hosted-fonts`, `admin/self-hosted-fonts` |
+| Self-hosted fonts, no requests to Google Fonts (#449); subtitles use Lato Light (weight 300), small labels stay regular | n/a | n/a | `public/self-hosted-fonts`, `admin/self-hosted-fonts` |
 | Content-Security-Policy enforced, no violations (full form incl. ALTCHA, every admin page) (#448) | `zodConfig` test | n/a | `public/csp`, `admin/csp` |
 | Security headers and CSP on every nginx response: page, static assets, runtime config, health check; runtime config and public folder files are revalidated on every load, hashed bundles cached a year with one Cache-Control header | n/a | n/a | `public/security-headers`, `admin/security-headers` |
-| Accessibility, WCAG 2.2 AA via axe: every form step, validation errors, confirmation and privacy dialog, every admin page, light and dark theme, desktop and mobile (#457) | n/a | n/a | `public/accessibility`, `mobile-public/accessibility`, `admin/accessibility` |
-| Skip to content link, and admin focus moves to the page content after navigating (#458) | `SkipLink` + `Layout` tests | n/a | `public/accessibility`, `admin/accessibility` (keyboard tests) |
+| Accessibility, WCAG 2.2 AA via axe: every form step, validation errors, confirmation and privacy dialog, every admin page, the admin edit and help dialogs (reservation, appointment, constraint, blocked period, help), admin pages and the open menu at phone width, light and dark theme, desktop and mobile (#457) | admin page tests (fields found by their labels) | n/a | `public/accessibility`, `mobile-public/accessibility`, `admin/accessibility` |
+| Skip to content link, and admin focus moves to the page content after navigating (#458); admin tab title per page, named menu button, closed phone menu out of the tab order, Escape closes it | `SkipLink` + `Layout` + `HelpGuide` + `ThemeToggle` tests | n/a | `public/accessibility`, `admin/accessibility` (keyboard tests) |
+| Public form semantics: fields marked invalid and linked to their errors, named choice groups, focus moves to the step heading on Continue, progress says which steps are completed, focused choice cards show a ring | `ReservationForm` tests | n/a | `public/accessibility` (keyboard tests) |
 | Pages and form parts load on demand; a stale tab reloads once after a deploy, without a reload loop (#459) | `chunkReload` + `App` tests | n/a | `admin/stale-deploy`, and every admin and form spec loads the chunks |
 | Unsaved changes: leaving via sidebar or browser back, closing a dialog with X, switching templates, closing the tab (#460) | `useUnsavedChanges` + page tests (reservation, templates, settings, appointments) | n/a | `admin/unsaved-changes` |
-| Confirm a reservation (appears in admin) | `ReservationsPage`/detail tests | controller tests | `admin/reservation-lifecycle` #1 |
-| Edit / remove a reservation | `ReservationDetailPage` test | `Update`/`DeleteReservationServiceTest` | `admin/reservation-lifecycle` #2 |
+| Dialogs (shared `Modal`, both apps): announced and named, focus moves in and stays inside, Escape closes only the top dialog, focus returns to the opener | `Modal` (shared), `ConfirmDialog` + `ReservationDetailPage` tests | n/a | `admin/accessibility` (keyboard test) |
+| Confirm a reservation (appears in admin), with a line saying what happened and who is emailed | `ReservationsPage`/detail tests | controller tests | `admin/reservation-lifecycle` #1 |
+| Admin shows words, not stored codes (status, location, payment, seating, invoice type, activity, role, change history) | `labels` + page tests | n/a | `admin/reservation-lifecycle`, `admin/week-overview` |
+| Edit / permanently delete a reservation (delete asks first and says whether an email goes out; a failed action or save keeps the page and the input) | `ReservationDetailPage` test | `Update`/`DeleteReservationServiceTest` | `admin/reservation-lifecycle` #2 |
 | Seating area (inside/outside) shown in detail (#292) | `ReservationDetailPage` test | — | `admin/reservation-lifecycle` #2 |
 | Reopen a rejected or cancelled reservation to pending | `ReservationDetailPage` test | `AdminReservationControllerTest` | `admin/reservation-lifecycle` #3, #4 |
 | Allowed status transitions only (pending to confirmed/rejected, confirmed to cancelled, rejected/cancelled to pending) | n/a | `ReservationStatusTest`, `AdminReservationControllerTest` | `admin/reservation-lifecycle` |
@@ -170,6 +174,7 @@ faster layers.
 | Catering-only export (#280) | — | `PdfExportServiceTest` | `admin/catering-export` |
 | Appointments on the PDF export (#303) | — | `PdfExportServiceTest`, `AppointmentRecurrenceServiceTest` | `admin/appointments-export` |
 | Week overview | `WeekOverviewPage` test | — | `admin/week-overview` |
+| Catering toggle on reservation cards (list and week): its own control on top of the card link, named by state and event, keyboard reachable, a failed save says so on the card | `ReservationsPage` + `WeekOverviewPage` tests | n/a | `admin/week-overview` |
 | Calendar feeds (iCal) incl. catering filter (#309), fail closed without a token (#450) | n/a | `ICalendarServiceTest`, `ReservationTest`, `CalendarFeedControllerTest` | `public/calendar-feed` |
 | Recurring appointments (incl. "Nth weekday", #286) | `recurrence` + `CalendarAppointmentsPage` tests | `ICalendarServiceTest` | `admin/calendar-appointments` |
 | Mobile date/time fields (#253) | — | — | `mobile-public/datetime` |

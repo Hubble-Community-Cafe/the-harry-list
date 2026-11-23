@@ -170,7 +170,7 @@ describe('FormSettingsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('2026-04-01 — 2026-04-03')).toBeInTheDocument();
-      expect(screen.getByText('HUBBLE')).toBeInTheDocument();
+      expect(screen.getAllByText('Hubble').length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -185,6 +185,9 @@ describe('FormSettingsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('New Constraint')).toBeInTheDocument();
     });
+    expect(screen.getByRole('dialog', { name: 'New Constraint' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Constraint Type')).toBeInTheDocument();
+    expect(screen.getByLabelText('Message (shown to users)')).toBeInTheDocument();
   });
 
   it('hides the target value field and saves an Activity Notice constraint', async () => {
@@ -330,6 +333,12 @@ describe('FormSettingsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('New Blocked Period')).toBeInTheDocument();
     });
+    // Every field is named by its visible label, so screen readers announce it.
+    expect(screen.getByRole('dialog', { name: 'New Blocked Period' })).toBeInTheDocument();
+    for (const label of ['Location (optional)', 'Start Date *', 'End Date *', 'Start Time (optional)',
+      'End Time (optional)', 'Reason (staff only) *', 'Public Message (shown to users)']) {
+      expect(screen.getByLabelText(label)).toBeInTheDocument();
+    }
   });
 
   it('reveals the acknowledgement text field when soft block is toggled on', async () => {

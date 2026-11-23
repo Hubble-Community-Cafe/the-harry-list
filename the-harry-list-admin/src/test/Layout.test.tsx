@@ -66,3 +66,41 @@ describe('Layout focus management', () => {
     expect(main.scrollTop).toBe(0);
   });
 });
+
+describe('Layout navigation for keyboard and screen readers', () => {
+  it('gives each page its own tab title', async () => {
+    renderLayout();
+    expect(document.title).toBe('Dashboard · The Harry List Admin');
+    fireEvent.click(screen.getByRole('link', { name: /Reservations/ }));
+    await screen.findByRole('heading', { name: 'Reservations page' });
+    expect(document.title).toBe('Reservations · The Harry List Admin');
+  });
+
+  it('has a named menu button that opens the drawer, and Escape closes it back to the button', async () => {
+    renderLayout();
+    const menu = screen.getByRole('button', { name: 'Open menu' });
+    expect(menu).toHaveAttribute('aria-expanded', 'false');
+    expect(menu).toHaveAttribute('aria-controls', document.querySelector('aside')?.id);
+
+    fireEvent.click(menu);
+    expect(menu).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: /Dashboard/ })).toHaveFocus();
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(menu).toHaveAttribute('aria-expanded', 'false');
+    expect(menu).toHaveFocus();
+  });
+
+  it('keeps the closed drawer out of reach on a phone', () => {
+    // The test setup's matchMedia matches nothing, so this renders the phone layout.
+    renderLayout();
+    expect(document.querySelector('aside')).toHaveAttribute('inert');
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    expect(document.querySelector('aside')).not.toHaveAttribute('inert');
+  });
+
+  it('has one h1 per page: the sidebar brand is not a heading', () => {
+    renderLayout();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+  });
+});

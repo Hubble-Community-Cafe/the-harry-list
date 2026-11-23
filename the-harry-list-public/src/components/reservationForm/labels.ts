@@ -12,3 +12,13 @@ export const SPECIAL_ACTIVITY_DESCRIPTIONS: Record<string, string> = {
   EAT_CATERING: 'Catered food for your event',
   CATERING_CORONA_ROOM: 'Catering for a Corona Room event (Hubble only)',
 };
+
+// Guest-facing location names; an empty value means the guest has no preference.
+export const LOCATION_LABELS: Record<string, string> = {
+  HUBBLE: 'Hubble',
+  METEOR: 'Meteor',
+  NO_PREFERENCE: 'No preference',
+};
+
+export const locationLabel = (value: string | null | undefined) =>
+  (value && LOCATION_LABELS[value]) || LOCATION_LABELS.NO_PREFERENCE;

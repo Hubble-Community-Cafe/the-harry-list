@@ -1,4 +1,6 @@
 import { useFormContext } from 'react-hook-form';
+import { fieldA11y } from './fieldA11y';
+import { FieldError } from './FieldError';
 import { CreditCard } from 'lucide-react';
 import { MAX_LENGTH } from '../../lib/fieldLimits';
 import type { FormOptions, ReservationFormData } from '../../types/reservation';
@@ -21,14 +23,14 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
               <CreditCard className="w-5 h-5 text-meteor-400" />
             </div>
             <div>
-              <h2 className="text-xl font-title font-semibold text-white tracking-tight">Payment Information</h2>
+              <h2 tabIndex={-1} className="text-xl font-title font-semibold text-white tracking-tight outline-none">Payment Information</h2>
               <p className="text-sm text-dark-400 font-light">How will you be paying?</p>
             </div>
           </div>
 
           <div className="form-group">
-            <label className="label">Payment Method *</label>
-            <div className="grid grid-cols-1 gap-3">
+            <p id="paymentOption-label" className="label">Payment Method *</p>
+            <div role="radiogroup" aria-labelledby="paymentOption-label" className="grid grid-cols-1 gap-3">
               {[
                 { value: 'INDIVIDUAL', label: 'People pay individually', desc: 'Each guest pays for themselves' },
                 { value: 'ONE_PERSON', label: 'One person pays at the end', desc: 'A single person settles the bill' },
@@ -51,6 +53,7 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
                       {...register('paymentOption')}
                       value={option.value}
                       className="sr-only"
+                      {...fieldA11y(errors, 'paymentOption')}
                     />
                     <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
                       selected ? 'border-meteor-500 bg-meteor-500' : 'border-dark-600 bg-dark-800'
@@ -65,7 +68,7 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
                 );
               })}
             </div>
-            {errors.paymentOption && <p className="error-text">{errors.paymentOption.message}</p>}
+            <FieldError errors={errors} name="paymentOption" />
           </div>
 
           {/* Invoice sub-type */}
@@ -73,7 +76,7 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
             <div className="space-y-4 pl-4 border-l-2 border-meteor-500/30">
               <div className="form-group">
                 <label htmlFor="invoiceType" className="label">Invoice Type *</label>
-                <select {...register('invoiceType')} id="invoiceType" className="select-field" disabled={optionsLoading}>
+                <select {...register('invoiceType')} id="invoiceType" {...fieldA11y(errors, 'invoiceType')} className="select-field" disabled={optionsLoading}>
                   <option value="">Select invoice type...</option>
                   {(formOptions?.invoiceTypes ?? [
                     { value: 'TUE', displayName: 'TU/e' },
@@ -83,7 +86,7 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
                     <option key={opt.value} value={opt.value}>{opt.displayName}</option>
                   ))}
                 </select>
-                {errors.invoiceType && <p className="error-text">{errors.invoiceType.message}</p>}
+                <FieldError errors={errors} name="invoiceType" />
               </div>
 
               {/* TUE/FONTYS: Kostenplaats */}
@@ -92,11 +95,11 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
                   <label htmlFor="costCenter" className="label">Kostenplaats *</label>
                   <input
                     type="text"
-                    {...register('costCenter')} maxLength={MAX_LENGTH.costCenter} id="costCenter"
+                    {...register('costCenter')} maxLength={MAX_LENGTH.costCenter} id="costCenter" {...fieldA11y(errors, 'costCenter')}
                     className="input-field"
                     placeholder="e.g., CC-12345"
                   />
-                  {errors.costCenter && <p className="error-text">{errors.costCenter.message}</p>}
+                  <FieldError errors={errors} name="costCenter" />
                 </div>
               )}
 
@@ -107,21 +110,21 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
                     <label htmlFor="invoiceName" className="label">Company Name *</label>
                     <input
                       type="text"
-                      {...register('invoiceName')} maxLength={MAX_LENGTH.invoiceName} id="invoiceName"
+                      {...register('invoiceName')} maxLength={MAX_LENGTH.invoiceName} id="invoiceName" autoComplete="organization" {...fieldA11y(errors, 'invoiceName')}
                       className="input-field"
                       placeholder="Company or organization name"
                     />
-                    {errors.invoiceName && <p className="error-text">{errors.invoiceName.message}</p>}
+                    <FieldError errors={errors} name="invoiceName" />
                   </div>
 
                   <div className="form-group">
                     <label htmlFor="invoiceAddress" className="label">Invoice Address *</label>
                     <textarea
-                      {...register('invoiceAddress')} maxLength={MAX_LENGTH.invoiceAddress} id="invoiceAddress"
+                      {...register('invoiceAddress')} maxLength={MAX_LENGTH.invoiceAddress} id="invoiceAddress" autoComplete="street-address" {...fieldA11y(errors, 'invoiceAddress')}
                       className="input-field min-h-[80px] resize-none"
                       placeholder="Full billing address..."
                     />
-                    {errors.invoiceAddress && <p className="error-text">{errors.invoiceAddress.message}</p>}
+                    <FieldError errors={errors} name="invoiceAddress" />
                   </div>
 
                   <div className="form-group">

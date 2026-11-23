@@ -38,7 +38,7 @@ for (const theme of THEMES) {
       await form.acceptTerms();
       await expectNoA11yViolations(page, testInfo, `${theme} 4 confirm`);
       await form.submit();
-      await expect(page.getByText('Reservation Submitted!')).toBeVisible();
+      await expect(page.getByText('Request received')).toBeVisible();
       await expectNoA11yViolations(page, testInfo, `${theme} 5 confirmation`);
 
       await form.openPrivacyFromFooter();
@@ -69,4 +69,34 @@ test('keyboard: the first Tab reaches a visible skip link that jumps past the he
   // The next Tab continues inside the content, not in the header.
   await page.keyboard.press('Tab');
   expect(await page.evaluate(() => !!document.activeElement?.closest('#main-content'))).toBe(true);
+});
+
+test('keyboard: Continue moves focus to the next step heading', async ({ page, request }) => {
+  await resetBackend(request);
+  const form = new ReservationFormPage(page);
+  await form.goto();
+  await form.fillContact({ name: 'Ada Access', email: 'ada.a11y@example.com' });
+  await page.getByRole('button', { name: 'Continue' }).press('Enter');
+
+  await expect(page.getByRole('heading', { name: 'Event Details' })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Step 1 of 4: Contact, completed' })).toBeVisible();
+});
+
+test('keyboard: a focused choice card shows a visible focus ring', async ({ page, request }) => {
+  await resetBackend(request);
+  const form = new ReservationFormPage(page);
+  await form.goto();
+  await form.fillContact({ name: 'Ada Access', email: 'ada.a11y@example.com' });
+  await form.continue();
+  await form.expectStep('Event Details');
+
+  // The radios are visually hidden; arrow keys move between them like a guest would.
+  await page.getByTestId('seating-INSIDE').focus();
+  await page.keyboard.press('ArrowRight');
+  const outside = page.getByTestId('seating-OUTSIDE');
+  await expect(outside).toBeFocused();
+
+  const card = page.locator('label').filter({ has: outside });
+  await expect(card).toHaveCSS('outline-style', 'solid');
+  await expect(card).toHaveCSS('outline-width', '2px');
 });
