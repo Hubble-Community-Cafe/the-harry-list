@@ -10,7 +10,9 @@ import { usePermissions } from '../lib/usePermissions';
 import { HelpGuide } from '../components/HelpGuide';
 import { weekOverviewGuide } from '../lib/guideContent';
 import { expandOccurrences } from '../lib/recurrence';
-import { locationLabel, statusLabel } from '../lib/labels';
+import { locationLabel } from '../lib/labels';
+import { StatusBadge } from '../components/StatusBadge';
+import { statusEdgeClass } from '../lib/status';
 
 const CATERING_ACTIVITIES = ['EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM'];
 
@@ -38,20 +40,6 @@ function addDays(date: Date, days: number): Date {
 }
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'border-l-yellow-400',
-  CONFIRMED: 'border-l-green-400',
-  REJECTED: 'border-l-red-400',
-  CANCELLED: 'border-l-dark-500',
-};
-
-const STATUS_BADGE: Record<string, string> = {
-  PENDING: 'bg-yellow-500/20 text-yellow-400',
-  CONFIRMED: 'bg-green-500/20 text-green-400',
-  REJECTED: 'bg-red-500/20 text-red-400',
-  CANCELLED: 'bg-dark-500/20 text-dark-400',
-};
 
 export function WeekOverviewPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -237,11 +225,11 @@ export function WeekOverviewPage() {
           <div className="text-xs text-dark-400">Total</div>
         </div>
         <div className="card !p-4">
-          <div className="text-2xl font-bold text-yellow-400">{pendingCount}</div>
+          <div className="text-2xl font-bold status-text-pending">{pendingCount}</div>
           <div className="text-xs text-dark-400">Pending</div>
         </div>
         <div className="card !p-4">
-          <div className="text-2xl font-bold text-green-400">{confirmedCount}</div>
+          <div className="text-2xl font-bold status-text-confirmed">{confirmedCount}</div>
           <div className="text-xs text-dark-400">Confirmed</div>
         </div>
         <div className="card !p-4">
@@ -351,13 +339,11 @@ function WeekReservationCard({
     // The title link stretches over the card; the catering toggle sits on top as its own control.
     <div
       data-testid="week-reservation"
-      className={`relative block rounded-lg bg-dark-800/80 hover:bg-dark-800 border-l-2 p-2 transition-colors has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-hubble-500 ${STATUS_COLORS[reservation.status] || 'border-l-dark-600'}`}
+      className={`relative block rounded-lg bg-dark-800/80 hover:bg-dark-800 border-l-2 p-2 transition-colors has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-hubble-500 ${statusEdgeClass(reservation.status)}`}
     >
       {/* Status badge */}
       <div className="mb-1">
-        <span className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded ${STATUS_BADGE[reservation.status] || 'bg-dark-600/30 text-dark-400'}`}>
-          {statusLabel(reservation.status)}
-        </span>
+        <StatusBadge status={reservation.status} size="compact" />
       </div>
 
       {/* Title */}

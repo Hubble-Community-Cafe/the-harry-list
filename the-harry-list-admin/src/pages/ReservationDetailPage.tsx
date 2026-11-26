@@ -20,8 +20,9 @@ import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { Modal } from 'the-harry-list-shared';
 import { HelpGuide } from '../components/HelpGuide';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { activityLabel, changeValueLabel, fieldLabel, invoiceTypeLabel, locationLabel, paymentLabel, statusLabel } from '../lib/labels';
+import { activityLabel, changeValueLabel, fieldLabel, invoiceTypeLabel, locationLabel, paymentLabel } from '../lib/labels';
 import { reservationDetailGuide } from '../lib/guideContent';
+import { StatusBadge } from '../components/StatusBadge';
 
 // Pre-filled (editable) default shown when rejecting a reservation. Staff can edit or clear it.
 const DEFAULT_REJECTION_MESSAGE =
@@ -349,7 +350,7 @@ export function ReservationDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           <HelpGuide title="Reservation Detail Guide" sections={reservationDetailGuide} />
-          <StatusBadge status={reservation.status} large />
+          <StatusBadge status={reservation.status} size="large" testId="reservation-status" />
         </div>
       </div>
 
@@ -1371,31 +1372,3 @@ function AuditActionBadge({ action }: { action: string }) {
   const { label, color, bg } = config[action] || { label: action, color: 'text-dark-300', bg: 'bg-dark-700' };
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${bg} ${color}`}>{label}</span>;
 }
-
-function StatusBadge({ status, large }: { status: string; large?: boolean }) {
-  const config: Record<string, { color: string; bg: string }> = {
-    PENDING: { color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
-    CONFIRMED: { color: 'text-green-400', bg: 'bg-green-500/20' },
-    REJECTED: { color: 'text-red-400', bg: 'bg-red-500/20' },
-    CANCELLED: { color: 'text-dark-400', bg: 'bg-dark-500/20' },
-  };
-
-  const { color, bg } = config[status] || config.PENDING;
-
-  return (
-    <span
-      data-testid="reservation-status"
-      className={`
-      inline-flex items-center gap-2 px-3 py-1.5 rounded-xl font-medium
-      ${bg} ${color}
-      ${large ? 'text-sm' : 'text-xs'}
-    `}>
-      {status === 'PENDING' && <Clock className="w-4 h-4" />}
-      {status === 'CONFIRMED' && <CheckCircle className="w-4 h-4" />}
-      {status === 'REJECTED' && <XCircle className="w-4 h-4" />}
-      {status === 'CANCELLED' && <XCircle className="w-4 h-4" />}
-      {statusLabel(status)}
-    </span>
-  );
-}
-

@@ -175,6 +175,18 @@ html {
 }
 
 :root {
+  /* Reservation status (StatusBadge, week cards). Housestyle colours: pending in the warm peach
+     accent, confirmed in Meteor green, rejected red, cancelled in the tan neutral. Text is at
+     least 5.9:1 on its tint over a card in both themes. */
+  --status-pending-fg: #ffbc7d;
+  --status-pending-bg: rgb(255 188 125 / 0.16);
+  --status-confirmed-fg: #7cc4a4;
+  --status-confirmed-bg: rgb(98 163 138 / 0.18);
+  --status-rejected-fg: #f4a3a3;
+  --status-rejected-bg: rgb(239 68 68 / 0.18);
+  --status-cancelled-fg: #c9bd9f;
+  --status-cancelled-bg: rgb(155 141 111 / 0.2);
+
   --background: 0 0% 100%;
   --foreground: 195 75% 15%;
   --card: 0 0% 100%;
@@ -263,6 +275,15 @@ body {
   --color-hubble-400: #1a6b7c;
   --color-hubble-500: #0f5568;
   --color-meteor-400: #2d7a5e;
+
+  --status-pending-fg: #8a4b12;
+  --status-pending-bg: rgb(255 188 125 / 0.28);
+  --status-confirmed-fg: #14593f;
+  --status-confirmed-bg: rgb(98 163 138 / 0.2);
+  --status-rejected-fg: #a12a2a;
+  --status-rejected-bg: rgb(239 68 68 / 0.12);
+  --status-cancelled-fg: #5b5040;
+  --status-cancelled-bg: rgb(155 141 111 / 0.2);
 }
 
 /* Base text overrides */
@@ -691,6 +712,20 @@ body.dark {
 }
 
 @layer components {
+  /* One status badge for every page; colours come from the --status-* tokens above. */
+  .status-pending { color: var(--status-pending-fg); background-color: var(--status-pending-bg); }
+  .status-confirmed { color: var(--status-confirmed-fg); background-color: var(--status-confirmed-bg); }
+  .status-rejected { color: var(--status-rejected-fg); background-color: var(--status-rejected-bg); }
+  .status-cancelled { color: var(--status-cancelled-fg); background-color: var(--status-cancelled-bg); }
+  /* Status colour on its own: counters and icons that stand for a status. */
+  .status-text-pending { color: var(--status-pending-fg); }
+  .status-text-confirmed { color: var(--status-confirmed-fg); }
+  /* The coloured left edge of a week overview card. */
+  .status-edge-pending { border-left-color: var(--status-pending-fg); }
+  .status-edge-confirmed { border-left-color: var(--status-confirmed-fg); }
+  .status-edge-rejected { border-left-color: var(--status-rejected-fg); }
+  .status-edge-cancelled { border-left-color: var(--status-cancelled-fg); }
+
   .btn-primary {
     /* Flat Hubble teal, no gradient or glow (housestyle). */
     @apply inline-flex items-center justify-center rounded-xl bg-hubble-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-hubble-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-hubble-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
