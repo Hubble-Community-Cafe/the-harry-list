@@ -1,9 +1,8 @@
 import { Sparkles } from 'lucide-react';
 import { ThemeToggle } from 'the-harry-list-shared';
 
-// Solid, not translucent: the header is not sticky, so nothing ever scrolls
-// beneath it. A backdrop-blur here would only frost the fixed decorative
-// background — a static effect for the cost of a full-width filter.
+// Solid, not translucent: the header is not sticky, so nothing ever scrolls beneath it,
+// and the housestyle has no frosted glass.
 export function Header() {
   return (
     <header className="relative z-20 border-b border-dark-800/50 bg-dark-950">

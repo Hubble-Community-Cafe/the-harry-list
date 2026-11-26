@@ -29,7 +29,7 @@ export function PrivacyPolicy({ open, onClose }: PrivacyPolicyProps) {
       onClose={onClose}
       closeOnBackdrop
       initialFocusRef={closeRef}
-      overlayClassName="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-overlay"
+      overlayClassName="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-overlay"
       backdropTestId="privacy-policy-backdrop"
       testId="privacy-policy"
       className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border border-dark-700 bg-dark-900 p-6 md:p-8 shadow-2xl animate-modal"

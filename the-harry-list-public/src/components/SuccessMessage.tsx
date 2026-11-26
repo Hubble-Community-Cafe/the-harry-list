@@ -19,7 +19,7 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
       <div className="card text-center">
         {/* Success icon */}
         <div className="mb-6">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/25">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-meteor-500">
             <CheckCircle className="w-10 h-10 text-white" />
           </div>
         </div>
@@ -38,7 +38,7 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
             <PartyPopper className="w-5 h-5 text-meteor-400" />
             <span className="text-sm text-dark-400">Confirmation number</span>
           </div>
-          <div className="text-4xl font-bold bg-gradient-to-r from-hubble-400 to-meteor-400 bg-clip-text text-transparent mb-4 tracking-wider">
+          <div className="text-4xl font-bold text-hubble-400 mb-4 tracking-wider">
             {result.confirmationNumber}
           </div>
 

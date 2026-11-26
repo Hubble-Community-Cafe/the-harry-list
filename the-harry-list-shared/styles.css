@@ -279,10 +279,7 @@ body {
 .light .bg-meteor-500,
 .light .bg-meteor-600,
 .light .bg-\[\#2f2f2f\],
-.light [class*="bg-gradient-to-r"][class*="from-hubble"]:not([class*="bg-clip-text"]),
-.light [class*="bg-gradient-to-br"][class*="from-hubble"]:not([class*="bg-clip-text"]),
-.light [class*="bg-gradient-to-br"][class*="from-meteor"]:not([class*="bg-clip-text"]),
-.light [class*="bg-gradient-to-br"][class*="from-dark"]:not([class*="bg-clip-text"]) {
+.light .bg-dark-500 {
   color: #ffffff;
 }
 
@@ -293,10 +290,7 @@ body {
 .light .bg-hubble-600 .text-white,
 .light .bg-meteor-500 .text-white,
 .light .bg-meteor-600 .text-white,
-.light [class*="bg-gradient-to-r"][class*="from-hubble"] .text-white,
-.light [class*="bg-gradient-to-br"][class*="from-hubble"] .text-white,
-.light [class*="bg-gradient-to-br"][class*="from-meteor"] .text-white,
-.light [class*="bg-gradient-to-br"][class*="from-dark"] .text-white {
+.light .bg-dark-500 .text-white {
   color: #ffffff;
 }
 
@@ -612,10 +606,6 @@ body {
 }
 
 /* Button overrides */
-.light .btn-primary {
-  box-shadow: 0 2px 8px rgba(26, 107, 124, 0.2);
-}
-
 .light .bg-\[\#2f2f2f\] {
   background-color: #1a2428;
 }
@@ -702,11 +692,13 @@ body.dark {
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-hubble-600 to-hubble-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-hubble-500/25 transition-all duration-200 hover:from-hubble-500 hover:to-hubble-400 hover:shadow-xl hover:shadow-hubble-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-hubble-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
+    /* Flat Hubble teal, no gradient or glow (housestyle). */
+    @apply inline-flex items-center justify-center rounded-xl bg-hubble-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-hubble-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-hubble-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-meteor-600 to-meteor-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-meteor-500/25 transition-all duration-200 hover:from-meteor-500 hover:to-meteor-400 hover:shadow-xl hover:shadow-meteor-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-meteor-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950;
+    /* Flat Meteor green, no gradient or glow (housestyle). */
+    @apply inline-flex items-center justify-center rounded-xl bg-meteor-500 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-meteor-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-meteor-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950;
   }
 
   /* Instant press feedback: the button visibly acknowledges the press before
@@ -724,7 +716,7 @@ body.dark {
   }
 
   .input-field {
-    @apply w-full rounded-xl border border-dark-700 bg-dark-800/50 px-4 py-3 text-white placeholder-dark-400 backdrop-blur-sm transition-all duration-200 focus:border-hubble-500 focus:outline-none focus:ring-2 focus:ring-hubble-500/20;
+    @apply w-full rounded-xl border border-dark-700 bg-dark-800/50 px-4 py-3 text-white placeholder-dark-400 transition-all duration-200 focus:border-hubble-500 focus:outline-none focus:ring-2 focus:ring-hubble-500/20;
   }
 
   .select-field {
@@ -759,7 +751,8 @@ body.dark {
   }
 
   .card {
-    @apply rounded-2xl border border-dark-800 bg-dark-900/80 p-6 backdrop-blur-xl shadow-2xl;
+    /* A solid surface: no frosted glass (housestyle). */
+    @apply rounded-2xl border border-dark-800 bg-dark-900 p-6 shadow-2xl;
   }
 
   .label {
@@ -772,10 +765,6 @@ body.dark {
 
   .error-text {
     @apply text-sm text-red-400 mt-1;
-  }
-
-  .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
   }
 }
 
