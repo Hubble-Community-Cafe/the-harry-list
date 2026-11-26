@@ -192,7 +192,7 @@ export function CalendarAppointmentsPage() {
         {canManageAppointments && (
         <button
           onClick={() => openEditor({ ...emptyAppointment })}
-          className="btn-primary flex items-center gap-2 shrink-0"
+          className="btn-primary btn-sm gap-2 shrink-0"
           data-testid="add-appointment"
         >
           <Plus className="w-4 h-4" />
@@ -540,14 +540,14 @@ export function CalendarAppointmentsPage() {
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   onClick={() => setEditing(null)}
-                  className="px-4 py-2 text-sm text-dark-400 hover:text-white transition-colors"
+                  className="btn-neutral btn-sm"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={saving || !editing.title || !editing.date || (!editing.allDay && (!editing.startTime || !editing.endTime))}
-                  className="btn-primary flex items-center gap-2"
+                  className="btn-primary btn-sm gap-2"
                   data-testid="save-appointment"
                 >
                   {saving && <Loader2 className="w-4 h-4 animate-spin" />}

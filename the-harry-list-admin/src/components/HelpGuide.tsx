@@ -265,11 +265,7 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
 
                 <button
                   onClick={() => hasNext ? setCurrentSection((p) => p + 1) : setIsOpen(false)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    hasNext
-                      ? 'bg-hubble-600 hover:bg-hubble-500 text-white'
-                      : 'bg-dark-700 hover:bg-dark-600 text-white'
-                  }`}
+                  className={`${hasNext ? 'btn-primary' : 'btn-neutral'} btn-sm gap-2`}
                 >
                   {hasNext ? 'Next' : 'Done'}
                   {hasNext && <ChevronRight className="w-4 h-4" />}
@@ -282,7 +278,7 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
               <div className="shrink-0 flex justify-end px-6 py-4 border-t border-dark-800">
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="px-4 py-2 rounded-lg text-sm font-medium bg-dark-700 hover:bg-dark-600 text-white transition-all"
+                  className="btn-neutral btn-sm"
                 >
                   Got it
                 </button>

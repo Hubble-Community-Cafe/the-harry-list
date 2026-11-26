@@ -336,7 +336,7 @@ export function EmailTemplatesPage() {
                       <button
                         onClick={() => sendTestEmail(template.templateType)}
                         disabled={sendingTest || !testEmail.trim()}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                        className="btn-neutral btn-sm gap-2"
                       >
                         {sendingTest ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         Send test
@@ -376,7 +376,7 @@ export function EmailTemplatesPage() {
                       <button
                         onClick={() => saveTemplate(template.templateType)}
                         disabled={saving}
-                        className="btn-primary flex items-center gap-2 text-sm px-4 py-2"
+                        className="btn-primary btn-sm gap-2"
                       >
                         {saving ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -422,7 +422,7 @@ export function EmailTemplatesPage() {
             <button
               onClick={handleUploadAttachment}
               disabled={uploadingAttachment || !newAttachmentName.trim()}
-              className="btn-primary flex items-center gap-2 text-sm px-4 py-2 shrink-0"
+              className="btn-primary btn-sm gap-2 shrink-0"
             >
               {uploadingAttachment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
               Upload

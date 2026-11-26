@@ -60,7 +60,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
               sessionStorage.clear();
               window.location.href = '/login';
             }}
-            className="inline-block px-4 py-2 bg-dark-800 hover:bg-dark-700 text-white rounded-lg transition-colors"
+            className="btn-neutral btn-sm"
           >
             Sign out and try again
           </button>
@@ -79,7 +79,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <ErrorBoundary
-      buttonClassName="bg-dark-800 hover:bg-dark-700"
       icon={
         <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
           <AlertTriangle className="w-8 h-8 text-amber-400" />

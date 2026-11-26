@@ -83,7 +83,7 @@ export function CalendarPage() {
         <p className="text-red-400 mb-2">{error}</p>
         <button
           onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-dark-800 hover:bg-dark-700 text-white rounded-lg transition-colors"
+          className="btn-neutral btn-sm"
         >
           Retry
         </button>

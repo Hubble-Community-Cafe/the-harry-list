@@ -296,7 +296,7 @@ export function SettingsPage() {
             <button
               onClick={() => openConstraint({ ...emptyConstraint })}
               data-testid="add-constraint"
-              className="flex items-center gap-2 px-3 py-2 bg-hubble-600 hover:bg-hubble-500 text-white rounded-lg text-sm transition-colors"
+              className="btn-primary btn-sm gap-2"
             >
               <Plus className="w-4 h-4" /> Add Constraint
             </button>
@@ -380,7 +380,7 @@ export function SettingsPage() {
             <button
               onClick={() => openPeriod({ ...emptyBlockedPeriod })}
               data-testid="add-blocked-period"
-              className="flex items-center gap-2 px-3 py-2 bg-hubble-600 hover:bg-hubble-500 text-white rounded-lg text-sm transition-colors"
+              className="btn-primary btn-sm gap-2"
             >
               <Plus className="w-4 h-4" /> Add Blocked Period
             </button>
@@ -673,7 +673,7 @@ export function SettingsPage() {
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setEditingConstraint(null)}
-                  className="flex-1 px-4 py-2 bg-dark-800 hover:bg-dark-700 text-white rounded-lg text-sm transition-colors"
+                  className="btn-neutral btn-sm flex-1"
                 >
                   Cancel
                 </button>
@@ -681,7 +681,7 @@ export function SettingsPage() {
                   onClick={handleSaveConstraint}
                   data-testid="save-constraint"
                   disabled={savingConstraint || !editingConstraint.message}
-                  className="flex-1 px-4 py-2 bg-hubble-600 hover:bg-hubble-500 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
+                  className="btn-primary btn-sm flex-1"
                 >
                   {savingConstraint ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Save'}
                 </button>
@@ -861,7 +861,7 @@ export function SettingsPage() {
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setEditingPeriod(null)}
-                  className="flex-1 px-4 py-2 bg-dark-800 hover:bg-dark-700 text-white rounded-lg text-sm transition-colors"
+                  className="btn-neutral btn-sm flex-1"
                 >
                   Cancel
                 </button>
@@ -869,7 +869,7 @@ export function SettingsPage() {
                   onClick={handleSavePeriod}
                   data-testid="save-blocked-period"
                   disabled={savingPeriod || !editingPeriod.reason || !editingPeriod.startDate || !editingPeriod.endDate}
-                  className="flex-1 px-4 py-2 bg-hubble-600 hover:bg-hubble-500 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
+                  className="btn-primary btn-sm flex-1"
                 >
                   {savingPeriod ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Save'}
                 </button>

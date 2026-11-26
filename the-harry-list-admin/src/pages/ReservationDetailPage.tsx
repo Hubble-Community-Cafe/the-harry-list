@@ -394,7 +394,7 @@ export function ReservationDetailPage() {
             onClick={startEditing}
             data-testid="edit-reservation"
             disabled={isUpdating}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-hubble-500/20 text-hubble-400 hover:bg-hubble-500/30 transition-colors"
+            className="btn-neutral btn-sm gap-2"
           >
             <Edit className="w-4 h-4" />
             Edit Details
@@ -404,7 +404,7 @@ export function ReservationDetailPage() {
             <button
               onClick={openCateringEmailDialog}
               disabled={isUpdating}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 transition-colors"
+              className="btn-neutral btn-sm gap-2"
             >
               <UtensilsCrossed className="w-4 h-4" />
               Send Catering Options
@@ -417,7 +417,7 @@ export function ReservationDetailPage() {
                 onClick={() => { setActionMessage(''); setShowConfirmDialog(true); }}
                 data-testid="confirm-reservation"
                 disabled={isUpdating}
-                className="btn-primary flex items-center gap-2"
+                className="btn-primary btn-sm gap-2"
               >
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                 Confirm
@@ -426,7 +426,7 @@ export function ReservationDetailPage() {
                 onClick={() => { setActionMessage(DEFAULT_REJECTION_MESSAGE); setShowRejectDialog(true); }}
                 data-testid="reject-reservation"
                 disabled={isUpdating}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                className="btn-danger-subtle btn-sm gap-2"
               >
                 <XCircle className="w-4 h-4" />
                 Reject
@@ -439,7 +439,7 @@ export function ReservationDetailPage() {
               onClick={() => { setActionMessage(''); setShowCancelDialog(true); }}
               data-testid="cancel-reservation"
               disabled={isUpdating}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors ml-auto"
+              className="btn-neutral btn-sm gap-2 ml-auto"
             >
               <XCircle className="w-4 h-4" />
               Cancel
@@ -459,7 +459,7 @@ export function ReservationDetailPage() {
               }}
               data-testid="reopen-reservation"
               disabled={isUpdating}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-colors"
+              className="btn-neutral btn-sm gap-2"
             >
               <RotateCcw className="w-4 h-4" />
               Move back to Pending
@@ -471,7 +471,7 @@ export function ReservationDetailPage() {
               onClick={() => setShowDeleteConfirm(true)}
               data-testid="remove-reservation"
               disabled={isUpdating}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/50 text-red-400 hover:bg-red-500/10 transition-colors ml-auto"
+              className="btn-danger-subtle btn-sm gap-2 ml-auto"
             >
               <Trash2 className="w-4 h-4" />
               Delete permanently
@@ -505,14 +505,14 @@ export function ReservationDetailPage() {
                 }}
                 data-testid="confirm-dialog-submit"
                 disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors flex items-center gap-2"
+                className="btn-secondary btn-sm gap-2"
               >
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                 Yes, Confirm Reservation
               </button>
               <button
                 onClick={() => setShowConfirmDialog(false)}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+                className="btn-neutral btn-sm"
               >
                 Cancel
               </button>
@@ -533,14 +533,14 @@ export function ReservationDetailPage() {
                 }}
                 data-testid="reject-dialog-submit"
                 disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors flex items-center gap-2"
+                className="btn-danger btn-sm gap-2"
               >
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
                 Yes, Reject Reservation
               </button>
               <button
                 onClick={() => setShowRejectDialog(false)}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+                className="btn-neutral btn-sm"
               >
                 Cancel
               </button>
@@ -561,14 +561,14 @@ export function ReservationDetailPage() {
                 }}
                 data-testid="cancel-dialog-submit"
                 disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors flex items-center gap-2"
+                className="btn-danger btn-sm gap-2"
               >
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
                 Yes, Cancel Reservation
               </button>
               <button
                 onClick={() => setShowCancelDialog(false)}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+                className="btn-neutral btn-sm"
               >
                 Go Back
               </button>
@@ -594,14 +594,14 @@ export function ReservationDetailPage() {
                 }}
                 data-testid="reopen-dialog-submit"
                 disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 transition-colors flex items-center gap-2"
+                className="btn-primary btn-sm gap-2"
               >
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
                 Yes, Move to Pending
               </button>
               <button
                 onClick={closeReopenDialog}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+                className="btn-neutral btn-sm"
               >
                 Go Back
               </button>
@@ -940,14 +940,14 @@ export function ReservationDetailPage() {
             <div className="flex justify-end gap-3 p-6 border-t border-dark-700">
               <button
                 onClick={() => setShowCateringEmail(false)}
-                className="px-4 py-2 rounded-xl border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+                className="btn-neutral btn-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSendCateringEmail}
                 disabled={sendingCateringEmail || loadingCateringPreview}
-                className="btn-primary flex items-center gap-2"
+                className="btn-primary btn-sm gap-2"
               >
                 {sendingCateringEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Send Email
@@ -1304,7 +1304,7 @@ export function ReservationDetailPage() {
             <div className="flex justify-end gap-3 p-6 border-t border-dark-700">
               <button
                 onClick={() => setIsEditing(false)}
-                className="px-4 py-2 rounded-xl border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+                className="btn-neutral btn-sm"
               >
                 Cancel
               </button>
@@ -1312,7 +1312,7 @@ export function ReservationDetailPage() {
                 onClick={handleEditSave}
                 data-testid="edit-save"
                 disabled={isUpdating}
-                className="btn-primary flex items-center gap-2"
+                className="btn-primary btn-sm gap-2"
               >
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                 Save Changes

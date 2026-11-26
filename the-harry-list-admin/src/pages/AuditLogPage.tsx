@@ -205,14 +205,14 @@ export function AuditLogPage() {
               <button
                 onClick={() => setPage(p => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="btn-neutral btn-sm gap-1 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="w-4 h-4" /> Prev
               </button>
               <button
                 onClick={() => setPage(p => p + 1)}
                 disabled={page + 1 >= totalPages}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="btn-neutral btn-sm gap-1 disabled:cursor-not-allowed"
               >
                 Next <ChevronRight className="w-4 h-4" />
               </button>

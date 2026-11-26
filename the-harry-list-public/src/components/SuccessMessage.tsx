@@ -100,7 +100,7 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
             href="https://hubble.cafe"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-xl border border-dark-700 bg-dark-800/50 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-dark-700 hover:border-dark-600"
+            className="btn-neutral"
           >
             Visit Hubble Café
           </a>
@@ -108,7 +108,7 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
             href="https://meteorcommunity.cafe"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-xl border border-dark-700 bg-dark-800/50 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-dark-700 hover:border-dark-600"
+            className="btn-neutral"
           >
             Visit Meteor Café
           </a>

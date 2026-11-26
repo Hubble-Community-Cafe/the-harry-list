@@ -733,20 +733,54 @@ body.dark {
 
   .btn-secondary {
     /* Flat Meteor green, no gradient or glow (housestyle). */
-    @apply inline-flex items-center justify-center rounded-xl bg-meteor-500 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-meteor-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-meteor-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950;
+    @apply inline-flex items-center justify-center rounded-xl bg-meteor-500 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-meteor-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-meteor-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Everything that is not the main action: Cancel, Back, Edit, Send catering options.
+     Text uses dark-50, which flips with the theme, so light mode needs no override. */
+  .btn-neutral {
+    @apply inline-flex items-center justify-center rounded-xl border border-dark-700 bg-dark-800 px-6 py-3 text-sm font-semibold transition-all duration-200 hover:bg-dark-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-hubble-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
+    color: var(--color-dark-50);
+  }
+
+  /* The final "yes" of a destructive question (delete, reject, cancel a reservation).
+     A deep red that sits with the café colours; white text is 6.5:1 on it. */
+  .btn-danger {
+    @apply inline-flex items-center justify-center rounded-xl bg-[#b42318] px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#912018] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Opens something destructive (Reject, Delete permanently): red, but not yet the final step. */
+  .btn-danger-subtle {
+    @apply inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
+    color: var(--status-rejected-fg);
+    background-color: var(--status-rejected-bg);
+  }
+  .btn-danger-subtle:hover:not(:disabled) {
+    background-color: rgb(239 68 68 / 0.28);
+  }
+
+  /* Compact size for toolbars, dialogs and list rows; combine with any btn-* above. */
+  .btn-sm {
+    @apply px-4 py-2 rounded-lg;
   }
 
   /* Instant press feedback: the button visibly acknowledges the press before
      any work happens. Scale is subtle by design (0.97, not a squash). */
   .btn-primary,
-  .btn-secondary {
+  .btn-secondary,
+  .btn-neutral,
+  .btn-danger,
+  .btn-danger-subtle {
     transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
                 background-color 200ms ease,
                 box-shadow 200ms ease;
   }
 
   .btn-primary:active:not(:disabled),
-  .btn-secondary:active:not(:disabled) {
+  .btn-secondary:active:not(:disabled),
+  .btn-neutral:active:not(:disabled),
+  .btn-danger:active:not(:disabled),
+  .btn-danger-subtle:active:not(:disabled) {
     transform: scale(0.97);
   }
 

@@ -5,8 +5,6 @@ interface Props {
   children: ReactNode;
   /** Optional icon above the message (the admin shows a warning sign). */
   icon?: ReactNode;
-  /** Colours of the refresh button, so each app keeps its own look. */
-  buttonClassName: string;
 }
 
 interface State {
@@ -37,7 +35,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
             <button
               onClick={() => window.location.reload()}
-              className={`px-4 py-2 ${this.props.buttonClassName} text-white rounded-lg transition-colors`}
+              className="btn-primary btn-sm"
             >
               Refresh page
             </button>

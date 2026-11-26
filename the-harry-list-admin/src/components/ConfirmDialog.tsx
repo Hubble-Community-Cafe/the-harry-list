@@ -61,7 +61,7 @@ export function ConfirmDialog({
               ref={cancelRef}
               onClick={onCancel}
               disabled={loading}
-              className="px-4 py-2 text-sm text-dark-400 hover:text-white transition-colors"
+              className="btn-neutral btn-sm"
             >
               {cancelLabel}
             </button>
@@ -69,7 +69,7 @@ export function ConfirmDialog({
               onClick={onConfirm}
               data-testid={confirmTestId}
               disabled={loading}
-              className="px-4 py-2 text-sm bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 rounded-lg transition-colors flex items-center gap-2"
+              className="btn-danger btn-sm gap-2"
             >
               {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {confirmLabel}

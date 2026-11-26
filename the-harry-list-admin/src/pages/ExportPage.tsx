@@ -194,15 +194,8 @@ export function ExportPage() {
             onClick={handleExport}
             data-testid="export-submit"
             disabled={loading}
-            className={`
-              w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all
-              ${loading
-                ? 'bg-dark-700 text-dark-400 cursor-not-allowed'
-                : selectedLocation === 'HUBBLE'
-                  ? 'bg-hubble-500 hover:bg-hubble-600 text-white'
-                  : 'bg-meteor-500 hover:bg-meteor-600 text-white'
-              }
-            `}
+            // The café's own colour: teal for Hubble, green for Meteor.
+            className={`${selectedLocation === 'HUBBLE' ? 'btn-primary' : 'btn-secondary'} w-full gap-2`}
           >
             {loading ? (
               <>

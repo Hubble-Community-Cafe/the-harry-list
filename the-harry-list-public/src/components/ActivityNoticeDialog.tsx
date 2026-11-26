@@ -62,7 +62,7 @@ export function ActivityNoticeDialog({ message, onConfirm, onDecline }: Activity
             type="button"
             onClick={onDecline}
             data-testid="activity-notice-decline"
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-dark-300 bg-dark-800 hover:bg-dark-700 hover:text-white transition-colors"
+            className="btn-neutral"
           >
             No, deselect this
           </button>

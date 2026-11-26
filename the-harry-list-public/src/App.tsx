@@ -40,7 +40,7 @@ function App() {
   };
 
   return (
-    <ErrorBoundary buttonClassName="bg-hubble-600 hover:bg-hubble-500">
+    <ErrorBoundary>
     <ThemeProvider>
       <div className="min-h-screen bg-dark-950 flex flex-col">
         <SkipLink />

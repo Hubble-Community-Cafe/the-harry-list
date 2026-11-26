@@ -19,21 +19,21 @@ describe('ErrorBoundary', () => {
   afterEach(() => vi.restoreAllMocks());
 
   it('renders its children when nothing fails', () => {
-    render(<ErrorBoundary buttonClassName="bg-x"><p>All good</p></ErrorBoundary>);
+    render(<ErrorBoundary><p>All good</p></ErrorBoundary>);
 
     expect(screen.getByText('All good')).toBeInTheDocument();
   });
 
-  it('shows the fallback with the app’s icon and button style, and reports to Sentry', () => {
+  it('shows the fallback with the app’s icon and the shared primary button, and reports to Sentry', () => {
     render(
-      <ErrorBoundary buttonClassName="bg-hubble-600" icon={<span data-testid="icon" />}>
+      <ErrorBoundary icon={<span data-testid="icon" />}>
         <Crash />
       </ErrorBoundary>,
     );
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     expect(screen.getByTestId('icon')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Refresh page' })).toHaveClass('bg-hubble-600');
+    expect(screen.getByRole('button', { name: 'Refresh page' })).toHaveClass('btn-primary');
     expect(Sentry.captureException).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'render failed' }), expect.anything());
   });
