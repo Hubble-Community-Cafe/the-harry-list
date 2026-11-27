@@ -37,7 +37,7 @@ export function Footer({ onOpenPrivacy }: FooterProps) {
               data-testid="footer-privacy-link"
               className="text-dark-400 hover:text-hubble-400 transition-colors"
             >
-              Privacy Policy
+              Privacy policy
             </button>
           </div>
 

@@ -180,7 +180,7 @@ class PublicReservationControllerTest {
         sampleRequest.setInvoiceType(InvoiceType.TUE);
         submit(sampleRequest)
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value("costCenter: Kostenplaats is required"));
+                .andExpect(jsonPath("$.detail").value("costCenter: Cost centre (kostenplaats) is required"));
     }
 
     @Test

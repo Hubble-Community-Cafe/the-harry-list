@@ -148,7 +148,7 @@ export function EmailTemplatesPage() {
       const data = await fetchEmailAttachments();
       setAttachments(data);
     } catch {
-      // Non-blocking — attachments section will show empty
+      // Non-blocking: attachments section will show empty
     } finally {
       setLoadingAttachments(false);
     }
@@ -202,8 +202,8 @@ export function EmailTemplatesPage() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center">
-        <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
-        <p className="text-red-400 mb-2">{error}</p>
+        <AlertCircle aria-hidden="true" className="w-12 h-12 notice-text-error mb-4" />
+        <p className="notice-text-error mb-2">{error}</p>
         <button onClick={loadTemplates} className="text-hubble-400 hover:text-hubble-300 text-sm underline">
           Try again
         </button>
@@ -216,19 +216,19 @@ export function EmailTemplatesPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Email Templates</h1>
+          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Email templates</h1>
           <p className="text-dark-400 font-light">
             {canEditEmailTemplates
               ? 'Customise the emails sent to customers and staff'
               : 'Manage the PDF attachments used in catering option emails'}
           </p>
         </div>
-        {canEditEmailTemplates && <HelpGuide title="Email Templates Guide" sections={emailTemplatesGuide} />}
+        {canEditEmailTemplates && <HelpGuide title="Email templates guide" sections={emailTemplatesGuide} />}
       </div>
 
       {/* Info card */}
       {canEditEmailTemplates && (
-      <div className="bg-dark-900 border border-dark-800 rounded-2xl p-5">
+      <div className="card !p-5">
         <p className="text-sm text-dark-300">
           Use <code className="bg-dark-800 text-hubble-400 px-1.5 py-0.5 rounded font-mono text-xs">{'{{variable}}'}</code> placeholders in your templates.
           Available variables are listed per template. Templates not yet customised use the built-in default.
@@ -244,7 +244,7 @@ export function EmailTemplatesPage() {
           return (
             <div
               key={template.templateType}
-              className="bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden"
+              className="card !p-0 overflow-hidden"
             >
               {/* Card header */}
               <button
@@ -336,17 +336,17 @@ export function EmailTemplatesPage() {
                       <button
                         onClick={() => sendTestEmail(template.templateType)}
                         disabled={sendingTest || !testEmail.trim()}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                        className="btn-neutral btn-sm gap-2"
                       >
                         {sendingTest ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         Send test
                       </button>
                     </div>
                     {testResult && (
-                      <div className={`flex items-center gap-2 text-sm rounded-lg px-3 py-2 ${
-                        testResult.status === 'sent' ? 'bg-green-500/10 text-green-400' :
-                        testResult.status === 'disabled' ? 'bg-dark-800 text-dark-400' :
-                        'bg-red-500/10 text-red-400'
+                      <div className={`flex items-center gap-2 text-sm rounded-lg border px-3 py-2 ${
+                        testResult.status === 'sent' ? 'notice-success' :
+                        testResult.status === 'disabled' ? 'border-dark-700 bg-dark-800 text-dark-400' :
+                        'notice-error'
                       }`}>
                         {testResult.status === 'sent' && <CheckCircle className="w-4 h-4 shrink-0" />}
                         {testResult.status === 'error' && <AlertCircle className="w-4 h-4 shrink-0" />}
@@ -360,7 +360,7 @@ export function EmailTemplatesPage() {
                     <button
                       onClick={() => resetTemplate(template.templateType)}
                       disabled={resetting || !template.customized}
-                      className="flex items-center gap-2 text-sm text-dark-400 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="flex items-center gap-2 text-sm text-dark-400 hover-danger-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
                       <RotateCcw className="w-4 h-4" />
                       Reset to default
@@ -368,7 +368,7 @@ export function EmailTemplatesPage() {
 
                     <div className="flex items-center gap-3">
                       {saveSuccess && (
-                        <span className="flex items-center gap-1.5 text-sm text-green-400">
+                        <span className="flex items-center gap-1.5 text-sm notice-text-success">
                           <CheckCircle className="w-4 h-4" />
                           Saved
                         </span>
@@ -376,7 +376,7 @@ export function EmailTemplatesPage() {
                       <button
                         onClick={() => saveTemplate(template.templateType)}
                         disabled={saving}
-                        className="btn-primary flex items-center gap-2 text-sm px-4 py-2"
+                        className="btn-primary btn-sm gap-2"
                       >
                         {saving ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -398,11 +398,11 @@ export function EmailTemplatesPage() {
       {/* PDF Attachments section */}
       {canManageAttachments && (
       <div>
-        <h2 className="text-xl font-title font-bold text-white mb-1 tracking-tight">PDF Attachments</h2>
+        <h2 className="text-xl font-title font-bold text-white mb-1 tracking-tight">PDF attachments</h2>
         <p className="text-dark-400 font-light text-sm mb-4">Manage PDF files that can be attached to catering option emails</p>
 
         {/* Upload form */}
-        <div className="bg-dark-900 border border-dark-800 rounded-2xl p-5 mb-4">
+        <div className="card !p-5 mb-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
@@ -422,14 +422,14 @@ export function EmailTemplatesPage() {
             <button
               onClick={handleUploadAttachment}
               disabled={uploadingAttachment || !newAttachmentName.trim()}
-              className="btn-primary flex items-center gap-2 text-sm px-4 py-2 shrink-0"
+              className="btn-primary btn-sm gap-2 shrink-0"
             >
               {uploadingAttachment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
               Upload
             </button>
           </div>
           {attachmentError && (
-            <div className="flex items-center gap-2 text-sm text-red-400 mt-3">
+            <div className="flex items-center gap-2 text-sm notice-text-error mt-3">
               <AlertCircle className="w-4 h-4 shrink-0" />
               {attachmentError}
             </div>
@@ -442,7 +442,7 @@ export function EmailTemplatesPage() {
             <Loader2 className="w-6 h-6 text-hubble-400 animate-spin" />
           </div>
         ) : attachments.length === 0 ? (
-          <div className="bg-dark-900 border border-dark-800 rounded-2xl p-8 text-center">
+          <div className="card !p-8 text-center">
             <FileText className="w-10 h-10 text-dark-600 mx-auto mb-3" />
             <p className="text-dark-400 text-sm">No PDF attachments uploaded yet</p>
           </div>
@@ -451,9 +451,9 @@ export function EmailTemplatesPage() {
             {attachments.map((attachment) => (
               <div
                 key={attachment.id}
-                className="bg-dark-900 border border-dark-800 rounded-xl px-5 py-3 flex items-center gap-4"
+                className="card !px-5 !py-3 flex items-center gap-4"
               >
-                <FileText className="w-5 h-5 text-orange-400 shrink-0" />
+                <FileText aria-hidden="true" className="w-5 h-5 notice-text-error shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-white truncate">{attachment.name}</div>
                   <div className="text-xs text-dark-500 truncate">
@@ -465,7 +465,7 @@ export function EmailTemplatesPage() {
                   onClick={() => handleToggleAttachmentActive(attachment.id, !attachment.active)}
                   className={`text-xs font-medium px-3 py-1 rounded-lg transition-colors ${
                     attachment.active
-                      ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                      ? 'notice-success hover:opacity-80'
                       : 'bg-dark-700 text-dark-400 hover:bg-dark-600'
                   }`}
                 >
@@ -473,7 +473,7 @@ export function EmailTemplatesPage() {
                 </button>
                 <button
                   onClick={() => handleDeleteAttachment(attachment.id)}
-                  className="p-1.5 rounded-lg text-dark-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                  className="p-1.5 rounded-lg text-dark-500 hover-danger transition-colors"
                   title="Delete attachment"
                 >
                   <Trash2 className="w-4 h-4" />

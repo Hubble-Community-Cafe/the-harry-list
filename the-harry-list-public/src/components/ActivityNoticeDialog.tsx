@@ -9,7 +9,7 @@ import { Modal } from 'the-harry-list-shared';
  * A notice limited to a location or group size appears as soon as those also match, which
  * can be after the activity was already selected.
  *
- * The title is intentionally fixed ("Please Note") — only the message is configurable in
+ * The title is intentionally fixed ("Please note"): only the message is configurable in
  * the admin Settings, which keeps every notice consistent.
  *
  * Dismissing without choosing (Escape, backdrop click) counts as "deselect": we never
@@ -39,17 +39,16 @@ export function ActivityNoticeDialog({ message, onConfirm, onDecline }: Activity
       onClose={onDecline}
       closeOnBackdrop
       initialFocusRef={confirmRef}
-      overlayClassName="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-overlay"
       backdropTestId="activity-notice-dialog-backdrop"
       testId="activity-notice-dialog"
-      className="relative w-full max-w-md rounded-2xl border border-dark-700 bg-dark-900 p-6 shadow-2xl animate-modal"
+      className="relative max-w-md p-6"
     >
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-amber-500/20">
-            <AlertTriangle className="w-5 h-5 text-amber-400" />
+          <div className="p-2 rounded-lg notice-warning">
+            <AlertTriangle aria-hidden="true" className="w-5 h-5" />
           </div>
-          <h2 id="activity-notice-title" className="text-xl font-title font-semibold text-white tracking-tight">
-            Please Note
+          <h2 id="activity-notice-title" className="dialog-title">
+            Please note
           </h2>
         </div>
 
@@ -62,7 +61,7 @@ export function ActivityNoticeDialog({ message, onConfirm, onDecline }: Activity
             type="button"
             onClick={onDecline}
             data-testid="activity-notice-decline"
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-dark-300 bg-dark-800 hover:bg-dark-700 hover:text-white transition-colors"
+            className="btn-neutral"
           >
             No, deselect this
           </button>

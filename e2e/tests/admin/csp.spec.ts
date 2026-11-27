@@ -4,8 +4,9 @@ import { watchCspViolations, expectEnforcingCsp, expectNoCspViolations } from '.
 
 /**
  * The admin runs under an enforcing Content-Security-Policy (nginx-csp.conf). Visits every page so a
- * directive that blocks the API, an image or a style fails here instead of in production. MSAL and
- * Graph are not exercised: the e2e stack signs in through the test header bridge.
+ * directive that blocks the API, an image or a style fails here instead of in production. MSAL is not
+ * exercised: the e2e stack signs in through the test header bridge. The browser no longer calls
+ * Microsoft Graph (the backend does the staff-group check), so Graph is not in connect-src.
  */
 test('every admin page loads under the Content-Security-Policy', async ({ page, request }, testInfo) => {
   await resetBackend(request);
@@ -28,7 +29,8 @@ test('every admin page loads under the Content-Security-Policy', async ({ page, 
   const violations = await watchCspViolations(page);
 
   const response = await page.goto('/');
-  expectEnforcingCsp(response, "script-src 'self'", 'https://login.microsoftonline.com', 'https://graph.microsoft.com', 'http://localhost:8080');
+  expectEnforcingCsp(response, "script-src 'self'", 'https://login.microsoftonline.com', 'http://localhost:8080');
+  expect(response?.headers()['content-security-policy']).not.toContain('graph.microsoft.com');
 
   const routes = ['/reservations', `/reservations/${seeded.id}`, '/week-overview', '/export', '/calendar',
     '/email-templates', '/settings', '/calendar-appointments', '/audit'];

@@ -469,7 +469,7 @@ public class ICalendarService {
             case MONTHLY_NTH_WEEKDAY -> {
                 byDay = formatNthWeekday(appointment);
                 if (byDay == null) {
-                    return ""; // incomplete config — emit no RRULE rather than an invalid one
+                    return ""; // incomplete config: emit no RRULE rather than an invalid one
                 }
                 freq = "MONTHLY";
             }

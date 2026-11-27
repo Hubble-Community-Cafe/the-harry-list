@@ -189,12 +189,12 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
   // Notice rendered wherever a blocked period applies. Hard blocks show a red,
   // blocking error; soft blocks show an amber warning with an acknowledgement checkbox.
   const blockedDateNotice = !blockedDateInfo ? null : blockedDateInfo.soft ? (
-    <div data-testid="blocked-date-notice" data-soft="true" className="mt-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 space-y-2">
+    <div data-testid="blocked-date-notice" data-soft="true" className="mt-2 text-xs border rounded-lg px-3 py-2 space-y-2 notice-warning">
       <div className="flex items-start gap-2">
         <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
         <span>{blockedDateInfo.message}</span>
       </div>
-      <label className={`flex items-start gap-2 cursor-pointer rounded-md p-1 -m-1 ${softBlockAckError ? 'ring-1 ring-red-500/60 bg-red-500/10' : ''}`}>
+      <label className={`flex items-start gap-2 cursor-pointer rounded-md p-1 -m-1 ${softBlockAckError ? 'notice-error border' : ''}`}>
         <input
           type="checkbox"
           id="soft-block-ack"
@@ -208,14 +208,14 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
           }}
           className="mt-0.5 shrink-0"
         />
-        <span className={softBlockAckError ? 'text-red-300' : undefined}>{blockedDateInfo.acknowledgementText}</span>
+        <span>{blockedDateInfo.acknowledgementText}</span>
       </label>
       {softBlockAckError && (
-        <p id="soft-block-ack-error" role="alert" data-testid="soft-block-ack-error" className="text-red-300 font-medium">Please tick the box above to confirm before continuing.</p>
+        <p id="soft-block-ack-error" role="alert" data-testid="soft-block-ack-error" className="notice-text-error font-medium">Please tick the box above to confirm before continuing.</p>
       )}
     </div>
   ) : (
-    <div id="blocked-date-notice" role="alert" tabIndex={-1} data-testid="blocked-date-notice" data-soft="false" className="mt-2 outline-none text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
+    <div id="blocked-date-notice" role="alert" tabIndex={-1} data-testid="blocked-date-notice" data-soft="false" className="mt-2 outline-none text-xs border rounded-lg px-3 py-2 flex items-start gap-2 notice-error">
       <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
       <span>{blockedDateInfo.message}</span>
     </div>
@@ -386,7 +386,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       {currentStep === 1 && (
         <div className="mb-6 bg-dark-800/80 border border-dark-700 rounded-xl p-5">
           <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-            <span className="text-lg">📋</span> Please Note
+            <span className="text-lg">📋</span> Please note
           </h3>
           <ul className="text-xs text-dark-300 space-y-1.5">
             <li>• This is a <span className="text-white font-medium">request form</span>: there are no obligations for you or us</li>
@@ -399,7 +399,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
 
       {/* Options Loading Error */}
       {optionsError && (
-        <div className="mb-6 bg-red-500/10 border border-red-500/50 rounded-xl p-4 text-red-400 text-center">
+        <div className="mb-6 border rounded-xl p-4 text-center notice-error">
           {optionsError}
         </div>
       )}
@@ -435,7 +435,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       })} className="card">
         {/* Keyed on currentStep so React remounts this wrapper on every step
             change, replaying the entrance animation. The navigation buttons
-            sit outside it deliberately — they are persistent chrome. */}
+            sit outside it deliberately: they are persistent chrome. */}
         <div key={currentStep} className="animate-step">
         {/* Step 1: Contact Information */}
         {currentStep === 1 && <ContactStep />}
@@ -518,7 +518,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  Submit Reservation
+                  Submit reservation
                 </>
               )}
             </button>

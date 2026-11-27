@@ -4,7 +4,7 @@ package com.pimvanleeuwen.the_harry_list_backend.model;
  * Recurrence pattern for calendar appointments.
  *
  * <p>The frequency family is captured by this enum; the finer detail (how often,
- * and — for {@link #MONTHLY_NTH_WEEKDAY} — which weekday of which week) lives in
+ * and: for {@link #MONTHLY_NTH_WEEKDAY}: which weekday of which week) lives in
  * the structured {@code recurrenceInterval}, {@code recurrenceWeekOfMonth} and
  * {@code recurrenceDayOfWeek} fields on {@code CalendarAppointment}. This keeps the
  * model generic: new patterns are added by extending this enum plus the single

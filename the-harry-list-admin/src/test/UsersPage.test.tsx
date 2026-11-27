@@ -47,7 +47,7 @@ describe('UsersPage', () => {
   it('renders page title', async () => {
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText('User Management')).toBeInTheDocument();
+      expect(screen.getByText('User management')).toBeInTheDocument();
     });
   });
 
@@ -90,7 +90,7 @@ describe('UsersPage', () => {
   it('shows role legend with descriptions', async () => {
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText('Role Permissions')).toBeInTheDocument();
+      expect(screen.getByText('Role permissions')).toBeInTheDocument();
     });
   });
 

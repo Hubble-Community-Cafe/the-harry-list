@@ -52,21 +52,21 @@ export function ExportPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Export Reservations</h1>
+          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Export reservations</h1>
           <p className="text-dark-400 mt-1">Generate PDF reports for daily reservation overviews</p>
         </div>
-        <HelpGuide title="Export Guide" sections={exportGuide} />
+        <HelpGuide title="Export guide" sections={exportGuide} />
       </div>
 
       {/* Export Card */}
-      <div className="bg-dark-900 border border-dark-800 rounded-xl overflow-hidden max-w-xl">
+      <div className="card !p-0 overflow-hidden max-w-xl">
         <div className="px-5 py-4 border-b border-dark-800 bg-hubble-500/10">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-hubble-500/20 text-hubble-400">
               <FileDown className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-semibold text-white">Daily Report</h3>
+              <h3 className="font-semibold text-white">Daily report</h3>
               <p className="text-xs text-dark-400">Export all reservations for a specific day</p>
             </div>
           </div>
@@ -77,7 +77,7 @@ export function ExportPage() {
           <div>
             <label htmlFor="export-date" className="flex items-center gap-2 text-sm font-medium text-dark-300 mb-2">
               <Calendar className="w-4 h-4" />
-              Select Date
+              Select date
             </label>
             <input
               type="date"
@@ -85,8 +85,7 @@ export function ExportPage() {
               data-testid="export-date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-xl text-white
-                         focus:border-hubble-500 focus:ring-1 focus:ring-hubble-500 outline-none transition-colors"
+              className="input-field"
             />
           </div>
 
@@ -94,7 +93,7 @@ export function ExportPage() {
           <div>
             <p id="export-location-label" className="flex items-center gap-2 text-sm font-medium text-dark-300 mb-2">
               <MapPin className="w-4 h-4" />
-              Select Location
+              Select location
             </p>
             <div role="group" aria-labelledby="export-location-label" className="grid grid-cols-2 gap-3">
               <button
@@ -183,7 +182,7 @@ export function ExportPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="flex items-center gap-2 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+            <div className="flex items-center gap-2 px-4 py-3 border rounded-lg text-sm notice-error">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               {error}
             </div>
@@ -194,15 +193,8 @@ export function ExportPage() {
             onClick={handleExport}
             data-testid="export-submit"
             disabled={loading}
-            className={`
-              w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all
-              ${loading
-                ? 'bg-dark-700 text-dark-400 cursor-not-allowed'
-                : selectedLocation === 'HUBBLE'
-                  ? 'bg-hubble-500 hover:bg-hubble-600 text-white'
-                  : 'bg-meteor-500 hover:bg-meteor-600 text-white'
-              }
-            `}
+            // The café's own colour: teal for Hubble, green for Meteor.
+            className={`${selectedLocation === 'HUBBLE' ? 'btn-primary' : 'btn-secondary'} w-full gap-2`}
           >
             {loading ? (
               <>
@@ -212,7 +204,7 @@ export function ExportPage() {
             ) : (
               <>
                 <FileDown className="w-5 h-5" />
-                Download PDF Report
+                Download PDF report
               </>
             )}
           </button>

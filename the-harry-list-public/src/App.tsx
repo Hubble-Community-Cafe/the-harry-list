@@ -40,17 +40,10 @@ function App() {
   };
 
   return (
-    <ErrorBoundary buttonClassName="bg-hubble-600 hover:bg-hubble-500">
+    <ErrorBoundary>
     <ThemeProvider>
       <div className="min-h-screen bg-dark-950 flex flex-col">
         <SkipLink />
-        {/* Background decoration */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-hubble-600/20 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 -left-40 w-80 h-80 bg-meteor-600/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 right-1/4 w-80 h-80 bg-hubble-500/10 rounded-full blur-3xl" />
-        </div>
-
         <Header />
 
         <main id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 relative z-10 outline-none">
@@ -59,10 +52,10 @@ function App() {
             <>
               {/* Hero Section */}
               <div className="text-center mb-12 animate-fade-in">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-tight leading-tight">
-                  <span className="bg-gradient-to-r from-hubble-400 via-hubble-300 to-meteor-400 bg-clip-text text-transparent">
-                    Reserve Your Spot at Hubble & Meteor
-                  </span>
+                {/* Two-tone, flat: each café in its own colour (housestyle), no gradient text. */}
+                <h1 className="font-title text-3xl md:text-4xl lg:text-5xl font-bold mb-4 tracking-tight leading-tight text-white">
+                  Reserve your spot at <span className="text-hubble-400">Hubble</span> &amp;{' '}
+                  <span className="text-meteor-400">Meteor</span>
                 </h1>
                 <p className="text-lg md:text-xl text-dark-300 max-w-2xl mx-auto">
                   Book your next event at Hubble or Meteor Community Café.

@@ -21,7 +21,7 @@ for (const theme of THEMES) {
 
       await form.fillContact({ name: 'Ada Access', email: 'ada.a11y@example.com' });
       await form.continue();
-      await form.expectStep('Event Details');
+      await form.expectStep('Event details');
       await expectNoA11yViolations(page, testInfo, `${theme} 2 details`);
 
       await form.fillActivity({ title: 'Accessible Drinks', date: '2030-10-08', startTime: '15:00', endTime: '17:00', guests: 12 });
@@ -30,7 +30,7 @@ for (const theme of THEMES) {
       await expectNoA11yViolations(page, testInfo, `${theme} 2 details filled`);
       await form.continue();
 
-      await form.expectStep('Payment Information');
+      await form.expectStep('Payment information');
       await form.selectPayment('People pay individually');
       await expectNoA11yViolations(page, testInfo, `${theme} 3 payment`);
       await form.continue();

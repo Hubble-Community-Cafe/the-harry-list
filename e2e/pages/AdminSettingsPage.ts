@@ -9,12 +9,12 @@ export class AdminSettingsPage {
 
   async goto(): Promise<void> {
     await this.page.goto('/settings');
-    // Assert the page heading specifically — "Settings" also appears in the nav/sidebar.
+    // Assert the page heading specifically: "Settings" also appears in the nav/sidebar.
     await expect(this.page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   }
 
   async openBlockedPeriodsTab(): Promise<void> {
-    await this.page.getByRole('button', { name: /Blocked Periods/ }).click();
+    await this.page.getByRole('button', { name: /Blocked periods/ }).click();
   }
 
   // ---- Form constraints ----
@@ -47,7 +47,7 @@ export class AdminSettingsPage {
 
   async openNewBlockedPeriod(): Promise<void> {
     await this.page.getByTestId('add-blocked-period').click();
-    await expect(this.page.getByText('New Blocked Period')).toBeVisible();
+    await expect(this.page.getByText('New blocked period')).toBeVisible();
   }
 
   softBlockToggle(): Locator {

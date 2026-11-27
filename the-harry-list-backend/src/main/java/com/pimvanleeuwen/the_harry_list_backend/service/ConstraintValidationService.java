@@ -40,7 +40,7 @@ public class ConstraintValidationService {
         List<String> violations = new ArrayList<>();
 
         if (activities == null || activities.isEmpty()) {
-            // No activities selected — only check blocked periods
+            // No activities selected: only check blocked periods
             validateBlockedPeriods(eventDate, location, violations);
             return violations;
         }
@@ -110,7 +110,7 @@ public class ConstraintValidationService {
                                        FormConstraint constraint,
                                        List<String> violations) {
         if (location == null || location == BarLocation.NO_PREFERENCE) {
-            // NO_PREFERENCE is acceptable — admin will set before confirming
+            // NO_PREFERENCE is acceptable: admin will set before confirming
             return;
         }
         String requiredLocation = constraint.getTargetValue();

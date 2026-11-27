@@ -39,16 +39,15 @@ export function ConfirmDialog({
       // While the action runs, the question stays open: Escape does nothing.
       onClose={loading ? () => {} : onCancel}
       initialFocusRef={cancelRef}
-      overlayClassName="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 animate-overlay"
-      className="bg-dark-900 border border-dark-700 rounded-xl w-full max-w-sm animate-modal"
+      className="max-w-sm"
     >
         <div className="p-6 space-y-4">
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-red-500/10 shrink-0">
-              <AlertTriangle className="w-5 h-5 text-red-400" />
+            <div className="p-2 rounded-lg notice-error shrink-0">
+              <AlertTriangle aria-hidden="true" className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <h2 id={`${id}-title`} className="text-white font-semibold">{title}</h2>
+              <h2 id={`${id}-title`} className="dialog-title">{title}</h2>
               <p id={`${id}-message`} className="text-sm text-dark-400 mt-1">{message}</p>
             </div>
             <button onClick={onCancel} aria-label="Close" className="text-dark-400 hover:text-white shrink-0" disabled={loading}>
@@ -61,7 +60,7 @@ export function ConfirmDialog({
               ref={cancelRef}
               onClick={onCancel}
               disabled={loading}
-              className="px-4 py-2 text-sm text-dark-400 hover:text-white transition-colors"
+              className="btn-neutral btn-sm"
             >
               {cancelLabel}
             </button>
@@ -69,7 +68,7 @@ export function ConfirmDialog({
               onClick={onConfirm}
               data-testid={confirmTestId}
               disabled={loading}
-              className="px-4 py-2 text-sm bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 rounded-lg transition-colors flex items-center gap-2"
+              className="btn-danger btn-sm gap-2"
             >
               {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {confirmLabel}

@@ -20,8 +20,10 @@ import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { Modal } from 'the-harry-list-shared';
 import { HelpGuide } from '../components/HelpGuide';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { activityLabel, changeValueLabel, fieldLabel, invoiceTypeLabel, locationLabel, paymentLabel, statusLabel } from '../lib/labels';
+import { activityLabel, changeValueLabel, fieldLabel, invoiceTypeLabel, locationLabel, paymentLabel } from '../lib/labels';
 import { reservationDetailGuide } from '../lib/guideContent';
+import { StatusBadge } from '../components/StatusBadge';
+import { AuditActionBadge } from '../components/AuditActionBadge';
 
 // Pre-filled (editable) default shown when rejecting a reservation. Staff can edit or clear it.
 const DEFAULT_REJECTION_MESSAGE =
@@ -132,7 +134,7 @@ export function ReservationDetailPage() {
   const { canUpdateReservations } = usePermissions();
   const userName = accounts[0]?.name || 'Staff';
 
-  // Loading the audit history must never break the page — failures fall back to empty.
+  // Loading the audit history must never break the page: failures fall back to empty.
   const loadAuditLog = useCallback(() => {
     if (!id) return;
     setLoadingAudit(true);
@@ -148,7 +150,7 @@ export function ReservationDetailPage() {
       .then(data => setReservation(data))
       .catch(err => setError(err instanceof Error ? err.message : 'Failed to load reservation'))
       .finally(() => setIsLoading(false));
-    // Initial audit load — state is only set inside async callbacks (loadingAudit
+    // Initial audit load: state is only set inside async callbacks (loadingAudit
     // already starts true), so we don't call setState synchronously in the effect body.
     fetchReservationAuditLog(parseInt(id))
       .then(setAuditLog)
@@ -320,11 +322,11 @@ export function ReservationDetailPage() {
 
   if (error || !reservation) {
     return (
-      <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-6 text-center">
-        <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-        <p className="text-red-400">{error || 'Reservation not found'}</p>
+      <div className="border rounded-xl p-6 text-center notice-error">
+        <AlertCircle aria-hidden="true" className="w-8 h-8 mx-auto mb-2" />
+        <p>{error || 'Reservation not found'}</p>
         <Link to="/reservations" className="btn-primary mt-4 inline-flex">
-          Back to Reservations
+          Back to reservations
         </Link>
       </div>
     );
@@ -340,7 +342,7 @@ export function ReservationDetailPage() {
             className="inline-flex items-center gap-2 text-sm text-dark-400 hover:text-white mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Reservations
+            Back to reservations
           </Link>
           <h1 className="text-2xl font-title font-bold text-white tracking-tight">{reservation.eventTitle}</h1>
           <p className="text-dark-400 font-light">
@@ -348,8 +350,8 @@ export function ReservationDetailPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <HelpGuide title="Reservation Detail Guide" sections={reservationDetailGuide} />
-          <StatusBadge status={reservation.status} large />
+          <HelpGuide title="Reservation detail guide" sections={reservationDetailGuide} />
+          <StatusBadge status={reservation.status} size="large" testId="reservation-status" />
         </div>
       </div>
 
@@ -360,13 +362,13 @@ export function ReservationDetailPage() {
 
         {/* Result of the last action. role=status/alert so screen readers hear it too. */}
         {actionNotice && (
-          <p role="status" data-testid="action-notice" className="mb-4 flex items-start gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-400">
+          <p role="status" data-testid="action-notice" className="mb-4 flex items-start gap-2 rounded-lg border px-3 py-2 text-sm notice-success">
             <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
             {actionNotice}
           </p>
         )}
         {actionError && (
-          <p role="alert" data-testid="action-error" className="mb-4 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+          <p role="alert" data-testid="action-error" className="mb-4 flex items-start gap-2 rounded-lg border px-3 py-2 text-sm notice-error">
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
             {actionError}
           </p>
@@ -393,20 +395,20 @@ export function ReservationDetailPage() {
             onClick={startEditing}
             data-testid="edit-reservation"
             disabled={isUpdating}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-hubble-500/20 text-hubble-400 hover:bg-hubble-500/30 transition-colors"
+            className="btn-neutral btn-sm gap-2"
           >
             <Edit className="w-4 h-4" />
-            Edit Details
+            Edit details
           </button>
 
           {hasCateringActivity && reservation.status !== 'REJECTED' && (
             <button
               onClick={openCateringEmailDialog}
               disabled={isUpdating}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 transition-colors"
+              className="btn-neutral btn-sm gap-2"
             >
               <UtensilsCrossed className="w-4 h-4" />
-              Send Catering Options
+              Send catering options
             </button>
           )}
 
@@ -416,7 +418,7 @@ export function ReservationDetailPage() {
                 onClick={() => { setActionMessage(''); setShowConfirmDialog(true); }}
                 data-testid="confirm-reservation"
                 disabled={isUpdating}
-                className="btn-primary flex items-center gap-2"
+                className="btn-primary btn-sm gap-2"
               >
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                 Confirm
@@ -425,7 +427,7 @@ export function ReservationDetailPage() {
                 onClick={() => { setActionMessage(DEFAULT_REJECTION_MESSAGE); setShowRejectDialog(true); }}
                 data-testid="reject-reservation"
                 disabled={isUpdating}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                className="btn-danger-subtle btn-sm gap-2"
               >
                 <XCircle className="w-4 h-4" />
                 Reject
@@ -438,7 +440,7 @@ export function ReservationDetailPage() {
               onClick={() => { setActionMessage(''); setShowCancelDialog(true); }}
               data-testid="cancel-reservation"
               disabled={isUpdating}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors ml-auto"
+              className="btn-neutral btn-sm gap-2 ml-auto"
             >
               <XCircle className="w-4 h-4" />
               Cancel
@@ -458,10 +460,10 @@ export function ReservationDetailPage() {
               }}
               data-testid="reopen-reservation"
               disabled={isUpdating}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-colors"
+              className="btn-neutral btn-sm gap-2"
             >
               <RotateCcw className="w-4 h-4" />
-              Move back to Pending
+              Move back to pending
             </button>
           )}
 
@@ -470,7 +472,7 @@ export function ReservationDetailPage() {
               onClick={() => setShowDeleteConfirm(true)}
               data-testid="remove-reservation"
               disabled={isUpdating}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/50 text-red-400 hover:bg-red-500/10 transition-colors ml-auto"
+              className="btn-danger-subtle btn-sm gap-2 ml-auto"
             >
               <Trash2 className="w-4 h-4" />
               Delete permanently
@@ -493,8 +495,8 @@ export function ReservationDetailPage() {
 
         {/* Confirm Reservation Dialog */}
         {showConfirmDialog && (
-          <div className="mt-4 p-4 rounded-xl bg-green-500/10 border border-green-500/50">
-            <p className="text-green-400 mb-3">Are you sure you want to confirm this reservation? {sendEmail && 'A confirmation email will be sent to the customer.'}</p>
+          <div className="mt-4 p-4 rounded-xl border notice-success">
+            <p className="mb-3">Are you sure you want to confirm this reservation? {sendEmail && 'A confirmation email will be sent to the customer.'}</p>
             <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
             <div className="flex gap-3 mt-3">
               <button
@@ -504,14 +506,14 @@ export function ReservationDetailPage() {
                 }}
                 data-testid="confirm-dialog-submit"
                 disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors flex items-center gap-2"
+                className="btn-secondary btn-sm gap-2"
               >
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                 Yes, Confirm Reservation
               </button>
               <button
                 onClick={() => setShowConfirmDialog(false)}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+                className="btn-neutral btn-sm"
               >
                 Cancel
               </button>
@@ -521,8 +523,8 @@ export function ReservationDetailPage() {
 
         {/* Reject Reservation Dialog */}
         {showRejectDialog && (
-          <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/50">
-            <p className="text-red-400 mb-3">Are you sure you want to reject this reservation? {sendEmail && 'A rejection email will be sent to the customer.'}</p>
+          <div className="mt-4 p-4 rounded-xl border notice-error">
+            <p className="mb-3">Are you sure you want to reject this reservation? {sendEmail && 'A rejection email will be sent to the customer.'}</p>
             <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
             <div className="flex gap-3 mt-3">
               <button
@@ -532,14 +534,14 @@ export function ReservationDetailPage() {
                 }}
                 data-testid="reject-dialog-submit"
                 disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors flex items-center gap-2"
+                className="btn-danger btn-sm gap-2"
               >
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
                 Yes, Reject Reservation
               </button>
               <button
                 onClick={() => setShowRejectDialog(false)}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+                className="btn-neutral btn-sm"
               >
                 Cancel
               </button>
@@ -549,8 +551,8 @@ export function ReservationDetailPage() {
 
         {/* Cancel Reservation Dialog */}
         {showCancelDialog && (
-          <div className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/50">
-            <p className="text-amber-400 mb-3">Are you sure you want to cancel this reservation? {sendEmail && 'A cancellation email will be sent to the customer.'}</p>
+          <div className="mt-4 p-4 rounded-xl border notice-neutral">
+            <p className="mb-3">Are you sure you want to cancel this reservation? {sendEmail && 'A cancellation email will be sent to the customer.'}</p>
             <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
             <div className="flex gap-3 mt-3">
               <button
@@ -560,16 +562,16 @@ export function ReservationDetailPage() {
                 }}
                 data-testid="cancel-dialog-submit"
                 disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors flex items-center gap-2"
+                className="btn-danger btn-sm gap-2"
               >
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
                 Yes, Cancel Reservation
               </button>
               <button
                 onClick={() => setShowCancelDialog(false)}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+                className="btn-neutral btn-sm"
               >
-                Go Back
+                Go back
               </button>
             </div>
           </div>
@@ -577,8 +579,8 @@ export function ReservationDetailPage() {
 
         {/* Reopen (Rejected or Cancelled -> Pending) Dialog */}
         {showReopenDialog && (
-          <div className="mt-4 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/50">
-            <p className="text-yellow-400 mb-3">
+          <div className="mt-4 p-4 rounded-xl border notice-warning">
+            <p className="mb-3">
               Move this {reservation.status === 'CANCELLED' ? 'cancelled' : 'rejected'} reservation back
               to <strong>Pending</strong>? You'll be able to
               edit the date, location and other details, then confirm or reject it again.
@@ -593,16 +595,16 @@ export function ReservationDetailPage() {
                 }}
                 data-testid="reopen-dialog-submit"
                 disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 transition-colors flex items-center gap-2"
+                className="btn-primary btn-sm gap-2"
               >
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
                 Yes, Move to Pending
               </button>
               <button
                 onClick={closeReopenDialog}
-                className="px-4 py-2 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+                className="btn-neutral btn-sm"
               >
-                Go Back
+                Go back
               </button>
             </div>
           </div>
@@ -612,11 +614,11 @@ export function ReservationDetailPage() {
 
       {/* Details Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Contact Information */}
+        {/* Contact information */}
         <div className="card">
           <h2 className="text-lg font-title font-semibold text-white mb-4 flex items-center gap-2">
             <Users className="w-5 h-5 text-hubble-400" />
-            Contact Information
+            Contact information
           </h2>
           <div className="space-y-4">
             <InfoRow icon={Users} label="Name" value={reservation.contactName} />
@@ -626,7 +628,7 @@ export function ReservationDetailPage() {
                 <div className="text-xs text-dark-500">Email</div>
                 <a
                   href={`mailto:${reservation.email}?subject=${encodeURIComponent(`Re: Your reservation "${reservation.eventTitle}"`)}`}
-                  className="text-blue-400 hover:text-blue-300 transition-colors"
+                  className="underline text-hubble-400 hover:text-hubble-300 transition-colors"
                 >
                   {reservation.email}
                 </a>
@@ -637,22 +639,22 @@ export function ReservationDetailPage() {
           </div>
         </div>
 
-        {/* Event Details */}
+        {/* Event details */}
         <div className="card">
           <h2 className="text-lg font-title font-semibold text-white mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-meteor-400" />
-            Event Details
+            Event details
           </h2>
           <div className="space-y-4">
             <InfoRow icon={Calendar} label="Date" value={new Date(reservation.eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} />
             <InfoRow icon={Clock} label="Time" value={`${reservation.startTime.slice(0, 5)} - ${reservation.endTime.slice(0, 5)}`} />
             <InfoRow icon={MapPin} label="Location" value={locationLabel(reservation.location)} />
             {/* Inside/outside is set on booking and editable, but was previously only visible
-                in edit mode — surface it here so staff can see it at a glance. */}
+                in edit mode: surface it here so staff can see it at a glance. */}
             {(reservation.seatingArea === 'INSIDE' || reservation.seatingArea === 'OUTSIDE') && (
               <div className="flex items-start gap-3">
                 <div className="pl-7">
-                  <div className="text-xs text-dark-500">Seating Area</div>
+                  <div className="text-xs text-dark-500">Seating area</div>
                   <div className="mt-1">
                     <SeatingAreaBadge area={reservation.seatingArea} />
                   </div>
@@ -662,10 +664,10 @@ export function ReservationDetailPage() {
             {/* Optional chain on purpose: rows persisted before guest count was mandatory
                 may hold null, and an unguarded toString() takes the whole page down,
                 leaving no way to open the reservation and repair it. */}
-            <InfoRow icon={Users} label="Expected Guests" value={reservation.expectedGuests?.toString() ?? 'Not specified'} />
+            <InfoRow icon={Users} label="Expected guests" value={reservation.expectedGuests?.toString() ?? 'Not specified'} />
             <div className="flex items-start gap-3">
               <div className="pl-7">
-                <div className="text-xs text-dark-500">Special Activities</div>
+                <div className="text-xs text-dark-500">Special activities</div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {reservation.specialActivities && reservation.specialActivities.length > 0
                     ? reservation.specialActivities.map((activity) => (
@@ -679,40 +681,40 @@ export function ReservationDetailPage() {
               </div>
             </div>
             {reservation.longReservationReason && (
-              <InfoRow label="Long Reservation Reason" value={reservation.longReservationReason} />
+              <InfoRow label="Long reservation reason" value={reservation.longReservationReason} />
             )}
           </div>
         </div>
 
-        {/* Payment Information */}
+        {/* Payment information */}
         <div className="card">
           <h2 className="text-lg font-title font-semibold text-white mb-4 flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-hubble-400" />
-            Payment Information
+            Payment information
           </h2>
           <div className="space-y-4">
-            <InfoRow label="Payment Method" value={paymentLabel(reservation.paymentOption)} />
-            <InfoRow label="Cost Center" value={reservation.costCenter} />
-            <InfoRow label="Invoice Name" value={reservation.invoiceName} />
-            <InfoRow label="Invoice Address" value={reservation.invoiceAddress} />
-            <InfoRow label="Invoice Type" value={invoiceTypeLabel(reservation.invoiceType)} />
-            <InfoRow label="Invoice Remarks" value={reservation.invoiceRemarks} />
+            <InfoRow label="Payment method" value={paymentLabel(reservation.paymentOption)} />
+            <InfoRow label="Cost centre (kostenplaats)" value={reservation.costCenter} />
+            <InfoRow label="Invoice name" value={reservation.invoiceName} />
+            <InfoRow label="Invoice address" value={reservation.invoiceAddress} />
+            <InfoRow label="Invoice type" value={invoiceTypeLabel(reservation.invoiceType)} />
+            <InfoRow label="Invoice remarks" value={reservation.invoiceRemarks} />
           </div>
         </div>
 
-        {/* Additional Information */}
+        {/* Additional information */}
         <div className="card">
           <h2 className="text-lg font-title font-semibold text-white mb-4 flex items-center gap-2">
             <UtensilsCrossed className="w-5 h-5 text-meteor-400" />
-            Additional Information
+            Additional information
           </h2>
           <div className="space-y-4">
             {reservation.cateringDietaryNotes && (
-              <InfoRow label="Catering Dietary Notes" value={reservation.cateringDietaryNotes} />
+              <InfoRow label="Catering dietary notes" value={reservation.cateringDietaryNotes} />
             )}
             {reservation.specialActivities?.some(a => ['EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM'].includes(a)) && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-dark-400">Catering Arranged</span>
+                <span className="text-sm text-dark-400">Catering arranged</span>
                 {canUpdateReservations ? (
                 <button
                   type="button"
@@ -726,8 +728,8 @@ export function ReservationDetailPage() {
                   }}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     reservation.cateringArranged
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
-                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/30 hover:bg-orange-500/30'
+                      ? 'border notice-success hover:opacity-80'
+                      : 'border notice-warning hover:opacity-80'
                   }`}
                 >
                   <UtensilsCrossed className="w-3 h-3" />
@@ -736,8 +738,8 @@ export function ReservationDetailPage() {
                 ) : (
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
                     reservation.cateringArranged
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                      ? 'border notice-success'
+                      : 'border notice-warning'
                   }`}>
                   <UtensilsCrossed className="w-3 h-3" />
                   {reservation.cateringArranged ? 'Arranged ✓' : 'Not arranged yet'}
@@ -764,24 +766,24 @@ export function ReservationDetailPage() {
           )}
           {reservation.comments && (
             <div className="mb-4">
-              <div className="text-sm text-dark-400 mb-1">Additional Comments</div>
+              <div className="text-sm text-dark-400 mb-1">Additional comments</div>
               <p className="text-white">{reservation.comments}</p>
             </div>
           )}
           {reservation.internalNotes && (
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-              <div className="text-xs font-semibold text-yellow-400 mb-1">Internal Notes (staff only)</div>
+            <div className="border rounded-lg p-3 notice-neutral">
+              <div className="text-xs font-semibold mb-1">Internal notes (staff only)</div>
               <p className="text-sm text-white whitespace-pre-wrap">{reservation.internalNotes}</p>
             </div>
           )}
         </div>
       )}
 
-      {/* Change History */}
+      {/* Change history */}
       <div className="card">
         <h2 className="text-lg font-title font-semibold text-white mb-4 flex items-center gap-2">
           <History className="w-5 h-5 text-hubble-400" />
-          Change History
+          Change history
         </h2>
         {loadingAudit ? (
           <div className="flex items-center gap-2 text-dark-400 text-sm">
@@ -800,16 +802,16 @@ export function ReservationDetailPage() {
                 </div>
                 <div className="text-sm text-dark-300 mt-1">
                   <span className="text-white">{entry.actorName || entry.actorEmail || 'system'}</span>
-                  {entry.summary && <span className="text-dark-400"> — {entry.summary}</span>}
+                  {entry.summary && <span className="text-dark-400">: {entry.summary}</span>}
                 </div>
                 {entry.changes.length > 0 && (
                   <ul className="mt-2 space-y-1">
                     {entry.changes.map((change, i) => (
                       <li key={i} className="text-xs text-dark-400">
                         <span className="text-dark-300">{fieldLabel(change.field)}</span>:{' '}
-                        <span className="line-through text-red-400/70">{changeValueLabel(change.field, change.oldValue)}</span>
+                        <span className="line-through notice-text-error">{changeValueLabel(change.field, change.oldValue)}</span>
                         {' → '}
-                        <span className="text-green-400/80">{changeValueLabel(change.field, change.newValue)}</span>
+                        <span className="notice-text-success">{changeValueLabel(change.field, change.newValue)}</span>
                       </li>
                     ))}
                   </ul>
@@ -832,13 +834,12 @@ export function ReservationDetailPage() {
         <Modal
           labelledBy="catering-email-title"
           onClose={() => setShowCateringEmail(false)}
-          overlayClassName="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+          className="max-w-2xl max-h-[90vh] overflow-y-auto"
         >
             <div className="flex items-center justify-between p-6 border-b border-dark-700">
-              <h2 id="catering-email-title" className="text-xl font-title font-semibold text-white flex items-center gap-2">
-                <UtensilsCrossed className="w-5 h-5 text-orange-400" />
-                Send Catering Options
+              <h2 id="catering-email-title" className="dialog-title flex items-center gap-2">
+                <UtensilsCrossed aria-hidden="true" className="w-5 h-5 notice-text-warning" />
+                Send catering options
               </h2>
               <button onClick={() => setShowCateringEmail(false)} aria-label="Close" className="text-dark-400 hover:text-white">
                 <X className="w-6 h-6" />
@@ -855,8 +856,8 @@ export function ReservationDetailPage() {
                 {cateringEmailStatus && (
                   <div className={`p-3 rounded-lg border ${
                     cateringEmailStatus.type === 'success'
-                      ? 'bg-green-500/10 border-green-500/50 text-green-400'
-                      : 'bg-red-500/10 border-red-500/50 text-red-400'
+                      ? 'notice-success'
+                      : 'notice-error'
                   }`}>
                     {cateringEmailStatus.message}
                   </div>
@@ -869,7 +870,7 @@ export function ReservationDetailPage() {
 
                 {/* Reply-to */}
                 <div className="form-group">
-                  <label htmlFor="catering-reply-to" className="label">Reply-To Email (optional)</label>
+                  <label htmlFor="catering-reply-to" className="label">Reply-to email (optional)</label>
                   <input
                     id="catering-reply-to"
                     type="email"
@@ -884,10 +885,10 @@ export function ReservationDetailPage() {
                 <div>
                   <p id="catering-attachments-label" className="label flex items-center gap-2 mb-2">
                     <Paperclip className="w-4 h-4" />
-                    PDF Attachments
+                    PDF attachments
                   </p>
                   {cateringAttachments.length === 0 ? (
-                    <p className="text-sm text-dark-500">No active attachments available. Upload PDFs in Email Templates &gt; PDF Attachments.</p>
+                    <p className="text-sm text-dark-500">No active attachments available. Upload PDFs in Email templates &gt; PDF attachments.</p>
                   ) : (
                     <div role="group" aria-labelledby="catering-attachments-label" className="space-y-2">
                       {cateringAttachments.map((att) => (
@@ -904,7 +905,7 @@ export function ReservationDetailPage() {
                             }}
                             className="w-4 h-4 rounded border-dark-600 bg-dark-700 text-hubble-500"
                           />
-                          <FileText className="w-4 h-4 text-red-400" />
+                          <FileText aria-hidden="true" className="w-4 h-4 notice-text-error" />
                           <span className="text-sm text-white">{att.name}</span>
                           <span className="text-xs text-dark-500">({att.filename})</span>
                         </label>
@@ -926,7 +927,7 @@ export function ReservationDetailPage() {
 
                 {/* Body */}
                 <div className="form-group">
-                  <label htmlFor="catering-email-body" className="label">Email Body (HTML)</label>
+                  <label htmlFor="catering-email-body" className="label">Email body (HTML)</label>
                   <textarea id="catering-email-body"
                     value={cateringBody}
                     onChange={(e) => setCateringBody(e.target.value)}
@@ -939,14 +940,14 @@ export function ReservationDetailPage() {
             <div className="flex justify-end gap-3 p-6 border-t border-dark-700">
               <button
                 onClick={() => setShowCateringEmail(false)}
-                className="px-4 py-2 rounded-xl border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+                className="btn-neutral btn-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSendCateringEmail}
                 disabled={sendingCateringEmail || loadingCateringPreview}
-                className="btn-primary flex items-center gap-2"
+                className="btn-primary btn-sm gap-2"
               >
                 {sendingCateringEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Send Email
@@ -960,11 +961,10 @@ export function ReservationDetailPage() {
         <Modal
           labelledBy="edit-reservation-title"
           onClose={() => confirmDiscard(() => setIsEditing(false))}
-          overlayClassName="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+          className="max-w-3xl max-h-[90vh] overflow-y-auto"
         >
             <div className="flex items-center justify-between p-6 border-b border-dark-700">
-              <h2 id="edit-reservation-title" className="text-xl font-title font-semibold text-white tracking-tight">Edit Reservation</h2>
+              <h2 id="edit-reservation-title" className="dialog-title">Edit reservation</h2>
               <button
                 onClick={() => confirmDiscard(() => setIsEditing(false))}
                 aria-label="Close editor"
@@ -990,12 +990,12 @@ export function ReservationDetailPage() {
 
               <EmailMessageField value={editMessage} onChange={setEditMessage} show={sendEditEmail} />
 
-              {/* Contact Information */}
+              {/* Contact information */}
               <div>
-                <h3 className="text-sm font-semibold text-hubble-400 mb-3">Contact Information</h3>
+                <h3 className="text-sm font-semibold text-hubble-400 mb-3">Contact information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group">
-                    <label htmlFor="edit-contact-name" className="label">Contact Name</label>
+                    <label htmlFor="edit-contact-name" className="label">Contact name</label>
                     <input id="edit-contact-name"
                       type="text"
                       value={editData.contactName || ''}
@@ -1033,12 +1033,12 @@ export function ReservationDetailPage() {
                 </div>
               </div>
 
-              {/* Event Details */}
+              {/* Event details */}
               <div>
-                <h3 className="text-sm font-semibold text-meteor-400 mb-3">Event Details</h3>
+                <h3 className="text-sm font-semibold text-meteor-400 mb-3">Event details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group md:col-span-2">
-                    <label htmlFor="edit-event-title" className="label">Event Title</label>
+                    <label htmlFor="edit-event-title" className="label">Event title</label>
                     <input id="edit-event-title"
                       type="text"
                       value={editData.eventTitle || ''}
@@ -1047,7 +1047,7 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group md:col-span-2">
-                    <p id="edit-special-activities" className="label">Special Activities</p>
+                    <p id="edit-special-activities" className="label">Special activities</p>
                     <div role="group" aria-labelledby="edit-special-activities" className="flex flex-wrap gap-2">
                       {editableActivities(editData.specialActivities || []).map((activity) => {
                         const selected = (editData.specialActivities || []).includes(activity);
@@ -1078,7 +1078,7 @@ export function ReservationDetailPage() {
                     </div>
                   </div>
                   <div className="form-group">
-                    <label htmlFor="edit-expected-guests" className="label">Expected Guests</label>
+                    <label htmlFor="edit-expected-guests" className="label">Expected guests</label>
                     <input id="edit-expected-guests"
                       type="number"
                       min={1}
@@ -1099,7 +1099,7 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="edit-event-date" className="label">Event Date</label>
+                    <label htmlFor="edit-event-date" className="label">Event date</label>
                     <input id="edit-event-date"
                       type="date"
                       value={editData.eventDate || ''}
@@ -1108,7 +1108,7 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="edit-start-time" className="label">Start Time</label>
+                    <label htmlFor="edit-start-time" className="label">Start time</label>
                     <input id="edit-start-time"
                       type="time"
                       value={editData.startTime?.slice(0, 5) || ''}
@@ -1117,7 +1117,7 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="edit-end-time" className="label">End Time</label>
+                    <label htmlFor="edit-end-time" className="label">End time</label>
                     <input id="edit-end-time"
                       type="time"
                       value={editData.endTime?.slice(0, 5) || ''}
@@ -1147,13 +1147,13 @@ export function ReservationDetailPage() {
                       onChange={(e) => setEditData({ ...editData, location: e.target.value })}
                       className="select-field"
                     >
-                      <option value="">No Preference</option>
+                      <option value="">No preference</option>
                       <option value="HUBBLE">Hubble</option>
                       <option value="METEOR">Meteor</option>
                     </select>
                   </div>
                   <div className="form-group">
-                    <label htmlFor="edit-seating-area" className="label">Seating Area</label>
+                    <label htmlFor="edit-seating-area" className="label">Seating area</label>
                     <select id="edit-seating-area"
                       value={editData.seatingArea || ''}
                       onChange={(e) => setEditData({ ...editData, seatingArea: e.target.value })}
@@ -1171,7 +1171,7 @@ export function ReservationDetailPage() {
                 <h3 className="text-sm font-semibold text-meteor-400 mb-3">Payment</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group">
-                    <label htmlFor="edit-payment-method" className="label">Payment Method</label>
+                    <label htmlFor="edit-payment-method" className="label">Payment method</label>
                     <select id="edit-payment-method"
                       value={editData.paymentOption || ''}
                       onChange={(e) => setEditData({ ...editData, paymentOption: e.target.value })}
@@ -1185,7 +1185,7 @@ export function ReservationDetailPage() {
                   {editData.paymentOption === 'INVOICE' && (
                     <>
                       <div className="form-group">
-                        <label htmlFor="edit-invoice-type" className="label">Invoice Type</label>
+                        <label htmlFor="edit-invoice-type" className="label">Invoice type</label>
                         <select id="edit-invoice-type"
                           value={editData.invoiceType || ''}
                           onChange={(e) => setEditData({ ...editData, invoiceType: e.target.value })}
@@ -1199,7 +1199,7 @@ export function ReservationDetailPage() {
                       </div>
                       {(editData.invoiceType === 'TUE' || editData.invoiceType === 'FONTYS') && (
                         <div className="form-group">
-                          <label htmlFor="edit-kostenplaats" className="label">Kostenplaats</label>
+                          <label htmlFor="edit-kostenplaats" className="label">Cost centre (kostenplaats)</label>
                           <input id="edit-kostenplaats"
                             type="text"
                             value={editData.costCenter || ''}
@@ -1211,7 +1211,7 @@ export function ReservationDetailPage() {
                       {editData.invoiceType === 'EXTERNAL' && (
                         <>
                           <div className="form-group">
-                            <label htmlFor="edit-invoice-name" className="label">Invoice Name</label>
+                            <label htmlFor="edit-invoice-name" className="label">Invoice name</label>
                             <input id="edit-invoice-name"
                               type="text"
                               value={editData.invoiceName || ''}
@@ -1220,7 +1220,7 @@ export function ReservationDetailPage() {
                             />
                           </div>
                           <div className="form-group">
-                            <label htmlFor="edit-invoice-address" className="label">Invoice Address</label>
+                            <label htmlFor="edit-invoice-address" className="label">Invoice address</label>
                             <input id="edit-invoice-address"
                               type="text"
                               value={editData.invoiceAddress || ''}
@@ -1229,7 +1229,7 @@ export function ReservationDetailPage() {
                             />
                           </div>
                           <div className="form-group md:col-span-2">
-                            <label htmlFor="edit-invoice-remarks" className="label">Invoice Remarks</label>
+                            <label htmlFor="edit-invoice-remarks" className="label">Invoice remarks</label>
                             <textarea id="edit-invoice-remarks"
                               value={editData.invoiceRemarks || ''}
                               onChange={(e) => setEditData({ ...editData, invoiceRemarks: e.target.value })}
@@ -1243,12 +1243,12 @@ export function ReservationDetailPage() {
                 </div>
               </div>
 
-              {/* Catering & Other */}
+              {/* Catering & other */}
               <div>
-                <h3 className="text-sm font-semibold text-hubble-400 mb-3">Catering & Other</h3>
+                <h3 className="text-sm font-semibold text-hubble-400 mb-3">Catering & other</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group md:col-span-2">
-                    <label htmlFor="edit-catering-dietary-notes" className="label">Catering Dietary Notes</label>
+                    <label htmlFor="edit-catering-dietary-notes" className="label">Catering dietary notes</label>
                     <textarea id="edit-catering-dietary-notes"
                       value={editData.cateringDietaryNotes || ''}
                       onChange={(e) => setEditData({ ...editData, cateringDietaryNotes: e.target.value })}
@@ -1257,7 +1257,7 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group md:col-span-2">
-                    <label htmlFor="edit-long-reservation-reason" className="label">Long Reservation Reason</label>
+                    <label htmlFor="edit-long-reservation-reason" className="label">Long reservation reason</label>
                     <textarea id="edit-long-reservation-reason"
                       value={editData.longReservationReason || ''}
                       onChange={(e) => setEditData({ ...editData, longReservationReason: e.target.value })}
@@ -1268,7 +1268,7 @@ export function ReservationDetailPage() {
                 </div>
               </div>
 
-              {/* Additional Comments */}
+              {/* Additional comments */}
               <div>
                 <h3 className="text-sm font-semibold text-meteor-400 mb-3">Additional</h3>
                 <div className="space-y-4">
@@ -1282,7 +1282,7 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="edit-internal-notes" className="label">Internal Notes <span className="text-yellow-400 text-xs">(staff only, not sent to customer)</span></label>
+                    <label htmlFor="edit-internal-notes" className="label">Internal notes <span className="notice-text-neutral text-xs">(staff only, not sent to customer)</span></label>
                     <textarea id="edit-internal-notes"
                       value={editData.internalNotes || ''}
                       onChange={(e) => setEditData({ ...editData, internalNotes: e.target.value })}
@@ -1295,7 +1295,7 @@ export function ReservationDetailPage() {
             </div>
 
             {editError && (
-              <p role="alert" data-testid="edit-error" className="mx-6 mt-4 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+              <p role="alert" data-testid="edit-error" className="mx-6 mt-4 flex items-start gap-2 rounded-lg border px-3 py-2 text-sm notice-error">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                 Not saved: {editError}
               </p>
@@ -1303,7 +1303,7 @@ export function ReservationDetailPage() {
             <div className="flex justify-end gap-3 p-6 border-t border-dark-700">
               <button
                 onClick={() => setIsEditing(false)}
-                className="px-4 py-2 rounded-xl border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors"
+                className="btn-neutral btn-sm"
               >
                 Cancel
               </button>
@@ -1311,10 +1311,10 @@ export function ReservationDetailPage() {
                 onClick={handleEditSave}
                 data-testid="edit-save"
                 disabled={isUpdating}
-                className="btn-primary flex items-center gap-2"
+                className="btn-primary btn-sm gap-2"
               >
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                Save Changes
+                Save changes
               </button>
             </div>
         </Modal>
@@ -1338,64 +1338,18 @@ function InfoRow({ icon: Icon, label, value }: { icon?: typeof Users; label: str
   );
 }
 
-// Surfaces the inside/outside seating area as a colored badge so staff can see it at a
-// glance, without having to open the editor.
+// Surfaces the inside/outside seating area as a badge so staff can see it at a glance, without
+// having to open the editor. A fact, not a state: the icon and word carry it, in neutral teal.
 function SeatingAreaBadge({ area }: { area: string }) {
   const isInside = area === 'INSIDE';
   const Icon = isInside ? Home : Sun;
   return (
     <span
       data-testid="seating-area-badge"
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
-        isInside
-          ? 'bg-green-500/20 text-green-400 border-green-500/30'
-          : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-      }`}
+      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border notice-info"
     >
       <Icon className="w-3 h-3" />
       {isInside ? 'Inside' : 'Outside'}
     </span>
   );
 }
-
-function AuditActionBadge({ action }: { action: string }) {
-  const config: Record<string, { label: string; color: string; bg: string }> = {
-    CREATE: { label: 'Created', color: 'text-green-400', bg: 'bg-green-500/20' },
-    UPDATE: { label: 'Updated', color: 'text-blue-400', bg: 'bg-blue-500/20' },
-    DELETE: { label: 'Deleted', color: 'text-red-400', bg: 'bg-red-500/20' },
-    STATUS_CHANGE: { label: 'Status changed', color: 'text-amber-400', bg: 'bg-amber-500/20' },
-    NOTES_UPDATED: { label: 'Notes updated', color: 'text-hubble-400', bg: 'bg-hubble-500/20' },
-    CATERING_ARRANGED: { label: 'Catering', color: 'text-orange-400', bg: 'bg-orange-500/20' },
-    EMAIL_SENT: { label: 'Email sent', color: 'text-meteor-400', bg: 'bg-meteor-500/20' },
-  };
-  const { label, color, bg } = config[action] || { label: action, color: 'text-dark-300', bg: 'bg-dark-700' };
-  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${bg} ${color}`}>{label}</span>;
-}
-
-function StatusBadge({ status, large }: { status: string; large?: boolean }) {
-  const config: Record<string, { color: string; bg: string }> = {
-    PENDING: { color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
-    CONFIRMED: { color: 'text-green-400', bg: 'bg-green-500/20' },
-    REJECTED: { color: 'text-red-400', bg: 'bg-red-500/20' },
-    CANCELLED: { color: 'text-dark-400', bg: 'bg-dark-500/20' },
-  };
-
-  const { color, bg } = config[status] || config.PENDING;
-
-  return (
-    <span
-      data-testid="reservation-status"
-      className={`
-      inline-flex items-center gap-2 px-3 py-1.5 rounded-xl font-medium
-      ${bg} ${color}
-      ${large ? 'text-sm' : 'text-xs'}
-    `}>
-      {status === 'PENDING' && <Clock className="w-4 h-4" />}
-      {status === 'CONFIRMED' && <CheckCircle className="w-4 h-4" />}
-      {status === 'REJECTED' && <XCircle className="w-4 h-4" />}
-      {status === 'CANCELLED' && <XCircle className="w-4 h-4" />}
-      {statusLabel(status)}
-    </span>
-  );
-}
-

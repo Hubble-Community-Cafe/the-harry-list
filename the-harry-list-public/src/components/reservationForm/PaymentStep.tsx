@@ -23,13 +23,13 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
               <CreditCard className="w-5 h-5 text-meteor-400" />
             </div>
             <div>
-              <h2 tabIndex={-1} className="text-xl font-title font-semibold text-white tracking-tight outline-none">Payment Information</h2>
+              <h2 tabIndex={-1} className="text-xl font-title font-semibold text-white tracking-tight outline-none">Payment information</h2>
               <p className="text-sm text-dark-400 font-light">How will you be paying?</p>
             </div>
           </div>
 
           <div className="form-group">
-            <p id="paymentOption-label" className="label">Payment Method *</p>
+            <p id="paymentOption-label" className="label">Payment method *</p>
             <div role="radiogroup" aria-labelledby="paymentOption-label" className="grid grid-cols-1 gap-3">
               {[
                 { value: 'INDIVIDUAL', label: 'People pay individually', desc: 'Each guest pays for themselves' },
@@ -75,7 +75,7 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
           {watchPaymentOption === 'INVOICE' && (
             <div className="space-y-4 pl-4 border-l-2 border-meteor-500/30">
               <div className="form-group">
-                <label htmlFor="invoiceType" className="label">Invoice Type *</label>
+                <label htmlFor="invoiceType" className="label">Invoice type *</label>
                 <select {...register('invoiceType')} id="invoiceType" {...fieldA11y(errors, 'invoiceType')} className="select-field" disabled={optionsLoading}>
                   <option value="">Select invoice type...</option>
                   {(formOptions?.invoiceTypes ?? [
@@ -89,10 +89,10 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
                 <FieldError errors={errors} name="invoiceType" />
               </div>
 
-              {/* TUE/FONTYS: Kostenplaats */}
+              {/* TUE/FONTYS: cost centre (kostenplaats) */}
               {(watchInvoiceType === 'TUE' || watchInvoiceType === 'FONTYS') && (
                 <div className="form-group">
-                  <label htmlFor="costCenter" className="label">Kostenplaats *</label>
+                  <label htmlFor="costCenter" className="label">Cost centre (kostenplaats) *</label>
                   <input
                     type="text"
                     {...register('costCenter')} maxLength={MAX_LENGTH.costCenter} id="costCenter" {...fieldA11y(errors, 'costCenter')}
@@ -107,7 +107,7 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
               {watchInvoiceType === 'EXTERNAL' && (
                 <div className="space-y-4">
                   <div className="form-group">
-                    <label htmlFor="invoiceName" className="label">Company Name *</label>
+                    <label htmlFor="invoiceName" className="label">Company name *</label>
                     <input
                       type="text"
                       {...register('invoiceName')} maxLength={MAX_LENGTH.invoiceName} id="invoiceName" autoComplete="organization" {...fieldA11y(errors, 'invoiceName')}
@@ -118,7 +118,7 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="invoiceAddress" className="label">Invoice Address *</label>
+                    <label htmlFor="invoiceAddress" className="label">Invoice address *</label>
                     <textarea
                       {...register('invoiceAddress')} maxLength={MAX_LENGTH.invoiceAddress} id="invoiceAddress" autoComplete="street-address" {...fieldA11y(errors, 'invoiceAddress')}
                       className="input-field min-h-[80px] resize-none"
@@ -128,7 +128,7 @@ export function PaymentStep({ formOptions, optionsLoading }: PaymentStepProps) {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="invoiceRemarks" className="label">Invoice Remarks</label>
+                    <label htmlFor="invoiceRemarks" className="label">Invoice remarks</label>
                     <textarea
                       {...register('invoiceRemarks')} maxLength={MAX_LENGTH.invoiceRemarks} id="invoiceRemarks"
                       className="input-field min-h-[60px] resize-none"

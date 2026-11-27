@@ -8,7 +8,7 @@ import type { CalendarAppointment, DayOfWeek, RecurrenceType } from '../types/re
  * "every N" interval and, for MONTHLY_NTH_WEEKDAY, an ordinal week + weekday.
  *
  * New recurrence patterns should be added here (option metadata + expander)
- * and in the backend RRULE mapper — not scattered across pages.
+ * and in the backend RRULE mapper: not scattered across pages.
  */
 
 // ── Weekday metadata ──────────────────────────────────────────────────────────
@@ -109,7 +109,7 @@ export function effectiveInterval(appointment: CalendarAppointment): number {
 /**
  * Expands an appointment into the concrete dates (yyyy-mm-dd) it occurs on within
  * the inclusive [rangeStart, rangeEnd] window. Honors the appointment's start date
- * and optional recurrenceEndDate. Does NOT filter on `enabled`/location — callers
+ * and optional recurrenceEndDate. Does NOT filter on `enabled`/location: callers
  * decide visibility. Returns sorted, unique date strings.
  */
 export function expandOccurrences(

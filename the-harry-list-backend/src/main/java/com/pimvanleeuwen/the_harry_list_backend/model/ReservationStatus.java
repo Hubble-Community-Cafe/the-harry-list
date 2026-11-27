@@ -4,7 +4,7 @@ package com.pimvanleeuwen.the_harry_list_backend.model;
  * Status of a reservation.
  */
 public enum ReservationStatus {
-    PENDING("Pending Review"),
+    PENDING("Pending review"),
     CONFIRMED("Confirmed"),
     REJECTED("Rejected"),
     CANCELLED("Cancelled");

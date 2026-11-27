@@ -10,7 +10,7 @@ describe('labels', () => {
     expect(paymentLabel('ONE_PERSON')).toBe('One person pays at the end');
     expect(invoiceTypeLabel('TUE')).toBe('TU/e');
     expect(seatingLabel('OUTSIDE')).toBe('Outside');
-    expect(activityLabel('EAT_A_LA_CARTE')).toBe('Eat a la Carte');
+    expect(activityLabel('EAT_A_LA_CARTE')).toBe('Eat a la carte');
     expect(roleLabel('ADMIN')).toBe('Admin');
   });
 
@@ -32,7 +32,7 @@ describe('constraintValueLabel', () => {
     const { constraintValueLabel } = await import('../lib/labels');
     expect(constraintValueLabel('METEOR')).toBe('Meteor');
     expect(constraintValueLabel('INSIDE')).toBe('Inside');
-    expect(constraintValueLabel('EAT_CATERING')).toBe('Eat Catering');
+    expect(constraintValueLabel('EAT_CATERING')).toBe('Eat catering');
     expect(constraintValueLabel('CONFIRM')).toBe('asks to confirm');
     expect(constraintValueLabel('18:00-22:00')).toBe('18:00-22:00');
   });
@@ -44,7 +44,7 @@ describe('change history labels', () => {
     expect(fieldLabel('paymentOption')).toBe('Payment option');
     expect(fieldLabel('status')).toBe('Status');
     expect(changeValueLabel('status', 'CONFIRMED')).toBe('Confirmed');
-    expect(changeValueLabel('specialActivities', 'EAT_CATERING, GRADUATION')).toBe('Eat Catering, Graduation / PhD Defense');
+    expect(changeValueLabel('specialActivities', 'EAT_CATERING, GRADUATION')).toBe('Eat catering, Graduation / PhD defense');
     expect(changeValueLabel('eventTitle', 'Board game night')).toBe('Board game night');
     expect(changeValueLabel('phoneNumber', null)).toBe('(empty)');
   });

@@ -85,7 +85,7 @@ describe('CalendarAppointmentsPage', () => {
   it('renders page title', async () => {
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText('Calendar Appointments')).toBeInTheDocument();
+      expect(screen.getByText('Calendar appointments')).toBeInTheDocument();
     });
   });
 
@@ -134,22 +134,22 @@ describe('CalendarAppointmentsPage', () => {
     expect(screen.getByRole('switch', { name: 'Appointment enabled: Staff Meeting' })).toHaveAttribute('aria-checked');
   });
 
-  it('opens create modal on Add Appointment click', async () => {
+  it('opens create modal on Add appointment click', async () => {
     renderPage();
     await waitFor(() => {
       expect(screen.getByText('Staff Meeting')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByText('Add Appointment'));
-    expect(screen.getByText('New Appointment')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Add appointment'));
+    expect(screen.getByText('New appointment')).toBeInTheDocument();
   });
 
   it('names the create dialog and every field in it by its label', async () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('Staff Meeting')).toBeInTheDocument());
-    fireEvent.click(screen.getByText('Add Appointment'));
+    fireEvent.click(screen.getByText('Add appointment'));
 
-    expect(screen.getByRole('dialog', { name: 'New Appointment' })).toBeInTheDocument();
-    for (const label of ['Title *', 'Description', 'Date *', 'Start Time *', 'End Time *', 'Location *', 'Recurrence']) {
+    expect(screen.getByRole('dialog', { name: 'New appointment' })).toBeInTheDocument();
+    for (const label of ['Title *', 'Description', 'Date *', 'Start time *', 'End time *', 'Location *', 'Recurrence']) {
       expect(screen.getByLabelText(label)).toBeInTheDocument();
     }
     const allDay = screen.getByRole('switch', { name: 'All-day event' });
@@ -165,7 +165,7 @@ describe('CalendarAppointmentsPage', () => {
     });
     const editButtons = screen.getAllByTitle('Edit');
     fireEvent.click(editButtons[0]);
-    expect(screen.getByText('Edit Appointment')).toBeInTheDocument();
+    expect(screen.getByText('Edit appointment')).toBeInTheDocument();
   });
 
   it('shows empty state when no appointments', async () => {
@@ -181,11 +181,11 @@ describe('CalendarAppointmentsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Staff Meeting')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByText('Add Appointment'));
+    fireEvent.click(screen.getByText('Add appointment'));
 
     // By default, time fields should be visible
-    expect(screen.getByText('Start Time *')).toBeInTheDocument();
-    expect(screen.getByText('End Time *')).toBeInTheDocument();
+    expect(screen.getByText('Start time *')).toBeInTheDocument();
+    expect(screen.getByText('End time *')).toBeInTheDocument();
 
     // Toggle all-day by clicking the toggle button (the parent of the icon, sibling of the text)
     const allDayText = screen.getByText('All-day event');
@@ -193,8 +193,8 @@ describe('CalendarAppointmentsPage', () => {
     fireEvent.click(toggleButton);
 
     // Time fields should be hidden
-    expect(screen.queryByText('Start Time *')).not.toBeInTheDocument();
-    expect(screen.queryByText('End Time *')).not.toBeInTheDocument();
+    expect(screen.queryByText('Start time *')).not.toBeInTheDocument();
+    expect(screen.queryByText('End time *')).not.toBeInTheDocument();
   });
 
   it('shows recurrence end date field when recurrence is set', async () => {
@@ -202,16 +202,16 @@ describe('CalendarAppointmentsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Staff Meeting')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByText('Add Appointment'));
+    fireEvent.click(screen.getByText('Add appointment'));
 
     // By default (NONE), no end date field
-    expect(screen.queryByText('Recurrence End Date')).not.toBeInTheDocument();
+    expect(screen.queryByText('Recurrence end date')).not.toBeInTheDocument();
 
     // Change recurrence to Weekly
     const recurrenceSelect = screen.getByDisplayValue('Does not repeat');
     fireEvent.change(recurrenceSelect, { target: { value: 'WEEKLY' } });
 
-    expect(screen.getByText('Recurrence End Date')).toBeInTheDocument();
+    expect(screen.getByText('Recurrence end date')).toBeInTheDocument();
   });
 
   it('calls toggle when toggle button clicked', async () => {
@@ -252,7 +252,7 @@ describe('CalendarAppointmentsPage', () => {
   const dateInputs = () => Array.from(document.querySelectorAll('input[type="date"]')) as HTMLInputElement[];
 
   const startNewAllDayAppointment = (title: string, date: string) => {
-    fireEvent.click(screen.getByText('Add Appointment'));
+    fireEvent.click(screen.getByText('Add appointment'));
     fireEvent.change(screen.getByPlaceholderText(/Staff Meeting/), { target: { value: title } });
     fireEvent.change(dateInputs()[0], { target: { value: date } });
     // all-day so we don't need start/end times to enable the submit button
@@ -267,7 +267,7 @@ describe('CalendarAppointmentsPage', () => {
     startNewAllDayAppointment('Sprint Sync', '2026-06-01');
     fireEvent.change(screen.getByDisplayValue('Does not repeat'), { target: { value: 'WEEKLY' } });
     fireEvent.change(screen.getByLabelText('Repeat interval'), { target: { value: '3' } });
-    fireEvent.click(screen.getByText('Create Appointment'));
+    fireEvent.click(screen.getByText('Create appointment'));
 
     await waitFor(() => expect(mockCreate).toHaveBeenCalled());
     const payload = mockCreate.mock.calls[0][0];
@@ -289,7 +289,7 @@ describe('CalendarAppointmentsPage', () => {
     fireEvent.change(screen.getByLabelText('Week of month'), { target: { value: '2' } });
     fireEvent.change(screen.getByLabelText('Day of week'), { target: { value: 'FRIDAY' } });
 
-    fireEvent.click(screen.getByText('Create Appointment'));
+    fireEvent.click(screen.getByText('Create appointment'));
 
     await waitFor(() => expect(mockCreate).toHaveBeenCalled());
     const payload = mockCreate.mock.calls[0][0];
@@ -319,7 +319,7 @@ describe('CalendarAppointmentsPage', () => {
     expect(screen.getByDisplayValue('Weekly')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Repeat interval'), { target: { value: '2' } });
 
-    fireEvent.click(screen.getByText('Save Changes'));
+    fireEvent.click(screen.getByText('Save changes'));
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
     const [id, payload] = mockUpdate.mock.calls[0];
     expect(id).toBe(8);
@@ -331,14 +331,14 @@ describe('CalendarAppointmentsPage', () => {
     const openNewAppointment = async () => {
       renderPage();
       await waitFor(() => expect(screen.getByText('Staff Meeting')).toBeInTheDocument());
-      fireEvent.click(screen.getByText('Add Appointment'));
-      return screen.getByText('New Appointment').closest('.fixed') as HTMLElement;
+      fireEvent.click(screen.getByText('Add appointment'));
+      return screen.getByText('New appointment').closest('[role="dialog"]') as HTMLElement;
     };
 
     it('closes the appointment dialog with X at once when nothing changed', async () => {
       const dialog = await openNewAppointment();
       fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
-      expect(screen.queryByText('New Appointment')).not.toBeInTheDocument();
+      expect(screen.queryByText('New appointment')).not.toBeInTheDocument();
     });
 
     it('asks before closing the appointment dialog with X after a change', async () => {
@@ -363,12 +363,12 @@ describe('CalendarAppointmentsPage - viewer permissions', () => {
     mockUsePermissions.mockReturnValue(viewerPermissions);
   });
 
-  it('hides Add Appointment button for viewer', async () => {
+  it('hides Add appointment button for viewer', async () => {
     renderPage();
     await waitFor(() => {
       expect(screen.getByText('Staff Meeting')).toBeInTheDocument();
     });
-    expect(screen.queryByText('Add Appointment')).not.toBeInTheDocument();
+    expect(screen.queryByText('Add appointment')).not.toBeInTheDocument();
   });
 
   it('hides edit, toggle, and delete buttons for viewer', async () => {

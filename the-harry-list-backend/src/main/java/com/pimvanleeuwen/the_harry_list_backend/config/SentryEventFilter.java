@@ -5,9 +5,9 @@ package com.pimvanleeuwen.the_harry_list_backend.config;
  * (the browser navigated away or closed the connection mid-response) rather
  * than a real server fault.
  *
- * <p>These show up in Sentry as noise — typically
+ * <p>These show up in Sentry as noise: typically
  * {@code AsyncRequestNotUsableException} / {@code ClientAbortException} wrapping
- * {@code java.io.IOException: Broken pipe} — and drown out genuine errors, so we
+ * {@code java.io.IOException: Broken pipe}: and drown out genuine errors, so we
  * drop them before sending.
  */
 public final class SentryEventFilter {

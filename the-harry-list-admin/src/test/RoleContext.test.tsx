@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { RoleProvider, useRole } from '../lib/RoleContext';
+import { NotInStaffGroupError } from '../lib/api';
 
 const { mockFetchCurrentUser, mockUseIsAuthenticated } = vi.hoisted(() => ({
   mockFetchCurrentUser: vi.fn(),
@@ -13,6 +14,7 @@ vi.mock('@azure/msal-react', () => ({
 
 vi.mock('../lib/api', () => ({
   fetchCurrentUser: mockFetchCurrentUser,
+  NotInStaffGroupError: class NotInStaffGroupError extends Error {},
 }));
 
 // Authenticate via MSAL so the e2e bridge isn't involved in these tests.
@@ -23,12 +25,13 @@ vi.mock('../lib/e2eAuth', () => ({
 const adminUser = { id: 1, azureOid: 'oid-1', email: 'pim@hubble.cafe', displayName: 'Pim', role: 'ADMIN' };
 
 function RoleProbe() {
-  const { role, isLoading, error, refetch } = useRole();
+  const { role, isLoading, error, accessDenied, refetch } = useRole();
   return (
     <div>
       <span data-testid="role">{role ?? 'none'}</span>
       <span data-testid="loading">{String(isLoading)}</span>
       <span data-testid="error">{error ?? 'none'}</span>
+      <span data-testid="denied">{String(accessDenied)}</span>
       <button onClick={() => refetch()}>refetch</button>
     </div>
   );
@@ -58,7 +61,7 @@ describe('RoleProvider', () => {
   });
 
   it('recovers from a transient fetch failure by retrying', async () => {
-    // Fails twice, then succeeds — the role must still resolve (previously a single
+    // Fails twice, then succeeds: the role must still resolve (previously a single
     // failure left role=null permanently and hid role-gated UI).
     mockFetchCurrentUser
       .mockRejectedValueOnce(new Error('network blip'))
@@ -83,6 +86,29 @@ describe('RoleProvider', () => {
     expect(mockFetchCurrentUser).toHaveBeenCalledTimes(3);
     expect(screen.getByTestId('role')).toHaveTextContent('none');
     expect(screen.getByTestId('loading')).toHaveTextContent('false');
+  });
+
+  it('marks access denied, without retrying, when the user is not in the staff group', async () => {
+    mockFetchCurrentUser.mockRejectedValue(new NotInStaffGroupError());
+
+    renderProvider();
+
+    await waitFor(() => expect(screen.getByTestId('denied')).toHaveTextContent('true'));
+    expect(mockFetchCurrentUser).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('role')).toHaveTextContent('none');
+    expect(screen.getByTestId('error')).toHaveTextContent('none');
+    expect(screen.getByTestId('loading')).toHaveTextContent('false');
+  });
+
+  it('does not mark access denied for other failures', async () => {
+    mockFetchCurrentUser.mockRejectedValue(new Error('still down'));
+
+    renderProvider();
+
+    await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('Failed to load user role'), {
+      timeout: 5000,
+    });
+    expect(screen.getByTestId('denied')).toHaveTextContent('false');
   });
 
   it('does not fetch when unauthenticated', async () => {

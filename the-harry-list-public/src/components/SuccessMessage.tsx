@@ -19,7 +19,7 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
       <div className="card text-center">
         {/* Success icon */}
         <div className="mb-6">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/25">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-meteor-500">
             <CheckCircle className="w-10 h-10 text-white" />
           </div>
         </div>
@@ -38,7 +38,7 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
             <PartyPopper className="w-5 h-5 text-meteor-400" />
             <span className="text-sm text-dark-400">Confirmation number</span>
           </div>
-          <div className="text-4xl font-bold bg-gradient-to-r from-hubble-400 to-meteor-400 bg-clip-text text-transparent mb-4 tracking-wider">
+          <div className="text-4xl font-bold text-hubble-400 mb-4 tracking-wider">
             {result.confirmationNumber}
           </div>
 
@@ -63,9 +63,9 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
         {/* Sender / spam-folder notice */}
         <div
           data-testid="sender-notice"
-          className="bg-meteor-950/50 border border-meteor-800/50 rounded-xl p-4 mb-4 text-left"
+          className="notice-warning rounded-xl border p-4 mb-4 text-left"
         >
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-meteor-300 mb-2">
+          <h3 className="flex items-center gap-2 text-sm font-semibold mb-2">
             <MailWarning className="w-4 h-4 shrink-0" />
             Check your inbox (and spam folder)
           </h3>
@@ -78,8 +78,8 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
         </div>
 
         {/* Important notice */}
-        <div className="bg-hubble-950/50 border border-hubble-800/50 rounded-xl p-4 mb-8 text-left">
-          <h3 className="text-sm font-semibold text-hubble-300 mb-2">
+        <div className="notice-info rounded-xl border p-4 mb-8 text-left">
+          <h3 className="text-sm font-semibold mb-2">
             ⚠️ Important Notice
           </h3>
           <p className="text-sm text-dark-400">
@@ -94,13 +94,13 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
             onClick={onNewReservation}
             className="btn-primary"
           >
-            Make Another Reservation
+            Make another reservation
           </button>
           <a
             href="https://hubble.cafe"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-xl border border-dark-700 bg-dark-800/50 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-dark-700 hover:border-dark-600"
+            className="btn-neutral"
           >
             Visit Hubble Café
           </a>
@@ -108,7 +108,7 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
             href="https://meteorcommunity.cafe"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-xl border border-dark-700 bg-dark-800/50 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-dark-700 hover:border-dark-600"
+            className="btn-neutral"
           >
             Visit Meteor Café
           </a>

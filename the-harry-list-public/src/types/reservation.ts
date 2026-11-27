@@ -1,11 +1,11 @@
 export interface ReservationFormData {
-  // Contact Information
+  // Contact information
   contactName: string;
   email: string;
   phoneNumber?: string;
   organizationName?: string;
 
-  // Event Details
+  // Event details
   eventTitle: string;
   description: string;
   specialActivities: string[];

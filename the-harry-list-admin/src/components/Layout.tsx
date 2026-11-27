@@ -72,12 +72,12 @@ export function Layout() {
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/reservations', icon: Calendar, label: 'Reservations' },
-    { to: '/week-overview', icon: CalendarDays, label: 'Week Overview' },
+    { to: '/week-overview', icon: CalendarDays, label: 'Week overview' },
     { to: '/export', icon: FileDown, label: 'Export' },
-    { to: '/calendar', icon: CalendarSync, label: 'Calendar Feeds' },
+    { to: '/calendar', icon: CalendarSync, label: 'Calendar feeds' },
     { to: '/calendar-appointments', icon: CalendarPlus, label: 'Appointments' },
-    ...((canEditEmailTemplates || canManageAttachments) ? [{ to: '/email-templates', icon: Mail, label: canEditEmailTemplates ? 'Email Templates' : 'Email Attachments' }] : []),
-    ...(canViewAuditLog ? [{ to: '/audit', icon: History, label: 'Audit Log' }] : []),
+    ...((canEditEmailTemplates || canManageAttachments) ? [{ to: '/email-templates', icon: Mail, label: canEditEmailTemplates ? 'Email templates' : 'Email attachments' }] : []),
+    ...(canViewAuditLog ? [{ to: '/audit', icon: History, label: 'Audit log' }] : []),
     ...(canEditFormSettings ? [{ to: '/settings', icon: Settings, label: 'Settings' }] : []),
   ];
 
@@ -97,7 +97,7 @@ export function Layout() {
         />
       )}
 
-      {/* Sidebar — fixed, does not scroll with content */}
+      {/* Sidebar: fixed, does not scroll with content */}
       {/* Closed on a phone, the drawer is inert (not just moved off-screen), so its links leave
           the tab order and the screen reader's view. On desktop the sidebar is always there. */}
       <aside
@@ -115,17 +115,17 @@ export function Layout() {
           <div className="flex items-center gap-3 p-6 border-b border-dark-800">
             <img
               src="/logo.svg"
-              alt="The Harry List Logo"
+              alt="The Harry List logo"
               className="w-10 h-10 rounded-xl"
             />
             <div>
               {/* Not a heading: each page has its own h1. */}
               <p className="font-title font-bold text-white">The Harry List</p>
-              <p className="text-xs text-dark-400">Admin Portal</p>
+              <p className="text-xs text-dark-400">Admin portal</p>
             </div>
           </div>
 
-          {/* Navigation — scrollable if nav items overflow */}
+          {/* Navigation: scrollable if nav items overflow */}
           <nav className="flex-1 p-3 overflow-y-auto">
             <ul className="space-y-1">
               {navItems.map((item) => (
@@ -150,7 +150,7 @@ export function Layout() {
             </ul>
           </nav>
 
-          {/* User section — pinned to bottom */}
+          {/* User section: pinned to bottom */}
           <div className="p-4 border-t border-dark-800">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-dark-500 uppercase tracking-wider">Settings</span>
@@ -168,7 +168,7 @@ export function Layout() {
                   {user?.username || 'Logged in'}
                   {role && (
                     <span className={`text-[9px] font-semibold px-1 py-0.5 rounded ${
-                      role === 'ADMIN' ? 'bg-red-500/20 text-red-400' :
+                      role === 'ADMIN' ? 'notice-warning' :
                       role === 'EDITOR' ? 'bg-hubble-500/20 text-hubble-400' :
                       'bg-dark-700 text-dark-400'
                     }`}>{roleLabel(role)}</span>
@@ -178,10 +178,10 @@ export function Layout() {
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 w-full px-4 py-3 mt-2 rounded-xl text-sm font-medium text-dark-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
+              className="flex items-center gap-3 w-full px-4 py-3 mt-2 rounded-xl text-sm font-medium text-dark-400 hover-danger transition-all"
             >
               <LogOut className="w-5 h-5" />
-              Sign Out
+              Sign out
             </button>
             <div className="mt-3 text-center">
               <span className="text-[10px] text-dark-500">v{version}</span>
@@ -190,7 +190,7 @@ export function Layout() {
         </div>
       </aside>
 
-      {/* Main content — this is the only part that scrolls */}
+      {/* Main content: this is the only part that scrolls */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile header */}
         <header className="lg:hidden flex items-center justify-between p-4 border-b border-dark-800 bg-dark-900">
@@ -211,7 +211,7 @@ export function Layout() {
           <div className="w-10" aria-hidden="true" /> {/* Spacer */}
         </header>
 
-        {/* Page content — scrollable */}
+        {/* Page content: scrollable */}
         <main id={MAIN_CONTENT_ID} ref={mainRef} tabIndex={-1} className="flex-1 p-6 overflow-y-auto outline-none">
           {/* Pages load on demand (see App.tsx); the sidebar stays while a page chunk arrives. */}
           <Suspense

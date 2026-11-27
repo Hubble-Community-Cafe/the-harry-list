@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -83,21 +84,37 @@ public class AdminUserService {
         return saved;
     }
 
+    /**
+     * Insert the row for a user's first login.
+     *
+     * <p>The admin fires several requests at once, so on a first login they all find no row and all
+     * try to insert one. The unique key on {@code azure_oid} lets exactly one win; the others used to
+     * fail their whole request with a 500. A loser now reads back the row the winner just stored.
+     */
     private AdminUser createUser(String azureOid, String email, String displayName) {
         AdminUser user = new AdminUser();
         user.setAzureOid(azureOid);
         user.setEmail(email);
         user.setDisplayName(displayName);
 
-        if (initialAdminOid != null && !initialAdminOid.isBlank() && initialAdminOid.equals(azureOid)) {
-            user.setRole(AdminRole.ADMIN);
-            log.info("AUDIT user.created email='{}' role=ADMIN (initial admin)", email);
-        } else {
-            user.setRole(AdminRole.VIEWER);
-            log.info("AUDIT user.created email='{}' role=VIEWER", email);
+        boolean initialAdmin = initialAdminOid != null && !initialAdminOid.isBlank()
+                && initialAdminOid.equals(azureOid);
+        user.setRole(initialAdmin ? AdminRole.ADMIN : AdminRole.VIEWER);
+
+        AdminUser saved;
+        try {
+            saved = adminUserRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            log.debug("Concurrent first login for oid={}, reading the row another request created", azureOid, e);
+            return adminUserRepository.findByAzureOid(azureOid).orElseThrow(() -> e);
         }
 
-        return adminUserRepository.save(user);
+        if (initialAdmin) {
+            log.info("AUDIT user.created email='{}' role=ADMIN (initial admin)", email);
+        } else {
+            log.info("AUDIT user.created email='{}' role=VIEWER", email);
+        }
+        return saved;
     }
 
     /**

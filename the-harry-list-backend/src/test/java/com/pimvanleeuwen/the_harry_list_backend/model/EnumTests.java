@@ -13,7 +13,7 @@ class EnumTests {
 
     @Test
     void specialActivity_shouldHaveCorrectDisplayNames() {
-        assertEquals("Graduation / PhD Defense", SpecialActivity.GRADUATION.getDisplayName());
+        assertEquals("Graduation / PhD defense", SpecialActivity.GRADUATION.getDisplayName());
         assertEquals("Eat a la carte", SpecialActivity.EAT_A_LA_CARTE.getDisplayName());
         assertEquals("Eat catering", SpecialActivity.EAT_CATERING.getDisplayName());
         assertEquals("Catering Corona Room", SpecialActivity.CATERING_CORONA_ROOM.getDisplayName());
@@ -76,7 +76,7 @@ class EnumTests {
     void barLocation_shouldHaveCorrectDisplayNames() {
         assertEquals("Hubble Community Café", BarLocation.HUBBLE.getDisplayName());
         assertEquals("Meteor Community Café", BarLocation.METEOR.getDisplayName());
-        assertEquals("No Preference", BarLocation.NO_PREFERENCE.getDisplayName());
+        assertEquals("No preference", BarLocation.NO_PREFERENCE.getDisplayName());
     }
 
     @Test
@@ -99,7 +99,7 @@ class EnumTests {
 
     @Test
     void reservationStatus_shouldHaveCorrectDisplayNames() {
-        assertEquals("Pending Review", ReservationStatus.PENDING.getDisplayName());
+        assertEquals("Pending review", ReservationStatus.PENDING.getDisplayName());
         assertEquals("Confirmed", ReservationStatus.CONFIRMED.getDisplayName());
         assertEquals("Rejected", ReservationStatus.REJECTED.getDisplayName());
         assertEquals("Cancelled", ReservationStatus.CANCELLED.getDisplayName());

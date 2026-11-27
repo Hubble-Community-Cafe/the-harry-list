@@ -90,7 +90,7 @@ public class PublicReservationRequest {
 
     private InvoiceType invoiceType;
 
-    @Size(max = 100, message = "Cost center must not exceed 100 characters")
+    @Size(max = 100, message = "Cost centre must not exceed 100 characters")
     private String costCenter;
 
     @Size(max = 255, message = "Invoice name must not exceed 255 characters")

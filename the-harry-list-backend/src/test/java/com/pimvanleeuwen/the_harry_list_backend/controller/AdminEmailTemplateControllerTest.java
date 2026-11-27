@@ -99,7 +99,7 @@ class AdminEmailTemplateControllerTest {
         mockMvc.perform(get("/api/admin/email-templates/CANCELLED"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.templateType").value("CANCELLED"))
-                .andExpect(jsonPath("$.displayName").value("Reservation Cancelled"))
+                .andExpect(jsonPath("$.displayName").value("Reservation cancelled"))
                 .andExpect(jsonPath("$.customized").value(false))
                 .andExpect(jsonPath("$.availableVariables").isArray());
     }

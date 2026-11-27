@@ -32,7 +32,7 @@ test.describe('public: activity-conflict constraint disables the conflicting opt
     await form.goto();
     await form.fillContact({ name: 'Jane Smith', email: 'jane@example.com' });
     await form.continue();
-    await form.expectStep('Event Details');
+    await form.expectStep('Event details');
 
     const alaCarte = page.getByRole('checkbox', { name: 'Eat a la carte' });
     await expect(alaCarte).toBeEnabled();
@@ -59,7 +59,7 @@ test.describe('public: the small-group Meteor lock gives the chosen location bac
     await form.goto();
     await form.fillContact({ name: 'Hugo Hubble', email: 'hugo.hubble@example.com' });
     await form.continue();
-    await form.expectStep('Event Details');
+    await form.expectStep('Event details');
 
     await form.selectLocation('HUBBLE');
 
@@ -95,7 +95,7 @@ test.describe('public: a seating lock gives the chosen seating back', () => {
     await form.goto();
     await form.fillContact({ name: 'Otto Outside', email: 'otto.outside@example.com' });
     await form.continue();
-    await form.expectStep('Event Details');
+    await form.expectStep('Event details');
 
     await form.selectSeating('OUTSIDE');
 

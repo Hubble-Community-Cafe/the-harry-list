@@ -63,7 +63,7 @@ describe('CalendarPage', () => {
   it('renders the calendar feeds page title', async () => {
     renderWithRouter(<CalendarPage />);
     await waitFor(() => {
-      expect(screen.getByText('Calendar Feeds')).toBeInTheDocument();
+      expect(screen.getByText('Calendar feeds')).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 

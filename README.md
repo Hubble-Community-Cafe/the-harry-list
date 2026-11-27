@@ -27,7 +27,7 @@ Bar reservation system for Stichting Bar Potential.
    ```env
    AZURE_CLIENT_ID=your-client-id
    AZURE_TENANT_ID=your-tenant-id
-   ALLOWED_GROUP_ID=your-group-id  # optional
+   ALLOWED_GROUP_ID=your-group-id  # optional, backend staff group
    ```
 
 3. **Start all services**:
@@ -91,7 +91,7 @@ See [`e2e/README.md`](e2e/README.md) for the architecture, how to read the evide
    | `AZURE_TENANT_ID` | Azure AD tenant ID |
    | `AZURE_CLIENT_ID` | Azure AD client ID |
    | `AZURE_CLIENT_SECRET` | Azure AD client secret (for Graph API email) |
-   | `ALLOWED_GROUP_ID` | Azure AD group ID for admin access. On the admin container it gates the UI; on the backend it also rejects API tokens without that group (403). **Required on the backend in production**: under the `prod` profile it refuses to start without it, because otherwise every tenant user can read all reservations. Enable the groups claim first, see [Azure AD App Registration](#azure-ad-app-registration). |
+   | `ALLOWED_GROUP_ID` | Azure AD staff group ID, set on the backend. It rejects API tokens without that group (403 with code `NOT_IN_STAFF_GROUP`), and the admin UI shows its Access denied screen on that answer. **Required on the backend in production**: under the `prod` profile it refuses to start without it, because otherwise every tenant user can read all reservations. Enable the groups claim first, see [Azure AD App Registration](#azure-ad-app-registration). |
    | `CALENDAR_FEED_TOKEN` | Token for public calendar feed. Required: without it the public feed is disabled (503) |
    | `CALENDAR_FEED_STAFF_TOKEN` | Token for staff calendar feed (with contact details). Required: without it the staff feed is disabled (503) |
    | `APP_ALTCHA_ENABLED` | Set to `true` to require the ALTCHA proof-of-work on the public form (recommended for production) |
@@ -165,7 +165,7 @@ It is off by default in local development and in the e2e stack. Optional tuning:
 
 Required configuration:
 - **Redirect URIs**: Add your admin portal URL (e.g., `https://admin.yourdomain.com`)
-- **API Permissions**: `User.Read`, `GroupMember.Read.All` (for group-based access)
+- **API Permissions**: `User.Read`. `GroupMember.Read.All` is no longer needed: the admin UI no longer looks up groups in Microsoft Graph, it follows the backend's staff-group check.
 - **Expose an API**: Create scope `access_as_user` with Application ID URI `api://{client-id}`
 - **Client Secret**: Generate one for email functionality (backend only)
 - **Groups claim** (needed for the backend staff-group check): Token configuration > Add groups claim > "Security groups" (or "All groups" if the staff group is a Microsoft 365 group), enabled for the Access token. The token then lists the user's groups and the backend requires the staff group among them. Entra leaves the claim out for users in more than 200 groups (overage); the backend then refuses them, which is safe but would lock out such a user.

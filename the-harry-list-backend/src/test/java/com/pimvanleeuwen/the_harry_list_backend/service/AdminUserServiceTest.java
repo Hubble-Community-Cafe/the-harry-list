@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.Optional;
@@ -70,6 +71,31 @@ class AdminUserServiceTest {
         AdminUser result = service.getOrCreateUser(ADMIN_OID, "pim@hubble.cafe", "Pim");
 
         assertEquals(AdminRole.ADMIN, result.getRole());
+    }
+
+    @Test
+    void getOrCreateUser_shouldReturnWinnersRowWhenConcurrentFirstLoginInsertsFirst() {
+        AdminUser winner = createUser(7L, OTHER_OID, "chantal@hubble.cafe", "Chantal", AdminRole.VIEWER);
+        when(adminUserRepository.findByAzureOid(OTHER_OID))
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.of(winner));
+        when(adminUserRepository.save(any()))
+                .thenThrow(new DataIntegrityViolationException("Duplicate entry for key 'azure_oid'"));
+
+        AdminUser result = service.getOrCreateUser(OTHER_OID, "chantal@hubble.cafe", "Chantal");
+
+        assertSame(winner, result);
+    }
+
+    @Test
+    void getOrCreateUser_shouldRethrowIntegrityErrorWhenNoRowExistsAfterwards() {
+        DataIntegrityViolationException failure = new DataIntegrityViolationException("some other constraint");
+        when(adminUserRepository.findByAzureOid(OTHER_OID)).thenReturn(Optional.empty());
+        when(adminUserRepository.save(any())).thenThrow(failure);
+
+        DataIntegrityViolationException thrown = assertThrows(DataIntegrityViolationException.class,
+                () -> service.getOrCreateUser(OTHER_OID, "chantal@hubble.cafe", "Chantal"));
+        assertSame(failure, thrown);
     }
 
     @Test

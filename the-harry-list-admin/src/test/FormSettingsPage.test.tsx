@@ -115,14 +115,14 @@ describe('FormSettingsPage', () => {
   it('displays constraints tab with constraint count', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getAllByText(/Form Constraints \(3\)/).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/Form constraints \(3\)/).length).toBeGreaterThanOrEqual(1);
     }, { timeout: 3000 });
   });
 
   it('displays blocked periods tab with count', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getAllByText(/Blocked Periods \(1\)/).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/Blocked periods \(1\)/).length).toBeGreaterThanOrEqual(1);
     }, { timeout: 3000 });
   });
 
@@ -137,20 +137,20 @@ describe('FormSettingsPage', () => {
   it('shows constraint type labels', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getByText('Activity Conflict')).toBeInTheDocument();
-      expect(screen.getByText('Location Lock')).toBeInTheDocument();
-      expect(screen.getByText('Advance Booking')).toBeInTheDocument();
+      expect(screen.getByText('Activity conflict')).toBeInTheDocument();
+      expect(screen.getByText('Location lock')).toBeInTheDocument();
+      expect(screen.getByText('Advance notice')).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
   it('switches to blocked periods tab', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getAllByText(/Blocked Periods/).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/Blocked periods/).length).toBeGreaterThanOrEqual(1);
     }, { timeout: 3000 });
 
     // Click the button tab (not the select option)
-    const blockedBtn = screen.getAllByText(/Blocked Periods/).find(el => el.closest('button'));
+    const blockedBtn = screen.getAllByText(/Blocked periods/).find(el => el.closest('button'));
     fireEvent.click(blockedBtn!);
 
     await waitFor(() => {
@@ -162,35 +162,35 @@ describe('FormSettingsPage', () => {
   it('shows blocked period date range and location', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getAllByText(/Blocked Periods/).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/Blocked periods/).length).toBeGreaterThanOrEqual(1);
     }, { timeout: 3000 });
 
-    const blockedBtn = screen.getAllByText(/Blocked Periods/).find(el => el.closest('button'));
+    const blockedBtn = screen.getAllByText(/Blocked periods/).find(el => el.closest('button'));
     fireEvent.click(blockedBtn!);
 
     await waitFor(() => {
-      expect(screen.getByText('2026-04-01 — 2026-04-03')).toBeInTheDocument();
+      expect(screen.getByText('2026-04-01 to 2026-04-03')).toBeInTheDocument();
       expect(screen.getAllByText('Hubble').length).toBeGreaterThanOrEqual(1);
     });
   });
 
-  it('opens the new constraint modal when Add Constraint is clicked', async () => {
+  it('opens the new constraint modal when Add constraint is clicked', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getByText('Add Constraint')).toBeInTheDocument();
+      expect(screen.getByText('Add constraint')).toBeInTheDocument();
     }, { timeout: 3000 });
 
-    fireEvent.click(screen.getByText('Add Constraint'));
+    fireEvent.click(screen.getByText('Add constraint'));
 
     await waitFor(() => {
-      expect(screen.getByText('New Constraint')).toBeInTheDocument();
+      expect(screen.getByText('New constraint')).toBeInTheDocument();
     });
-    expect(screen.getByRole('dialog', { name: 'New Constraint' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Constraint Type')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'New constraint' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Constraint type')).toBeInTheDocument();
     expect(screen.getByLabelText('Message (shown to users)')).toBeInTheDocument();
   });
 
-  it('hides the target value field and saves an Activity Notice constraint', async () => {
+  it('hides the target value field and saves an Activity notice constraint', async () => {
     vi.mocked(createFormConstraint).mockResolvedValueOnce({
       id: 9,
       constraintType: 'ACTIVITY_NOTICE',
@@ -200,14 +200,14 @@ describe('FormSettingsPage', () => {
     });
 
     renderWithRouter(<FormSettingsPage />);
-    await waitFor(() => expect(screen.getByText('Add Constraint')).toBeInTheDocument(), { timeout: 3000 });
-    fireEvent.click(screen.getByText('Add Constraint'));
-    await waitFor(() => expect(screen.getByText('New Constraint')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Add constraint')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByText('Add constraint'));
+    await waitFor(() => expect(screen.getByText('New constraint')).toBeInTheDocument());
 
     // Target Value is shown for the default (Activity Conflict) type.
     expect(screen.getByTestId('constraint-target')).toBeInTheDocument();
 
-    // Switching to Activity Notice hides the target value field — only trigger + message remain.
+    // Switching to Activity Notice hides the target value field: only trigger + message remain.
     fireEvent.change(screen.getByTestId('constraint-type'), { target: { value: 'ACTIVITY_NOTICE' } });
     expect(screen.queryByTestId('constraint-target')).not.toBeInTheDocument();
 
@@ -225,7 +225,7 @@ describe('FormSettingsPage', () => {
     });
   });
 
-  it('saves an Activity Notice with the confirmation popup enabled', async () => {
+  it('saves an Activity notice with the confirmation popup enabled', async () => {
     vi.mocked(createFormConstraint).mockResolvedValueOnce({
       id: 10,
       constraintType: 'ACTIVITY_NOTICE',
@@ -236,9 +236,9 @@ describe('FormSettingsPage', () => {
     });
 
     renderWithRouter(<FormSettingsPage />);
-    await waitFor(() => expect(screen.getByText('Add Constraint')).toBeInTheDocument(), { timeout: 3000 });
-    fireEvent.click(screen.getByText('Add Constraint'));
-    await waitFor(() => expect(screen.getByText('New Constraint')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Add constraint')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByText('Add constraint'));
+    await waitFor(() => expect(screen.getByText('New constraint')).toBeInTheDocument());
 
     fireEvent.change(screen.getByTestId('constraint-type'), { target: { value: 'ACTIVITY_NOTICE' } });
 
@@ -261,7 +261,7 @@ describe('FormSettingsPage', () => {
     });
   });
 
-  it('saves an Activity Notice limited to a location and minimum group size', async () => {
+  it('saves an Activity notice limited to a location and minimum group size', async () => {
     vi.mocked(createFormConstraint).mockResolvedValueOnce({
       id: 11,
       constraintType: 'ACTIVITY_NOTICE',
@@ -274,9 +274,9 @@ describe('FormSettingsPage', () => {
     });
 
     renderWithRouter(<FormSettingsPage />);
-    await waitFor(() => expect(screen.getByText('Add Constraint')).toBeInTheDocument(), { timeout: 3000 });
-    fireEvent.click(screen.getByText('Add Constraint'));
-    await waitFor(() => expect(screen.getByText('New Constraint')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Add constraint')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByText('Add constraint'));
+    await waitFor(() => expect(screen.getByText('New constraint')).toBeInTheDocument());
 
     fireEvent.change(screen.getByTestId('constraint-type'), { target: { value: 'ACTIVITY_NOTICE' } });
 
@@ -307,36 +307,36 @@ describe('FormSettingsPage', () => {
 
   it('hides the notice conditions for other constraint types', async () => {
     renderWithRouter(<FormSettingsPage />);
-    await waitFor(() => expect(screen.getByText('Add Constraint')).toBeInTheDocument(), { timeout: 3000 });
-    fireEvent.click(screen.getByText('Add Constraint'));
-    await waitFor(() => expect(screen.getByText('New Constraint')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Add constraint')).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.click(screen.getByText('Add constraint'));
+    await waitFor(() => expect(screen.getByText('New constraint')).toBeInTheDocument());
 
     expect(screen.queryByTestId('constraint-notice-location')).not.toBeInTheDocument();
     expect(screen.queryByTestId('constraint-notice-min-guests')).not.toBeInTheDocument();
   });
 
-  it('opens new blocked period modal when Add Blocked Period is clicked', async () => {
+  it('opens new blocked period modal when Add blocked period is clicked', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getAllByText(/Blocked Periods/).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/Blocked periods/).length).toBeGreaterThanOrEqual(1);
     }, { timeout: 3000 });
 
-    const blockedBtn = screen.getAllByText(/Blocked Periods/).find(el => el.closest('button'));
+    const blockedBtn = screen.getAllByText(/Blocked periods/).find(el => el.closest('button'));
     fireEvent.click(blockedBtn!);
 
     await waitFor(() => {
-      expect(screen.getByText('Add Blocked Period')).toBeInTheDocument();
+      expect(screen.getByText('Add blocked period')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('Add Blocked Period'));
+    fireEvent.click(screen.getByText('Add blocked period'));
 
     await waitFor(() => {
-      expect(screen.getByText('New Blocked Period')).toBeInTheDocument();
+      expect(screen.getByText('New blocked period')).toBeInTheDocument();
     });
     // Every field is named by its visible label, so screen readers announce it.
-    expect(screen.getByRole('dialog', { name: 'New Blocked Period' })).toBeInTheDocument();
-    for (const label of ['Location (optional)', 'Start Date *', 'End Date *', 'Start Time (optional)',
-      'End Time (optional)', 'Reason (staff only) *', 'Public Message (shown to users)']) {
+    expect(screen.getByRole('dialog', { name: 'New blocked period' })).toBeInTheDocument();
+    for (const label of ['Location (optional)', 'Start date *', 'End date *', 'Start time (optional)',
+      'End time (optional)', 'Reason (staff only) *', 'Public message (shown to users)']) {
       expect(screen.getByLabelText(label)).toBeInTheDocument();
     }
   });
@@ -344,19 +344,19 @@ describe('FormSettingsPage', () => {
   it('reveals the acknowledgement text field when soft block is toggled on', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getAllByText(/Blocked Periods/).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/Blocked periods/).length).toBeGreaterThanOrEqual(1);
     }, { timeout: 3000 });
 
-    const blockedBtn = screen.getAllByText(/Blocked Periods/).find(el => el.closest('button'));
+    const blockedBtn = screen.getAllByText(/Blocked periods/).find(el => el.closest('button'));
     fireEvent.click(blockedBtn!);
 
     await waitFor(() => {
-      expect(screen.getByText('Add Blocked Period')).toBeInTheDocument();
+      expect(screen.getByText('Add blocked period')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByText('Add Blocked Period'));
+    fireEvent.click(screen.getByText('Add blocked period'));
 
     await waitFor(() => {
-      expect(screen.getByText('New Blocked Period')).toBeInTheDocument();
+      expect(screen.getByText('New blocked period')).toBeInTheDocument();
     });
 
     // Acknowledgement field hidden until soft block is enabled
@@ -383,10 +383,10 @@ describe('FormSettingsPage', () => {
 
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getAllByText(/Blocked Periods/).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/Blocked periods/).length).toBeGreaterThanOrEqual(1);
     }, { timeout: 3000 });
 
-    const blockedBtn = screen.getAllByText(/Blocked Periods/).find(el => el.closest('button'));
+    const blockedBtn = screen.getAllByText(/Blocked periods/).find(el => el.closest('button'));
     fireEvent.click(blockedBtn!);
 
     await waitFor(() => {
@@ -398,19 +398,19 @@ describe('FormSettingsPage', () => {
   it('clears an optional blocked-period time via the clear button', async () => {
     renderWithRouter(<FormSettingsPage />);
     await waitFor(() => {
-      expect(screen.getAllByText(/Blocked Periods/).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/Blocked periods/).length).toBeGreaterThanOrEqual(1);
     }, { timeout: 3000 });
 
-    const blockedBtn = screen.getAllByText(/Blocked Periods/).find(el => el.closest('button'));
+    const blockedBtn = screen.getAllByText(/Blocked periods/).find(el => el.closest('button'));
     fireEvent.click(blockedBtn!);
 
     await waitFor(() => {
-      expect(screen.getByText('Add Blocked Period')).toBeInTheDocument();
+      expect(screen.getByText('Add blocked period')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByText('Add Blocked Period'));
+    fireEvent.click(screen.getByText('Add blocked period'));
 
     await waitFor(() => {
-      expect(screen.getByText('New Blocked Period')).toBeInTheDocument();
+      expect(screen.getByText('New blocked period')).toBeInTheDocument();
     });
 
     const startTime = document.querySelector('input[type="time"]') as HTMLInputElement;
@@ -436,15 +436,15 @@ describe('FormSettingsPage', () => {
   describe('unsaved dialog edits', () => {
     const openNewConstraint = async () => {
       renderWithRouter(<FormSettingsPage />);
-      fireEvent.click(await screen.findByText('Add Constraint'));
-      const dialog = (await screen.findByText('New Constraint')).closest('.fixed') as HTMLElement;
+      fireEvent.click(await screen.findByText('Add constraint'));
+      const dialog = (await screen.findByText('New constraint')).closest('[role="dialog"]') as HTMLElement;
       return dialog;
     };
 
     it('closes the constraint dialog with X at once when nothing changed', async () => {
       const dialog = await openNewConstraint();
       fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
-      expect(screen.queryByText('New Constraint')).not.toBeInTheDocument();
+      expect(screen.queryByText('New constraint')).not.toBeInTheDocument();
       expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument();
     });
 

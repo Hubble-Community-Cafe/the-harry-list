@@ -1,9 +1,9 @@
 // Guest-facing names and one-line explanations of the special activities.
 export const SPECIAL_ACTIVITY_LABELS: Record<string, string> = {
-  GRADUATION: 'Graduation / PhD Defense',
-  EAT_A_LA_CARTE: 'Eat a la Carte',
+  GRADUATION: 'Graduation / PhD defense',
+  EAT_A_LA_CARTE: 'Eat a la carte',
   EAT_CATERING: 'Catering',
-  CATERING_CORONA_ROOM: 'Catering for Corona Room Event',
+  CATERING_CORONA_ROOM: 'Catering for Corona Room event',
 };
 
 export const SPECIAL_ACTIVITY_DESCRIPTIONS: Record<string, string> = {

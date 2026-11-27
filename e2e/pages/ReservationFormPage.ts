@@ -21,14 +21,14 @@ export type Seating = 'INSIDE' | 'OUTSIDE';
  * Page object for the public multi-step reservation form.
  *
  * Selectors are centralized here: when the form's markup changes, update this file
- * (and the data-testid hooks in ReservationForm.tsx) — not every spec.
+ * (and the data-testid hooks in ReservationForm.tsx): not every spec.
  */
 export class ReservationFormPage {
   constructor(private readonly page: Page) {}
 
   async goto(): Promise<void> {
     await this.page.goto('/');
-    await expect(this.page.getByText('Contact Information')).toBeVisible();
+    await expect(this.page.getByText('Contact information')).toBeVisible();
   }
 
   continueButton(): Locator {
@@ -197,7 +197,7 @@ export class ReservationFormPage {
     await this.continue();
     await this.selectPayment(opts.payment ?? 'People pay individually');
     await this.continue();
-    await this.expectStep('Review & Confirm');
+    await this.expectStep('Review & confirm');
     await this.acceptTerms();
     await this.submit();
   }

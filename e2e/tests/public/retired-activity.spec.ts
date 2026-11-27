@@ -19,11 +19,11 @@ test.describe('public: retired private-event activity', () => {
     await form.goto();
     await form.fillContact({ name: 'Rita Retired', email: 'rita.retired@example.com' });
     await form.continue();
-    await form.expectStep('Event Details');
+    await form.expectStep('Event details');
 
     await expect(form.activityCheckbox('Private event')).toHaveCount(0);
     // The other activities still render, so this is not an empty or broken options list.
-    await expect(form.activityCheckbox('Graduation / PhD Defense')).toBeVisible();
+    await expect(form.activityCheckbox('Graduation / PhD defense')).toBeVisible();
     await expect(form.activityCheckbox('Eat a la carte')).toBeVisible();
     await captureScreenshot(testInfo, page, '1-activities-without-private-event');
   });

@@ -5,7 +5,7 @@ import { BACKEND_URL } from '../../playwright.config';
 import { captureScreenshot } from '../../fixtures/evidence';
 
 /**
- * Hard block (default): the date is fully unavailable — a red notice, no acknowledgement
+ * Hard block (default): the date is fully unavailable: a red notice, no acknowledgement
  * option, and no way to advance. Contrast with the soft block in soft-block.spec.ts.
  */
 test.describe('public: hard-blocked period', () => {
@@ -29,7 +29,7 @@ test.describe('public: hard-blocked period', () => {
 
     await form.fillContact({ name: 'Jane Smith', email: 'jane@example.com' });
     await form.continue();
-    await form.expectStep('Event Details');
+    await form.expectStep('Event details');
 
     await form.fillActivity({ title: 'Hard block test', date: DATE_IN_BLOCK });
 
@@ -43,7 +43,7 @@ test.describe('public: hard-blocked period', () => {
     // Continue does not advance, and tells the guest why: the notice scrolls into view and
     // takes focus, so a screen reader reads it.
     await form.continue();
-    await form.expectStep('Event Details');
+    await form.expectStep('Event details');
     await expect(form.blockedNotice()).toBeFocused();
     await expect(form.blockedNotice()).toBeInViewport();
   });

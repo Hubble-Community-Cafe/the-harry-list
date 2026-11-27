@@ -37,22 +37,17 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-dark-950 flex flex-col">
-      {/* Background decoration */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-hubble-600/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-meteor-600/20 rounded-full blur-3xl" />
-      </div>
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="text-center mb-8">
             <img
               src="/logo.svg"
-              alt="The Harry List Logo"
+              alt="The Harry List logo"
               className="w-16 h-16 mx-auto mb-4 rounded-2xl"
             />
             <h1 className="text-2xl font-title font-bold text-white tracking-tight">The Harry List</h1>
-            <p className="text-dark-400 font-light mt-1">Staff Administration Portal</p>
+            <p className="text-dark-400 font-light mt-1">Staff administration portal</p>
           </div>
           {/* Login Card */}
           <div className="card">
@@ -61,13 +56,13 @@ export function LoginPage() {
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-hubble-500/20 mb-4">
                   <Shield className="w-6 h-6 text-hubble-400" />
                 </div>
-                <h2 className="text-xl font-semibold text-white">Staff Login</h2>
+                <h2 className="text-xl font-semibold text-white">Staff login</h2>
                 <p className="text-sm text-dark-400 mt-1">
                   Sign in with your organization Microsoft account
                 </p>
               </div>
               {error && (
-                <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-3 text-sm text-red-400">
+                <div className="border rounded-xl p-3 text-sm notice-error">
                   {error}
                 </div>
               )}

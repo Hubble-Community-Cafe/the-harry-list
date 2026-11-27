@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Calendar, Clock, Users, CheckCircle, XCircle,
-  AlertCircle, Loader2, TrendingUp
+  Calendar, Clock, Users, CheckCircle, AlertCircle, Loader2, TrendingUp
 } from 'lucide-react';
 import { fetchReservations } from '../lib/api';
 import type { Reservation } from '../types/reservation';
 import { HelpGuide } from '../components/HelpGuide';
 import { dashboardGuide } from '../lib/guideContent';
-import { locationLabel, statusLabel } from '../lib/labels';
+import { locationLabel } from '../lib/labels';
+import { StatusBadge } from '../components/StatusBadge';
 
 interface Stats {
   total: number;
@@ -58,9 +58,9 @@ export function DashboardPage() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-6 text-center">
-        <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-        <p className="text-red-400">{error}</p>
+      <div className="border rounded-xl p-6 text-center notice-error">
+        <AlertCircle aria-hidden="true" className="w-8 h-8 mx-auto mb-2" />
+        <p>{error}</p>
       </div>
     );
   }
@@ -73,7 +73,7 @@ export function DashboardPage() {
           <h1 className="text-2xl font-title font-bold text-white tracking-tight">Dashboard</h1>
           <p className="text-dark-400 font-light">Overview of reservation activity</p>
         </div>
-        <HelpGuide title="Dashboard Guide" sections={dashboardGuide} />
+        <HelpGuide title="Dashboard guide" sections={dashboardGuide} />
       </div>
 
       {/* Stats Grid */}
@@ -92,8 +92,8 @@ export function DashboardPage() {
 
         <div className="card">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-yellow-500/20">
-              <Clock className="w-5 h-5 text-yellow-400" />
+            <div className="p-2 rounded-lg status-pending">
+              <Clock className="w-5 h-5 status-text-pending" />
             </div>
             <div>
               <div className="text-2xl font-bold text-white">{stats.pending}</div>
@@ -104,8 +104,8 @@ export function DashboardPage() {
 
         <div className="card">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-500/20">
-              <CheckCircle className="w-5 h-5 text-green-400" />
+            <div className="p-2 rounded-lg status-confirmed">
+              <CheckCircle className="w-5 h-5 status-text-confirmed" />
             </div>
             <div>
               <div className="text-2xl font-bold text-white">{stats.confirmed}</div>
@@ -132,7 +132,7 @@ export function DashboardPage() {
         {/* Pending Reservations */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Pending Approval</h2>
+            <h2 className="text-lg font-semibold text-white">Pending approval</h2>
             <Link to="/reservations?status=PENDING" className="text-sm text-hubble-400 hover:text-hubble-300">
               View all
             </Link>
@@ -169,10 +169,10 @@ export function DashboardPage() {
           )}
         </div>
 
-        {/* Recent Reservations */}
+        {/* Recent reservations */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Recent Reservations</h2>
+            <h2 className="text-lg font-semibold text-white">Recent reservations</h2>
             <Link to="/reservations" className="text-sm text-hubble-400 hover:text-hubble-300">
               View all
             </Link>
@@ -204,22 +204,3 @@ export function DashboardPage() {
     </div>
   );
 }
-
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { color: string; icon: typeof CheckCircle }> = {
-    PENDING: { color: 'bg-yellow-500/20 text-yellow-400', icon: Clock },
-    CONFIRMED: { color: 'bg-green-500/20 text-green-400', icon: CheckCircle },
-    REJECTED: { color: 'bg-red-500/20 text-red-400', icon: XCircle },
-    CANCELLED: { color: 'bg-dark-500/20 text-dark-400', icon: XCircle },
-  };
-
-  const { color, icon: Icon } = config[status] || config.PENDING;
-
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${color}`}>
-      <Icon className="w-3 h-3" />
-      {statusLabel(status)}
-    </span>
-  );
-}
-

@@ -25,7 +25,7 @@ test.describe('public: activity notice', () => {
     await form.goto();
     await form.fillContact({ name: 'Nora Notice', email: 'nora.notice@example.com' });
     await form.continue();
-    await form.expectStep('Event Details');
+    await form.expectStep('Event details');
 
     // No notice until the triggering activity is chosen.
     await expect(form.activityNotices()).toHaveCount(0);
@@ -62,25 +62,25 @@ test.describe('public: activity notice requiring confirmation', () => {
     await form.goto();
     await form.fillContact({ name: 'Cara Confirm', email: 'cara.confirm@example.com' });
     await form.continue();
-    await form.expectStep('Event Details');
+    await form.expectStep('Event details');
 
-    const graduation = page.getByRole('checkbox', { name: 'Graduation / PhD Defense' });
+    const graduation = page.getByRole('checkbox', { name: 'Graduation / PhD defense' });
 
     // Selecting opens the dialog; the activity is not selected yet.
-    await form.toggleActivity('Graduation / PhD Defense');
+    await form.toggleActivity('Graduation / PhD defense');
     await expect(form.activityNoticeDialog()).toBeVisible();
     await expect(form.activityNoticeDialog()).toContainText(NOTICE);
     await expect(graduation).toHaveAttribute('aria-checked', 'false');
     await captureScreenshot(testInfo, page, '1-confirmation-dialog');
 
-    // Declining reverts cleanly — no activity, no banner.
+    // Declining reverts cleanly: no activity, no banner.
     await form.declineActivityNotice();
     await expect(form.activityNoticeDialog()).toHaveCount(0);
     await expect(graduation).toHaveAttribute('aria-checked', 'false');
     await expect(form.activityNotices()).toHaveCount(0);
 
     // Confirming selects the activity and leaves the banner as a reminder.
-    await form.toggleActivity('Graduation / PhD Defense');
+    await form.toggleActivity('Graduation / PhD defense');
     await form.confirmActivityNotice();
     await expect(form.activityNoticeDialog()).toHaveCount(0);
     await expect(graduation).toHaveAttribute('aria-checked', 'true');
@@ -114,7 +114,7 @@ test.describe('public: activity notice limited to a location and group size', ()
     await form.goto();
     await form.fillContact({ name: 'Mila Menu', email: 'mila.menu@example.com' });
     await form.continue();
-    await form.expectStep('Event Details');
+    await form.expectStep('Event details');
 
     const alaCarte = form.activityCheckbox('Eat a la carte');
 

@@ -14,7 +14,7 @@ const renderWithRouter = (component: React.ReactNode) => {
 describe('ExportPage', () => {
   it('renders the export page title', () => {
     renderWithRouter(<ExportPage />);
-    expect(screen.getByText('Export Reservations')).toBeInTheDocument();
+    expect(screen.getByText('Export reservations')).toBeInTheDocument();
   });
 
   it('displays date picker', () => {
@@ -31,7 +31,7 @@ describe('ExportPage', () => {
 
   it('groups the location toggles under a name and says which one is selected', () => {
     renderWithRouter(<ExportPage />);
-    const group = screen.getByRole('group', { name: 'Select Location' });
+    const group = screen.getByRole('group', { name: 'Select location' });
     // The emoji are decorative (aria-hidden), so the names are just the café names.
     const toggles = [within(group).getByRole('button', { name: 'Hubble' }), within(group).getByRole('button', { name: 'Meteor' })];
     expect(toggles.filter((t) => t.getAttribute('aria-pressed') === 'true')).toHaveLength(1);

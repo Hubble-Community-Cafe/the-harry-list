@@ -29,7 +29,7 @@ test.describe('public: soft-blocked period', () => {
 
     await form.fillContact({ name: 'Jane Smith', email: 'jane@example.com' });
     await form.continue();
-    await form.expectStep('Event Details');
+    await form.expectStep('Event details');
 
     await form.fillActivity({ title: 'Soft block test', date: DATE_IN_BLOCK });
 
@@ -41,7 +41,7 @@ test.describe('public: soft-blocked period', () => {
 
     // Pressing Continue without acknowledging keeps us on the step and explains why.
     await form.continue();
-    await form.expectStep('Event Details');
+    await form.expectStep('Event details');
     await expect(form.softAckError()).toBeVisible();
     await captureScreenshot(testInfo, page, '2-acknowledgement-required-prompt');
 
@@ -50,7 +50,7 @@ test.describe('public: soft-blocked period', () => {
     await expect(form.softAckError()).toHaveCount(0);
     await form.selectSeating('INSIDE'); // seating is required to advance the merged step
     await form.continue();
-    await form.expectStep('Payment Information');
+    await form.expectStep('Payment information');
     await captureScreenshot(testInfo, page, '3-proceeded-to-payment');
   });
 });

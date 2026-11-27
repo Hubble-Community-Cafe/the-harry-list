@@ -18,7 +18,7 @@ test.describe('mobile: date & time fields', () => {
     await form.goto();
     await form.fillContact({ name: 'Mobile User', email: 'mobile@example.com' });
     await form.continue();
-    await form.expectStep('Event Details');
+    await form.expectStep('Event details');
 
     const date = page.getByTestId('event-date');
     const start = page.getByTestId('start-time');

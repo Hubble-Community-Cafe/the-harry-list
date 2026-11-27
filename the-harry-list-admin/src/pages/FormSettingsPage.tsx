@@ -22,14 +22,14 @@ import { UsersTab } from './UsersPage';
 import { activityLabel, constraintValueLabel, locationLabel } from '../lib/labels';
 
 const CONSTRAINT_TYPES = [
-  { value: 'ACTIVITY_CONFLICT', label: 'Activity Conflict' },
-  { value: 'LOCATION_LOCK', label: 'Location Lock' },
-  { value: 'SEATING_LOCK', label: 'Seating Lock' },
-  { value: 'TIME_RESTRICTION', label: 'Time Restriction' },
-  { value: 'ADVANCE_BOOKING', label: 'Advance Booking' },
-  { value: 'GUEST_LIMIT', label: 'Guest Limit' },
-  { value: 'GUEST_MINIMUM', label: 'Guest Minimum' },
-  { value: 'ACTIVITY_NOTICE', label: 'Activity Notice' },
+  { value: 'ACTIVITY_CONFLICT', label: 'Activity conflict' },
+  { value: 'LOCATION_LOCK', label: 'Location lock' },
+  { value: 'SEATING_LOCK', label: 'Seating lock' },
+  { value: 'TIME_RESTRICTION', label: 'Time restriction' },
+  { value: 'ADVANCE_BOOKING', label: 'Advance notice' },
+  { value: 'GUEST_LIMIT', label: 'Guest limit' },
+  { value: 'GUEST_MINIMUM', label: 'Guest minimum' },
+  { value: 'ACTIVITY_NOTICE', label: 'Activity notice' },
 ];
 
 // Selectable activities only: a constraint on a retired activity can never fire, since no
@@ -228,25 +228,25 @@ export function SettingsPage() {
           <h1 className="text-2xl font-title font-bold text-white tracking-tight">Settings</h1>
           <p className="text-dark-400 font-light">Manage constraints, blocked periods, and admin settings</p>
         </div>
-        <HelpGuide title="Settings Guide" sections={formSettingsGuide} />
+        <HelpGuide title="Settings guide" sections={formSettingsGuide} />
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-          <span className="text-red-400 text-sm">{error}</span>
-          <button onClick={() => setError(null)} aria-label="Dismiss error" className="ml-auto text-red-400 hover:text-red-300">
+        <div className="border rounded-lg p-4 flex items-center gap-3 notice-error">
+          <AlertCircle aria-hidden="true" className="w-5 h-5 shrink-0" />
+          <span className="text-sm">{error}</span>
+          <button onClick={() => setError(null)} aria-label="Dismiss error" className="ml-auto hover:opacity-80">
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Tab Switcher — dropdown on mobile, horizontal tabs on md+ */}
+      {/* Tab Switcher: dropdown on mobile, horizontal tabs on md+ */}
       {(() => {
         const tabs = [
-          { key: 'constraints' as const, icon: Shield, label: `Form Constraints (${constraints.length})` },
-          { key: 'blocked' as const, icon: Calendar, label: `Blocked Periods (${blockedPeriods.length})` },
-          ...(canEditFormSettings ? [{ key: 'retention' as const, icon: Database, label: 'Data Retention' }] : []),
+          { key: 'constraints' as const, icon: Shield, label: `Form constraints (${constraints.length})` },
+          { key: 'blocked' as const, icon: Calendar, label: `Blocked periods (${blockedPeriods.length})` },
+          ...(canEditFormSettings ? [{ key: 'retention' as const, icon: Database, label: 'Data retention' }] : []),
           ...(canManageUsers ? [{ key: 'users' as const, icon: Users, label: 'Users' }] : []),
         ];
         return (
@@ -257,7 +257,7 @@ export function SettingsPage() {
                 aria-label="Settings section"
                 value={activeTab}
                 onChange={e => setActiveTab(e.target.value as typeof activeTab)}
-                className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2.5 text-white text-sm appearance-none"
+                className="select-field field-sm"
               >
                 {tabs.map(t => (
                   <option key={t.key} value={t.key}>{t.label}</option>
@@ -296,9 +296,9 @@ export function SettingsPage() {
             <button
               onClick={() => openConstraint({ ...emptyConstraint })}
               data-testid="add-constraint"
-              className="flex items-center gap-2 px-3 py-2 bg-hubble-600 hover:bg-hubble-500 text-white rounded-lg text-sm transition-colors"
+              className="btn-primary btn-sm gap-2"
             >
-              <Plus className="w-4 h-4" /> Add Constraint
+              <Plus className="w-4 h-4" /> Add constraint
             </button>
           </div>
 
@@ -350,13 +350,13 @@ export function SettingsPage() {
                       aria-label={`Constraint enabled: ${c.message}`}
                     >
                       {c.enabled
-                        ? <ToggleRight className="w-5 h-5 text-green-400" />
+                        ? <ToggleRight className="w-5 h-5 notice-text-success" />
                         : <ToggleLeft className="w-5 h-5 text-dark-500" />
                       }
                     </button>
                     <button
                       onClick={() => c.id && setDeleteTarget({ type: 'constraint', id: c.id })}
-                      className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="p-1.5 rounded-lg text-dark-400 hover-danger transition-colors"
                       title="Delete"
                       aria-label={`Delete constraint: ${c.message}`}
                     >
@@ -380,9 +380,9 @@ export function SettingsPage() {
             <button
               onClick={() => openPeriod({ ...emptyBlockedPeriod })}
               data-testid="add-blocked-period"
-              className="flex items-center gap-2 px-3 py-2 bg-hubble-600 hover:bg-hubble-500 text-white rounded-lg text-sm transition-colors"
+              className="btn-primary btn-sm gap-2"
             >
-              <Plus className="w-4 h-4" /> Add Blocked Period
+              <Plus className="w-4 h-4" /> Add blocked period
             </button>
           </div>
 
@@ -400,16 +400,16 @@ export function SettingsPage() {
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className={`text-xs font-mono px-2 py-0.5 rounded bg-dark-800 ${bp.softBlock ? 'text-amber-400' : 'text-red-400'}`}>
-                        {bp.startDate} — {bp.endDate}
+                      <span className={`text-xs font-mono px-2 py-0.5 rounded bg-dark-800 ${bp.softBlock ? 'notice-text-warning' : 'notice-text-error'}`}>
+                        {bp.startDate} to {bp.endDate}
                       </span>
                       {bp.softBlock && (
-                        <span data-testid="soft-block-badge" className="text-xs font-medium px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                        <span data-testid="soft-block-badge" className="text-xs font-medium px-2 py-0.5 rounded border notice-warning">
                           Soft block
                         </span>
                       )}
                       {bp.location && (
-                        <span className="text-xs font-mono px-2 py-0.5 rounded bg-dark-800 text-amber-400">
+                        <span className="text-xs font-mono px-2 py-0.5 rounded bg-dark-800 notice-text-warning">
                           {locationLabel(bp.location)}
                         </span>
                       )}
@@ -442,13 +442,13 @@ export function SettingsPage() {
                       aria-label={`Blocked period enabled: ${bp.reason}`}
                     >
                       {bp.enabled
-                        ? <ToggleRight className="w-5 h-5 text-green-400" />
+                        ? <ToggleRight className="w-5 h-5 notice-text-success" />
                         : <ToggleLeft className="w-5 h-5 text-dark-500" />
                       }
                     </button>
                     <button
                       onClick={() => bp.id && setDeleteTarget({ type: 'period', id: bp.id })}
-                      className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="p-1.5 rounded-lg text-dark-400 hover-danger transition-colors"
                       title="Delete"
                       aria-label={`Delete blocked period: ${bp.reason}`}
                     >
@@ -467,13 +467,12 @@ export function SettingsPage() {
         <Modal
           labelledBy="constraint-title"
           onClose={() => confirmDiscard(() => setEditingConstraint(null))}
-          overlayClassName="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-          className="bg-dark-900 border border-dark-700 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+          className="max-w-lg max-h-[90vh] overflow-y-auto"
         >
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 id="constraint-title" className="text-lg font-bold text-white">
-                  {editingConstraint.id ? 'Edit Constraint' : 'New Constraint'}
+                <h2 id="constraint-title" className="dialog-title">
+                  {editingConstraint.id ? 'Edit constraint' : 'New constraint'}
                 </h2>
                 <button
                   onClick={() => confirmDiscard(() => setEditingConstraint(null))}
@@ -486,7 +485,7 @@ export function SettingsPage() {
 
               <div className="space-y-3">
                 <div>
-                  <label htmlFor="constraint-constraint-type" className="block text-sm text-dark-400 mb-1">Constraint Type</label>
+                  <label htmlFor="constraint-constraint-type" className="block text-sm text-dark-400 mb-1">Constraint type</label>
                   <select id="constraint-constraint-type"
                     data-testid="constraint-type"
                     value={editingConstraint.constraintType}
@@ -495,7 +494,7 @@ export function SettingsPage() {
                       constraintType: e.target.value,
                       triggerActivity: e.target.value === 'GUEST_MINIMUM' ? 'ANY' : editingConstraint.triggerActivity,
                     })}
-                    className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                    className="w-full select-field field-sm"
                   >
                     {CONSTRAINT_TYPES.map(t => (
                       <option key={t.value} value={t.value}>{t.label}</option>
@@ -505,12 +504,12 @@ export function SettingsPage() {
 
                 {editingConstraint.constraintType !== 'GUEST_MINIMUM' && (
                   <div>
-                    <label htmlFor="constraint-trigger-activity" className="block text-sm text-dark-400 mb-1">Trigger Activity</label>
+                    <label htmlFor="constraint-trigger-activity" className="block text-sm text-dark-400 mb-1">Trigger activity</label>
                     <select id="constraint-trigger-activity"
                       data-testid="constraint-trigger"
                       value={editingConstraint.triggerActivity}
                       onChange={e => setEditingConstraint({ ...editingConstraint, triggerActivity: e.target.value })}
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full select-field field-sm"
                     >
                       {ACTIVITIES.map(a => (
                         <option key={a} value={a}>{activityLabel(a)}</option>
@@ -538,8 +537,8 @@ export function SettingsPage() {
                     </label>
                     <p className="text-xs text-dark-500 mt-1">
                       Off: the message appears as a banner under the activity list. On: guests
-                      must acknowledge it in a dialog titled "Please Note" before the activity
-                      is selected, and can choose to deselect instead. Use sparingly — reserve
+                      must acknowledge it in a dialog titled "Please note" before the activity
+                      is selected, and can choose to deselect instead. Use sparingly: reserve
                       it for notices that are genuinely easy to miss.
                     </p>
                   </div>
@@ -558,7 +557,7 @@ export function SettingsPage() {
                         data-testid="constraint-notice-location"
                         value={editingConstraint.secondaryValue || ''}
                         onChange={e => setEditingConstraint({ ...editingConstraint, secondaryValue: e.target.value })}
-                        className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-full select-field field-sm"
                       >
                         <option value="">Any location</option>
                         {LOCATIONS.map(l => (
@@ -581,12 +580,12 @@ export function SettingsPage() {
                           numericValue: e.target.value ? parseInt(e.target.value) : undefined,
                         })}
                         placeholder="Any group size"
-                        className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-full input-field field-sm"
                       />
                     </div>
                     <p className="sm:col-span-2 text-xs text-dark-500">
                       Leave both empty to show the notice to everyone who picks the activity. When
-                      set, the notice (and popup) only appears once the guest has also chosen that
+                      set, the notice (and popup) only appears once the customer has also chosen that
                       location and/or at least that many guests, in whatever order they fill in the form.
                     </p>
                   </div>
@@ -594,14 +593,14 @@ export function SettingsPage() {
 
                 {editingConstraint.constraintType !== 'ACTIVITY_NOTICE' && (
                   <div>
-                    <label htmlFor="constraint-target-value" className="block text-sm text-dark-400 mb-1">Target Value</label>
+                    <label htmlFor="constraint-target-value" className="block text-sm text-dark-400 mb-1">Target value</label>
                     <input id="constraint-target-value"
                       type="text"
                       data-testid="constraint-target"
                       value={editingConstraint.targetValue || ''}
                       onChange={e => setEditingConstraint({ ...editingConstraint, targetValue: e.target.value })}
                       placeholder="e.g. EAT_A_LA_CARTE, HUBBLE, INSIDE"
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full input-field field-sm"
                     />
                     <p className="text-xs text-dark-500 mt-1">
                       {editingConstraint.constraintType === 'ACTIVITY_CONFLICT' && 'The conflicting activity'}
@@ -633,20 +632,20 @@ export function SettingsPage() {
                         ...editingConstraint,
                         numericValue: e.target.value ? parseInt(e.target.value) : undefined,
                       })}
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full input-field field-sm"
                     />
                   </div>
                 )}
 
                 {editingConstraint.constraintType === 'TIME_RESTRICTION' && (
                   <div>
-                    <label htmlFor="constraint-time-range" className="block text-sm text-dark-400 mb-1">Time Range</label>
+                    <label htmlFor="constraint-time-range" className="block text-sm text-dark-400 mb-1">Time range</label>
                     <input id="constraint-time-range"
                       type="text"
                       value={editingConstraint.secondaryValue || ''}
                       onChange={e => setEditingConstraint({ ...editingConstraint, secondaryValue: e.target.value })}
                       placeholder="e.g. 09:00-10:45"
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full input-field field-sm"
                     />
                   </div>
                 )}
@@ -658,13 +657,13 @@ export function SettingsPage() {
                     value={editingConstraint.message}
                     onChange={e => setEditingConstraint({ ...editingConstraint, message: e.target.value })}
                     rows={2}
-                    className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                    className="w-full input-field field-sm"
                   />
                   {editingConstraint.constraintType === 'ACTIVITY_NOTICE' && (
                     <p className="text-xs text-dark-500 mt-1">
                       Shown as an informational note when the trigger activity is selected and the
                       conditions above match (e.g. "A private event at Meteor has an additional charge").
-                      It does not block the booking.
+                      It does not block the reservation.
                     </p>
                   )}
                 </div>
@@ -673,7 +672,7 @@ export function SettingsPage() {
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setEditingConstraint(null)}
-                  className="flex-1 px-4 py-2 bg-dark-800 hover:bg-dark-700 text-white rounded-lg text-sm transition-colors"
+                  className="btn-neutral btn-sm flex-1"
                 >
                   Cancel
                 </button>
@@ -681,7 +680,7 @@ export function SettingsPage() {
                   onClick={handleSaveConstraint}
                   data-testid="save-constraint"
                   disabled={savingConstraint || !editingConstraint.message}
-                  className="flex-1 px-4 py-2 bg-hubble-600 hover:bg-hubble-500 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
+                  className="btn-primary btn-sm flex-1"
                 >
                   {savingConstraint ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Save'}
                 </button>
@@ -695,13 +694,12 @@ export function SettingsPage() {
         <Modal
           labelledBy="blocked-period-title"
           onClose={() => confirmDiscard(() => setEditingPeriod(null))}
-          overlayClassName="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-          className="bg-dark-900 border border-dark-700 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+          className="max-w-lg max-h-[90vh] overflow-y-auto"
         >
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 id="blocked-period-title" className="text-lg font-bold text-white">
-                  {editingPeriod.id ? 'Edit Blocked Period' : 'New Blocked Period'}
+                <h2 id="blocked-period-title" className="dialog-title">
+                  {editingPeriod.id ? 'Edit blocked period' : 'New blocked period'}
                 </h2>
                 <button
                   onClick={() => confirmDiscard(() => setEditingPeriod(null))}
@@ -718,7 +716,7 @@ export function SettingsPage() {
                   <select id="period-location"
                     value={editingPeriod.location || ''}
                     onChange={e => setEditingPeriod({ ...editingPeriod, location: e.target.value || undefined })}
-                    className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                    className="w-full select-field field-sm"
                   >
                     <option value="">All locations</option>
                     {LOCATIONS.map(l => (
@@ -729,34 +727,34 @@ export function SettingsPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
-                    <label htmlFor="period-start-date" className="block text-sm text-dark-400 mb-1">Start Date *</label>
+                    <label htmlFor="period-start-date" className="block text-sm text-dark-400 mb-1">Start date *</label>
                     <input id="period-start-date"
                       type="date"
                       value={editingPeriod.startDate}
                       onChange={e => setEditingPeriod({ ...editingPeriod, startDate: e.target.value })}
-                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full min-w-0 input-field field-sm"
                     />
                   </div>
                   <div className="min-w-0">
-                    <label htmlFor="period-end-date" className="block text-sm text-dark-400 mb-1">End Date *</label>
+                    <label htmlFor="period-end-date" className="block text-sm text-dark-400 mb-1">End date *</label>
                     <input id="period-end-date"
                       type="date"
                       value={editingPeriod.endDate}
                       onChange={e => setEditingPeriod({ ...editingPeriod, endDate: e.target.value })}
-                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full min-w-0 input-field field-sm"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
-                    <label htmlFor="period-start-time" className="block text-sm text-dark-400 mb-1">Start Time (optional)</label>
+                    <label htmlFor="period-start-time" className="block text-sm text-dark-400 mb-1">Start time (optional)</label>
                     <div className="flex items-center gap-1">
                       <input id="period-start-time"
                         type="time"
                         value={editingPeriod.startTime || ''}
                         onChange={e => setEditingPeriod({ ...editingPeriod, startTime: e.target.value || undefined })}
-                        className="w-full min-w-0 flex-1 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-full min-w-0 flex-1 input-field field-sm"
                       />
                       {editingPeriod.startTime && (
                         <button
@@ -772,13 +770,13 @@ export function SettingsPage() {
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <label htmlFor="period-end-time" className="block text-sm text-dark-400 mb-1">End Time (optional)</label>
+                    <label htmlFor="period-end-time" className="block text-sm text-dark-400 mb-1">End time (optional)</label>
                     <div className="flex items-center gap-1">
                       <input id="period-end-time"
                         type="time"
                         value={editingPeriod.endTime || ''}
                         onChange={e => setEditingPeriod({ ...editingPeriod, endTime: e.target.value || undefined })}
-                        className="w-full min-w-0 flex-1 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-full min-w-0 flex-1 input-field field-sm"
                       />
                       {editingPeriod.endTime && (
                         <button
@@ -802,18 +800,18 @@ export function SettingsPage() {
                     value={editingPeriod.reason}
                     onChange={e => setEditingPeriod({ ...editingPeriod, reason: e.target.value })}
                     placeholder="e.g. Holiday closure, Maintenance"
-                    className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                    className="w-full input-field field-sm"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="period-public-message" className="block text-sm text-dark-400 mb-1">Public Message (shown to users)</label>
+                  <label htmlFor="period-public-message" className="block text-sm text-dark-400 mb-1">Public message (shown to users)</label>
                   <input id="period-public-message"
                     type="text"
                     value={editingPeriod.publicMessage || ''}
                     onChange={e => setEditingPeriod({ ...editingPeriod, publicMessage: e.target.value })}
                     placeholder="e.g. Closed for maintenance"
-                    className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                    className="w-full input-field field-sm"
                   />
                 </div>
 
@@ -829,13 +827,13 @@ export function SettingsPage() {
                       title="Toggle soft block"
                     >
                       {editingPeriod.softBlock
-                        ? <ToggleRight className="w-6 h-6 text-amber-400" />
+                        ? <ToggleRight className="w-6 h-6 notice-text-warning" />
                         : <ToggleLeft className="w-6 h-6 text-dark-500" />}
                     </button>
                     <span className="text-sm text-white">
-                      Soft block (allow bookings with a warning)
+                      Soft block (allow reservations with a warning)
                       <span className="block text-xs text-dark-400 mt-0.5">
-                        Guests can still book during this period, but must acknowledge a warning first.
+                        Customers can still book during this period, but must acknowledge a warning first.
                         Use this for e.g. a summer closing where the bar opens on request.
                       </span>
                     </span>
@@ -850,7 +848,7 @@ export function SettingsPage() {
                         value={editingPeriod.acknowledgementText || ''}
                         onChange={e => setEditingPeriod({ ...editingPeriod, acknowledgementText: e.target.value })}
                         placeholder="I understand the bar may be closed and my reservation is a request"
-                        className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-full input-field field-sm"
                       />
                       <p className="text-xs text-dark-500 mt-1">Leave blank to use a default acknowledgement message.</p>
                     </div>
@@ -861,7 +859,7 @@ export function SettingsPage() {
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setEditingPeriod(null)}
-                  className="flex-1 px-4 py-2 bg-dark-800 hover:bg-dark-700 text-white rounded-lg text-sm transition-colors"
+                  className="btn-neutral btn-sm flex-1"
                 >
                   Cancel
                 </button>
@@ -869,7 +867,7 @@ export function SettingsPage() {
                   onClick={handleSavePeriod}
                   data-testid="save-blocked-period"
                   disabled={savingPeriod || !editingPeriod.reason || !editingPeriod.startDate || !editingPeriod.endDate}
-                  className="flex-1 px-4 py-2 bg-hubble-600 hover:bg-hubble-500 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
+                  className="btn-primary btn-sm flex-1"
                 >
                   {savingPeriod ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Save'}
                 </button>
@@ -886,27 +884,27 @@ export function SettingsPage() {
           </p>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-dark-900 border border-dark-800 rounded-xl p-4">
+            <div className="card !p-4">
               <div className="text-xs text-dark-500 mb-1">Status</div>
-              <div className={`text-sm font-semibold ${retention.enabled ? 'text-green-400' : 'text-dark-400'}`}>
+              <div className={`text-sm font-semibold ${retention.enabled ? 'notice-text-success' : 'text-dark-400'}`}>
                 {retention.enabled ? 'Enabled' : 'Disabled'}
               </div>
             </div>
-            <div className="bg-dark-900 border border-dark-800 rounded-xl p-4">
-              <div className="text-xs text-dark-500 mb-1">Retention Period</div>
+            <div className="card !p-4">
+              <div className="text-xs text-dark-500 mb-1">Retention period</div>
               <div className="text-sm font-semibold text-white">
-                {retention.enabled ? `${retention.retentionDays} days` : '—'}
+                {retention.enabled ? `${retention.retentionDays} days` : 'Not set'}
               </div>
             </div>
-            <div className="bg-dark-900 border border-dark-800 rounded-xl p-4">
-              <div className="text-xs text-dark-500 mb-1">Cutoff Date</div>
+            <div className="card !p-4">
+              <div className="text-xs text-dark-500 mb-1">Cutoff date</div>
               <div className="text-sm font-semibold text-white">
-                {retention.cutoffDate ?? '—'}
+                {retention.cutoffDate ?? 'Not set'}
               </div>
             </div>
-            <div className="bg-dark-900 border border-dark-800 rounded-xl p-4">
-              <div className="text-xs text-dark-500 mb-1">Eligible for Removal</div>
-              <div className={`text-sm font-semibold ${retention.eligibleForDeletion > 0 ? 'text-amber-400' : 'text-white'}`}>
+            <div className="card !p-4">
+              <div className="text-xs text-dark-500 mb-1">Eligible for removal</div>
+              <div className={`text-sm font-semibold ${retention.eligibleForDeletion > 0 ? 'notice-text-warning' : 'text-white'}`}>
                 {retention.eligibleForDeletion} reservations
               </div>
             </div>

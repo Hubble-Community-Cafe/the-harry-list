@@ -76,7 +76,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
 /** Renders inline Markdown: **bold**, `code`, *italic* */
 function renderInline(text: string): React.ReactNode {
   const parts: React.ReactNode[] = [];
-  // Match **bold**, `code`, *italic* — process in order of appearance
+  // Match **bold**, `code`, *italic*: process in order of appearance
   const regex = /(\*\*(.+?)\*\*|`(.+?)`|\*(.+?)\*)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -148,8 +148,7 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
           labelledBy={titleId}
           onClose={() => setIsOpen(false)}
           closeOnBackdrop
-          overlayClassName="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-          className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl"
+          className="max-w-2xl max-h-[85vh] flex flex-col"
         >
             {/* Header */}
             <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-dark-800">
@@ -158,7 +157,7 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
                   <HelpCircle className="w-4 h-4 text-hubble-400" />
                 </div>
                 <div>
-                  <h2 id={titleId} className="text-lg font-semibold text-white">{title}</h2>
+                  <h2 id={titleId} className="dialog-title">{title}</h2>
                   {sections.length > 1 && (
                     <p className="text-xs text-dark-400">
                       Step {currentSection + 1} of {sections.length}
@@ -265,11 +264,7 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
 
                 <button
                   onClick={() => hasNext ? setCurrentSection((p) => p + 1) : setIsOpen(false)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    hasNext
-                      ? 'bg-hubble-600 hover:bg-hubble-500 text-white'
-                      : 'bg-dark-700 hover:bg-dark-600 text-white'
-                  }`}
+                  className={`${hasNext ? 'btn-primary' : 'btn-neutral'} btn-sm gap-2`}
                 >
                   {hasNext ? 'Next' : 'Done'}
                   {hasNext && <ChevronRight className="w-4 h-4" />}
@@ -282,7 +277,7 @@ export function HelpGuide({ title, sections }: HelpGuideProps) {
               <div className="shrink-0 flex justify-end px-6 py-4 border-t border-dark-800">
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="px-4 py-2 rounded-lg text-sm font-medium bg-dark-700 hover:bg-dark-600 text-white transition-all"
+                  className="btn-neutral btn-sm"
                 >
                   Got it
                 </button>

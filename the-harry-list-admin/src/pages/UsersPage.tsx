@@ -7,7 +7,7 @@ import { roleLabel } from '../lib/labels';
 const ROLE_OPTIONS = ['VIEWER', 'EDITOR', 'ADMIN'] as const;
 
 const ROLE_STYLES: Record<string, string> = {
-  ADMIN: 'bg-red-500/20 text-red-400',
+  ADMIN: 'notice-warning',
   EDITOR: 'bg-hubble-500/20 text-hubble-400',
   VIEWER: 'bg-dark-700 text-dark-300',
 };
@@ -19,7 +19,7 @@ const ROLE_DESCRIPTIONS: Record<string, string> = {
 };
 
 /**
- * Users tab content — used inside the Settings page.
+ * Users tab content: used inside the Settings page.
  * Does not render its own page header.
  */
 export function UsersTab() {
@@ -62,20 +62,20 @@ export function UsersTab() {
     <div className="space-y-4">
       {/* Error */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-          <span className="text-red-400 text-sm">{error}</span>
+        <div className="border rounded-lg p-4 flex items-center gap-3 notice-error">
+          <AlertCircle aria-hidden="true" className="w-5 h-5 shrink-0" />
+          <span className="text-sm">{error}</span>
           <button onClick={() => setError(null)} aria-label="Dismiss error" className="ml-auto">
-            <X className="w-4 h-4 text-red-400" />
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Role Legend */}
-      <div className="bg-dark-900 border border-dark-800 rounded-xl p-4">
+      <div className="card !p-4">
         <div className="flex items-center gap-2 mb-3">
           <Shield className="w-4 h-4 text-dark-400" />
-          <span className="text-sm font-medium text-dark-300">Role Permissions</span>
+          <span className="text-sm font-medium text-dark-300">Role permissions</span>
         </div>
         <div className="grid gap-2 sm:grid-cols-3">
           {ROLE_OPTIONS.map(role => (
@@ -102,7 +102,7 @@ export function UsersTab() {
             return (
               <div
                 key={user.id}
-                className="bg-dark-900 border border-dark-800 rounded-xl p-4 flex items-center gap-4"
+                className="card !p-4 flex items-center gap-4"
               >
                 {/* Avatar */}
                 <div className="w-10 h-10 rounded-full bg-hubble-500/20 flex items-center justify-center shrink-0">
@@ -136,7 +136,7 @@ export function UsersTab() {
                         value={user.role}
                         onChange={e => handleRoleChange(user.id, e.target.value)}
                         disabled={saving === user.id}
-                        className="bg-dark-800 border border-dark-700 rounded-lg px-3 py-1.5 text-white text-sm appearance-none pr-8 cursor-pointer disabled:opacity-50"
+                        className="select-field field-sm w-auto disabled:opacity-50"
                       >
                         {ROLE_OPTIONS.map(role => (
                           <option key={role} value={role}>{roleLabel(role)}</option>
@@ -158,13 +158,13 @@ export function UsersTab() {
 }
 
 /**
- * Standalone Users page — kept for backwards compatibility with /users route.
+ * Standalone Users page: kept for backwards compatibility with /users route.
  */
 export function UsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-title font-bold text-white tracking-tight">User Management</h1>
+        <h1 className="text-2xl font-title font-bold text-white tracking-tight">User management</h1>
         <p className="text-dark-400 font-light">Manage admin panel access and roles</p>
       </div>
       <UsersTab />

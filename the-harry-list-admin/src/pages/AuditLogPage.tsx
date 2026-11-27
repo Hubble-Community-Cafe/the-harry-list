@@ -3,6 +3,7 @@ import { Loader2, AlertCircle, History, ChevronLeft, ChevronRight, Filter } from
 import { fetchAuditLog } from '../lib/api';
 import type { AuditAction, AuditEntityType, AuditLogEntry } from '../types/audit';
 import { changeValueLabel, fieldLabel, humanize } from '../lib/labels';
+import { AuditActionBadge } from '../components/AuditActionBadge';
 
 const ENTITY_TYPES: AuditEntityType[] = [
   'RESERVATION', 'BLOCKED_PERIOD', 'CALENDAR_APPOINTMENT',
@@ -72,7 +73,7 @@ export function AuditLogPage() {
       <div>
         <h1 className="text-2xl font-title font-bold text-white flex items-center gap-2">
           <History className="w-6 h-6 text-hubble-400" />
-          Audit Log
+          Audit log
         </h1>
         <p className="text-dark-400 font-light">A record of who changed what across the admin panel</p>
       </div>
@@ -145,9 +146,9 @@ export function AuditLogPage() {
 
       {/* Error */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-          <span className="text-red-400 text-sm">{error}</span>
+        <div className="border rounded-lg p-4 flex items-center gap-3 notice-error">
+          <AlertCircle aria-hidden="true" className="w-5 h-5 shrink-0" />
+          <span className="text-sm">{error}</span>
         </div>
       )}
 
@@ -165,29 +166,29 @@ export function AuditLogPage() {
         <>
           <div className="space-y-3">
             {entries.map(entry => (
-              <div key={entry.id} className="bg-dark-900 border border-dark-800 rounded-xl p-4">
+              <div key={entry.id} className="card !p-4">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     <AuditActionBadge action={entry.action} />
                     <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-dark-700 text-dark-300">
                       {humanize(entry.entityType)}
                     </span>
-                    <span className="text-white text-sm">{entry.entityLabel || `#${entry.entityId ?? '—'}`}</span>
+                    <span className="text-white text-sm">{entry.entityLabel || (entry.entityId != null ? `#${entry.entityId}` : 'Unknown')}</span>
                   </div>
                   <time className="text-xs text-dark-500">{new Date(entry.createdAt).toLocaleString()}</time>
                 </div>
                 <div className="text-sm text-dark-300 mt-1">
                   <span className="text-white">{entry.actorName || entry.actorEmail || 'system'}</span>
-                  {entry.summary && <span className="text-dark-400"> — {entry.summary}</span>}
+                  {entry.summary && <span className="text-dark-400">: {entry.summary}</span>}
                 </div>
                 {entry.changes.length > 0 && (
                   <ul className="mt-2 space-y-1">
                     {entry.changes.map((change, i) => (
                       <li key={i} className="text-xs text-dark-400">
                         <span className="text-dark-300">{fieldLabel(change.field)}</span>:{' '}
-                        <span className="line-through text-red-400/70">{changeValueLabel(change.field, change.oldValue)}</span>
+                        <span className="line-through notice-text-error">{changeValueLabel(change.field, change.oldValue)}</span>
                         {' → '}
-                        <span className="text-green-400/80">{changeValueLabel(change.field, change.newValue)}</span>
+                        <span className="notice-text-success">{changeValueLabel(change.field, change.newValue)}</span>
                       </li>
                     ))}
                   </ul>
@@ -205,14 +206,14 @@ export function AuditLogPage() {
               <button
                 onClick={() => setPage(p => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="btn-neutral btn-sm gap-1 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="w-4 h-4" /> Prev
               </button>
               <button
                 onClick={() => setPage(p => p + 1)}
                 disabled={page + 1 >= totalPages}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-dark-700 text-dark-300 hover:bg-dark-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="btn-neutral btn-sm gap-1 disabled:cursor-not-allowed"
               >
                 Next <ChevronRight className="w-4 h-4" />
               </button>
@@ -222,20 +223,4 @@ export function AuditLogPage() {
       )}
     </div>
   );
-}
-
-function AuditActionBadge({ action }: { action: string }) {
-  const config: Record<string, { label: string; color: string; bg: string }> = {
-    CREATE: { label: 'Created', color: 'text-green-400', bg: 'bg-green-500/20' },
-    UPDATE: { label: 'Updated', color: 'text-blue-400', bg: 'bg-blue-500/20' },
-    DELETE: { label: 'Deleted', color: 'text-red-400', bg: 'bg-red-500/20' },
-    STATUS_CHANGE: { label: 'Status changed', color: 'text-amber-400', bg: 'bg-amber-500/20' },
-    NOTES_UPDATED: { label: 'Notes updated', color: 'text-hubble-400', bg: 'bg-hubble-500/20' },
-    CATERING_ARRANGED: { label: 'Catering', color: 'text-orange-400', bg: 'bg-orange-500/20' },
-    EMAIL_SENT: { label: 'Email sent', color: 'text-meteor-400', bg: 'bg-meteor-500/20' },
-    ROLE_CHANGED: { label: 'Role changed', color: 'text-red-400', bg: 'bg-red-500/20' },
-    TOGGLE: { label: 'Toggled', color: 'text-dark-300', bg: 'bg-dark-700' },
-  };
-  const { label, color, bg } = config[action] || { label: action, color: 'text-dark-300', bg: 'bg-dark-700' };
-  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${bg} ${color}`}>{label}</span>;
 }

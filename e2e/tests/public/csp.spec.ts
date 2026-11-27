@@ -18,13 +18,13 @@ test('the reservation form works under the Content-Security-Policy', async ({ pa
 
   await form.fillContact({ name: 'Casey Policy', email: 'casey.csp@example.com' });
   await form.continue();
-  await form.expectStep('Event Details');
+  await form.expectStep('Event details');
   await form.fillActivity({ title: 'CSP Probe Drinks', date: '2030-10-08', startTime: '15:00', endTime: '17:00', guests: 12 });
   await form.expectStep('Where would you like to host your event?');
   await form.selectLocation('NO_PREFERENCE');
   await form.selectSeating('INSIDE');
   await form.continue();
-  await form.expectStep('Payment Information');
+  await form.expectStep('Payment information');
   await form.selectPayment('People pay individually');
   await form.continue();
 

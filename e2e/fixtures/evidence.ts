@@ -1,7 +1,7 @@
 import type { Page, TestInfo } from '@playwright/test';
 
 /**
- * Helpers for attaching curated, human-readable evidence to the HTML report — so a
+ * Helpers for attaching curated, human-readable evidence to the HTML report: so a
  * passing run shows positive proof of each flow (not just a green check), and a failing
  * run has the exact UI/email/DB state at the point of interest.
  */
@@ -10,7 +10,7 @@ import type { Page, TestInfo } from '@playwright/test';
  * Attach a full-page screenshot under a descriptive step name.
  *
  * Uses `animations: 'disabled'` so Playwright fast-forwards CSS transitions/animations
- * (the form fades between steps) to their final state before capturing — otherwise a
+ * (the form fades between steps) to their final state before capturing: otherwise a
  * screenshot can catch a mid-animation frame before the desired result has rendered.
  */
 export async function captureScreenshot(testInfo: TestInfo, page: Page, name: string): Promise<void> {

@@ -221,7 +221,7 @@ class ICalendarServiceTest {
         Reservation cateringReservation = createCateringReservation();
         CalendarAppointment appointment = createSampleAppointment();
         givenStored(List.of(cateringReservation));
-        // Lenient: catering-only short-circuits before the appointment repo is queried — that
+        // Lenient: catering-only short-circuits before the appointment repo is queried: that
         // early exit is precisely the behaviour under test (appointments never reach the feed).
         lenient().when(calendarAppointmentRepository.findByEnabledTrue()).thenReturn(List.of(appointment));
 

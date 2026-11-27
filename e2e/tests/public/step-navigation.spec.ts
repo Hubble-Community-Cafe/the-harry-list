@@ -26,7 +26,7 @@ test.describe('public: step navigation', () => {
     await expect(page.getByText('Please enter a valid email')).toBeHidden();
     await form.continue();
 
-    await form.expectStep('Event Details');
+    await form.expectStep('Event details');
   });
 
   test('opening the review step does not submit the form or show the terms error', async ({ page }) => {
@@ -46,7 +46,7 @@ test.describe('public: step navigation', () => {
     await form.selectPayment('People pay individually');
     await form.continue();
 
-    await form.expectStep('Review & Confirm');
+    await form.expectStep('Review & confirm');
     await expect(page.getByText('You must accept the terms')).toBeHidden();
     expect(reservationPosts).toBe(0);
 

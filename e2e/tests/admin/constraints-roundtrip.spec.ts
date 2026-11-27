@@ -33,10 +33,10 @@ test.describe('admin: a constraint created in the UI is enforced on the public f
     // Now verify the public form enforces it.
     await page.goto(PUBLIC_BASE_URL);
     const form = new ReservationFormPage(page);
-    await expect(page.getByText('Contact Information')).toBeVisible();
+    await expect(page.getByText('Contact information')).toBeVisible();
     await form.fillContact({ name: 'Jane Smith', email: 'jane@example.com' });
     await form.continue();
-    await form.expectStep('Event Details');
+    await form.expectStep('Event details');
     await form.fillActivity({ title: 'Big dinner', date: '2030-09-10', guests: 20 });
     await form.toggleActivity('Eat a la carte');
 
@@ -44,6 +44,6 @@ test.describe('admin: a constraint created in the UI is enforced on the public f
     await captureScreenshot(testInfo, page, '2-constraint-enforced-public');
 
     await form.continue();
-    await form.expectStep('Event Details'); // blocked by the constraint
+    await form.expectStep('Event details'); // blocked by the constraint
   });
 });

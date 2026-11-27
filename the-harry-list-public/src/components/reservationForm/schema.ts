@@ -26,7 +26,7 @@ export const formSchema = z.object({
   seatingArea: z.string().min(1, 'Please select a seating area'),
   paymentOption: z.string().min(1, 'Please select a payment option'),
   invoiceType: z.string().optional(),
-  costCenter: z.string().max(MAX_LENGTH.costCenter, tooLongMessage('Cost center', 'costCenter')).optional(),
+  costCenter: z.string().max(MAX_LENGTH.costCenter, tooLongMessage('Cost centre', 'costCenter')).optional(),
   invoiceName: z.string().max(MAX_LENGTH.invoiceName, tooLongMessage('Invoice name', 'invoiceName')).optional(),
   invoiceAddress: z.string().max(MAX_LENGTH.invoiceAddress, tooLongMessage('Invoice address', 'invoiceAddress')).optional(),
   invoiceRemarks: z.string().max(MAX_LENGTH.invoiceRemarks, tooLongMessage('Invoice remarks', 'invoiceRemarks')).optional(),
@@ -43,12 +43,12 @@ export const formSchema = z.object({
     });
   }
 
-  // Kostenplaats required for TUE/FONTYS invoice
+  // Cost centre (kostenplaats) required for TUE/FONTYS invoice
   if (data.paymentOption === 'INVOICE' && (data.invoiceType === 'TUE' || data.invoiceType === 'FONTYS')) {
     if (!data.costCenter || data.costCenter.trim() === '') {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Kostenplaats is required',
+        message: 'Cost centre (kostenplaats) is required',
         path: ['costCenter'],
       });
     }

@@ -10,7 +10,9 @@ import { usePermissions } from '../lib/usePermissions';
 import { HelpGuide } from '../components/HelpGuide';
 import { weekOverviewGuide } from '../lib/guideContent';
 import { expandOccurrences } from '../lib/recurrence';
-import { locationLabel, statusLabel } from '../lib/labels';
+import { locationLabel } from '../lib/labels';
+import { StatusBadge } from '../components/StatusBadge';
+import { statusEdgeClass } from '../lib/status';
 
 const CATERING_ACTIVITIES = ['EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_ROOM'];
 
@@ -38,20 +40,6 @@ function addDays(date: Date, days: number): Date {
 }
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'border-l-yellow-400',
-  CONFIRMED: 'border-l-green-400',
-  REJECTED: 'border-l-red-400',
-  CANCELLED: 'border-l-dark-500',
-};
-
-const STATUS_BADGE: Record<string, string> = {
-  PENDING: 'bg-yellow-500/20 text-yellow-400',
-  CONFIRMED: 'bg-green-500/20 text-green-400',
-  REJECTED: 'bg-red-500/20 text-red-400',
-  CANCELLED: 'bg-dark-500/20 text-dark-400',
-};
 
 export function WeekOverviewPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -150,9 +138,9 @@ export function WeekOverviewPage() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-6 text-center">
-        <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-        <p className="text-red-400">{error}</p>
+      <div className="border rounded-xl p-6 text-center notice-error">
+        <AlertCircle aria-hidden="true" className="w-8 h-8 mx-auto mb-2" />
+        <p>{error}</p>
       </div>
     );
   }
@@ -163,10 +151,10 @@ export function WeekOverviewPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
           <div>
-            <h1 className="text-2xl font-title font-bold text-white tracking-tight">Week Overview</h1>
+            <h1 className="text-2xl font-title font-bold text-white tracking-tight">Week overview</h1>
             <p className="text-dark-400 font-light">Quick overview of the week's reservations</p>
           </div>
-          <HelpGuide title="Week Overview Guide" sections={weekOverviewGuide} />
+          <HelpGuide title="Week overview guide" sections={weekOverviewGuide} />
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -177,7 +165,7 @@ export function WeekOverviewPage() {
               aria-label="Filter by status"
               className="select-field pl-9 pr-8 text-sm min-w-[140px]"
             >
-              <option value="ALL">All Statuses</option>
+              <option value="ALL">All statuses</option>
               <option value="PENDING">Pending</option>
               <option value="CONFIRMED">Confirmed</option>
               <option value="REJECTED">Rejected</option>
@@ -192,7 +180,7 @@ export function WeekOverviewPage() {
               aria-label="Filter by location"
               className="select-field pl-9 pr-8 text-sm min-w-[140px]"
             >
-              <option value="ALL">All Locations</option>
+              <option value="ALL">All locations</option>
               <option value="HUBBLE">Hubble</option>
               <option value="METEOR">Meteor</option>
             </select>
@@ -237,15 +225,15 @@ export function WeekOverviewPage() {
           <div className="text-xs text-dark-400">Total</div>
         </div>
         <div className="card !p-4">
-          <div className="text-2xl font-bold text-yellow-400">{pendingCount}</div>
+          <div className="text-2xl font-bold status-text-pending">{pendingCount}</div>
           <div className="text-xs text-dark-400">Pending</div>
         </div>
         <div className="card !p-4">
-          <div className="text-2xl font-bold text-green-400">{confirmedCount}</div>
+          <div className="text-2xl font-bold status-text-confirmed">{confirmedCount}</div>
           <div className="text-xs text-dark-400">Confirmed</div>
         </div>
         <div className="card !p-4">
-          <div className={`text-2xl font-bold ${cateringNeeded > 0 ? 'text-orange-400' : 'text-dark-500'}`}>{cateringNeeded}</div>
+          <div className={`text-2xl font-bold ${cateringNeeded > 0 ? 'notice-text-warning' : 'text-dark-500'}`}>{cateringNeeded}</div>
           <div className="text-xs text-dark-400">Catering to arrange</div>
         </div>
       </div>
@@ -351,13 +339,11 @@ function WeekReservationCard({
     // The title link stretches over the card; the catering toggle sits on top as its own control.
     <div
       data-testid="week-reservation"
-      className={`relative block rounded-lg bg-dark-800/80 hover:bg-dark-800 border-l-2 p-2 transition-colors has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-hubble-500 ${STATUS_COLORS[reservation.status] || 'border-l-dark-600'}`}
+      className={`relative block rounded-lg bg-dark-800/80 hover:bg-dark-800 border-l-2 p-2 transition-colors has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-hubble-500 ${statusEdgeClass(reservation.status)}`}
     >
       {/* Status badge */}
       <div className="mb-1">
-        <span className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded ${STATUS_BADGE[reservation.status] || 'bg-dark-600/30 text-dark-400'}`}>
-          {statusLabel(reservation.status)}
-        </span>
+        <StatusBadge status={reservation.status} size="compact" />
       </div>
 
       {/* Title */}
@@ -402,8 +388,8 @@ function WeekReservationCard({
             onClick={() => onCateringToggle(reservation.id, !reservation.cateringArranged)}
             className={`relative z-10 flex items-center gap-0.5 min-h-6 text-[10px] font-medium px-1.5 py-0.5 rounded transition-colors ${
               reservation.cateringArranged
-                ? 'bg-green-500/20 text-green-400'
-                : 'bg-orange-500/20 text-orange-400'
+                ? 'notice-success'
+                : 'notice-warning'
             }`}
             title={reservation.cateringArranged ? 'Catering arranged (click to undo)' : 'Catering needed (click to mark arranged)'}
           >
@@ -413,8 +399,8 @@ function WeekReservationCard({
         ) : (
           <span className={`flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded ${
               reservation.cateringArranged
-                ? 'bg-green-500/20 text-green-400'
-                : 'bg-orange-500/20 text-orange-400'
+                ? 'notice-success'
+                : 'notice-warning'
             }`}>
             <UtensilsCrossed className="w-3 h-3" />
             <span className="sr-only">Catering </span>
@@ -423,7 +409,7 @@ function WeekReservationCard({
         ))}
       </div>
       {cateringError && (
-        <p role="alert" data-testid="catering-error" className="relative z-10 mt-1 text-[11px] text-red-400">
+        <p role="alert" data-testid="catering-error" className="relative z-10 mt-1 text-[11px] notice-text-error">
           {cateringError}
         </p>
       )}
@@ -437,11 +423,11 @@ function WeekAppointmentCard({ appointment }: { appointment: CalendarAppointment
   return (
     <Link
       to="/calendar-appointments"
-      className="block rounded-lg bg-dark-800/80 hover:bg-dark-800 border-l-2 border-l-indigo-400 p-2 transition-colors"
+      className="block rounded-lg bg-dark-800/80 hover:bg-dark-800 border-l-2 edge-info p-2 transition-colors"
     >
       {/* Appointment badge */}
       <div className="mb-1">
-        <span className="inline-block text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400">
+        <span className="inline-block text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded notice-info">
           Appointment
         </span>
       </div>

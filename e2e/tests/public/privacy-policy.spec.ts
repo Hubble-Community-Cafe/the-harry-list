@@ -17,7 +17,7 @@ test.describe('public: privacy policy', () => {
 
     await form.openPrivacyFromFooter();
     await expect(form.privacyDialog()).toBeVisible();
-    await expect(form.privacyDialog()).toContainText('Privacy Policy');
+    await expect(form.privacyDialog()).toContainText('Privacy policy');
     await captureScreenshot(testInfo, page, '1-privacy-open');
 
     await form.closePrivacy();

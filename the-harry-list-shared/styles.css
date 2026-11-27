@@ -175,6 +175,30 @@ html {
 }
 
 :root {
+  /* Form fields: the edge is at least 3:1 against the field and the card (WCAG 1.4.11), and
+     placeholders at least 4.5:1, in both themes. */
+  --field-border: #557a86;
+  --field-placeholder: var(--color-dark-400);
+
+  /* The dimmed page behind a dialog. */
+  --backdrop: rgb(0 0 0 / 0.6);
+
+  /* Info notices in Hubble teal (the other notice tones reuse the --status-* colours). */
+  --notice-info-fg: #7dd3db;
+  --notice-info-bg: rgb(62 187 198 / 0.12);
+
+  /* Reservation status (StatusBadge, week cards). Housestyle colours: pending in the warm peach
+     accent, confirmed in Meteor green, rejected red, cancelled in the tan neutral. Text is at
+     least 5.9:1 on its tint over a card in both themes. */
+  --status-pending-fg: #ffbc7d;
+  --status-pending-bg: rgb(255 188 125 / 0.16);
+  --status-confirmed-fg: #7cc4a4;
+  --status-confirmed-bg: rgb(98 163 138 / 0.18);
+  --status-rejected-fg: #f4a3a3;
+  --status-rejected-bg: rgb(239 68 68 / 0.18);
+  --status-cancelled-fg: #c9bd9f;
+  --status-cancelled-bg: rgb(155 141 111 / 0.2);
+
   --background: 0 0% 100%;
   --foreground: 195 75% 15%;
   --card: 0 0% 100%;
@@ -219,8 +243,12 @@ html {
   --ring: 186 55% 49%;
 }
 
-* {
-  border-color: hsl(var(--border));
+/* A default border colour, in Tailwind's base layer so every border-* class can override it.
+   (Unlayered, it beat all of them: dark mode showed one grey for every border.) */
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
 }
 
 /* Dark mode */
@@ -241,7 +269,7 @@ body {
 }
 
 /* ===================================
-   LIGHT MODE — comprehensive overrides
+   LIGHT MODE: comprehensive overrides
    =================================== */
 
 .light {
@@ -263,6 +291,23 @@ body {
   --color-hubble-400: #1a6b7c;
   --color-hubble-500: #0f5568;
   --color-meteor-400: #2d7a5e;
+
+  --field-border: #7f8f98;
+  --field-placeholder: #66757c;
+
+  --backdrop: rgb(0 0 0 / 0.35);
+
+  --notice-info-fg: #155e6d;
+  --notice-info-bg: rgb(26 107 124 / 0.1);
+
+  --status-pending-fg: #8a4b12;
+  --status-pending-bg: rgb(255 188 125 / 0.28);
+  --status-confirmed-fg: #14593f;
+  --status-confirmed-bg: rgb(98 163 138 / 0.2);
+  --status-rejected-fg: #a12a2a;
+  --status-rejected-bg: rgb(239 68 68 / 0.12);
+  --status-cancelled-fg: #5b5040;
+  --status-cancelled-bg: rgb(155 141 111 / 0.2);
 }
 
 /* Base text overrides */
@@ -270,59 +315,20 @@ body {
   color: #1a2428;
 }
 
-/* Preserve transparent text for gradient clip effects */
-.light .text-transparent {
-  color: transparent;
-}
-
 /* Preserve white text on dark/colored backgrounds */
-.light .bg-red-500,
-.light .bg-green-500,
-.light .bg-blue-500,
 .light .bg-hubble-500,
 .light .bg-hubble-600,
 .light .bg-meteor-500,
-.light .bg-meteor-600,
 .light .bg-\[\#2f2f2f\],
-.light [class*="bg-gradient-to-r"][class*="from-hubble"]:not([class*="bg-clip-text"]),
-.light [class*="bg-gradient-to-br"][class*="from-hubble"]:not([class*="bg-clip-text"]),
-.light [class*="bg-gradient-to-br"][class*="from-meteor"]:not([class*="bg-clip-text"]),
-.light [class*="bg-gradient-to-br"][class*="from-dark"]:not([class*="bg-clip-text"]) {
+.light .bg-dark-500 {
   color: #ffffff;
 }
 
-.light .bg-red-500 .text-white,
-.light .bg-green-500 .text-white,
-.light .bg-blue-500 .text-white,
 .light .bg-hubble-500 .text-white,
 .light .bg-hubble-600 .text-white,
 .light .bg-meteor-500 .text-white,
-.light .bg-meteor-600 .text-white,
-.light [class*="bg-gradient-to-r"][class*="from-hubble"] .text-white,
-.light [class*="bg-gradient-to-br"][class*="from-hubble"] .text-white,
-.light [class*="bg-gradient-to-br"][class*="from-meteor"] .text-white,
-.light [class*="bg-gradient-to-br"][class*="from-dark"] .text-white {
+.light .bg-dark-500 .text-white {
   color: #ffffff;
-}
-
-.light .text-dark-300,
-.light [class*="text-dark-300/"] {
-  color: #4b5e66;
-}
-
-.light .text-dark-400,
-.light [class*="text-dark-400/"] {
-  color: #51646d;
-}
-
-.light .text-dark-500,
-.light [class*="text-dark-500/"] {
-  color: #53646b;
-}
-
-.light .text-dark-600,
-.light [class*="text-dark-600/"] {
-  color: #a3b4bb;
 }
 
 .light .text-dark-700,
@@ -331,28 +337,8 @@ body {
 }
 
 /* Background overrides */
-.light .bg-dark-950 {
-  background-color: #f5f7fa;
-}
-
-.light .bg-dark-950\/80 {
-  background-color: rgba(245, 247, 250, 0.9);
-}
-
-.light .bg-dark-900 {
-  background-color: #f0f3f5;
-}
-
 .light .bg-dark-900\/50 {
   background-color: rgba(240, 243, 245, 0.6);
-}
-
-.light .bg-dark-900\/80 {
-  background-color: rgba(240, 243, 245, 0.9);
-}
-
-.light .bg-dark-800 {
-  background-color: #e8edf0;
 }
 
 .light .bg-dark-800\/50 {
@@ -361,10 +347,6 @@ body {
 
 .light .bg-dark-800\/80 {
   background-color: rgba(232, 237, 240, 0.85);
-}
-
-.light .bg-dark-700 {
-  background-color: #d4dce0;
 }
 
 .light .bg-dark-700\/50 {
@@ -386,14 +368,6 @@ body {
 
 .light .border-dark-700 {
   border-color: #cdd5da;
-}
-
-.light .border-dark-600 {
-  border-color: #bcc7cc;
-}
-
-.light .border-dark-400 {
-  border-color: #bcc7cc;
 }
 
 /* Hover state overrides */
@@ -432,6 +406,15 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
+.light .dialog-panel {
+  background-color: #ffffff;
+}
+
+/* .dialog-title applies text-white itself, so the .text-white flip above does not reach it. */
+.light .dialog-title {
+  color: #1a2428;
+}
+
 .light .card:hover {
   border-color: #cdd5da;
 }
@@ -440,7 +423,7 @@ body {
 .light .input-field,
 .light .select-field {
   background-color: #ffffff;
-  border-color: #cdd5da;
+  border-color: var(--field-border);
   color: #1a2428;
 }
 
@@ -448,14 +431,6 @@ body {
 .light .select-field:focus {
   border-color: #1a6b7c;
   box-shadow: 0 0 0 3px rgba(26, 107, 124, 0.1);
-}
-
-.light .input-field::placeholder {
-  color: #9ca3af;
-}
-
-.light .select-field {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235f7580' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
 .light .select-field:focus {
@@ -479,56 +454,18 @@ body {
   border-color: #cdd5da;
 }
 
-/* Modal overlays */
-.light .bg-black\/60 {
-  background-color: rgba(0, 0, 0, 0.35);
-}
-
+/* The mobile sidebar overlay (dialogs use --backdrop) */
 .light .bg-black\/50 {
   background-color: rgba(0, 0, 0, 0.25);
 }
 
-/* Status badge backgrounds — tuned tints for light mode readability */
+/* Status badge backgrounds: tuned tints for light mode readability */
 .light .bg-hubble-500\/10 {
   background-color: rgba(26, 107, 124, 0.08);
 }
 
 .light .bg-hubble-500\/20 {
   background-color: rgba(26, 107, 124, 0.12);
-}
-
-.light .bg-hubble-500\/30 {
-  background-color: rgba(26, 107, 124, 0.18);
-}
-
-.light .hover\:bg-hubble-500\/30:hover {
-  background-color: rgba(26, 107, 124, 0.18);
-}
-
-.light .bg-green-500\/20 {
-  background-color: rgba(34, 139, 34, 0.1);
-}
-
-.light .bg-green-500\/10 {
-  background-color: rgba(34, 139, 34, 0.07);
-}
-
-.light .bg-yellow-500\/20 {
-  background-color: rgba(180, 130, 0, 0.1);
-}
-
-.light .bg-red-500\/20 {
-  background-color: rgba(200, 40, 40, 0.08);
-}
-
-.light .bg-hubble-950\/50 {
-  background-color: rgba(3, 15, 20, 0.04);
-}
-
-.light .bg-meteor-950\/50 {
-  /* meteor-950 is a near-black gray; in light mode use a faint meteor-green tint
-     to match the hubble-950/50 notice instead of rendering a dark grey block */
-  background-color: rgba(5, 56, 38, 0.05);
 }
 
 .light .bg-meteor-500\/10 {
@@ -539,133 +476,12 @@ body {
   background-color: rgba(5, 56, 38, 0.1);
 }
 
-.light .bg-red-500\/10 {
-  background-color: rgba(200, 40, 40, 0.06);
-}
-
-.light .hover\:bg-red-500\/10:hover {
-  background-color: rgba(200, 40, 40, 0.08);
-}
-
-.light .bg-blue-500\/20 {
-  background-color: rgba(37, 99, 235, 0.1);
-}
-
-.light .bg-blue-500\/10 {
-  background-color: rgba(37, 99, 235, 0.07);
-}
-
-.light .bg-amber-500\/10 {
-  background-color: rgba(180, 130, 0, 0.07);
-}
-
-.light .bg-orange-500\/20 {
-  background-color: rgba(200, 100, 0, 0.1);
-}
-
-.light .bg-dark-500\/20 {
-  background-color: rgba(122, 143, 152, 0.15);
-}
-
-/* Status text colors — slightly deeper for light mode contrast */
-.light .text-yellow-400,
-.light [class*="text-yellow-400/"] {
-  color: #896000; /* 4.6:1 on its tinted badge backgrounds (WCAG AA); was #a37200 */
-}
-
-.light .text-green-400,
-.light [class*="text-green-400/"] {
-  color: #147c3b; /* 4.6:1 on its tinted badge backgrounds (WCAG AA); was #15803d */
-}
-
 /* Border tints for light mode */
-.light .border-hubble-500 {
-  border-color: #1a6b7c;
-}
-
-.light .border-hubble-800\/50 {
-  border-color: rgba(9, 45, 59, 0.12);
-}
-
-.light .border-meteor-500 {
-  border-color: #065f46;
-}
-
 .light .border-meteor-500\/30 {
   border-color: rgba(5, 56, 38, 0.2);
 }
 
-.light .border-green-500\/30 {
-  border-color: rgba(34, 139, 34, 0.2);
-}
-
-.light .border-green-500\/50 {
-  border-color: rgba(34, 139, 34, 0.3);
-}
-
-.light .border-meteor-800\/50 {
-  border-color: rgba(2, 22, 16, 0.12);
-}
-
-.light .border-red-500\/20 {
-  border-color: rgba(200, 40, 40, 0.15);
-}
-
-.light .border-red-500\/30 {
-  border-color: rgba(200, 40, 40, 0.2);
-}
-
-.light .border-red-500\/50 {
-  border-color: rgba(200, 40, 40, 0.3);
-}
-
-.light .border-blue-500\/50 {
-  border-color: rgba(37, 99, 235, 0.3);
-}
-
-.light .border-amber-500\/50 {
-  border-color: rgba(180, 130, 0, 0.3);
-}
-
-.light .border-orange-500\/30 {
-  border-color: rgba(200, 100, 0, 0.2);
-}
-
-.light .border-blue-500\/20 {
-  border-color: rgba(37, 99, 235, 0.15);
-}
-
-.light .border-amber-500\/20 {
-  border-color: rgba(180, 130, 0, 0.15);
-}
-
-/* Form error messages: .error-text applies text-red-400 inside a component class, which the
-   .light .text-red-400 override below does not reach, so it needs its own light colour. */
-.light .error-text {
-  color: #bf1f1f;
-}
-
-/* Status text colors — deeper for light mode contrast */
-.light .text-amber-400,
-.light [class*="text-amber-400/"] {
-  color: #af5109; /* 4.6:1 on its tinted badge backgrounds (WCAG AA); was #b45309 */
-}
-
-.light .text-orange-400,
-.light [class*="text-orange-400/"] {
-  color: #c2410c;
-}
-
-.light .text-red-400,
-.light [class*="text-red-400/"] {
-  color: #bf1f1f; /* 4.6:1 on its tinted badge backgrounds (WCAG AA); was #dc2626 */
-}
-
-.light .text-blue-400,
-.light [class*="text-blue-400/"] {
-  color: #2563eb;
-}
-
+/* Status text colors: deeper for light mode contrast */
 .light .text-hubble-300,
 .light [class*="text-hubble-300/"] {
   color: #1a6b7c;
@@ -696,15 +512,7 @@ body {
   border-color: rgba(26, 107, 124, 0.25);
 }
 
-.light .border-hubble-500\/50 {
-  border-color: rgba(26, 107, 124, 0.35);
-}
-
 /* Button overrides */
-.light .btn-primary {
-  box-shadow: 0 2px 8px rgba(26, 107, 124, 0.2);
-}
-
 .light .bg-\[\#2f2f2f\] {
   background-color: #1a2428;
 }
@@ -713,45 +521,39 @@ body {
   background-color: #2b3840;
 }
 
-/* Gradient backgrounds for decorative elements */
-.light .bg-hubble-600\/20 {
-  background-color: rgba(15, 77, 100, 0.08);
-}
-
-.light .bg-meteor-600\/20 {
-  background-color: rgba(4, 45, 30, 0.06);
-}
-
-/* White/semi-transparent glass effects */
-.light .bg-white\/5 {
-  background-color: rgba(0, 0, 0, 0.03);
-}
-
-.light .border-white\/10 {
-  border-color: rgba(0, 0, 0, 0.06);
-}
-
-/* Shadow adjustments */
-.light .shadow-2xl {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-
-.light .shadow-lg {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
 /* Ring offset */
 .light .focus\:ring-offset-dark-950:focus {
   --tw-ring-offset-color: #f5f7fa;
 }
 
-/* Border-l accent lines */
-.light .border-l-2 {
-  border-left-width: 2px;
+/* Card, checkbox and badge borders and the select chevron: still needed in light mode
+   (a pixel comparison shows them changing without these). */
+.light .border-hubble-500\/50 {
+  border-color: rgba(26, 107, 124, 0.35);
+}
+
+.light .border-dark-600 {
+  border-color: #bcc7cc;
+}
+
+.light .border-dark-400 {
+  border-color: #bcc7cc;
+}
+
+.light .select-field {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235f7580' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+.light .border-hubble-500 {
+  border-color: #1a6b7c;
+}
+
+.light .border-meteor-500 {
+  border-color: #065f46;
 }
 
 /* ===================================
-   DARK MODE — applied via .dark class
+   DARK MODE: applied via .dark class
    =================================== */
 
 .dark body,
@@ -766,40 +568,112 @@ body.dark {
 }
 
 @layer components {
+  /* One status badge for every page; colours come from the --status-* tokens above. */
+  .status-pending { color: var(--status-pending-fg); background-color: var(--status-pending-bg); }
+  .status-confirmed { color: var(--status-confirmed-fg); background-color: var(--status-confirmed-bg); }
+  .status-rejected { color: var(--status-rejected-fg); background-color: var(--status-rejected-bg); }
+  .status-cancelled { color: var(--status-cancelled-fg); background-color: var(--status-cancelled-bg); }
+  /* Status colour on its own: counters and icons that stand for a status. */
+  .status-text-pending { color: var(--status-pending-fg); }
+  .status-text-confirmed { color: var(--status-confirmed-fg); }
+  /* The coloured left edge of a week overview card. */
+  .status-edge-pending { border-left-color: var(--status-pending-fg); }
+  .status-edge-confirmed { border-left-color: var(--status-confirmed-fg); }
+  .status-edge-rejected { border-left-color: var(--status-rejected-fg); }
+  .status-edge-cancelled { border-left-color: var(--status-cancelled-fg); }
+
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-hubble-600 to-hubble-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-hubble-500/25 transition-all duration-200 hover:from-hubble-500 hover:to-hubble-400 hover:shadow-xl hover:shadow-hubble-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-hubble-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
+    /* Flat Hubble teal, no gradient or glow (housestyle). */
+    @apply inline-flex items-center justify-center rounded-xl bg-hubble-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-hubble-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-hubble-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-meteor-600 to-meteor-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-meteor-500/25 transition-all duration-200 hover:from-meteor-500 hover:to-meteor-400 hover:shadow-xl hover:shadow-meteor-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-meteor-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950;
+    /* Flat Meteor green, no gradient or glow (housestyle). */
+    @apply inline-flex items-center justify-center rounded-xl bg-meteor-500 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-meteor-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-meteor-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Everything that is not the main action: Cancel, Back, Edit, Send catering options.
+     Text uses dark-50, which flips with the theme, so light mode needs no override. */
+  .btn-neutral {
+    @apply inline-flex items-center justify-center rounded-xl border border-dark-700 bg-dark-800 px-6 py-3 text-sm font-semibold transition-all duration-200 hover:bg-dark-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-hubble-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
+    color: var(--color-dark-50);
+  }
+
+  /* The final "yes" of a destructive question (delete, reject, cancel a reservation).
+     A deep red that sits with the café colours; white text is 6.5:1 on it. */
+  .btn-danger {
+    @apply inline-flex items-center justify-center rounded-xl bg-[#b42318] px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#912018] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Opens something destructive (Reject, Delete permanently): red, but not yet the final step. */
+  .btn-danger-subtle {
+    @apply inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
+    color: var(--status-rejected-fg);
+    background-color: var(--status-rejected-bg);
+  }
+  .btn-danger-subtle:hover:not(:disabled) {
+    background-color: rgb(239 68 68 / 0.28);
+  }
+
+  /* Compact size for toolbars, dialogs and list rows; combine with any btn-* above. */
+  .btn-sm {
+    @apply px-4 py-2 rounded-lg;
   }
 
   /* Instant press feedback: the button visibly acknowledges the press before
      any work happens. Scale is subtle by design (0.97, not a squash). */
   .btn-primary,
-  .btn-secondary {
+  .btn-secondary,
+  .btn-neutral,
+  .btn-danger,
+  .btn-danger-subtle {
     transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
                 background-color 200ms ease,
                 box-shadow 200ms ease;
   }
 
   .btn-primary:active:not(:disabled),
-  .btn-secondary:active:not(:disabled) {
+  .btn-secondary:active:not(:disabled),
+  .btn-neutral:active:not(:disabled),
+  .btn-danger:active:not(:disabled),
+  .btn-danger-subtle:active:not(:disabled) {
     transform: scale(0.97);
   }
 
   .input-field {
-    @apply w-full rounded-xl border border-dark-700 bg-dark-800/50 px-4 py-3 text-white placeholder-dark-400 backdrop-blur-sm transition-all duration-200 focus:border-hubble-500 focus:outline-none focus:ring-2 focus:ring-hubble-500/20;
+    @apply w-full rounded-xl border bg-dark-800/50 px-4 py-3 text-white transition-all duration-200 focus:border-hubble-500 focus:outline-none focus:ring-2 focus:ring-hubble-500/20;
   }
 
   .select-field {
-    @apply w-full rounded-xl border border-dark-700 bg-dark-800/50 px-4 py-3 text-white transition-all duration-200 focus:border-hubble-500 focus:outline-none focus:ring-2 focus:ring-hubble-500/20 cursor-pointer;
+    @apply w-full rounded-xl border bg-dark-800/50 px-4 py-3 text-white transition-all duration-200 focus:border-hubble-500 focus:outline-none focus:ring-2 focus:ring-hubble-500/20 cursor-pointer;
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235a6a70' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
     background-size: 20px;
     padding-right: 44px;
+  }
+
+  .input-field,
+  .select-field {
+    border-color: var(--field-border);
+  }
+  .input-field::placeholder {
+    color: var(--field-placeholder);
+  }
+  .input-field:focus,
+  .select-field:focus {
+    border-color: var(--color-hubble-500);
+  }
+
+  /* Compact fields for dialogs and toolbars; combine with input-field or select-field. */
+  .field-sm {
+    @apply rounded-lg px-3 py-2 text-sm;
+  }
+  .select-field.field-sm {
+    padding-right: 36px;
+    background-position: right 8px center;
+    background-size: 18px;
   }
 
   .select-field:focus {
@@ -824,8 +698,51 @@ body.dark {
   }
 
   .card {
-    @apply rounded-2xl border border-dark-800 bg-dark-900/80 p-6 backdrop-blur-xl shadow-2xl;
+    /* A solid surface: no frosted glass (housestyle). */
+    @apply rounded-2xl border border-dark-800 bg-dark-900 p-6 shadow-2xl;
   }
+
+  /* Dialogs: one backdrop, panel and title for every Modal in both apps. The panel is the card
+     surface lifted one step (a firmer edge, white in light mode). */
+  .dialog-backdrop {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+    background-color: var(--backdrop);
+  }
+
+  .dialog-panel {
+    @apply w-full rounded-2xl border border-dark-700 bg-dark-900 shadow-2xl;
+  }
+
+  .dialog-title {
+    @apply font-title text-xl font-semibold tracking-tight text-white;
+  }
+
+  /* Notice boxes: text colour, tint and edge for each tone; size and layout stay in the markup
+     (add `border`). The tones reuse the status colours: error red, warning peach, success
+     Meteor green, neutral tan (staff-only notes), plus Hubble teal for info. Text inside a
+     notice that sets its own colour (text-dark-400, text-white) keeps it. */
+  .notice-error { --notice-fg: var(--status-rejected-fg); --notice-bg: var(--status-rejected-bg); }
+  .notice-warning { --notice-fg: var(--status-pending-fg); --notice-bg: var(--status-pending-bg); }
+  .notice-success { --notice-fg: var(--status-confirmed-fg); --notice-bg: var(--status-confirmed-bg); }
+  .notice-neutral { --notice-fg: var(--status-cancelled-fg); --notice-bg: var(--status-cancelled-bg); }
+  .notice-info { --notice-fg: var(--notice-info-fg); --notice-bg: var(--notice-info-bg); }
+
+  .notice-error,
+  .notice-warning,
+  .notice-success,
+  .notice-neutral,
+  .notice-info {
+    color: var(--notice-fg);
+    background-color: var(--notice-bg);
+    border-color: color-mix(in srgb, var(--notice-fg) 35%, transparent);
+  }
+
+  /* The same tone as text only, for a label or hint outside a box. */
+  .notice-text-error { color: var(--status-rejected-fg); }
+  .notice-text-success { color: var(--status-confirmed-fg); }
+  .notice-text-info { color: var(--notice-info-fg); }
+  .notice-text-warning { color: var(--status-pending-fg); }
+  .notice-text-neutral { color: var(--status-cancelled-fg); }
 
   .label {
     @apply block text-sm font-medium text-dark-300 mb-2;
@@ -836,11 +753,8 @@ body.dark {
   }
 
   .error-text {
-    @apply text-sm text-red-400 mt-1;
-  }
-
-  .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+    @apply text-sm mt-1;
+    color: var(--status-rejected-fg);
   }
 }
 
@@ -982,4 +896,31 @@ body.dark {
 label:has(> input.sr-only:focus-visible) {
   outline: 2px solid var(--color-hubble-400);
   outline-offset: 2px;
+}
+
+/* Hover states in the notice tones. Utilities (not components) so they beat the resting
+   text-dark-400 utility on the same element. */
+@utility hover-danger {
+  &:hover {
+    color: var(--status-rejected-fg);
+    background-color: var(--status-rejected-bg);
+  }
+}
+
+@utility hover-danger-text {
+  &:hover {
+    color: var(--status-rejected-fg);
+  }
+}
+
+@utility hover-warning {
+  &:hover {
+    border-color: color-mix(in srgb, var(--status-pending-fg) 40%, transparent);
+    background-color: var(--status-pending-bg);
+  }
+}
+
+/* The left edge of a calendar appointment card (week overview), in the info teal. */
+@utility edge-info {
+  border-left-color: var(--notice-info-fg);
 }

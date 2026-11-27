@@ -307,7 +307,7 @@ public class EmailTemplateService {
     /**
      * Render a template body with both escaped variables and pre-sanitized raw-HTML variables.
      * Raw-HTML variables (e.g. {@code customMessage}) are substituted verbatim and must already be
-     * safe HTML — see {@link EmailTemplates#buildCustomMessageBlock(String)}.
+     * safe HTML: see {@link EmailTemplates#buildCustomMessageBlock(String)}.
      */
     public String getRenderedBody(EmailTemplateType type, Map<String, String> variables,
                                   Map<String, String> rawHtmlVariables) {
@@ -363,7 +363,7 @@ public class EmailTemplateService {
         // Common fields
         vars.put("contactName", "Jane Doe");
         vars.put("confirmationNumber", "TEST01");
-        vars.put("eventTitle", "Test Event — Template Preview");
+        vars.put("eventTitle", "Test event (template preview)");
         vars.put("eventDate", "Friday, April 4, 2026");
         vars.put("startTime", "18:00");
         vars.put("endTime", "22:00");

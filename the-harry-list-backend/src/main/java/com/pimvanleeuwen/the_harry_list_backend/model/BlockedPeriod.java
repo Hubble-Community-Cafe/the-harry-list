@@ -27,7 +27,7 @@ public class BlockedPeriod {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Optional — if set, only blocks this location. Null = blocks all locations. */
+    /** Optional: if set, only blocks this location. Null = blocks all locations. */
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private BarLocation location;

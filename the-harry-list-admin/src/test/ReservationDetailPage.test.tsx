@@ -65,7 +65,7 @@ const DEFAULT_REJECTION_MESSAGE =
 const renderPage = () =>
   renderInDataRouter(<ReservationDetailPage />, { path: '/reservations/:id', initialEntry: '/reservations/1' });
 
-describe('ReservationDetailPage — change history', () => {
+describe('ReservationDetailPage: change history', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -74,7 +74,7 @@ describe('ReservationDetailPage — change history', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Change History')).toBeInTheDocument();
+      expect(screen.getByText('Change history')).toBeInTheDocument();
     }, { timeout: 3000 });
 
     expect(screen.getByText('Status changed')).toBeInTheDocument();
@@ -100,7 +100,7 @@ describe('ReservationDetailPage — change history', () => {
   });
 });
 
-describe('ReservationDetailPage — custom email message', () => {
+describe('ReservationDetailPage: custom email message', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -162,7 +162,7 @@ describe('ReservationDetailPage: reopen rejected or cancelled reservation', () =
     vi.clearAllMocks();
   });
 
-  it('shows a "Move back to Pending" action for rejected reservations', async () => {
+  it('shows a "Move back to pending" action for rejected reservations', async () => {
     vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'REJECTED' });
 
     renderPage();
@@ -174,7 +174,7 @@ describe('ReservationDetailPage: reopen rejected or cancelled reservation', () =
     expect(screen.queryByTestId('cancel-reservation')).not.toBeInTheDocument();
   });
 
-  it('hides the "Send Catering Options" action for rejected reservations', async () => {
+  it('hides the "Send catering options" action for rejected reservations', async () => {
     const cateringActivities = ['EAT_CATERING'];
     // A catering reservation that is still pending offers the catering email...
     vi.mocked(fetchReservation).mockResolvedValueOnce({
@@ -182,7 +182,7 @@ describe('ReservationDetailPage: reopen rejected or cancelled reservation', () =
     });
     const { unmount } = renderPage();
     await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
-    expect(screen.getByRole('button', { name: /Send Catering Options/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Send catering options/i })).toBeInTheDocument();
     unmount();
 
     // ...but once rejected, there's nothing left to cater, so the action is gone.
@@ -191,10 +191,10 @@ describe('ReservationDetailPage: reopen rejected or cancelled reservation', () =
     });
     renderPage();
     await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
-    expect(screen.queryByRole('button', { name: /Send Catering Options/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Send catering options/i })).not.toBeInTheDocument();
   });
 
-  it('offers "Move back to Pending" for cancelled reservations too', async () => {
+  it('offers "Move back to pending" for cancelled reservations too', async () => {
     vi.mocked(fetchReservation).mockResolvedValueOnce({ ...sampleReservation, status: 'CANCELLED' });
     vi.mocked(updateReservationStatus).mockResolvedValueOnce({ ...sampleReservation, status: 'PENDING' });
 
@@ -255,17 +255,17 @@ describe('ReservationDetailPage: reopen rejected or cancelled reservation', () =
     fireEvent.click(screen.getByRole('checkbox', { name: /send email notification to customer/i }));
 
     const textarea = await screen.findByPlaceholderText(/shaded spot/i);
-    fireEvent.change(textarea, { target: { value: 'Good news — a slot opened up!' } });
+    fireEvent.change(textarea, { target: { value: 'Good news: a slot opened up!' } });
 
     fireEvent.click(screen.getByTestId('reopen-dialog-submit'));
 
     await waitFor(() =>
       expect(updateReservationStatus).toHaveBeenCalledWith(
-        1, 'PENDING', 'Staff Member', true, 'Good news — a slot opened up!'));
+        1, 'PENDING', 'Staff Member', true, 'Good news: a slot opened up!'));
   });
 });
 
-describe('ReservationDetailPage — seating area indicator', () => {
+describe('ReservationDetailPage: seating area indicator', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -298,7 +298,7 @@ describe('ReservationDetailPage — seating area indicator', () => {
   });
 });
 
-describe('ReservationDetailPage — retired status and activity', () => {
+describe('ReservationDetailPage: retired status and activity', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -340,7 +340,7 @@ describe('ReservationDetailPage — retired status and activity', () => {
   });
 });
 
-describe('ReservationDetailPage — edit email default', () => {
+describe('ReservationDetailPage: edit email default', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -363,14 +363,14 @@ describe('ReservationDetailPage — edit email default', () => {
     fireEvent.click(screen.getByTestId('edit-reservation'));
     await screen.findByTestId('edit-save');
 
-    for (const label of ['Contact Name', 'Email', 'Phone', 'Organization', 'Event Title', 'Expected Guests',
-      'Event Date', 'Start Time', 'End Time', 'Description', 'Location', 'Seating Area', 'Payment Method',
+    for (const label of ['Contact name', 'Email', 'Phone', 'Organization', 'Event title', 'Expected guests',
+      'Event date', 'Start time', 'End time', 'Description', 'Location', 'Seating area', 'Payment method',
       'Comments']) {
       expect(screen.getByLabelText(label)).toBeInTheDocument();
     }
-    expect(screen.getByLabelText(/Internal Notes/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Internal notes/)).toBeInTheDocument();
 
-    const activities = screen.getByRole('group', { name: 'Special Activities' });
+    const activities = screen.getByRole('group', { name: 'Special activities' });
     for (const toggle of within(activities).getAllByRole('button')) {
       expect(toggle).toHaveAttribute('aria-pressed');
     }
@@ -472,7 +472,7 @@ describe('ReservationDetailPage: unsaved edits', () => {
 
   it('is a named dialog that asks on Escape after a change, and Escape on the question keeps editing', async () => {
     await openEditor();
-    expect(screen.getByRole('dialog', { name: 'Edit Reservation' })).toHaveAttribute('aria-modal', 'true');
+    expect(screen.getByRole('dialog', { name: 'Edit reservation' })).toHaveAttribute('aria-modal', 'true');
     changeGuests();
 
     fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
@@ -495,7 +495,7 @@ describe('ReservationDetailPage: unsaved edits', () => {
   it('closes with Cancel at once even after a change, since Cancel is an explicit discard', async () => {
     await openEditor();
     changeGuests();
-    const editor = screen.getByRole('heading', { name: 'Edit Reservation' }).closest('.fixed') as HTMLElement;
+    const editor = screen.getByRole('heading', { name: 'Edit reservation' }).closest('[role="dialog"]') as HTMLElement;
     fireEvent.click(within(editor).getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByTestId('edit-save')).not.toBeInTheDocument();
     expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument();
@@ -510,7 +510,7 @@ describe('ReservationDetailPage: unsaved edits', () => {
   });
 });
 
-describe('ReservationDetailPage — catering email reply-to', () => {
+describe('ReservationDetailPage: catering email reply-to', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -520,12 +520,12 @@ describe('ReservationDetailPage — catering email reply-to', () => {
       ...sampleReservation, status: 'PENDING', specialActivities: ['EAT_CATERING'],
     });
     vi.mocked(fetchCateringEmailPreview).mockResolvedValueOnce({
-      subject: 'Catering Options', body: '<p>menu</p>', defaultReplyTo: 'reservations@example.com',
+      subject: 'Catering options', body: '<p>menu</p>', defaultReplyTo: 'reservations@example.com',
     });
 
     renderPage();
     await waitFor(() => expect(screen.getByText('Actions')).toBeInTheDocument(), { timeout: 3000 });
-    fireEvent.click(screen.getByRole('button', { name: /Send Catering Options/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Send catering options/i }));
 
     const replyTo = await screen.findByLabelText(/Reply-To Email/i);
     await waitFor(() => expect(replyTo).toHaveValue('reservations@example.com'));
@@ -579,7 +579,7 @@ describe('ReservationDetailPage: action feedback', () => {
 
     fireEvent.click(screen.getByTestId('reopen-reservation'));
     expect(emailBox).not.toBeChecked(); // reopening suggests no email
-    fireEvent.click(screen.getByRole('button', { name: 'Go Back' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Go back' }));
 
     expect(emailBox).toBeChecked();
   });
@@ -627,7 +627,7 @@ describe('ReservationDetailPage: readable values', () => {
 
     expect(screen.getByText('One person pays at the end')).toBeInTheDocument();
     expect(screen.getAllByText('Hubble').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Eat a la Carte')).toBeInTheDocument();
+    expect(screen.getByText('Eat a la carte')).toBeInTheDocument();
     for (const code of ['CONFIRMED', 'HUBBLE', 'ONE_PERSON', 'EAT A LA CARTE']) {
       expect(screen.queryByText(code)).not.toBeInTheDocument();
     }

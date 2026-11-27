@@ -32,10 +32,9 @@ interface ModalProps {
   closeOnBackdrop?: boolean;
   /** Element to focus on open; defaults to the first focusable element in the dialog. */
   initialFocusRef?: RefObject<HTMLElement | null>;
-  /** Classes for the dialog panel (size, surface, padding). */
+  /** Extra classes for the dialog panel: its size, padding and layout. The surface, edge, radius
+   *  and entrance animation are shared (.dialog-panel), as is the backdrop (.dialog-backdrop). */
   className: string;
-  /** Classes for the full-screen backdrop. */
-  overlayClassName?: string;
   testId?: string;
   backdropTestId?: string;
   children: ReactNode;
@@ -58,7 +57,6 @@ export function Modal({
   closeOnBackdrop = false,
   initialFocusRef,
   className,
-  overlayClassName = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-overlay',
   testId,
   backdropTestId,
   children,
@@ -117,7 +115,7 @@ export function Modal({
 
   return createPortal(
     <div
-      className={overlayClassName}
+      className="dialog-backdrop animate-overlay"
       data-testid={backdropTestId}
       onClick={closeOnBackdrop ? (event) => { if (event.target === event.currentTarget) onClose(); } : undefined}
     >
@@ -129,7 +127,7 @@ export function Modal({
         aria-describedby={describedBy}
         tabIndex={-1}
         data-testid={testId}
-        className={`${className} outline-none`}
+        className={`dialog-panel animate-modal ${className} outline-none`}
       >
         {children}
       </div>

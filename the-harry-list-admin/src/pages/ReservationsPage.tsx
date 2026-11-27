@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   Search, Filter, Calendar, Users, MapPin,
-  CheckCircle, XCircle, Clock, Loader2, AlertCircle,
+  Clock, Loader2, AlertCircle,
   ChevronRight, UtensilsCrossed
 } from 'lucide-react';
 import { fetchReservations, updateCateringArranged } from '../lib/api';
@@ -11,6 +11,7 @@ import { usePermissions } from '../lib/usePermissions';
 import { HelpGuide } from '../components/HelpGuide';
 import { reservationsGuide } from '../lib/guideContent';
 import { locationLabel, statusLabel } from '../lib/labels';
+import { StatusBadge } from '../components/StatusBadge';
 
 const statusOptions = ['ALL', 'PENDING', 'CONFIRMED', 'REJECTED', 'CANCELLED'];
 const locationOptions = ['ALL', 'HUBBLE', 'METEOR'];
@@ -84,9 +85,9 @@ export function ReservationsPage() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-6 text-center">
-        <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-        <p className="text-red-400">{error}</p>
+      <div className="border rounded-xl p-6 text-center notice-error">
+        <AlertCircle aria-hidden="true" className="w-8 h-8 mx-auto mb-2" />
+        <p>{error}</p>
       </div>
     );
   }
@@ -99,7 +100,7 @@ export function ReservationsPage() {
           <h1 className="text-2xl font-title font-bold text-white tracking-tight">Reservations</h1>
           <p className="text-dark-400 font-light">Manage all reservation requests</p>
         </div>
-        <HelpGuide title="Reservations Guide" sections={reservationsGuide} />
+        <HelpGuide title="Reservations guide" sections={reservationsGuide} />
       </div>
 
       {/* Filters */}
@@ -129,7 +130,7 @@ export function ReservationsPage() {
             >
               {statusOptions.map((status) => (
                 <option key={status} value={status}>
-                  {status === 'ALL' ? 'All Statuses' : statusLabel(status)}
+                  {status === 'ALL' ? 'All statuses' : statusLabel(status)}
                 </option>
               ))}
             </select>
@@ -146,7 +147,7 @@ export function ReservationsPage() {
             >
               {locationOptions.map((location) => (
                 <option key={location} value={location}>
-                  {location === 'ALL' ? 'All Locations' : locationLabel(location)}
+                  {location === 'ALL' ? 'All locations' : locationLabel(location)}
                 </option>
               ))}
             </select>
@@ -170,7 +171,7 @@ export function ReservationsPage() {
         Showing {sortedReservations.length} of {reservations.length} reservations
       </div>
 
-      {/* Reservations List */}
+      {/* Reservations list */}
       <div className="space-y-6">
         {groupedByDay.length === 0 ? (
           <div className="card text-center py-12">
@@ -244,8 +245,8 @@ export function ReservationsPage() {
                                   }}
                                   className={`relative z-10 inline-flex items-center gap-1 min-h-6 px-2 py-0.5 rounded text-xs font-medium transition-colors ${
                                     reservation.cateringArranged
-                                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                                      ? 'border notice-success'
+                                      : 'border notice-warning'
                                   }`}
                                   title={reservation.cateringArranged ? 'Catering arranged ✓ (click to undo)' : 'Catering requested (click to mark as arranged)'}
                                 >
@@ -255,8 +256,8 @@ export function ReservationsPage() {
                                 ) : (
                                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
                                     reservation.cateringArranged
-                                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                                      ? 'border notice-success'
+                                      : 'border notice-warning'
                                   }`}>
                                   <UtensilsCrossed className="w-3 h-3" />
                                   {reservation.cateringArranged ? 'Catering arranged' : 'Catering to arrange'}
@@ -291,7 +292,7 @@ export function ReservationsPage() {
                       </div>
                     </div>
                     {cateringError?.id === reservation.id && (
-                      <p role="alert" data-testid="catering-error" className="relative z-10 mt-3 text-sm text-red-400">
+                      <p role="alert" data-testid="catering-error" className="relative z-10 mt-3 text-sm notice-text-error">
                         {cateringError.message}
                       </p>
                     )}
@@ -310,24 +311,6 @@ const CATERING_ACTIVITIES = ['EAT_A_LA_CARTE', 'EAT_CATERING', 'CATERING_CORONA_
 
 function hasCatering(activities?: string[]): boolean {
   return !!activities?.some(a => CATERING_ACTIVITIES.includes(a));
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { color: string; icon: typeof CheckCircle }> = {
-    PENDING: { color: 'bg-yellow-500/20 text-yellow-400', icon: Clock },
-    CONFIRMED: { color: 'bg-green-500/20 text-green-400', icon: CheckCircle },
-    REJECTED: { color: 'bg-red-500/20 text-red-400', icon: XCircle },
-    CANCELLED: { color: 'bg-dark-500/20 text-dark-400', icon: XCircle },
-  };
-
-  const { color, icon: Icon } = config[status] || config.PENDING;
-
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${color}`}>
-      <Icon className="w-3 h-3" />
-      {statusLabel(status)}
-    </span>
-  );
 }
 
 function LocationBadge({ location }: { location: string }) {

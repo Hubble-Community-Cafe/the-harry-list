@@ -50,11 +50,11 @@ export const SEATING_LABELS: Record<string, string> = {
 export const seatingLabel = labelFrom(SEATING_LABELS);
 
 export const ACTIVITY_LABELS: Record<string, string> = {
-  GRADUATION: 'Graduation / PhD Defense',
-  EAT_A_LA_CARTE: 'Eat a la Carte',
-  EAT_CATERING: 'Eat Catering',
+  GRADUATION: 'Graduation / PhD defense',
+  EAT_A_LA_CARTE: 'Eat a la carte',
+  EAT_CATERING: 'Eat catering',
   CATERING_CORONA_ROOM: 'Catering Corona Room',
-  PRIVATE_EVENT: 'Private Event (retired)',
+  PRIVATE_EVENT: 'Private event (retired)',
 };
 export const activityLabel = labelFrom(ACTIVITY_LABELS);
 

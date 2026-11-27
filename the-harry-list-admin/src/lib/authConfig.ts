@@ -10,7 +10,6 @@ declare global {
       AZURE_CLIENT_ID?: string;
       AZURE_TENANT_ID?: string;
       REDIRECT_URI?: string;
-      ALLOWED_GROUP_ID?: string;
       SENTRY_DSN?: string;
       // e2e-only: injected by docker-compose.e2e.yml to bypass MSAL in tests.
       E2E_AUTH_OID?: string;
@@ -40,9 +39,6 @@ if (import.meta.env.DEV) {
     runtimeConfig: window.__RUNTIME_CONFIG__ ? 'loaded' : 'not loaded',
   });
 }
-
-// Allowed group ID - only members of this group can access the admin portal
-export const ALLOWED_GROUP_ID = getConfig('ALLOWED_GROUP_ID', 'VITE_ALLOWED_GROUP_ID');
 
 export const msalConfig: Configuration = {
   auth: {
@@ -81,9 +77,4 @@ export const loginRequest = {
     'email',
     `api://${AZURE_CLIENT_ID}/access_as_user`
   ],
-};
-
-export const graphConfig = {
-  graphMeEndpoint: 'https://graph.microsoft.com/v1.0/me',
-  graphMemberOfEndpoint: 'https://graph.microsoft.com/v1.0/me/memberOf',
 };

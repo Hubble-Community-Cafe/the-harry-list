@@ -15,6 +15,6 @@ test('page subtitles use Lato Light, and the small sidebar label stays regular',
   // font-light must set the weight (it once set a font family, so Lato Light was never used).
   const subtitle = page.getByText('Manage constraints, blocked periods, and admin settings');
   await expect(subtitle).toHaveCSS('font-weight', '300');
-  await expect(page.getByText('Admin Portal')).toHaveCSS('font-weight', '400');
+  await expect(page.getByText('Admin portal')).toHaveCSS('font-weight', '400');
   expect(await page.evaluate(() => document.fonts.check('300 16px Lato'))).toBe(true);
 });

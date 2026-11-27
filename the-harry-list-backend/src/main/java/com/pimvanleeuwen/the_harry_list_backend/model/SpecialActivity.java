@@ -14,7 +14,7 @@ import java.util.Set;
  * rendering in the admin panel, PDF day reports, ICS feeds and emails.
  */
 public enum SpecialActivity {
-    GRADUATION("Graduation / PhD Defense"),
+    GRADUATION("Graduation / PhD defense"),
     EAT_A_LA_CARTE("Eat a la carte"),
     EAT_CATERING("Eat catering"),
     CATERING_CORONA_ROOM("Catering Corona Room"),

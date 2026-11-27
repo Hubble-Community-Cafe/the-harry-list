@@ -16,14 +16,14 @@ export function ContactStep() {
               <User className="w-5 h-5 text-hubble-400" />
             </div>
             <div>
-              <h2 tabIndex={-1} className="text-xl font-title font-semibold text-white tracking-tight outline-none">Contact Information</h2>
+              <h2 tabIndex={-1} className="text-xl font-title font-semibold text-white tracking-tight outline-none">Contact information</h2>
               <p className="text-sm text-dark-400 font-light">Tell us how to reach you</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="form-group">
-              <label htmlFor="contactName" className="label">Full Name *</label>
+              <label htmlFor="contactName" className="label">Full name *</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                 <input
@@ -39,7 +39,7 @@ export function ContactStep() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="email" className="label">Email Address *</label>
+              <label htmlFor="email" className="label">Email address *</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                 <input
@@ -55,7 +55,7 @@ export function ContactStep() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="phoneNumber" className="label">Phone Number</label>
+              <label htmlFor="phoneNumber" className="label">Phone number</label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                 <input
@@ -70,7 +70,7 @@ export function ContactStep() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="organizationName" className="label">Organization / Association</label>
+              <label htmlFor="organizationName" className="label">Organization / association</label>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 z-10 pointer-events-none" />
                 <input

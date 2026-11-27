@@ -186,28 +186,28 @@ export function CalendarAppointmentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Calendar Appointments</h1>
+          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Calendar appointments</h1>
           <p className="text-dark-400 font-light">Custom calendar entries that appear in the ICS feeds alongside reservations</p>
         </div>
         {canManageAppointments && (
         <button
           onClick={() => openEditor({ ...emptyAppointment })}
-          className="btn-primary flex items-center gap-2 shrink-0"
+          className="btn-primary btn-sm gap-2 shrink-0"
           data-testid="add-appointment"
         >
           <Plus className="w-4 h-4" />
-          Add Appointment
+          Add appointment
         </button>
         )}
       </div>
 
       {/* Error */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-          <span className="text-red-400 text-sm">{error}</span>
+        <div className="border rounded-lg p-4 flex items-center gap-3 notice-error">
+          <AlertCircle aria-hidden="true" className="w-5 h-5 shrink-0" />
+          <span className="text-sm">{error}</span>
           <button onClick={() => setError(null)} aria-label="Dismiss error" className="ml-auto">
-            <X className="w-4 h-4 text-red-400" />
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
@@ -241,7 +241,7 @@ export function CalendarAppointmentsPage() {
                   </span>
                   {/* All-day or time badge */}
                   {appointment.allDay ? (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 flex items-center gap-1">
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded notice-info flex items-center gap-1">
                       <Sun className="w-3 h-3" />
                       All day
                     </span>
@@ -255,7 +255,7 @@ export function CalendarAppointmentsPage() {
                   {appointment.recurrenceType !== 'NONE' && (
                     <span
                       data-testid="appointment-recurrence"
-                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 flex items-center gap-1"
+                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded notice-info flex items-center gap-1"
                     >
                       <Repeat className="w-3 h-3" />
                       {recurrenceSummary(appointment)}
@@ -291,13 +291,13 @@ export function CalendarAppointmentsPage() {
                   aria-label={`Appointment enabled: ${appointment.title}`}
                 >
                   {appointment.enabled
-                    ? <ToggleRight className="w-5 h-5 text-green-400" />
+                    ? <ToggleRight className="w-5 h-5 notice-text-success" />
                     : <ToggleLeft className="w-5 h-5 text-dark-500" />
                   }
                 </button>
                 <button
                   onClick={() => appointment.id && setDeleteTarget(appointment.id)}
-                  className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10"
+                  className="p-1.5 rounded-lg text-dark-400 hover-danger"
                   title="Delete"
                   aria-label={`Delete appointment: ${appointment.title}`}
                 >
@@ -315,13 +315,12 @@ export function CalendarAppointmentsPage() {
         <Modal
           labelledBy="appointment-dialog-title"
           onClose={() => confirmDiscard(() => setEditing(null))}
-          overlayClassName="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-          className="bg-dark-900 border border-dark-700 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+          className="max-w-lg max-h-[90vh] overflow-y-auto"
         >
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 id="appointment-dialog-title" className="text-lg font-semibold text-white">
-                  {editing.id ? 'Edit Appointment' : 'New Appointment'}
+                <h2 id="appointment-dialog-title" className="dialog-title">
+                  {editing.id ? 'Edit appointment' : 'New appointment'}
                 </h2>
                 <button
                   onClick={() => confirmDiscard(() => setEditing(null))}
@@ -339,7 +338,7 @@ export function CalendarAppointmentsPage() {
                   type="text"
                   value={editing.title}
                   onChange={e => setEditing({ ...editing, title: e.target.value })}
-                  className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full input-field field-sm"
                   placeholder="e.g. Staff Meeting, Holiday Closure"
                   data-testid="appointment-title"
                 />
@@ -352,7 +351,7 @@ export function CalendarAppointmentsPage() {
                   value={editing.description || ''}
                   onChange={e => setEditing({ ...editing, description: e.target.value })}
                   rows={2}
-                  className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full input-field field-sm"
                   placeholder="Optional notes or details"
                 />
               </div>
@@ -364,7 +363,7 @@ export function CalendarAppointmentsPage() {
                   type="date"
                   value={editing.date}
                   onChange={e => setEditing({ ...editing, date: e.target.value })}
-                  className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full input-field field-sm"
                   data-testid="appointment-date"
                 />
               </div>
@@ -381,7 +380,7 @@ export function CalendarAppointmentsPage() {
                   data-testid="appointment-allday-toggle"
                 >
                   {editing.allDay
-                    ? <ToggleRight className="w-6 h-6 text-amber-400" />
+                    ? <ToggleRight className="w-6 h-6 notice-text-success" />
                     : <ToggleLeft className="w-6 h-6 text-dark-500" />
                   }
                 </button>
@@ -392,21 +391,21 @@ export function CalendarAppointmentsPage() {
               {!editing.allDay && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="min-w-0">
-                    <label htmlFor="appointment-start-time" className="label">Start Time *</label>
+                    <label htmlFor="appointment-start-time" className="label">Start time *</label>
                     <input id="appointment-start-time"
                       type="time"
                       value={editing.startTime || ''}
                       onChange={e => setEditing({ ...editing, startTime: e.target.value })}
-                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full min-w-0 input-field field-sm"
                     />
                   </div>
                   <div className="min-w-0">
-                    <label htmlFor="appointment-end-time" className="label">End Time *</label>
+                    <label htmlFor="appointment-end-time" className="label">End time *</label>
                     <input id="appointment-end-time"
                       type="time"
                       value={editing.endTime || ''}
                       onChange={e => setEditing({ ...editing, endTime: e.target.value })}
-                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full min-w-0 input-field field-sm"
                     />
                   </div>
                 </div>
@@ -418,20 +417,20 @@ export function CalendarAppointmentsPage() {
                 <select id="appointment-location"
                   value={editing.location}
                   onChange={e => setEditing({ ...editing, location: e.target.value })}
-                  className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full select-field field-sm"
                 >
                   <option value="HUBBLE">Hubble</option>
                   <option value="METEOR">Meteor</option>
                 </select>
               </div>
 
-              {/* Recurrence — guided builder */}
+              {/* Recurrence: guided builder */}
               <div>
                 <label htmlFor="appointment-recurrence" className="label">Recurrence</label>
                 <select id="appointment-recurrence"
                   value={frequencyOf(editing.recurrenceType)}
                   onChange={e => handleFrequencyChange(e.target.value as Frequency)}
-                  className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full select-field field-sm"
                   data-testid="appointment-frequency"
                 >
                   {FREQUENCY_OPTIONS.map(opt => (
@@ -442,7 +441,7 @@ export function CalendarAppointmentsPage() {
 
               {editing.recurrenceType !== 'NONE' && (
                 <>
-                  {/* Interval — "repeat every N units" */}
+                  {/* Interval: "repeat every N units" */}
                   <div className="flex items-end gap-2">
                     <div>
                       <label htmlFor="appointment-repeat-every" className="label">Repeat every</label>
@@ -455,7 +454,7 @@ export function CalendarAppointmentsPage() {
                           ...editing,
                           recurrenceInterval: Math.max(1, parseInt(e.target.value, 10) || 1),
                         })}
-                        className="w-20 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-20 input-field field-sm"
                       />
                     </div>
                     <span className="text-sm text-dark-300 pb-2">
@@ -476,7 +475,7 @@ export function CalendarAppointmentsPage() {
                           checked={editing.recurrenceType === 'MONTHLY'}
                           onChange={() => setMonthlyMode('dayOfMonth')}
                         />
-                        On day {editing.date ? new Date(editing.date + 'T00:00:00').getDate() : '—'} of the month
+                        {editing.date ? `On day ${new Date(editing.date + 'T00:00:00').getDate()} of the month` : 'On the same day of each month'}
                       </label>
                       <label className="flex items-center gap-2 text-sm text-dark-300 flex-wrap">
                         <input
@@ -497,7 +496,7 @@ export function CalendarAppointmentsPage() {
                             recurrenceDayOfWeek: editing.recurrenceDayOfWeek
                               ?? (editing.date ? nthWeekdayFromDate(editing.date).day : 'MONDAY'),
                           })}
-                          className="bg-dark-800 border border-dark-700 rounded-lg px-2 py-1 text-white text-sm"
+                          className="select-field field-sm w-auto"
                         >
                           {WEEK_OF_MONTH_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -512,7 +511,7 @@ export function CalendarAppointmentsPage() {
                             recurrenceWeekOfMonth: editing.recurrenceWeekOfMonth ?? 1,
                             recurrenceDayOfWeek: e.target.value as DayOfWeek,
                           })}
-                          className="bg-dark-800 border border-dark-700 rounded-lg px-2 py-1 text-white text-sm"
+                          className="select-field field-sm w-auto"
                         >
                           {WEEKDAYS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -524,12 +523,12 @@ export function CalendarAppointmentsPage() {
 
                   {/* Recurrence end date */}
                   <div>
-                    <label htmlFor="appointment-recurrence-end-date" className="label">Recurrence End Date</label>
+                    <label htmlFor="appointment-recurrence-end-date" className="label">Recurrence end date</label>
                     <input id="appointment-recurrence-end-date"
                       type="date"
                       value={editing.recurrenceEndDate || ''}
                       onChange={e => setEditing({ ...editing, recurrenceEndDate: e.target.value })}
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full input-field field-sm"
                     />
                     <p className="text-xs text-dark-500 mt-1">Leave empty for indefinite recurrence</p>
                   </div>
@@ -540,18 +539,18 @@ export function CalendarAppointmentsPage() {
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   onClick={() => setEditing(null)}
-                  className="px-4 py-2 text-sm text-dark-400 hover:text-white transition-colors"
+                  className="btn-neutral btn-sm"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={saving || !editing.title || !editing.date || (!editing.allDay && (!editing.startTime || !editing.endTime))}
-                  className="btn-primary flex items-center gap-2"
+                  className="btn-primary btn-sm gap-2"
                   data-testid="save-appointment"
                 >
                   {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {editing.id ? 'Save Changes' : 'Create Appointment'}
+                  {editing.id ? 'Save changes' : 'Create appointment'}
                 </button>
               </div>
             </div>

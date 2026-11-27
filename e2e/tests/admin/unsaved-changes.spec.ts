@@ -42,11 +42,11 @@ test.describe('admin: unsaved changes', () => {
     // The email template editor sits in the page itself, so the sidebar stays clickable (the
     // reservation editor is a dialog whose overlay covers the sidebar).
     await page.goto('/email-templates');
-    await page.getByRole('button', { name: /Submission Confirmation/ }).click();
+    await page.getByRole('button', { name: /Submission confirmation/ }).click();
     const subject = page.getByPlaceholder('Subject...');
     await subject.fill('Unsaved subject');
 
-    await page.getByRole('link', { name: 'Week Overview' }).click();
+    await page.getByRole('link', { name: 'Week overview' }).click();
     await expect(discardQuestion(page)).toBeVisible();
     await page.getByRole('button', { name: 'Keep editing' }).click();
 

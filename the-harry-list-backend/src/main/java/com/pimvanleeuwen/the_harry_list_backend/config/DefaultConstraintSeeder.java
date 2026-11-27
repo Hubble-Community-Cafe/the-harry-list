@@ -73,19 +73,19 @@ public class DefaultConstraintSeeder implements CommandLineRunner {
                 .message("Early time slots (before 11:00) are only available for Corona Room catering")
                 .build());
 
-        // Advance booking requirements
+        // Advance notice requirements
         formConstraintRepository.save(FormConstraint.builder()
                 .constraintType(FormConstraintType.ADVANCE_BOOKING)
                 .triggerActivity("EAT_CATERING")
                 .numericValue(7)
-                .message("Catering requires at least 7 days advance booking")
+                .message("Catering needs at least 7 days' notice")
                 .build());
 
         formConstraintRepository.save(FormConstraint.builder()
                 .constraintType(FormConstraintType.ADVANCE_BOOKING)
                 .triggerActivity("CATERING_CORONA_ROOM")
                 .numericValue(7)
-                .message("Corona Room catering requires at least 7 days advance booking")
+                .message("Corona Room catering needs at least 7 days' notice")
                 .build());
 
         // Guest limits
