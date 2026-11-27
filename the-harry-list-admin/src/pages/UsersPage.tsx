@@ -136,7 +136,7 @@ export function UsersTab() {
                         value={user.role}
                         onChange={e => handleRoleChange(user.id, e.target.value)}
                         disabled={saving === user.id}
-                        className="bg-dark-800 border border-dark-700 rounded-lg px-3 py-1.5 text-white text-sm appearance-none pr-8 cursor-pointer disabled:opacity-50"
+                        className="select-field field-sm w-auto disabled:opacity-50"
                       >
                         {ROLE_OPTIONS.map(role => (
                           <option key={role} value={role}>{roleLabel(role)}</option>

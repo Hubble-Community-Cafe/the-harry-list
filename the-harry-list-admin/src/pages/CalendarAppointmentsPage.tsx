@@ -339,7 +339,7 @@ export function CalendarAppointmentsPage() {
                   type="text"
                   value={editing.title}
                   onChange={e => setEditing({ ...editing, title: e.target.value })}
-                  className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full input-field field-sm"
                   placeholder="e.g. Staff Meeting, Holiday Closure"
                   data-testid="appointment-title"
                 />
@@ -352,7 +352,7 @@ export function CalendarAppointmentsPage() {
                   value={editing.description || ''}
                   onChange={e => setEditing({ ...editing, description: e.target.value })}
                   rows={2}
-                  className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full input-field field-sm"
                   placeholder="Optional notes or details"
                 />
               </div>
@@ -364,7 +364,7 @@ export function CalendarAppointmentsPage() {
                   type="date"
                   value={editing.date}
                   onChange={e => setEditing({ ...editing, date: e.target.value })}
-                  className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full input-field field-sm"
                   data-testid="appointment-date"
                 />
               </div>
@@ -397,7 +397,7 @@ export function CalendarAppointmentsPage() {
                       type="time"
                       value={editing.startTime || ''}
                       onChange={e => setEditing({ ...editing, startTime: e.target.value })}
-                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full min-w-0 input-field field-sm"
                     />
                   </div>
                   <div className="min-w-0">
@@ -406,7 +406,7 @@ export function CalendarAppointmentsPage() {
                       type="time"
                       value={editing.endTime || ''}
                       onChange={e => setEditing({ ...editing, endTime: e.target.value })}
-                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full min-w-0 input-field field-sm"
                     />
                   </div>
                 </div>
@@ -418,7 +418,7 @@ export function CalendarAppointmentsPage() {
                 <select id="appointment-location"
                   value={editing.location}
                   onChange={e => setEditing({ ...editing, location: e.target.value })}
-                  className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full select-field field-sm"
                 >
                   <option value="HUBBLE">Hubble</option>
                   <option value="METEOR">Meteor</option>
@@ -431,7 +431,7 @@ export function CalendarAppointmentsPage() {
                 <select id="appointment-recurrence"
                   value={frequencyOf(editing.recurrenceType)}
                   onChange={e => handleFrequencyChange(e.target.value as Frequency)}
-                  className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full select-field field-sm"
                   data-testid="appointment-frequency"
                 >
                   {FREQUENCY_OPTIONS.map(opt => (
@@ -455,7 +455,7 @@ export function CalendarAppointmentsPage() {
                           ...editing,
                           recurrenceInterval: Math.max(1, parseInt(e.target.value, 10) || 1),
                         })}
-                        className="w-20 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-20 input-field field-sm"
                       />
                     </div>
                     <span className="text-sm text-dark-300 pb-2">
@@ -497,7 +497,7 @@ export function CalendarAppointmentsPage() {
                             recurrenceDayOfWeek: editing.recurrenceDayOfWeek
                               ?? (editing.date ? nthWeekdayFromDate(editing.date).day : 'MONDAY'),
                           })}
-                          className="bg-dark-800 border border-dark-700 rounded-lg px-2 py-1 text-white text-sm"
+                          className="select-field field-sm w-auto"
                         >
                           {WEEK_OF_MONTH_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -512,7 +512,7 @@ export function CalendarAppointmentsPage() {
                             recurrenceWeekOfMonth: editing.recurrenceWeekOfMonth ?? 1,
                             recurrenceDayOfWeek: e.target.value as DayOfWeek,
                           })}
-                          className="bg-dark-800 border border-dark-700 rounded-lg px-2 py-1 text-white text-sm"
+                          className="select-field field-sm w-auto"
                         >
                           {WEEKDAYS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -529,7 +529,7 @@ export function CalendarAppointmentsPage() {
                       type="date"
                       value={editing.recurrenceEndDate || ''}
                       onChange={e => setEditing({ ...editing, recurrenceEndDate: e.target.value })}
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full input-field field-sm"
                     />
                     <p className="text-xs text-dark-500 mt-1">Leave empty for indefinite recurrence</p>
                   </div>

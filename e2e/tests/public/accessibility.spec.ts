@@ -100,3 +100,15 @@ test('keyboard: a focused choice card shows a visible focus ring', async ({ page
   await expect(card).toHaveCSS('outline-style', 'solid');
   await expect(card).toHaveCSS('outline-width', '2px');
 });
+
+for (const [theme, edge] of [['dark', 'rgb(85, 122, 134)'], ['light', 'rgb(127, 143, 152)']] as const) {
+  test(`form fields show their 3:1 edge colour (${theme})`, async ({ page, request }) => {
+    // Guards a cascade-layer bug: an unlayered default border colour once overrode every
+    // border class, so dark-mode fields had no visible edge.
+    await resetBackend(request);
+    await useTheme(page, theme);
+    const form = new ReservationFormPage(page);
+    await form.goto();
+    await expect(page.getByTestId('contact-name')).toHaveCSS('border-top-color', edge);
+  });
+}

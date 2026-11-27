@@ -85,8 +85,7 @@ export function ExportPage() {
               data-testid="export-date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-xl text-white
-                         focus:border-hubble-500 focus:ring-1 focus:ring-hubble-500 outline-none transition-colors"
+              className="input-field"
             />
           </div>
 

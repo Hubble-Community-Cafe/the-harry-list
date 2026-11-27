@@ -257,7 +257,7 @@ export function SettingsPage() {
                 aria-label="Settings section"
                 value={activeTab}
                 onChange={e => setActiveTab(e.target.value as typeof activeTab)}
-                className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2.5 text-white text-sm appearance-none"
+                className="select-field field-sm"
               >
                 {tabs.map(t => (
                   <option key={t.key} value={t.key}>{t.label}</option>
@@ -495,7 +495,7 @@ export function SettingsPage() {
                       constraintType: e.target.value,
                       triggerActivity: e.target.value === 'GUEST_MINIMUM' ? 'ANY' : editingConstraint.triggerActivity,
                     })}
-                    className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                    className="w-full select-field field-sm"
                   >
                     {CONSTRAINT_TYPES.map(t => (
                       <option key={t.value} value={t.value}>{t.label}</option>
@@ -510,7 +510,7 @@ export function SettingsPage() {
                       data-testid="constraint-trigger"
                       value={editingConstraint.triggerActivity}
                       onChange={e => setEditingConstraint({ ...editingConstraint, triggerActivity: e.target.value })}
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full select-field field-sm"
                     >
                       {ACTIVITIES.map(a => (
                         <option key={a} value={a}>{activityLabel(a)}</option>
@@ -558,7 +558,7 @@ export function SettingsPage() {
                         data-testid="constraint-notice-location"
                         value={editingConstraint.secondaryValue || ''}
                         onChange={e => setEditingConstraint({ ...editingConstraint, secondaryValue: e.target.value })}
-                        className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-full select-field field-sm"
                       >
                         <option value="">Any location</option>
                         {LOCATIONS.map(l => (
@@ -581,7 +581,7 @@ export function SettingsPage() {
                           numericValue: e.target.value ? parseInt(e.target.value) : undefined,
                         })}
                         placeholder="Any group size"
-                        className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-full input-field field-sm"
                       />
                     </div>
                     <p className="sm:col-span-2 text-xs text-dark-500">
@@ -601,7 +601,7 @@ export function SettingsPage() {
                       value={editingConstraint.targetValue || ''}
                       onChange={e => setEditingConstraint({ ...editingConstraint, targetValue: e.target.value })}
                       placeholder="e.g. EAT_A_LA_CARTE, HUBBLE, INSIDE"
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full input-field field-sm"
                     />
                     <p className="text-xs text-dark-500 mt-1">
                       {editingConstraint.constraintType === 'ACTIVITY_CONFLICT' && 'The conflicting activity'}
@@ -633,7 +633,7 @@ export function SettingsPage() {
                         ...editingConstraint,
                         numericValue: e.target.value ? parseInt(e.target.value) : undefined,
                       })}
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full input-field field-sm"
                     />
                   </div>
                 )}
@@ -646,7 +646,7 @@ export function SettingsPage() {
                       value={editingConstraint.secondaryValue || ''}
                       onChange={e => setEditingConstraint({ ...editingConstraint, secondaryValue: e.target.value })}
                       placeholder="e.g. 09:00-10:45"
-                      className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full input-field field-sm"
                     />
                   </div>
                 )}
@@ -658,7 +658,7 @@ export function SettingsPage() {
                     value={editingConstraint.message}
                     onChange={e => setEditingConstraint({ ...editingConstraint, message: e.target.value })}
                     rows={2}
-                    className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                    className="w-full input-field field-sm"
                   />
                   {editingConstraint.constraintType === 'ACTIVITY_NOTICE' && (
                     <p className="text-xs text-dark-500 mt-1">
@@ -718,7 +718,7 @@ export function SettingsPage() {
                   <select id="period-location"
                     value={editingPeriod.location || ''}
                     onChange={e => setEditingPeriod({ ...editingPeriod, location: e.target.value || undefined })}
-                    className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                    className="w-full select-field field-sm"
                   >
                     <option value="">All locations</option>
                     {LOCATIONS.map(l => (
@@ -734,7 +734,7 @@ export function SettingsPage() {
                       type="date"
                       value={editingPeriod.startDate}
                       onChange={e => setEditingPeriod({ ...editingPeriod, startDate: e.target.value })}
-                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full min-w-0 input-field field-sm"
                     />
                   </div>
                   <div className="min-w-0">
@@ -743,7 +743,7 @@ export function SettingsPage() {
                       type="date"
                       value={editingPeriod.endDate}
                       onChange={e => setEditingPeriod({ ...editingPeriod, endDate: e.target.value })}
-                      className="w-full min-w-0 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full min-w-0 input-field field-sm"
                     />
                   </div>
                 </div>
@@ -756,7 +756,7 @@ export function SettingsPage() {
                         type="time"
                         value={editingPeriod.startTime || ''}
                         onChange={e => setEditingPeriod({ ...editingPeriod, startTime: e.target.value || undefined })}
-                        className="w-full min-w-0 flex-1 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-full min-w-0 flex-1 input-field field-sm"
                       />
                       {editingPeriod.startTime && (
                         <button
@@ -778,7 +778,7 @@ export function SettingsPage() {
                         type="time"
                         value={editingPeriod.endTime || ''}
                         onChange={e => setEditingPeriod({ ...editingPeriod, endTime: e.target.value || undefined })}
-                        className="w-full min-w-0 flex-1 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-full min-w-0 flex-1 input-field field-sm"
                       />
                       {editingPeriod.endTime && (
                         <button
@@ -802,7 +802,7 @@ export function SettingsPage() {
                     value={editingPeriod.reason}
                     onChange={e => setEditingPeriod({ ...editingPeriod, reason: e.target.value })}
                     placeholder="e.g. Holiday closure, Maintenance"
-                    className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                    className="w-full input-field field-sm"
                   />
                 </div>
 
@@ -813,7 +813,7 @@ export function SettingsPage() {
                     value={editingPeriod.publicMessage || ''}
                     onChange={e => setEditingPeriod({ ...editingPeriod, publicMessage: e.target.value })}
                     placeholder="e.g. Closed for maintenance"
-                    className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                    className="w-full input-field field-sm"
                   />
                 </div>
 
@@ -850,7 +850,7 @@ export function SettingsPage() {
                         value={editingPeriod.acknowledgementText || ''}
                         onChange={e => setEditingPeriod({ ...editingPeriod, acknowledgementText: e.target.value })}
                         placeholder="I understand the bar may be closed and my reservation is a request"
-                        className="w-full bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-full input-field field-sm"
                       />
                       <p className="text-xs text-dark-500 mt-1">Leave blank to use a default acknowledgement message.</p>
                     </div>

@@ -175,6 +175,11 @@ html {
 }
 
 :root {
+  /* Form fields: the edge is at least 3:1 against the field and the card (WCAG 1.4.11), and
+     placeholders at least 4.5:1, in both themes. */
+  --field-border: #557a86;
+  --field-placeholder: var(--color-dark-400);
+
   /* Reservation status (StatusBadge, week cards). Housestyle colours: pending in the warm peach
      accent, confirmed in Meteor green, rejected red, cancelled in the tan neutral. Text is at
      least 5.9:1 on its tint over a card in both themes. */
@@ -231,8 +236,12 @@ html {
   --ring: 186 55% 49%;
 }
 
-* {
-  border-color: hsl(var(--border));
+/* A default border colour, in Tailwind's base layer so every border-* class can override it.
+   (Unlayered, it beat all of them: dark mode showed one grey for every border.) */
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
 }
 
 /* Dark mode */
@@ -275,6 +284,9 @@ body {
   --color-hubble-400: #1a6b7c;
   --color-hubble-500: #0f5568;
   --color-meteor-400: #2d7a5e;
+
+  --field-border: #7f8f98;
+  --field-placeholder: #66757c;
 
   --status-pending-fg: #8a4b12;
   --status-pending-bg: rgb(255 188 125 / 0.28);
@@ -398,7 +410,7 @@ body {
 .light .input-field,
 .light .select-field {
   background-color: #ffffff;
-  border-color: #cdd5da;
+  border-color: var(--field-border);
   color: #1a2428;
 }
 
@@ -406,10 +418,6 @@ body {
 .light .select-field:focus {
   border-color: #1a6b7c;
   box-shadow: 0 0 0 3px rgba(26, 107, 124, 0.1);
-}
-
-.light .input-field::placeholder {
-  color: #9ca3af;
 }
 
 .light .select-field:focus {
@@ -785,17 +793,39 @@ body.dark {
   }
 
   .input-field {
-    @apply w-full rounded-xl border border-dark-700 bg-dark-800/50 px-4 py-3 text-white placeholder-dark-400 transition-all duration-200 focus:border-hubble-500 focus:outline-none focus:ring-2 focus:ring-hubble-500/20;
+    @apply w-full rounded-xl border bg-dark-800/50 px-4 py-3 text-white transition-all duration-200 focus:border-hubble-500 focus:outline-none focus:ring-2 focus:ring-hubble-500/20;
   }
 
   .select-field {
-    @apply w-full rounded-xl border border-dark-700 bg-dark-800/50 px-4 py-3 text-white transition-all duration-200 focus:border-hubble-500 focus:outline-none focus:ring-2 focus:ring-hubble-500/20 cursor-pointer;
+    @apply w-full rounded-xl border bg-dark-800/50 px-4 py-3 text-white transition-all duration-200 focus:border-hubble-500 focus:outline-none focus:ring-2 focus:ring-hubble-500/20 cursor-pointer;
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235a6a70' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
     background-size: 20px;
     padding-right: 44px;
+  }
+
+  .input-field,
+  .select-field {
+    border-color: var(--field-border);
+  }
+  .input-field::placeholder {
+    color: var(--field-placeholder);
+  }
+  .input-field:focus,
+  .select-field:focus {
+    border-color: var(--color-hubble-500);
+  }
+
+  /* Compact fields for dialogs and toolbars; combine with input-field or select-field. */
+  .field-sm {
+    @apply rounded-lg px-3 py-2 text-sm;
+  }
+  .select-field.field-sm {
+    padding-right: 36px;
+    background-position: right 8px center;
+    background-size: 18px;
   }
 
   .select-field:focus {

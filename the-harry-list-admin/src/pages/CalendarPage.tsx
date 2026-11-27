@@ -144,7 +144,7 @@ export function CalendarPage() {
                   type="text"
                   readOnly
                   value={feed.url}
-                  className="w-full px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-xs text-dark-400 truncate"
+                  className="input-field field-sm text-xs text-dark-400 truncate"
                 />
 
                 {/* Quick Actions */}
