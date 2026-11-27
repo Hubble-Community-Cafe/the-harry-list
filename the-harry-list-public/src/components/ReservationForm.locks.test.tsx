@@ -22,7 +22,7 @@ import { fetchFormOptions, fetchFormConstraints, fetchBlockedPeriods } from '../
 
 const mockOptions: FormOptions = {
   specialActivities: [
-    { value: 'CATERING_CORONA_ROOM', displayName: 'Catering for Corona Room Event' },
+    { value: 'CATERING_CORONA_ROOM', displayName: 'Catering for Corona Room event' },
   ],
   invoiceTypes: [],
   locations: [
@@ -62,14 +62,14 @@ async function goToStep2(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
   await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
   await user.click(screen.getByRole('button', { name: 'Continue' }));
-  await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
+  await waitFor(() => expect(screen.getByText('Event details')).toBeInTheDocument());
 }
 
 const location = (value: 'HUBBLE' | 'METEOR' | 'NO_PREFERENCE') =>
   screen.getByTestId(`location-${value}`) as HTMLInputElement;
 const seating = (value: 'INSIDE' | 'OUTSIDE') =>
   screen.getByTestId(`seating-${value}`) as HTMLInputElement;
-const coronaRoom = () => screen.getByRole('checkbox', { name: 'Catering for Corona Room Event' });
+const coronaRoom = () => screen.getByRole('checkbox', { name: 'Catering for Corona Room event' });
 const setGuests = (value: string) =>
   fireEvent.change(screen.getByRole('spinbutton'), { target: { value } });
 

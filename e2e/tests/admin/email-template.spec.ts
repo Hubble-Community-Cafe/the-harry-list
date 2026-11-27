@@ -23,7 +23,7 @@ test.describe('admin: edited email template is used when sending', () => {
       headers: adminAuthHeaders(E2E_ADMIN_OID),
       data: {
         subject: 'Your reservation for {{eventTitle}}',
-        bodyTemplate: `<p>${MARKER} — {{eventTitle}}</p>{{customMessage}}`,
+        bodyTemplate: `<p>${MARKER}: {{eventTitle}}</p>{{customMessage}}`,
       },
     });
     expect(put.ok()).toBeTruthy();

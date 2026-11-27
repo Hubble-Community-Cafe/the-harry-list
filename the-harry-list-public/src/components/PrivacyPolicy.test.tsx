@@ -11,7 +11,7 @@ describe('PrivacyPolicy', () => {
   it('renders the policy when open', () => {
     render(<PrivacyPolicy open onClose={vi.fn()} />);
     expect(screen.getByTestId('privacy-policy')).toBeInTheDocument();
-    expect(screen.getByRole('dialog', { name: 'Privacy Policy' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Privacy policy' })).toBeInTheDocument();
   });
 
   it('exposes the contact address as clickable mailto links', () => {

@@ -52,10 +52,10 @@ export function ExportPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Export Reservations</h1>
+          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Export reservations</h1>
           <p className="text-dark-400 mt-1">Generate PDF reports for daily reservation overviews</p>
         </div>
-        <HelpGuide title="Export Guide" sections={exportGuide} />
+        <HelpGuide title="Export guide" sections={exportGuide} />
       </div>
 
       {/* Export Card */}
@@ -66,7 +66,7 @@ export function ExportPage() {
               <FileDown className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-semibold text-white">Daily Report</h3>
+              <h3 className="font-semibold text-white">Daily report</h3>
               <p className="text-xs text-dark-400">Export all reservations for a specific day</p>
             </div>
           </div>
@@ -77,7 +77,7 @@ export function ExportPage() {
           <div>
             <label htmlFor="export-date" className="flex items-center gap-2 text-sm font-medium text-dark-300 mb-2">
               <Calendar className="w-4 h-4" />
-              Select Date
+              Select date
             </label>
             <input
               type="date"
@@ -93,7 +93,7 @@ export function ExportPage() {
           <div>
             <p id="export-location-label" className="flex items-center gap-2 text-sm font-medium text-dark-300 mb-2">
               <MapPin className="w-4 h-4" />
-              Select Location
+              Select location
             </p>
             <div role="group" aria-labelledby="export-location-label" className="grid grid-cols-2 gap-3">
               <button
@@ -204,7 +204,7 @@ export function ExportPage() {
             ) : (
               <>
                 <FileDown className="w-5 h-5" />
-                Download PDF Report
+                Download PDF report
               </>
             )}
           </button>

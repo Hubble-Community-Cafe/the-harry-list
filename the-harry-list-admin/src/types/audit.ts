@@ -1,4 +1,4 @@
-// Audit log types — mirror the backend AuditLogResponse / FieldChange DTOs.
+// Audit log types: mirror the backend AuditLogResponse / FieldChange DTOs.
 
 export interface FieldChange {
   field: string;

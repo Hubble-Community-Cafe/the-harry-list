@@ -1,7 +1,7 @@
 # End-to-end tests (Playwright)
 
 These tests drive the **real** public and admin apps against a throwaway full stack and
-assert on real UI, database state, and email — with screenshots, traces, and the actual
+assert on real UI, database state, and email: with screenshots, traces, and the actual
 delivered emails attached to the report as evidence.
 
 They complement (not replace) the fast layers: most logic is covered by backend unit/
@@ -16,7 +16,7 @@ Playwright (chromium)
   └── admin app    (http://localhost:5174)  ─┤ HTTP
                                               ▼
                           backend  (http://localhost:8080, Spring profile "e2e")
-                            ├── MariaDB (tmpfs — clean every boot)
+                            ├── MariaDB (tmpfs: clean every boot)
                             └── SMTP ──► Mailpit (http://localhost:8025, REST API)
 ```
 
@@ -28,12 +28,12 @@ Everything is launched by `docker-compose.e2e.yml` (repo root). The backend runs
   the same `ReservationEmailService` and `EmailMessages` as production, so tests read the real
   rendered messages.
 - **Auth** is header-based (`E2eSecurityConfig`): the admin app and API requests send
-  `X-Test-Oid`, and the real `RoleAuthorizationFilter` resolves the role from the DB — so
+  `X-Test-Oid`, and the real `RoleAuthorizationFilter` resolves the role from the DB: so
   RBAC and audit attribution behave exactly like production.
 - **Seed/reset** endpoints (`TestSupportController`, `/test/*`) let specs set up and clear
   state without going through Azure-authenticated APIs.
 
-All of the above is gated to the `e2e` profile and verified by `E2eProfileGuardTest` — it
+All of the above is gated to the `e2e` profile and verified by `E2eProfileGuardTest`: it
 cannot load in dev or production.
 
 The **admin app** participates via an env-gated bridge (`lib/e2eAuth.ts`): when
@@ -74,7 +74,7 @@ Useful flags: `npm test -- public/soft-block.spec.ts` (one file), `npm run test:
 
 Every run is self-documenting:
 
-- **Trace** for every test (`trace: 'on'`) — an interactive timeline (DOM/network/console).
+- **Trace** for every test (`trace: 'on'`): an interactive timeline (DOM/network/console).
   Open with `npx playwright show-trace <trace.zip>` or drag it into
   [trace.playwright.dev](https://trace.playwright.dev).
 - **Curated screenshots** at key moments via `captureScreenshot` (animations disabled so the
@@ -109,7 +109,7 @@ e2e/
 ## How the pieces fit (for writing/maintaining specs)
 
 - **Selectors** are `data-testid`-first. When the UI changes, update the test id in the app
-  and the page object — not every spec.
+  and the page object: not every spec.
 - **Page objects** (`pages/`) own the selectors and flows for a screen. Specs read as prose.
 - **Seeding** goes through `fixtures/backend.ts` (`/test/*`), never the UI, so tests start
   from a known state and stay isolated (`resetBackend` in `beforeEach`).
@@ -130,7 +130,7 @@ e2e/
 5. Add a row to the coverage map below.
 
 > Gotchas worth knowing: hidden radios need `.check({ force: true })`; `getByText` is
-> strict — prefer `getByRole('heading', …)` or a test id when text repeats (nav + heading);
+> strict: prefer `getByRole('heading', …)` or a test id when text repeats (nav + heading);
 > confirming a reservation requires a concrete location; activity conflicts are seeded in
 > both directions.
 
@@ -143,13 +143,13 @@ faster layers.
 |------|------------------|---------------------|----------|
 | Make a reservation (happy + many options) | form unit tests | `CreateReservationService*` | `public/happy-path`, `public/booking-options` |
 | Step navigation: one Continue click advances after fixing errors, opening the review step never submits or shows the terms error, the review shows a readable date and location | `ReservationForm` + `formatDate` tests | n/a | `public/step-navigation` |
-| Sender / spam-folder notice on confirmation (#310) | `SuccessMessage` test | — | `public/happy-path` |
+| Sender / spam-folder notice on confirmation (#310) | `SuccessMessage` test | n/a | `public/happy-path` |
 | Staff inbox comes only from `APP_MAIL_STAFF`: new reservation alert, guest Reply-To, catering default Reply-To | `ReservationDetailPage` test | `EmailMessagesTest`, `EmailTemplateServiceTest`, `AdminReservationControllerTest` | `public/happy-path` |
 | Soft / hard blocked periods, and a blocked Continue focusing the notice or box that explains why | `blockedPeriods` + form tests | `ConstraintValidationServiceTest`, `FormOptionsControllerTest` (staff-only reason never public) | `public/soft-block`, `public/hard-block`, `admin/blocked-periods` |
 | Form constraints (all types), and a forced location (small group or activity lock) or seating giving the guest's own choice back once it lifts | form tests | `ConstraintValidationServiceTest` | `public/constraints-blocking`, `public/constraints-dynamic`, `admin/constraints-roundtrip` |
 | Activity notice (advisory banner, opt-in confirmation dialog, optional location and minimum-guest conditions) | `ReservationForm` + `FormSettingsPage` tests | `ConstraintValidationServiceTest` | `public/activity-notice` |
 | Retired private-event activity (form, options API, direct submit) | `ReservationForm` + `ReservationDetailPage` tests | `FormOptionsControllerTest`, `CreateReservationServiceTest` | `public/retired-activity` |
-| Privacy policy (GDPR notice + dialog) | `PrivacyPolicy` + `Footer` tests | — | `public/privacy-policy` |
+| Privacy policy (GDPR notice + dialog) | `PrivacyPolicy` + `Footer` tests | n/a | `public/privacy-policy` |
 | Self-hosted fonts, no requests to Google Fonts (#449); subtitles use Lato Light (weight 300), small labels stay regular | n/a | n/a | `public/self-hosted-fonts`, `admin/self-hosted-fonts` |
 | Content-Security-Policy enforced, no violations (full form incl. ALTCHA, every admin page) (#448) | `zodConfig` test | n/a | `public/csp`, `admin/csp` |
 | Security headers and CSP on every nginx response: page, static assets, runtime config, health check; runtime config and public folder files are revalidated on every load, hashed bundles cached a year with one Cache-Control header | n/a | n/a | `public/security-headers`, `admin/security-headers` |
@@ -162,22 +162,22 @@ faster layers.
 | Confirm a reservation (appears in admin), with a line saying what happened and who is emailed | `ReservationsPage`/detail tests | controller tests | `admin/reservation-lifecycle` #1 |
 | Admin shows words, not stored codes (status, location, payment, seating, invoice type, activity, role, change history) | `labels` + page tests | n/a | `admin/reservation-lifecycle`, `admin/week-overview` |
 | Edit / permanently delete a reservation (delete asks first and says whether an email goes out; a failed action or save keeps the page and the input) | `ReservationDetailPage` test | `Update`/`DeleteReservationServiceTest` | `admin/reservation-lifecycle` #2 |
-| Seating area (inside/outside) shown in detail (#292) | `ReservationDetailPage` test | — | `admin/reservation-lifecycle` #2 |
+| Seating area (inside/outside) shown in detail (#292) | `ReservationDetailPage` test | n/a | `admin/reservation-lifecycle` #2 |
 | Reopen a rejected or cancelled reservation to pending | `ReservationDetailPage` test | `AdminReservationControllerTest` | `admin/reservation-lifecycle` #3, #4 |
 | Allowed status transitions only (pending to confirmed/rejected, confirmed to cancelled, rejected/cancelled to pending) | n/a | `ReservationStatusTest`, `AdminReservationControllerTest` | `admin/reservation-lifecycle` |
 | Staff edits skip the public form rules (constraints, blocked periods, retired activities) | n/a | `UpdateReservationServiceTest` | n/a |
-| Status-change email + custom message | — | `AdminReservationControllerTest` | `admin/status-email` |
-| Editable email templates | — | `EmailTemplateServiceTest` | `admin/email-template` |
+| Status-change email + custom message | n/a | `AdminReservationControllerTest` | `admin/status-email` |
+| Editable email templates | n/a | `EmailTemplateServiceTest` | `admin/email-template` |
 | RBAC (viewer/editor/admin), incl. staff reservation endpoints and the backend staff-group check | `usePermissions` | filter tests, `ReservationControllerTest`, `EndpointAuthorizationGuardTest` | `admin/rbac` |
 | API error responses: one problem+json shape (`detail`, validation `errors`) | shared `apiErrorMessage`, public `lib/api` | `AdminReservationControllerTest`, `PublicReservationControllerTest`, `AdminEmailAttachmentControllerTest`, filter tests | `admin/rbac` |
 | Audit log | `AuditDiff`/`AuditService` | controller tests | `admin/audit-log` |
-| Catering-only export (#280) | — | `PdfExportServiceTest` | `admin/catering-export` |
-| Appointments on the PDF export (#303) | — | `PdfExportServiceTest`, `AppointmentRecurrenceServiceTest` | `admin/appointments-export` |
-| Week overview | `WeekOverviewPage` test | — | `admin/week-overview` |
+| Catering-only export (#280) | n/a | `PdfExportServiceTest` | `admin/catering-export` |
+| Appointments on the PDF export (#303) | n/a | `PdfExportServiceTest`, `AppointmentRecurrenceServiceTest` | `admin/appointments-export` |
+| Week overview | `WeekOverviewPage` test | n/a | `admin/week-overview` |
 | Catering toggle on reservation cards (list and week): its own control on top of the card link, named by state and event, keyboard reachable, a failed save says so on the card | `ReservationsPage` + `WeekOverviewPage` tests | n/a | `admin/week-overview` |
 | Calendar feeds (iCal) incl. catering filter (#309), fail closed without a token (#450) | n/a | `ICalendarServiceTest`, `ReservationTest`, `CalendarFeedControllerTest` | `public/calendar-feed` |
 | Recurring appointments (incl. "Nth weekday", #286) | `recurrence` + `CalendarAppointmentsPage` tests | `ICalendarServiceTest` | `admin/calendar-appointments` |
-| Mobile date/time fields (#253) | — | — | `mobile-public/datetime` |
+| Mobile date/time fields (#253) | n/a | n/a | `mobile-public/datetime` |
 
 ## CI
 

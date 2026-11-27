@@ -19,7 +19,7 @@ const ROLE_DESCRIPTIONS: Record<string, string> = {
 };
 
 /**
- * Users tab content — used inside the Settings page.
+ * Users tab content: used inside the Settings page.
  * Does not render its own page header.
  */
 export function UsersTab() {
@@ -75,7 +75,7 @@ export function UsersTab() {
       <div className="card !p-4">
         <div className="flex items-center gap-2 mb-3">
           <Shield className="w-4 h-4 text-dark-400" />
-          <span className="text-sm font-medium text-dark-300">Role Permissions</span>
+          <span className="text-sm font-medium text-dark-300">Role permissions</span>
         </div>
         <div className="grid gap-2 sm:grid-cols-3">
           {ROLE_OPTIONS.map(role => (
@@ -158,13 +158,13 @@ export function UsersTab() {
 }
 
 /**
- * Standalone Users page — kept for backwards compatibility with /users route.
+ * Standalone Users page: kept for backwards compatibility with /users route.
  */
 export function UsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-title font-bold text-white tracking-tight">User Management</h1>
+        <h1 className="text-2xl font-title font-bold text-white tracking-tight">User management</h1>
         <p className="text-dark-400 font-light">Manage admin panel access and roles</p>
       </div>
       <UsersTab />

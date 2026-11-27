@@ -184,7 +184,7 @@ export function CalendarPage() {
                 <div className="flex flex-col items-center gap-2">
                   <ShieldAlert className="w-5 h-5 notice-text-warning opacity-70 group-hover:opacity-100 transition-opacity" />
                   <span className="text-xs text-dark-400 group-hover:text-dark-300 transition-colors">
-                    This URL contains a secret token — click to reveal
+                    This URL contains a secret token. Click to reveal it.
                   </span>
                   <Eye className="w-3.5 h-3.5 text-dark-500 group-hover:text-dark-400 transition-colors" />
                 </div>
@@ -205,17 +205,17 @@ export function CalendarPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Calendar Feeds</h1>
+          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Calendar feeds</h1>
           <p className="text-dark-400 mt-1">Subscribe to reservation calendars from any calendar app</p>
         </div>
-        <HelpGuide title="Calendar Feeds Guide" sections={calendarGuide} />
+        <HelpGuide title="Calendar feeds guide" sections={calendarGuide} />
       </div>
 
       {/* Info Box */}
       <div className="bg-dark-800/50 border border-dark-700 rounded-xl p-5">
         <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
           <RefreshCw className="w-4 h-4 text-hubble-400" />
-          How to Subscribe
+          How to subscribe
         </h3>
         <ul className="text-sm text-dark-300 space-y-2">
           <li>• <strong>Google Calendar:</strong> Settings → Add calendar → From URL → Paste the URL</li>
@@ -260,7 +260,7 @@ export function CalendarPage() {
       {/* Optional Parameters */}
       {parameters.length > 0 && (
         <div className="card !p-5">
-          <h3 className="font-semibold text-white mb-4">Additional URL Parameters</h3>
+          <h3 className="font-semibold text-white mb-4">Additional URL parameters</h3>
           <p className="text-sm text-dark-400 mb-4">You can append these parameters to customize the feed further:</p>
           <div className="grid gap-4 md:grid-cols-2">
             {parameters.map((param) => (

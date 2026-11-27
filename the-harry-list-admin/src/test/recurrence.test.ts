@@ -39,7 +39,7 @@ describe('nthWeekdayOfMonth', () => {
   });
 });
 
-describe('expandOccurrences — NONE', () => {
+describe('expandOccurrences: NONE', () => {
   it('returns the single date when in range', () => {
     expect(expandOccurrences(appt({ date: '2026-06-03' }), '2026-06-01', '2026-06-07')).toEqual(['2026-06-03']);
   });
@@ -48,7 +48,7 @@ describe('expandOccurrences — NONE', () => {
   });
 });
 
-describe('expandOccurrences — interval frequencies', () => {
+describe('expandOccurrences: interval frequencies', () => {
   it('DAILY every 3 days', () => {
     const a = appt({ date: '2026-06-01', recurrenceType: 'DAILY', recurrenceInterval: 3 });
     expect(expandOccurrences(a, '2026-06-01', '2026-06-10')).toEqual([
@@ -91,7 +91,7 @@ describe('expandOccurrences — interval frequencies', () => {
   });
 });
 
-describe('expandOccurrences — MONTHLY_NTH_WEEKDAY', () => {
+describe('expandOccurrences: MONTHLY_NTH_WEEKDAY', () => {
   it('expands "2nd Friday of the month" across months', () => {
     const a = appt({
       date: '2026-06-12',

@@ -5,8 +5,8 @@ import { attachText, captureScreenshot } from '../../fixtures/evidence';
 import { BACKEND_URL } from '../../playwright.config';
 
 /**
- * Admin can configure a generic recurring appointment — "every 2nd Friday of the
- * month" (#286) — through the guided builder, and the backend emits the correct
+ * Admin can configure a generic recurring appointment: "every 2nd Friday of the
+ * month" (#286): through the guided builder, and the backend emits the correct
  * RFC 5545 RRULE (BYDAY=2FR) in the public iCal feed. This exercises the wiring
  * from the new UI through persistence to ICS generation in one journey.
  */

@@ -269,7 +269,7 @@ body {
 }
 
 /* ===================================
-   LIGHT MODE — comprehensive overrides
+   LIGHT MODE: comprehensive overrides
    =================================== */
 
 .light {
@@ -459,7 +459,7 @@ body {
   background-color: rgba(0, 0, 0, 0.25);
 }
 
-/* Status badge backgrounds — tuned tints for light mode readability */
+/* Status badge backgrounds: tuned tints for light mode readability */
 .light .bg-hubble-500\/10 {
   background-color: rgba(26, 107, 124, 0.08);
 }
@@ -481,7 +481,7 @@ body {
   border-color: rgba(5, 56, 38, 0.2);
 }
 
-/* Status text colors — deeper for light mode contrast */
+/* Status text colors: deeper for light mode contrast */
 .light .text-hubble-300,
 .light [class*="text-hubble-300/"] {
   color: #1a6b7c;
@@ -553,7 +553,7 @@ body {
 }
 
 /* ===================================
-   DARK MODE — applied via .dark class
+   DARK MODE: applied via .dark class
    =================================== */
 
 .dark body,

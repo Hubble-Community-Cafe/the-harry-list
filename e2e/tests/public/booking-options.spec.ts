@@ -21,30 +21,30 @@ test.describe('public: booking with many options', () => {
     const form = new ReservationFormPage(page);
     await form.goto();
 
-    // Step 1 — contact, with organization + phone.
+    // Step 1: contact, with organization + phone.
     await form.fillContact(CONTACT);
     await page.locator('input[name="phoneNumber"]').fill('+31 6 12345678');
     await page.locator('input[name="organizationName"]').fill('Study Association E2E');
     await form.continue();
 
-    // Step 2 — merged details: activity + special activity + location/seating (Hubble, outside).
-    await form.expectStep('Event Details');
+    // Step 2: merged details: activity + special activity + location/seating (Hubble, outside).
+    await form.expectStep('Event details');
     await form.fillActivity({ title: 'Graduation drinks', date: '2030-09-18', guests: 40 });
     await form.toggleActivity('Graduation / PhD Defense');
     await form.selectLocation('HUBBLE');
     await form.selectSeating('OUTSIDE');
     await form.continue();
 
-    // Step 3 — invoice payment with type + cost centre.
-    await form.expectStep('Payment Information');
+    // Step 3: invoice payment with type + cost centre.
+    await form.expectStep('Payment information');
     await form.selectPayment('Invoice (>50 euros only)');
     await page.locator('select[name="invoiceType"]').selectOption('TUE');
     await page.locator('input[name="costCenter"]').fill('CC-12345');
     await captureScreenshot(testInfo, page, '1-invoice-payment');
     await form.continue();
 
-    // Step 5 — confirm.
-    await form.expectStep('Review & Confirm');
+    // Step 5: confirm.
+    await form.expectStep('Review & confirm');
     await form.acceptTerms();
     await form.submit();
 

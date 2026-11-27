@@ -41,15 +41,15 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
               <Calendar className="w-5 h-5 text-meteor-400" />
             </div>
             <div>
-              <h2 tabIndex={-1} className="text-xl font-title font-semibold text-white tracking-tight outline-none">Event Details</h2>
+              <h2 tabIndex={-1} className="text-xl font-title font-semibold text-white tracking-tight outline-none">Event details</h2>
               <p className="text-sm text-dark-400 font-light">Tell us about your event and where to host it</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Event Title */}
+            {/* Event title */}
             <div className="form-group md:col-span-2">
-              <label htmlFor="eventTitle" className="label">Event Title *</label>
+              <label htmlFor="eventTitle" className="label">Event title *</label>
               <input
                 type="text"
                 {...register('eventTitle')} maxLength={MAX_LENGTH.eventTitle} id="eventTitle"
@@ -61,9 +61,9 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
               <FieldError errors={errors} name="eventTitle" />
             </div>
 
-            {/* Special Activities */}
+            {/* Special activities */}
             <div className="form-group md:col-span-2">
-              <p id="specialActivities-label" className="label">Special Activities</p>
+              <p id="specialActivities-label" className="label">Special activities</p>
               <p id="specialActivities-hint" className="text-xs text-dark-400 mb-3">Select any special activities for your event (optional, if you want a regular drink/borrel you can leave this empty)</p>
               <div role="group" aria-labelledby="specialActivities-label" aria-describedby="specialActivities-hint" className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {(formOptions?.specialActivities ?? Object.entries(SPECIAL_ACTIVITY_LABELS).map(([value, displayName]) => ({ value, displayName, description: undefined }))).map((option) => {
@@ -127,9 +127,9 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
               )}
             </div>
 
-            {/* Expected Guests */}
+            {/* Expected guests */}
             <div className="form-group">
-              <label htmlFor="expectedGuests" className="label">Expected Number of Guests *</label>
+              <label htmlFor="expectedGuests" className="label">Expected number of guests *</label>
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -190,12 +190,12 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
               </div>
             </div>
 
-            {/* Event Date */}
+            {/* Event date */}
             <div className="form-group">
-              <label htmlFor="eventDate" className="label">Event Date *</label>
+              <label htmlFor="eventDate" className="label">Event date *</label>
               {requiresAdvanceBooking && (
                 <div className="mb-2 text-xs border rounded-lg px-3 py-2 notice-info">
-                  ℹ️ Selected activities require at least <strong>{advanceBookingDays} days</strong> advance booking.
+                  ℹ️ Selected activities need at least <strong>{advanceBookingDays} days'</strong> notice.
                 </div>
               )}
               <div className="relative">
@@ -214,9 +214,9 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
               {!blockedDateInfo?.locationSpecific && blockedDateNotice}
             </div>
 
-            {/* Start Time */}
+            {/* Start time */}
             <div className="form-group">
-              <label htmlFor="startTime" className="label">Start Time *</label>
+              <label htmlFor="startTime" className="label">Start time *</label>
               <select {...register('startTime')} id="startTime" {...fieldA11y(errors, 'startTime')} data-testid="start-time" className="select-field">
                 <option value="">Select start time...</option>
                 {startTimes.map(time => <option key={time} value={time}>{time}</option>)}
@@ -229,9 +229,9 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
               )}
             </div>
 
-            {/* End Time */}
+            {/* End time */}
             <div className="form-group">
-              <label htmlFor="endTime" className="label">End Time *</label>
+              <label htmlFor="endTime" className="label">End time *</label>
               <select {...register('endTime')} id="endTime" {...fieldA11y(errors, 'endTime')} data-testid="end-time" className="select-field">
                 <option value="">Select end time...</option>
                 {endTimes.map(time => <option key={time} value={time}>{time}</option>)}
@@ -240,7 +240,7 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
             </div>
           </div>
 
-          {/* Location, seating & remarks — merged in from the former Location step so all
+          {/* Location, seating & remarks: merged in from the former Location step so all
               date/activity/time/location constraints live on one page. */}
           <div className="space-y-6 pt-6 border-t border-dark-800">
           <div className="flex items-center gap-3">
@@ -248,12 +248,12 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
               <MapPin className="w-5 h-5 text-hubble-400" />
             </div>
             <div>
-              <h3 className="text-lg font-title font-semibold text-white tracking-tight">Location &amp; Seating</h3>
+              <h3 className="text-lg font-title font-semibold text-white tracking-tight">Location &amp; seating</h3>
               <p className="text-sm text-dark-400 font-light">Where would you like to host your event?</p>
             </div>
           </div>
 
-          {/* Location lock explanation. Only for activity-based locks here — the guest-count
+          {/* Location lock explanation. Only for activity-based locks here: the guest-count
               (<8 → Meteor) case is already explained next to the guest field above, so we don't
               repeat it now that both sit on the same step. */}
           {locationLocked && (() => {
@@ -339,7 +339,7 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
               )}
             </label>
 
-            {/* No Preference */}
+            {/* No preference */}
             <label className={`
               relative flex flex-col p-6 rounded-xl border-2 transition-[background-color,border-color,box-shadow,opacity] duration-200
               ${locationLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
@@ -361,7 +361,7 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
                   <MapPin className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <div className="font-semibold text-white">No Preference</div>
+                  <div className="font-semibold text-white">No preference</div>
                   <div className="text-xs text-dark-400">We'll choose for you</div>
                 </div>
               </div>
@@ -378,13 +378,13 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
             </label>
           </div>
 
-          {/* Blocked period notice — only for location-specific blocks here; global/time
+          {/* Blocked period notice: only for location-specific blocks here; global/time
               blocks are already surfaced (and acknowledged) on the date step. */}
           {blockedDateInfo?.locationSpecific && blockedDateNotice}
 
           {/* Seating Area Selection */}
           <div className="form-group">
-            <p id="seatingArea-label" className="label">Seating Area *</p>
+            <p id="seatingArea-label" className="label">Seating area *</p>
             {seatingLocked && (
               <div className="mb-3 text-xs border rounded-lg px-3 py-2 notice-info">
                 Seating is fixed to {seatingLocked === 'INSIDE' ? 'Inside' : 'Outside'} based on selected activities.
@@ -448,7 +448,7 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
 
           {/* Additional remarks */}
           <div className="form-group">
-            <label htmlFor="comments" className="label">Additional Location/Seating Remarks (optional)</label>
+            <label htmlFor="comments" className="label">Additional location/seating remarks (optional)</label>
             <input
               type="text"
               {...register('comments')} maxLength={MAX_LENGTH.comments} id="comments"
@@ -463,7 +463,7 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
             <div className="form-group">
               <label htmlFor="longReservationReason" className="label flex items-center gap-2">
                 <AlertTriangle aria-hidden="true" className="w-4 h-4 notice-text-warning" />
-                Reason for Long Reservation *
+                Reason for long reservation *
               </label>
               <p id="longReservationReason-hint" className="text-xs notice-text-warning mb-2">
                 Your reservation is {Math.floor(durationMinutes / 60)}h{durationMinutes % 60 > 0 ? ` ${durationMinutes % 60}m` : ''} long.
@@ -483,7 +483,7 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
           {/* Catering dietary notes */}
           {rules.asksForDietaryNotes && (
             <div className="form-group">
-              <label htmlFor="cateringDietaryNotes" className="label">Catering Dietary Notes</label>
+              <label htmlFor="cateringDietaryNotes" className="label">Catering dietary notes</label>
               <textarea
                 {...register('cateringDietaryNotes')} maxLength={MAX_LENGTH.cateringDietaryNotes} id="cateringDietaryNotes"
                 className="input-field min-h-[80px] resize-none"
@@ -492,9 +492,9 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
             </div>
           )}
 
-          {/* Event Description */}
+          {/* Event description */}
           <div className="form-group">
-            <label htmlFor="description" className="label">Event Description *</label>
+            <label htmlFor="description" className="label">Event description *</label>
             <textarea
               {...register('description')} maxLength={MAX_LENGTH.description} id="description" {...fieldA11y(errors, 'description')}
               className="input-field min-h-[100px] resize-none"

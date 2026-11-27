@@ -21,7 +21,7 @@ for (const theme of THEMES) {
 
       await form.fillContact({ name: 'Ada Access', email: 'ada.a11y@example.com' });
       await form.continue();
-      await form.expectStep('Event Details');
+      await form.expectStep('Event details');
       await expectNoA11yViolations(page, testInfo, `${theme} 2 details`);
 
       await form.fillActivity({ title: 'Accessible Drinks', date: '2030-10-08', startTime: '15:00', endTime: '17:00', guests: 12 });
@@ -30,7 +30,7 @@ for (const theme of THEMES) {
       await expectNoA11yViolations(page, testInfo, `${theme} 2 details filled`);
       await form.continue();
 
-      await form.expectStep('Payment Information');
+      await form.expectStep('Payment information');
       await form.selectPayment('People pay individually');
       await expectNoA11yViolations(page, testInfo, `${theme} 3 payment`);
       await form.continue();
@@ -78,7 +78,7 @@ test('keyboard: Continue moves focus to the next step heading', async ({ page, r
   await form.fillContact({ name: 'Ada Access', email: 'ada.a11y@example.com' });
   await page.getByRole('button', { name: 'Continue' }).press('Enter');
 
-  await expect(page.getByRole('heading', { name: 'Event Details' })).toBeFocused();
+  await expect(page.getByRole('heading', { name: 'Event details' })).toBeFocused();
   await expect(page.getByRole('button', { name: 'Step 1 of 4: Contact, completed' })).toBeVisible();
 });
 
@@ -88,7 +88,7 @@ test('keyboard: a focused choice card shows a visible focus ring', async ({ page
   await form.goto();
   await form.fillContact({ name: 'Ada Access', email: 'ada.a11y@example.com' });
   await form.continue();
-  await form.expectStep('Event Details');
+  await form.expectStep('Event details');
 
   // The radios are visually hidden; arrow keys move between them like a guest would.
   await page.getByTestId('seating-INSIDE').focus();
@@ -123,7 +123,7 @@ for (const [theme, title, panel] of [['dark', 'rgb(255, 255, 255)', 'rgb(10, 34,
     await form.goto();
     await form.openPrivacyFromFooter();
     await expect(form.privacyDialog()).toHaveCSS('background-color', panel);
-    await expect(page.getByRole('heading', { name: 'Privacy Policy' })).toHaveCSS('color', title);
+    await expect(page.getByRole('heading', { name: 'Privacy policy' })).toHaveCSS('color', title);
   });
 }
 

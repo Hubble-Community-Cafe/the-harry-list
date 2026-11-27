@@ -58,7 +58,7 @@ describe('RoleProvider', () => {
   });
 
   it('recovers from a transient fetch failure by retrying', async () => {
-    // Fails twice, then succeeds — the role must still resolve (previously a single
+    // Fails twice, then succeeds: the role must still resolve (previously a single
     // failure left role=null permanently and hid role-gated UI).
     mockFetchCurrentUser
       .mockRejectedValueOnce(new Error('network blip'))

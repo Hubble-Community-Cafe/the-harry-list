@@ -54,7 +54,7 @@ function App() {
               <div className="text-center mb-12 animate-fade-in">
                 {/* Two-tone, flat: each café in its own colour (housestyle), no gradient text. */}
                 <h1 className="font-title text-3xl md:text-4xl lg:text-5xl font-bold mb-4 tracking-tight leading-tight text-white">
-                  Reserve Your Spot at <span className="text-hubble-400">Hubble</span> &amp;{' '}
+                  Reserve your spot at <span className="text-hubble-400">Hubble</span> &amp;{' '}
                   <span className="text-meteor-400">Meteor</span>
                 </h1>
                 <p className="text-lg md:text-xl text-dark-300 max-w-2xl mx-auto">

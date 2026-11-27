@@ -2,41 +2,41 @@ import type { GuideSection } from '../components/HelpGuide';
 
 export const dashboardGuide: GuideSection[] = [
   {
-    title: 'Dashboard Overview',
+    title: 'Dashboard overview',
     screenshot: '/screenshots/dashboard-overview.png',
     screenshotAlt: 'Dashboard with stat cards and reservation lists',
     content: `The **Dashboard** is your home screen. It gives you a quick snapshot of the current state of all reservations.
 
-## Stat Cards
+## Stat cards
 
 At the top you'll see four summary cards:
 
-- **Total Reservations** — the total number of reservations in the system
-- **Pending** — reservations waiting for approval (action required)
-- **Confirmed** — reservations that have been approved
-- **Upcoming** — confirmed reservations with an event date in the future
+- **Total reservations**: the total number of reservations in the system
+- **Pending**: reservations waiting for approval (action required)
+- **Confirmed**: reservations that have been approved
+- **Upcoming**: confirmed reservations with an event date in the future
 
 ### Tip
 Click any stat card to jump directly to the **Reservations** page with the corresponding filter pre-applied.`,
   },
   {
-    title: 'Pending Approvals',
+    title: 'Pending approvals',
     screenshot: '/screenshots/dashboard-pending.png',
     screenshotAlt: 'Pending reservations list on the dashboard',
     content: `## Pending Approvals
 
-Below the stat cards, you'll find the **Pending Approval** section. These are reservations that have been submitted through the public form and are waiting for a staff member to review them.
+Below the stat cards, you'll find the **Pending approval** section. These are reservations that have been submitted through the public form and are waiting for a staff member to review them.
 
 - Each card shows the **event title**, **contact name**, **date**, **time**, **location**, and **number of guests**
 - Click on a reservation to go to its **detail page** where you can approve, reject, or edit it
 
 ### What to check before approving
-- Is the date available? (check the **Week Overview** for conflicts)
+- Is the date available? (check the **Week overview** for conflicts)
 - Are there enough staff for the requested catering activities?
 - Is the guest count reasonable for the selected location?`,
   },
   {
-    title: 'Recent Reservations',
+    title: 'Recent reservations',
     screenshot: '/screenshots/dashboard-recent.png',
     screenshotAlt: 'Recent reservations section',
     content: `## Recent Reservations
@@ -54,94 +54,94 @@ Click any reservation to view its full details.`,
 
 export const reservationsGuide: GuideSection[] = [
   {
-    title: 'Reservations List',
+    title: 'Reservations list',
     screenshot: '/screenshots/reservations-list.png',
     screenshotAlt: 'Reservations page with search and filters',
     content: `The **Reservations** page shows all reservations in the system, grouped by event date.
 
-## Search & Filters
+## Search & filters
 
 Use the controls at the top to narrow down what you see:
 
-- **Search** — type to filter by event title, contact name, email, confirmation number, or ID
-- **Status filter** — show only reservations with a specific status (Pending, Confirmed, Rejected, Cancelled)
-- **Location filter** — show only Hubble or Meteor reservations
-- **Show past events** — toggle to include events that have already happened (hidden by default)`,
+- **Search**: type to filter by event title, contact name, email, confirmation number, or ID
+- **Status filter**: show only reservations with a specific status (Pending, Confirmed, Rejected, Cancelled)
+- **Location filter**: show only Hubble or Meteor reservations
+- **Show past events**: toggle to include events that have already happened (hidden by default)`,
   },
   {
-    title: 'Reservation Cards',
+    title: 'Reservation cards',
     screenshot: '/screenshots/reservations-cards.png',
     screenshotAlt: 'Reservation card with status badge and details',
     content: `## Reading a Reservation Card
 
 Each reservation card shows:
 
-- **Status badge** — color-coded: *yellow* = Pending, *green* = Confirmed, *red* = Rejected, *grey* = Cancelled
+- **Status badge**: an icon and a word, in colour: *peach* = Pending, *green* = Confirmed, *red* = Rejected, *tan* = Cancelled
 - **Event title** and **contact name**
 - **Date and time** of the event
-- **Location** — displayed as a Hubble or Meteor badge
+- **Location**: displayed as a Hubble or Meteor badge
 - **Guest count**
-- **Catering icon** — a fork/knife icon appears if the reservation includes catering activities
+- **Catering icon**: a fork/knife icon appears if the reservation includes catering activities
 
-### Catering Toggle
+### Catering toggle
 If a reservation has catering, you'll see a catering status button: **Catering to arrange** or **Catering arranged**. Click it to switch between the two; this does not open the reservation. Click anywhere else on the card to open it. If saving fails, a message under the card says so.`,
   },
   {
-    title: 'Managing a Reservation',
+    title: 'Managing a reservation',
     screenshot: '/screenshots/reservation-detail.png',
     screenshotAlt: 'Reservation detail page with action buttons',
     content: `## Reservation Detail Page
 
 Click any reservation card to open its **detail page**. Here you can:
 
-### Status Actions
-- **Confirm** — approve a pending reservation (sends a confirmation email to the contact)
-- **Reject** — decline a reservation with an optional reason
-- **Cancel** — cancel a reservation
+### Status actions
+- **Confirm**: approve a pending reservation (sends a confirmation email to the contact)
+- **Reject**: decline a reservation with an optional reason
+- **Cancel**: cancel a reservation
 
-### Other Actions
-- **Edit** — modify any field (event details, contact info, dates, location, etc.)
-- **Send Catering Options** — if the reservation includes catering, send an email with PDF menu attachments
+### Other actions
+- **Edit**: modify any field (event details, contact info, dates, location, etc.)
+- **Send catering options**: if the reservation includes catering, send an email with PDF menu attachments
 - **Delete permanently**: only for rejected or cancelled reservations; asks first, and says whether the contact gets an email
 
-### Email Notifications
+### Email notifications
 Most status changes can optionally send an email to the contact person. Use the **"Send email notification"** checkbox to control this.`,
   },
 ];
 
 export const weekOverviewGuide: GuideSection[] = [
   {
-    title: 'Week Overview',
+    title: 'Week overview',
     screenshot: '/screenshots/week-overview.png',
     screenshotAlt: 'Week overview grid showing 7 days with reservations',
-    content: `The **Week Overview** shows a 7-day grid view (Monday to Sunday) of all reservations for the selected week.
+    content: `The **Week overview** shows a 7-day grid view (Monday to Sunday) of all reservations for the selected week.
 
 ## Navigation
 
 - Use the **left/right arrows** to move between weeks
-- Click **"This Week"** to jump back to the current week
+- Click **"This week"** to jump back to the current week
 - The **current day** is highlighted with a subtle accent
 
-## What You See
+## What you see
 
 Each day column shows:
 - The **date** and **day name**
 - All reservations for that day as compact cards
-- A **color-coded left border** indicating the reservation status
+- A **coloured left border** showing the reservation status (peach, green, red or tan)
 - The **event title**, **time**, **guest count**, and **location badge**`,
   },
   {
-    title: 'Filtering & Catering',
+    title: 'Filtering & catering',
     screenshot: '/screenshots/week-overview-filters.png',
     screenshotAlt: 'Week overview filters and catering toggle',
     content: `## Filters
 
 At the top of the page you can filter by:
 
-- **Location** — show only Hubble, only Meteor, or both
-- **Status** — show only specific statuses (e.g. only Confirmed)
+- **Location**: show only Hubble, only Meteor, or both
+- **Status**: show only specific statuses (e.g. only Confirmed)
 
-## Catering Management
+## Catering management
 
 Reservations with catering activities show a **fork/knife icon**. You can toggle the catering status directly from the week overview:
 
@@ -150,7 +150,7 @@ Reservations with catering activities show a **fork/knife icon**. You can toggle
 
 This is the fastest way to track catering prep for the week ahead.
 
-## Weekly Summary
+## Weekly summary
 
 At the top of the page, you'll see a summary bar showing the **total number of reservations** and **total guests** for the selected week, broken down by location.`,
   },
@@ -158,58 +158,58 @@ At the top of the page, you'll see a summary bar showing the **total number of r
 
 export const exportGuide: GuideSection[] = [
   {
-    title: 'PDF Export',
+    title: 'PDF export',
     screenshot: '/screenshots/export-page.png',
     screenshotAlt: 'Export page with date picker and location selector',
     content: `The **Export** page lets you generate a **PDF report** of reservations for a specific date and location.
 
-## How to Export
+## How to export
 
-1. **Select a date** — choose the day you want the report for
-2. **Select a location** — choose either Hubble or Meteor
-3. **Confirmed only** — toggle this on to exclude pending, rejected, or cancelled reservations (recommended for daily prep sheets)
-4. **Catering only** — toggle this on to include only reservations that have catering (eat a la carte, eat catering, or Catering Corona Room) — handy for the kitchen's prep list
+1. **Select a date**: choose the day you want the report for
+2. **Select a location**: choose either Hubble or Meteor
+3. **Confirmed only**: toggle this on to exclude pending, rejected, or cancelled reservations (recommended for daily prep sheets)
+4. **Catering only**: toggle this on to include only reservations that have catering (eat a la carte, eat catering, or Catering Corona Room), handy for the kitchen's prep list
 5. Click **"Export PDF"**
 
-You can combine the two toggles, e.g. **Confirmed only + Catering only** for a confirmed catering prep sheet.
+You can combine the two toggles, e.g. **Confirmed only + catering only** for a confirmed catering prep sheet.
 
 The PDF will automatically download to your device.
 
-## Calendar Appointments
+## Calendar appointments
 
-If any **calendar appointments** (from the Calendar Appointments page, including recurring ones) fall on the selected date and location, they appear on a **leading page** before the reservations — so people without portal access still see them on the printout. Appointments are always included regardless of the **Confirmed only** / **Catering only** toggles, which only filter reservations.
+If any **calendar appointments** (from the Calendar appointments page, including recurring ones) fall on the selected date and location, they appear on a **leading page** before the reservations, so people without portal access still see them on the printout. Appointments are always included regardless of the **Confirmed only** / **Catering only** toggles, which only filter reservations.
 
-## When to Use This
+## When to use this
 
-- **Before opening** — print the day's reservation list for the bar
-- **For handoff** — share with kitchen staff or event coordinators
-- **For records** — keep a paper trail of daily reservations
+- **Before opening**: print the day's reservation list for the bar
+- **For handoff**: share with kitchen staff or event coordinators
+- **For records**: keep a paper trail of daily reservations
 
 ### Tip
-For a quick overview without printing, use the **Week Overview** page instead.`,
+For a quick overview without printing, use the **Week overview** page instead.`,
   },
 ];
 
 export const calendarGuide: GuideSection[] = [
   {
-    title: 'Calendar Feeds',
+    title: 'Calendar feeds',
     screenshot: '/screenshots/calendar-feeds.png',
     screenshotAlt: 'Calendar feeds page with copy buttons and Google Calendar links',
-    content: `The **Calendar Feeds** page provides ICS calendar feed URLs that you can subscribe to from any calendar app (Google Calendar, Apple Calendar, Outlook, etc.).
+    content: `The **Calendar feeds** page provides ICS calendar feed URLs that you can subscribe to from any calendar app (Google Calendar, Apple Calendar, Outlook, etc.).
 
-## Feed Types
+## Feed types
 
 There are two types of feeds for each location:
 
-- **Public feed** — shows event titles, dates, and times only (no personal contact details)
-- **Staff feed** — includes contact name, email, and phone number in the event description
+- **Public feed**: shows event titles, dates, and times only (no personal contact details)
+- **Staff feed**: includes contact name, email, and phone number in the event description
 
-## Available Feeds
+## Available feeds
 
-- **Hubble Public** and **Hubble Staff**
-- **Meteor Public** and **Meteor Staff**
+- **Hubble public** and **Hubble staff**
+- **Meteor public** and **Meteor staff**
 
-## How to Subscribe
+## How to subscribe
 
 1. Click the **copy button** next to any feed URL
 2. In your calendar app, look for "Subscribe to calendar" or "Add calendar by URL"
@@ -219,21 +219,21 @@ There are two types of feeds for each location:
 Click the **"Add to Google Calendar"** link to open Google Calendar with the feed URL pre-filled.
 
 ### Important
-Calendar feeds update automatically — new and changed reservations appear within a few hours. You only need to subscribe once.
+Calendar feeds update automatically: new and changed reservations appear within a few hours. You only need to subscribe once.
 
 Staff feed URLs contain a security token. **Do not share staff feed URLs** with people outside the team.
 
 ### If a staff feed link is shared or someone leaves the team
 Everyone uses the **same** staff feed link, so removing someone from the portal does **not** stop a calendar they already subscribed to. If a staff feed link may have been shared, or someone with access leaves, ask the administrator who runs the server to **change the staff feed token**. All staff then copy the new link from this page and subscribe again; the old link stops working right away.
 
-## Filtering a Feed
+## Filtering a feed
 
-Each feed URL already includes a **location** filter. You can append extra parameters from the **Additional URL Parameters** section to narrow it further, and combine them:
+Each feed URL already includes a **location** filter. You can append extra parameters from the **Additional URL parameters** section to narrow it further, and combine them:
 
-- \`&catering=true\` — only events that include catering (eat à la carte, eat catering, or Catering Corona Room)
-- \`&catering=false\` — only events **without** catering (custom calendar appointments count as non-catering)
-- \`&status=CONFIRMED\` — only a specific status
-- \`&upcomingOnly=true\` — hide past events
+- \`&catering=true\`: only events that include catering (eat à la carte, eat catering, or Catering Corona Room)
+- \`&catering=false\`: only events **without** catering (custom calendar appointments count as non-catering)
+- \`&status=CONFIRMED\`: only a specific status
+- \`&upcomingOnly=true\`: hide past events
 
 For example, appending \`&catering=true\` to the Hubble staff feed gives a calendar of just the Hubble catering events. Leaving a parameter off keeps everything for that dimension, so any link you've already subscribed to keeps working unchanged.`,
   },
@@ -241,53 +241,53 @@ For example, appending \`&catering=true\` to the Hubble staff feed gives a calen
 
 export const emailTemplatesGuide: GuideSection[] = [
   {
-    title: 'Email Templates',
+    title: 'Email templates',
     screenshot: '/screenshots/email-templates.png',
     screenshotAlt: 'Email templates page with expandable template cards',
-    content: `The **Email Templates** page lets you customize the email notifications that are sent to customers when reservation statuses change.
+    content: `The **Email templates** page lets you customize the email notifications that are sent to customers when reservation statuses change.
 
-## Template Types
+## Template types
 
 Each status change has its own email template:
 
-- **Reservation Received** — sent when a customer submits a new reservation
-- **Reservation Confirmed** — sent when you approve a reservation
-- **Reservation Rejected** — sent when you reject a reservation
-- **Reservation Cancelled** — sent when a reservation is cancelled
-- **Catering Options** — sent manually with PDF menu attachments
+- **Reservation received**: sent when a customer submits a new reservation
+- **Reservation confirmed**: sent when you approve a reservation
+- **Reservation rejected**: sent when you reject a reservation
+- **Reservation cancelled**: sent when a reservation is cancelled
+- **Catering options**: sent manually with PDF menu attachments
 
 Click on any template card to **expand** it and see or edit its content.`,
   },
   {
-    title: 'Editing Templates',
+    title: 'Editing templates',
     screenshot: '/screenshots/email-templates-edit.png',
     screenshotAlt: 'Expanded email template with subject and body editor',
     content: `## Editing a Template
 
 When you expand a template, you can modify:
 
-- **Subject line** — the email subject
-- **Body** — the full HTML email body
+- **Subject line**: the email subject
+- **Body**: the full HTML email body
 
-### Template Variables
+### Template variables
 
 Templates support **variables** that get replaced with actual reservation data when the email is sent. Available variables are listed above the editor. Common ones include:
 
-- \`{{contactName}}\` — the customer's name
-- \`{{eventTitle}}\` — the name of the event
-- \`{{eventDate}}\` — the date of the event
-- \`{{location}}\` — Hubble or Meteor
-- \`{{confirmationNumber}}\` — the unique booking reference
+- \`{{contactName}}\`: the customer's name
+- \`{{eventTitle}}\`: the name of the event
+- \`{{eventDate}}\`: the date of the event
+- \`{{location}}\`: Hubble or Meteor
+- \`{{confirmationNumber}}\`: the unique reservation reference
 
-The **Reservation Confirmed/Rejected** and **Reservation Updated** templates also support:
+The **Reservation confirmed/rejected** and **Reservation updated** templates also support:
 
-- \`{{customMessage}}\` — the optional message a staff member types when confirming, rejecting, cancelling, completing, or editing a reservation. It renders as a highlighted note, or nothing at all when no message is entered. Keep this placeholder in the template if you want those one-off messages to appear.
+- \`{{customMessage}}\`: the optional message a staff member types when confirming, rejecting, cancelling, completing, or editing a reservation. It renders as a highlighted note, or nothing at all when no message is entered. Keep this placeholder in the template if you want those one-off messages to appear.
 
 ### Actions
 
-- **Save** — save your changes
-- **Reset to Default** — revert to the original template
-- **Send Test Email** — send a preview to any email address to check how it looks
+- **Save**: save your changes
+- **Reset to default**: revert to the original template
+- **Send test email**: send a preview to any email address to check how it looks
 
 ### Tip
 The body uses **HTML**. If you're not comfortable editing HTML, only change the text content and leave the HTML tags intact.
@@ -296,12 +296,12 @@ The body uses **HTML**. If you're not comfortable editing HTML, only change the 
 If you open or close another template, leave the page, or close the tab before saving, you are first asked whether to discard your changes. Choose **Keep editing** to return and save them.`,
   },
   {
-    title: 'PDF Attachments',
+    title: 'PDF attachments',
     screenshot: '/screenshots/email-attachments.png',
     screenshotAlt: 'PDF attachments section with upload form and attachment list',
     content: `## PDF Attachments
 
-Below the email templates, you'll find the **PDF Attachments** section. These are PDF files (like catering menus) that can be attached when sending catering option emails.
+Below the email templates, you'll find the **PDF attachments** section. These are PDF files (like catering menus) that can be attached when sending catering option emails.
 
 ### Uploading a PDF
 
@@ -309,125 +309,125 @@ Below the email templates, you'll find the **PDF Attachments** section. These ar
 2. Click **"Choose file"** and select a PDF file (max 3 MB)
 3. Click **Upload**
 
-### Managing Attachments
+### Managing attachments
 
-- **Active/Inactive toggle** — only active attachments are pre-selected when sending catering emails
-- **Delete** — permanently remove an attachment
+- **Active/inactive toggle**: only active attachments are pre-selected when sending catering emails
+- **Delete**: permanently remove an attachment
 
-### How Attachments Are Used
+### How attachments are used
 
-When you send a **"Catering Options"** email from a reservation's detail page, all active attachments are pre-selected. You can uncheck any you don't want to include for that specific email.`,
+When you send a **"Catering options"** email from a reservation's detail page, all active attachments are pre-selected. You can uncheck any you don't want to include for that specific email.`,
   },
 ];
 
 export const formSettingsGuide: GuideSection[] = [
   {
-    title: 'Form Settings Overview',
+    title: 'Form settings overview',
     screenshot: '/screenshots/form-settings.png',
     screenshotAlt: 'Form settings page with constraints and blocked periods tabs',
-    content: `The **Form Settings** page controls the rules and restrictions applied to the public reservation form. It has two main sections:
+    content: `The **Form settings** page controls the rules and restrictions applied to the public reservation form. It has two main sections:
 
-- **Form Constraints** — rules that validate or restrict what customers can select
-- **Blocked Periods** — specific date ranges when reservations are not allowed
+- **Form constraints**: rules that validate or restrict what customers can select
+- **Blocked periods**: specific date ranges when reservations are not allowed
 
 These settings directly affect what customers see and can do on the public reservation form.
 
 If you close a constraint or blocked period with the **X**, leave the page, or close the tab before saving, you are first asked whether to discard your changes. **Cancel** throws them away straight away.`,
   },
   {
-    title: 'Form Constraints',
+    title: 'Form constraints',
     screenshot: '/screenshots/form-constraints.png',
     screenshotAlt: 'Form constraints list with type badges and toggle switches',
     content: `## Form Constraints
 
 Constraints are rules that enforce business logic on the reservation form. Each constraint has:
 
-- **Type** — what kind of rule it is
-- **Message** — the error message shown to the customer
-- **Enabled/Disabled toggle** — turn rules on or off without deleting them
+- **Type**: what kind of rule it is
+- **Message**: the error message shown to the customer
+- **Enabled/disabled toggle**: turn rules on or off without deleting them
 
-### Constraint Types
+### Constraint types
 
-- **Activity Conflict** — prevents combining incompatible activities (e.g. catering + à la carte)
-- **Location Lock** — forces a specific location when a certain activity is selected (e.g. Corona Room → Hubble)
-- **Advance Booking** — requires a minimum number of days between booking and event date
-- **Time Restriction** — limits available time slots for certain activities
-- **Guest Minimum** — sets a minimum guest count for a specific location (e.g. Meteor minimum 1 person)
-- **Activity Notice** — shows an advisory message when an activity is selected, without blocking the booking (e.g. "Catering requires a deposit"). Tick **Require confirmation popup** to make guests acknowledge it in a dialog (with the option to deselect the activity instead) rather than just showing a banner they can scroll past. Use that sparingly, for notices that are genuinely easy to miss. Optionally fill in **Only at location** and/or **Only from number of guests** to show the notice only for that bar or for bigger groups (e.g. Meteor, Eat a la Carte, from 8 guests: "please send your menu choices in advance"). Guests then see it as soon as all of those match, in whatever order they fill in the form.
+- **Activity conflict**: prevents combining incompatible activities (e.g. catering + à la carte)
+- **Location lock**: forces a specific location when a certain activity is selected (e.g. Corona Room → Hubble)
+- **Advance notice**: requires a minimum number of days between making the reservation and the event date
+- **Time restriction**: limits available time slots for certain activities
+- **Guest minimum**: sets a minimum guest count for a specific location (e.g. Meteor minimum 1 person)
+- **Activity notice**: shows an advisory message when an activity is selected, without blocking the reservation (e.g. "Catering requires a deposit"). Tick **Require confirmation popup** to make customers acknowledge it in a dialog (with the option to deselect the activity instead) rather than just showing a banner they can scroll past. Use that sparingly, for notices that are genuinely easy to miss. Optionally fill in **Only at location** and/or **Only from number of guests** to show the notice only for that bar or for bigger groups (e.g. Meteor, Eat a la Carte, from 8 guests: "please send your menu choices in advance"). Guests then see it as soon as all of those match, in whatever order they fill in the form.
 
-### Adding a Constraint
+### Adding a constraint
 
-Click **"Add Constraint"** and fill in:
-1. **Constraint type** — select from the dropdown
-2. **Trigger activity** — which activity triggers this rule (not needed for Guest Minimum)
-3. **Target value** — what the rule applies to (location, conflicting activity, etc.)
-4. **Numeric value** — for rules that need a number (days, minimum guests)
-5. **Message** — the error text customers will see
+Click **"Add constraint"** and fill in:
+1. **Constraint type**: select from the dropdown
+2. **Trigger activity**: which activity triggers this rule (not needed for Guest minimum)
+3. **Target value**: what the rule applies to (location, conflicting activity, etc.)
+4. **Numeric value**: for rules that need a number (days, minimum guests)
+5. **Message**: the error text customers will see
 
 > **Private events** are no longer a bookable activity, so they cannot be picked as a trigger.
 > Reservations booked with one before it was retired still show it on their detail page.`,
   },
   {
-    title: 'Blocked Periods',
+    title: 'Blocked periods',
     screenshot: '/screenshots/form-blocked-periods.png',
     screenshotAlt: 'Blocked periods list with date ranges and location badges',
     content: `## Blocked Periods
 
 Blocked periods prevent customers from making reservations during specific date ranges. Use these for:
 
-- **Holidays** — Christmas, New Year's, etc.
-- **Maintenance** — planned closures
-- **Private events** — when the venue is booked exclusively
-- **Seasonal closures** — summer or winter breaks
+- **Holidays**: Christmas, New Year's, etc.
+- **Maintenance**: planned closures
+- **Private events**: when the venue is booked exclusively
+- **Seasonal closures**: summer or winter breaks
 
-### Creating a Blocked Period
+### Creating a blocked period
 
-Click **"Add Blocked Period"** and fill in:
-1. **Start date** and **End date** — the date range to block
-2. **Location** — optionally limit the block to just Hubble or Meteor (leave empty for both)
-3. **Reason** — internal note for staff (not shown to customers)
-4. **Public message** — the message customers see when trying to book these dates
-5. **Soft block** — see below
-6. **Enabled** — toggle on/off
+Click **"Add blocked period"** and fill in:
+1. **Start date** and **End date**: the date range to block
+2. **Location**: optionally limit the block to just Hubble or Meteor (leave empty for both)
+3. **Reason**: internal note for staff (not shown to customers)
+4. **Public message**: the message customers see when trying to book these dates
+5. **Soft block**: see below
+6. **Enabled**: toggle on/off
 
-### Hard vs. Soft Blocks
+### Hard vs. soft blocks
 
 By default a blocked period is a **hard block**: customers cannot book those dates at all.
 
-Turn on **Soft block (allow bookings with a warning)** when the venue is closed *by default* but bookings are still possible — for example a summer closing where the bar opens only on request. With a soft block:
+Turn on **Soft block (allow reservations with a warning)** when the venue is closed *by default* but reservations are still possible, for example a summer closing where the bar opens only on request. With a soft block:
 
 - The period is still marked and the **public message** is shown as a warning.
-- The customer must tick an **acknowledgement checkbox** before continuing, then can complete the booking.
+- The customer must tick an **acknowledgement checkbox** before continuing, then can complete the reservation.
 - Soft-blocked rows are marked with an amber **"Soft block"** badge in the list.
 
-When soft block is on you can set the **acknowledgement text** — the checkbox label the customer must tick (e.g. *"I understand the bar may be closed and my reservation is a request"*). Leave it blank to use a sensible default.
+When soft block is on you can set the **acknowledgement text**: the checkbox label the customer must tick (e.g. *"I understand the bar may be closed and my reservation is a request"*). Leave it blank to use a sensible default.
 
 ### Tip
 You can create blocked periods in advance. Use the **enabled toggle** to activate them when needed instead of creating and deleting them each time.`,
   },
   {
-    title: 'Data Retention',
+    title: 'Data retention',
     screenshot: '/screenshots/form-data-retention.png',
     screenshotAlt: 'Data retention section showing retention period and status',
     content: `## Data Retention
 
-At the bottom of the page, you'll see the **Data Retention** settings. This shows how long reservation data is kept before being automatically deleted.
+At the bottom of the page, you'll see the **Data retention** settings. This shows how long reservation data is kept before being automatically deleted.
 
-### What You See
+### What you see
 
-- **Retention period** — how many days after the event date reservations are kept (e.g. 365 days)
-- **Status** — whether automatic deletion is enabled
-- **Eligible for deletion** — how many reservations would be deleted in the next run
-- **Next run** — when the next automatic cleanup will happen (daily at 2:00 AM)
-- **Cutoff date** — reservations with event dates before this date will be deleted
+- **Retention period**: how many days after the event date reservations are kept (e.g. 365 days)
+- **Status**: whether automatic deletion is enabled
+- **Eligible for deletion**: how many reservations would be deleted in the next run
+- **Next run**: when the next automatic cleanup will happen (daily at 2:00 AM)
+- **Cutoff date**: reservations with event dates before this date will be deleted
 
 ### Important
-Data retention settings can **only be changed** through the server configuration (Docker Compose). Staff cannot modify these settings from the admin panel — they are displayed here for transparency only.
+Data retention settings can **only be changed** through the server configuration (Docker Compose). Staff cannot modify these settings from the admin panel; they are displayed here for transparency only.
 
 This is a privacy and compliance measure to ensure old personal data (names, emails, phone numbers) is not kept longer than necessary.
 
 ### The audit log is cleaned up too
-The **Audit Log** also contains personal data (for example a changed name or email address), so it follows the same rule:
+The **Audit log** also contains personal data (for example a changed name or email address), so it follows the same rule:
 
 - When a reservation is deleted by the cleanup, its change history goes with it.
 - Other entries (settings, users, and reservations someone already removed by hand) are deleted once they are older than the same retention period.`,
@@ -436,77 +436,77 @@ The **Audit Log** also contains personal data (for example a changed name or ema
 
 export const reservationDetailGuide: GuideSection[] = [
   {
-    title: 'Reservation Details',
+    title: 'Reservation details',
     screenshot: '/screenshots/reservation-detail-overview.png',
     screenshotAlt: 'Reservation detail page showing all fields',
-    content: `The **Reservation Detail** page shows all information about a single reservation.
+    content: `The **Reservation detail** page shows all information about a single reservation.
 
-## Information Sections
+## Information sections
 
-- **Contact Information** — name, email, phone number
-- **Event Details** — title, date, start/end time, location, seating area (Inside / Outside), guest count
-- **Activities** — selected special activities (catering, à la carte, etc.)
-- **Additional Notes** — any comments the customer added
-- **Payment** — payment option and invoice details (if applicable)
-- **Status History** — who confirmed/rejected and when
+- **Contact information**: name, email, phone number
+- **Event details**: title, date, start/end time, location, seating area (Inside / Outside), guest count
+- **Activities**: selected special activities (catering, à la carte, etc.)
+- **Additional notes**: any comments the customer added
+- **Payment**: payment option and invoice details (if applicable)
+- **Status history**: who confirmed/rejected and when
 
 ## Unsaved changes
 
 When you edit a reservation and then close the editor with the **X**, go back in the browser, or close the tab before saving, you are first asked whether to discard your changes. Choose **Keep editing** to return and save them. **Cancel** closes the editor and throws the changes away straight away.`,
   },
   {
-    title: 'Status Actions',
+    title: 'Status actions',
     screenshot: '/screenshots/reservation-actions.png',
     screenshotAlt: 'Action buttons for confirming, rejecting, and managing reservations',
     content: `## Status Actions
 
 The available actions depend on the current status:
 
-### Pending Reservations
-- **Confirm** — approve the reservation. Optionally sends a confirmation email
-- **Reject** — decline the reservation. The rejection email is pre-filled with a default reason you can edit or replace
+### Pending reservations
+- **Confirm**: approve the reservation. Optionally sends a confirmation email
+- **Reject**: decline the reservation. The rejection email is pre-filled with a default reason you can edit or replace
 
-### Confirmed Reservations
-- **Cancel** — cancel the reservation (e.g. customer called to cancel)
+### Confirmed reservations
+- **Cancel**: cancel the reservation (e.g. customer called to cancel)
 
-### Rejected and Cancelled Reservations
-- **Move back to Pending**: reopen a rejected or cancelled reservation. Use this when the event is going ahead after all (e.g. a different date or location frees up, or the customer changes their mind) so you can edit the existing details instead of asking the customer to fill everything in again. The reservation returns to **Pending**, ready to confirm or reject. The customer email is **off** by default for this action; tick the box only if you want to let them know it's being reconsidered. When the dialog closes, the box goes back to how you had it.
+### Rejected and cancelled reservations
+- **Move back to pending**: reopen a rejected or cancelled reservation. Use this when the event is going ahead after all (e.g. a different date or location frees up, or the customer changes their mind) so you can edit the existing details instead of asking the customer to fill everything in again. The reservation returns to **Pending**, ready to confirm or reject. The customer email is **off** by default for this action; tick the box only if you want to let them know it's being reconsidered. When the dialog closes, the box goes back to how you had it.
 - **Delete permanently**: remove the reservation and its history for good. A confirmation dialog asks first and says whether the customer gets a cancellation email (that follows the **"Send email notification"** checkbox).
 
 Other status changes are refused, also when made outside these buttons: a pending reservation cannot be cancelled directly (reject it instead), and a confirmed one cannot go back to pending.
 
-### All Reservations
-- **Edit** — open the edit form to change any field
+### All reservations
+- **Edit**: open the edit form to change any field
 
-### Email Notifications
-Each status change dialog (and the edit form) has a **"Send email notification"** checkbox. For most status changes it is **on** by default — uncheck it only if you've already communicated with the customer directly. For the **edit form** and the **Move back to Pending** action it is **off** by default, since those are usually internal corrections; tick it when the change is worth notifying the customer about.
+### Email notifications
+Each status change dialog (and the edit form) has a **"Send email notification"** checkbox. For most status changes it is **on** by default. Uncheck it only if you've already communicated with the customer directly. For the **edit form** and the **Move back to pending** action it is **off** by default, since those are usually internal corrections; tick it when the change is worth notifying the customer about.
 
 After each action, a line at the top of the **Actions** box says what happened and whether an email went out. If something goes wrong, the reason appears there too, and nothing you typed is lost.
 
-### Adding a Message to the Email
-When the email notification is on, every status dialog and the edit form shows an optional **"Add a message to the email"** box. Anything you type here appears as a highlighted note in that email — use it to clarify things the standard template doesn't cover, e.g. *"We read your special request and will keep a shaded spot for you."* For **Reject**, this box is pre-filled with a default reason that you can edit, replace, or clear before sending.`,
+### Adding a message to the email
+When the email notification is on, every status dialog and the edit form shows an optional **"Add a message to the email"** box. Anything you type here appears as a highlighted note in that email. Use it to clarify things the standard template doesn't cover, e.g. *"We read your special request and will keep a shaded spot for you."* For **Reject**, this box is pre-filled with a default reason that you can edit, replace, or clear before sending.`,
   },
   {
-    title: 'Catering Email',
+    title: 'Catering email',
     screenshot: '/screenshots/reservation-catering-email.png',
     screenshotAlt: 'Catering email dialog with attachment checkboxes',
     content: `## Sending Catering Options
 
-For reservations that include catering activities, you'll see a **"Send Catering Options"** button.
+For reservations that include catering activities, you'll see a **"Send catering options"** button.
 
-### How It Works
+### How it works
 
-1. Click **"Send Catering Options"**
+1. Click **"Send catering options"**
 2. The dialog shows a pre-filled email with:
-   - **Recipient** — the customer's email
-   - **Reply-to** — where the customer's reply will go. It is pre-filled with the reservations inbox; change it to your own email if the customer should reply to you directly
-   - **Attachments** — all active PDF menus (pre-checked, uncheck any you don't want to include)
-   - **Subject** — pre-filled from the template
-   - **Body** — pre-filled HTML email body
+   - **Recipient**: the customer's email
+   - **Reply-to**: where the customer's reply will go. It is pre-filled with the reservations inbox; change it to your own email if the customer should reply to you directly
+   - **Attachments**: all active PDF menus (pre-checked, uncheck any you don't want to include)
+   - **Subject**: pre-filled from the template
+   - **Body**: pre-filled HTML email body
 3. Optionally edit the subject or body for this specific email
 4. Click **Send**
 
 ### Tip
-Make sure you have **PDF attachments uploaded** on the Email Templates page before sending catering emails. The email can be sent without attachments, but it's most useful when menus are attached.`,
+Make sure you have **PDF attachments uploaded** on the Email templates page before sending catering emails. The email can be sent without attachments, but it's most useful when menus are attached.`,
   },
 ];

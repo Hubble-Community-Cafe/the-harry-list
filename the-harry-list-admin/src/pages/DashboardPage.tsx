@@ -73,7 +73,7 @@ export function DashboardPage() {
           <h1 className="text-2xl font-title font-bold text-white tracking-tight">Dashboard</h1>
           <p className="text-dark-400 font-light">Overview of reservation activity</p>
         </div>
-        <HelpGuide title="Dashboard Guide" sections={dashboardGuide} />
+        <HelpGuide title="Dashboard guide" sections={dashboardGuide} />
       </div>
 
       {/* Stats Grid */}
@@ -132,7 +132,7 @@ export function DashboardPage() {
         {/* Pending Reservations */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Pending Approval</h2>
+            <h2 className="text-lg font-semibold text-white">Pending approval</h2>
             <Link to="/reservations?status=PENDING" className="text-sm text-hubble-400 hover:text-hubble-300">
               View all
             </Link>
@@ -169,10 +169,10 @@ export function DashboardPage() {
           )}
         </div>
 
-        {/* Recent Reservations */}
+        {/* Recent reservations */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Recent Reservations</h2>
+            <h2 className="text-lg font-semibold text-white">Recent reservations</h2>
             <Link to="/reservations" className="text-sm text-hubble-400 hover:text-hubble-300">
               View all
             </Link>

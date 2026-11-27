@@ -43,11 +43,11 @@ export function LoginPage() {
           <div className="text-center mb-8">
             <img
               src="/logo.svg"
-              alt="The Harry List Logo"
+              alt="The Harry List logo"
               className="w-16 h-16 mx-auto mb-4 rounded-2xl"
             />
             <h1 className="text-2xl font-title font-bold text-white tracking-tight">The Harry List</h1>
-            <p className="text-dark-400 font-light mt-1">Staff Administration Portal</p>
+            <p className="text-dark-400 font-light mt-1">Staff administration portal</p>
           </div>
           {/* Login Card */}
           <div className="card">
@@ -56,7 +56,7 @@ export function LoginPage() {
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-hubble-500/20 mb-4">
                   <Shield className="w-6 h-6 text-hubble-400" />
                 </div>
-                <h2 className="text-xl font-semibold text-white">Staff Login</h2>
+                <h2 className="text-xl font-semibold text-white">Staff login</h2>
                 <p className="text-sm text-dark-400 mt-1">
                   Sign in with your organization Microsoft account
                 </p>

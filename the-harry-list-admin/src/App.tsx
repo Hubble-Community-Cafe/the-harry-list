@@ -51,7 +51,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
           <div className="w-16 h-16 notice-error rounded-full flex items-center justify-center mx-auto mb-4">
             <ShieldX aria-hidden="true" className="w-8 h-8" />
           </div>
-          <h1 className="text-xl font-bold text-white mb-2">Access Denied</h1>
+          <h1 className="text-xl font-bold text-white mb-2">Access denied</h1>
           <p className="text-dark-400 mb-6">
             {groupError || 'You are not authorized to access this application. Please contact an administrator to request access.'}
           </p>

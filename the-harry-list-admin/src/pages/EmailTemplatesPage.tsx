@@ -148,7 +148,7 @@ export function EmailTemplatesPage() {
       const data = await fetchEmailAttachments();
       setAttachments(data);
     } catch {
-      // Non-blocking — attachments section will show empty
+      // Non-blocking: attachments section will show empty
     } finally {
       setLoadingAttachments(false);
     }
@@ -216,14 +216,14 @@ export function EmailTemplatesPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Email Templates</h1>
+          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Email templates</h1>
           <p className="text-dark-400 font-light">
             {canEditEmailTemplates
               ? 'Customise the emails sent to customers and staff'
               : 'Manage the PDF attachments used in catering option emails'}
           </p>
         </div>
-        {canEditEmailTemplates && <HelpGuide title="Email Templates Guide" sections={emailTemplatesGuide} />}
+        {canEditEmailTemplates && <HelpGuide title="Email templates guide" sections={emailTemplatesGuide} />}
       </div>
 
       {/* Info card */}
@@ -398,7 +398,7 @@ export function EmailTemplatesPage() {
       {/* PDF Attachments section */}
       {canManageAttachments && (
       <div>
-        <h2 className="text-xl font-title font-bold text-white mb-1 tracking-tight">PDF Attachments</h2>
+        <h2 className="text-xl font-title font-bold text-white mb-1 tracking-tight">PDF attachments</h2>
         <p className="text-dark-400 font-light text-sm mb-4">Manage PDF files that can be attached to catering option emails</p>
 
         {/* Upload form */}

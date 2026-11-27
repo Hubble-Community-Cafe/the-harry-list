@@ -46,7 +46,7 @@ test.describe('admin: unsaved changes', () => {
     const subject = page.getByPlaceholder('Subject...');
     await subject.fill('Unsaved subject');
 
-    await page.getByRole('link', { name: 'Week Overview' }).click();
+    await page.getByRole('link', { name: 'Week overview' }).click();
     await expect(discardQuestion(page)).toBeVisible();
     await page.getByRole('button', { name: 'Keep editing' }).click();
 

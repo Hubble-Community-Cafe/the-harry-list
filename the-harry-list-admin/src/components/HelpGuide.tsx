@@ -76,7 +76,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
 /** Renders inline Markdown: **bold**, `code`, *italic* */
 function renderInline(text: string): React.ReactNode {
   const parts: React.ReactNode[] = [];
-  // Match **bold**, `code`, *italic* — process in order of appearance
+  // Match **bold**, `code`, *italic*: process in order of appearance
   const regex = /(\*\*(.+?)\*\*|`(.+?)`|\*(.+?)\*)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;

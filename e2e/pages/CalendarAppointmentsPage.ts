@@ -10,8 +10,8 @@ export class CalendarAppointmentsPage {
 
   async goto(): Promise<void> {
     await this.page.goto('/calendar-appointments');
-    // Heading specifically — the text also appears in the nav.
-    await expect(this.page.getByRole('heading', { name: 'Calendar Appointments' })).toBeVisible();
+    // Heading specifically: the text also appears in the nav.
+    await expect(this.page.getByRole('heading', { name: 'Calendar appointments' })).toBeVisible();
   }
 
   rows(): Locator {
@@ -35,7 +35,7 @@ export class CalendarAppointmentsPage {
     endDate?: string;   // optional recurrence end
   }): Promise<void> {
     await this.page.getByTestId('add-appointment').click();
-    await expect(this.page.getByText('New Appointment')).toBeVisible();
+    await expect(this.page.getByText('New appointment')).toBeVisible();
 
     await this.page.getByTestId('appointment-title').fill(opts.title);
     await this.page.getByTestId('appointment-date').fill(opts.date);

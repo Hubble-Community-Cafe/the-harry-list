@@ -22,14 +22,14 @@ import { UsersTab } from './UsersPage';
 import { activityLabel, constraintValueLabel, locationLabel } from '../lib/labels';
 
 const CONSTRAINT_TYPES = [
-  { value: 'ACTIVITY_CONFLICT', label: 'Activity Conflict' },
-  { value: 'LOCATION_LOCK', label: 'Location Lock' },
-  { value: 'SEATING_LOCK', label: 'Seating Lock' },
-  { value: 'TIME_RESTRICTION', label: 'Time Restriction' },
-  { value: 'ADVANCE_BOOKING', label: 'Advance Booking' },
-  { value: 'GUEST_LIMIT', label: 'Guest Limit' },
-  { value: 'GUEST_MINIMUM', label: 'Guest Minimum' },
-  { value: 'ACTIVITY_NOTICE', label: 'Activity Notice' },
+  { value: 'ACTIVITY_CONFLICT', label: 'Activity conflict' },
+  { value: 'LOCATION_LOCK', label: 'Location lock' },
+  { value: 'SEATING_LOCK', label: 'Seating lock' },
+  { value: 'TIME_RESTRICTION', label: 'Time restriction' },
+  { value: 'ADVANCE_BOOKING', label: 'Advance notice' },
+  { value: 'GUEST_LIMIT', label: 'Guest limit' },
+  { value: 'GUEST_MINIMUM', label: 'Guest minimum' },
+  { value: 'ACTIVITY_NOTICE', label: 'Activity notice' },
 ];
 
 // Selectable activities only: a constraint on a retired activity can never fire, since no
@@ -228,7 +228,7 @@ export function SettingsPage() {
           <h1 className="text-2xl font-title font-bold text-white tracking-tight">Settings</h1>
           <p className="text-dark-400 font-light">Manage constraints, blocked periods, and admin settings</p>
         </div>
-        <HelpGuide title="Settings Guide" sections={formSettingsGuide} />
+        <HelpGuide title="Settings guide" sections={formSettingsGuide} />
       </div>
 
       {error && (
@@ -241,12 +241,12 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* Tab Switcher — dropdown on mobile, horizontal tabs on md+ */}
+      {/* Tab Switcher: dropdown on mobile, horizontal tabs on md+ */}
       {(() => {
         const tabs = [
-          { key: 'constraints' as const, icon: Shield, label: `Form Constraints (${constraints.length})` },
-          { key: 'blocked' as const, icon: Calendar, label: `Blocked Periods (${blockedPeriods.length})` },
-          ...(canEditFormSettings ? [{ key: 'retention' as const, icon: Database, label: 'Data Retention' }] : []),
+          { key: 'constraints' as const, icon: Shield, label: `Form constraints (${constraints.length})` },
+          { key: 'blocked' as const, icon: Calendar, label: `Blocked periods (${blockedPeriods.length})` },
+          ...(canEditFormSettings ? [{ key: 'retention' as const, icon: Database, label: 'Data retention' }] : []),
           ...(canManageUsers ? [{ key: 'users' as const, icon: Users, label: 'Users' }] : []),
         ];
         return (
@@ -298,7 +298,7 @@ export function SettingsPage() {
               data-testid="add-constraint"
               className="btn-primary btn-sm gap-2"
             >
-              <Plus className="w-4 h-4" /> Add Constraint
+              <Plus className="w-4 h-4" /> Add constraint
             </button>
           </div>
 
@@ -382,7 +382,7 @@ export function SettingsPage() {
               data-testid="add-blocked-period"
               className="btn-primary btn-sm gap-2"
             >
-              <Plus className="w-4 h-4" /> Add Blocked Period
+              <Plus className="w-4 h-4" /> Add blocked period
             </button>
           </div>
 
@@ -401,7 +401,7 @@ export function SettingsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className={`text-xs font-mono px-2 py-0.5 rounded bg-dark-800 ${bp.softBlock ? 'notice-text-warning' : 'notice-text-error'}`}>
-                        {bp.startDate} — {bp.endDate}
+                        {bp.startDate} to {bp.endDate}
                       </span>
                       {bp.softBlock && (
                         <span data-testid="soft-block-badge" className="text-xs font-medium px-2 py-0.5 rounded border notice-warning">
@@ -472,7 +472,7 @@ export function SettingsPage() {
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 id="constraint-title" className="dialog-title">
-                  {editingConstraint.id ? 'Edit Constraint' : 'New Constraint'}
+                  {editingConstraint.id ? 'Edit constraint' : 'New constraint'}
                 </h2>
                 <button
                   onClick={() => confirmDiscard(() => setEditingConstraint(null))}
@@ -485,7 +485,7 @@ export function SettingsPage() {
 
               <div className="space-y-3">
                 <div>
-                  <label htmlFor="constraint-constraint-type" className="block text-sm text-dark-400 mb-1">Constraint Type</label>
+                  <label htmlFor="constraint-constraint-type" className="block text-sm text-dark-400 mb-1">Constraint type</label>
                   <select id="constraint-constraint-type"
                     data-testid="constraint-type"
                     value={editingConstraint.constraintType}
@@ -504,7 +504,7 @@ export function SettingsPage() {
 
                 {editingConstraint.constraintType !== 'GUEST_MINIMUM' && (
                   <div>
-                    <label htmlFor="constraint-trigger-activity" className="block text-sm text-dark-400 mb-1">Trigger Activity</label>
+                    <label htmlFor="constraint-trigger-activity" className="block text-sm text-dark-400 mb-1">Trigger activity</label>
                     <select id="constraint-trigger-activity"
                       data-testid="constraint-trigger"
                       value={editingConstraint.triggerActivity}
@@ -537,8 +537,8 @@ export function SettingsPage() {
                     </label>
                     <p className="text-xs text-dark-500 mt-1">
                       Off: the message appears as a banner under the activity list. On: guests
-                      must acknowledge it in a dialog titled "Please Note" before the activity
-                      is selected, and can choose to deselect instead. Use sparingly — reserve
+                      must acknowledge it in a dialog titled "Please note" before the activity
+                      is selected, and can choose to deselect instead. Use sparingly: reserve
                       it for notices that are genuinely easy to miss.
                     </p>
                   </div>
@@ -585,7 +585,7 @@ export function SettingsPage() {
                     </div>
                     <p className="sm:col-span-2 text-xs text-dark-500">
                       Leave both empty to show the notice to everyone who picks the activity. When
-                      set, the notice (and popup) only appears once the guest has also chosen that
+                      set, the notice (and popup) only appears once the customer has also chosen that
                       location and/or at least that many guests, in whatever order they fill in the form.
                     </p>
                   </div>
@@ -593,7 +593,7 @@ export function SettingsPage() {
 
                 {editingConstraint.constraintType !== 'ACTIVITY_NOTICE' && (
                   <div>
-                    <label htmlFor="constraint-target-value" className="block text-sm text-dark-400 mb-1">Target Value</label>
+                    <label htmlFor="constraint-target-value" className="block text-sm text-dark-400 mb-1">Target value</label>
                     <input id="constraint-target-value"
                       type="text"
                       data-testid="constraint-target"
@@ -639,7 +639,7 @@ export function SettingsPage() {
 
                 {editingConstraint.constraintType === 'TIME_RESTRICTION' && (
                   <div>
-                    <label htmlFor="constraint-time-range" className="block text-sm text-dark-400 mb-1">Time Range</label>
+                    <label htmlFor="constraint-time-range" className="block text-sm text-dark-400 mb-1">Time range</label>
                     <input id="constraint-time-range"
                       type="text"
                       value={editingConstraint.secondaryValue || ''}
@@ -663,7 +663,7 @@ export function SettingsPage() {
                     <p className="text-xs text-dark-500 mt-1">
                       Shown as an informational note when the trigger activity is selected and the
                       conditions above match (e.g. "A private event at Meteor has an additional charge").
-                      It does not block the booking.
+                      It does not block the reservation.
                     </p>
                   )}
                 </div>
@@ -699,7 +699,7 @@ export function SettingsPage() {
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 id="blocked-period-title" className="dialog-title">
-                  {editingPeriod.id ? 'Edit Blocked Period' : 'New Blocked Period'}
+                  {editingPeriod.id ? 'Edit blocked period' : 'New blocked period'}
                 </h2>
                 <button
                   onClick={() => confirmDiscard(() => setEditingPeriod(null))}
@@ -727,7 +727,7 @@ export function SettingsPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
-                    <label htmlFor="period-start-date" className="block text-sm text-dark-400 mb-1">Start Date *</label>
+                    <label htmlFor="period-start-date" className="block text-sm text-dark-400 mb-1">Start date *</label>
                     <input id="period-start-date"
                       type="date"
                       value={editingPeriod.startDate}
@@ -736,7 +736,7 @@ export function SettingsPage() {
                     />
                   </div>
                   <div className="min-w-0">
-                    <label htmlFor="period-end-date" className="block text-sm text-dark-400 mb-1">End Date *</label>
+                    <label htmlFor="period-end-date" className="block text-sm text-dark-400 mb-1">End date *</label>
                     <input id="period-end-date"
                       type="date"
                       value={editingPeriod.endDate}
@@ -748,7 +748,7 @@ export function SettingsPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
-                    <label htmlFor="period-start-time" className="block text-sm text-dark-400 mb-1">Start Time (optional)</label>
+                    <label htmlFor="period-start-time" className="block text-sm text-dark-400 mb-1">Start time (optional)</label>
                     <div className="flex items-center gap-1">
                       <input id="period-start-time"
                         type="time"
@@ -770,7 +770,7 @@ export function SettingsPage() {
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <label htmlFor="period-end-time" className="block text-sm text-dark-400 mb-1">End Time (optional)</label>
+                    <label htmlFor="period-end-time" className="block text-sm text-dark-400 mb-1">End time (optional)</label>
                     <div className="flex items-center gap-1">
                       <input id="period-end-time"
                         type="time"
@@ -805,7 +805,7 @@ export function SettingsPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="period-public-message" className="block text-sm text-dark-400 mb-1">Public Message (shown to users)</label>
+                  <label htmlFor="period-public-message" className="block text-sm text-dark-400 mb-1">Public message (shown to users)</label>
                   <input id="period-public-message"
                     type="text"
                     value={editingPeriod.publicMessage || ''}
@@ -831,9 +831,9 @@ export function SettingsPage() {
                         : <ToggleLeft className="w-6 h-6 text-dark-500" />}
                     </button>
                     <span className="text-sm text-white">
-                      Soft block (allow bookings with a warning)
+                      Soft block (allow reservations with a warning)
                       <span className="block text-xs text-dark-400 mt-0.5">
-                        Guests can still book during this period, but must acknowledge a warning first.
+                        Customers can still book during this period, but must acknowledge a warning first.
                         Use this for e.g. a summer closing where the bar opens on request.
                       </span>
                     </span>
@@ -891,19 +891,19 @@ export function SettingsPage() {
               </div>
             </div>
             <div className="card !p-4">
-              <div className="text-xs text-dark-500 mb-1">Retention Period</div>
+              <div className="text-xs text-dark-500 mb-1">Retention period</div>
               <div className="text-sm font-semibold text-white">
-                {retention.enabled ? `${retention.retentionDays} days` : '—'}
+                {retention.enabled ? `${retention.retentionDays} days` : 'Not set'}
               </div>
             </div>
             <div className="card !p-4">
-              <div className="text-xs text-dark-500 mb-1">Cutoff Date</div>
+              <div className="text-xs text-dark-500 mb-1">Cutoff date</div>
               <div className="text-sm font-semibold text-white">
-                {retention.cutoffDate ?? '—'}
+                {retention.cutoffDate ?? 'Not set'}
               </div>
             </div>
             <div className="card !p-4">
-              <div className="text-xs text-dark-500 mb-1">Eligible for Removal</div>
+              <div className="text-xs text-dark-500 mb-1">Eligible for removal</div>
               <div className={`text-sm font-semibold ${retention.eligibleForDeletion > 0 ? 'notice-text-warning' : 'text-white'}`}>
                 {retention.eligibleForDeletion} reservations
               </div>

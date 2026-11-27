@@ -46,7 +46,7 @@ export function SummaryStep({ activityNotices, submitError, setAltchaPayload, on
               <ClipboardCheck className="w-5 h-5 text-hubble-400" />
             </div>
             <div>
-              <h2 tabIndex={-1} className="text-xl font-title font-semibold text-white tracking-tight outline-none">Review & Confirm</h2>
+              <h2 tabIndex={-1} className="text-xl font-title font-semibold text-white tracking-tight outline-none">Review & confirm</h2>
               <p className="text-sm text-dark-400 font-light">Please review your reservation details</p>
             </div>
           </div>
@@ -151,7 +151,7 @@ export function SummaryStep({ activityNotices, submitError, setAltchaPayload, on
                 data-testid="form-privacy-link"
                 className="underline text-hubble-400 hover:text-hubble-300 transition-colors"
               >
-                Privacy Policy
+                Privacy policy
               </button>
               {' '}for how we handle your data.
             </p>

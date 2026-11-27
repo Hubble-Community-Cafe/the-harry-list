@@ -28,14 +28,14 @@ test.describe('public: full booking happy path', () => {
   test('submits a reservation end-to-end and emails the guest', async ({ page, request }, testInfo) => {
     const form = new ReservationFormPage(page);
 
-    // Step 1 — Contact
+    // Step 1: Contact
     await form.goto();
     await form.fillContact(CONTACT);
     await captureScreenshot(testInfo, page, '1-contact');
     await form.continue();
 
-    // Step 2 — Details (activity + location & seating, now merged)
-    await form.expectStep('Event Details');
+    // Step 2: Details (activity + location & seating, now merged)
+    await form.expectStep('Event details');
     await form.fillActivity(ACTIVITY);
     await form.expectStep('Where would you like to host your event?');
     await form.selectLocation('NO_PREFERENCE');
@@ -43,13 +43,13 @@ test.describe('public: full booking happy path', () => {
     await captureScreenshot(testInfo, page, '2-details');
     await form.continue();
 
-    // Step 3 — Payment
-    await form.expectStep('Payment Information');
+    // Step 3: Payment
+    await form.expectStep('Payment information');
     await form.selectPayment('People pay individually');
     await captureScreenshot(testInfo, page, '3-payment');
     await form.continue();
 
-    // Step 4 — Confirm
+    // Step 4: Confirm
     await form.acceptTerms();
     await captureScreenshot(testInfo, page, '5-review');
     await form.submit();

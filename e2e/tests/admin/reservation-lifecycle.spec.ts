@@ -24,7 +24,7 @@ test.describe('admin: reservation lifecycle', () => {
     // 1) Guest submits via the public form (a concrete location so it can be confirmed).
     await page.goto(PUBLIC_BASE_URL);
     const form = new ReservationFormPage(page);
-    await expect(page.getByText('Contact Information')).toBeVisible();
+    await expect(page.getByText('Contact information')).toBeVisible();
     await form.completeBooking({
       contact: { name: 'Lifecycle Guest', email: guestEmail },
       activity: { title, date: '2030-11-20' },
@@ -83,13 +83,13 @@ test.describe('admin: reservation lifecycle', () => {
     await row.click();
     await expect(page.getByTestId('reservation-status')).toContainText('Pending');
 
-    // The inside/outside seating area is visible in read mode (#292) — staff no longer
+    // The inside/outside seating area is visible in read mode (#292): staff no longer
     // have to open the editor to find out where the reservation is seated.
     await expect(page.getByTestId('seating-area-badge')).toContainText('Inside');
 
     // Edit the guest count.
     await page.getByTestId('edit-reservation').click();
-    // The "send update email" notification defaults to OFF — editing should be silent
+    // The "send update email" notification defaults to OFF: editing should be silent
     // unless the editor explicitly opts in.
     await expect(
       page.getByRole('checkbox', { name: /send email notification about changes/i })
@@ -117,7 +117,7 @@ test.describe('admin: reservation lifecycle', () => {
   });
 
   test('a rejected reservation can be moved back to pending and confirmed', async ({ page, request }, testInfo) => {
-    // A rejected event whose date/location changed — staff reopen it rather than
+    // A rejected event whose date/location changed: staff reopen it rather than
     // asking the customer to re-submit everything.
     await seedReservation(request, {
       contactName: 'Reopen Guest',
@@ -142,7 +142,7 @@ test.describe('admin: reservation lifecycle', () => {
     await expect(page.getByTestId('reservation-status')).toContainText('Rejected');
     await captureScreenshot(testInfo, page, '1-rejected');
 
-    // Move it back to pending (email stays off — internal correction).
+    // Move it back to pending (email stays off: internal correction).
     await page.getByTestId('reopen-reservation').click();
     await page.getByTestId('reopen-dialog-submit').click();
     await expect(page.getByTestId('reservation-status')).toContainText('Pending');

@@ -186,7 +186,7 @@ export function CalendarAppointmentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Calendar Appointments</h1>
+          <h1 className="text-2xl font-title font-bold text-white tracking-tight">Calendar appointments</h1>
           <p className="text-dark-400 font-light">Custom calendar entries that appear in the ICS feeds alongside reservations</p>
         </div>
         {canManageAppointments && (
@@ -196,7 +196,7 @@ export function CalendarAppointmentsPage() {
           data-testid="add-appointment"
         >
           <Plus className="w-4 h-4" />
-          Add Appointment
+          Add appointment
         </button>
         )}
       </div>
@@ -320,7 +320,7 @@ export function CalendarAppointmentsPage() {
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 id="appointment-dialog-title" className="dialog-title">
-                  {editing.id ? 'Edit Appointment' : 'New Appointment'}
+                  {editing.id ? 'Edit appointment' : 'New appointment'}
                 </h2>
                 <button
                   onClick={() => confirmDiscard(() => setEditing(null))}
@@ -391,7 +391,7 @@ export function CalendarAppointmentsPage() {
               {!editing.allDay && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="min-w-0">
-                    <label htmlFor="appointment-start-time" className="label">Start Time *</label>
+                    <label htmlFor="appointment-start-time" className="label">Start time *</label>
                     <input id="appointment-start-time"
                       type="time"
                       value={editing.startTime || ''}
@@ -400,7 +400,7 @@ export function CalendarAppointmentsPage() {
                     />
                   </div>
                   <div className="min-w-0">
-                    <label htmlFor="appointment-end-time" className="label">End Time *</label>
+                    <label htmlFor="appointment-end-time" className="label">End time *</label>
                     <input id="appointment-end-time"
                       type="time"
                       value={editing.endTime || ''}
@@ -424,7 +424,7 @@ export function CalendarAppointmentsPage() {
                 </select>
               </div>
 
-              {/* Recurrence — guided builder */}
+              {/* Recurrence: guided builder */}
               <div>
                 <label htmlFor="appointment-recurrence" className="label">Recurrence</label>
                 <select id="appointment-recurrence"
@@ -441,7 +441,7 @@ export function CalendarAppointmentsPage() {
 
               {editing.recurrenceType !== 'NONE' && (
                 <>
-                  {/* Interval — "repeat every N units" */}
+                  {/* Interval: "repeat every N units" */}
                   <div className="flex items-end gap-2">
                     <div>
                       <label htmlFor="appointment-repeat-every" className="label">Repeat every</label>
@@ -475,7 +475,7 @@ export function CalendarAppointmentsPage() {
                           checked={editing.recurrenceType === 'MONTHLY'}
                           onChange={() => setMonthlyMode('dayOfMonth')}
                         />
-                        On day {editing.date ? new Date(editing.date + 'T00:00:00').getDate() : '—'} of the month
+                        {editing.date ? `On day ${new Date(editing.date + 'T00:00:00').getDate()} of the month` : 'On the same day of each month'}
                       </label>
                       <label className="flex items-center gap-2 text-sm text-dark-300 flex-wrap">
                         <input
@@ -523,7 +523,7 @@ export function CalendarAppointmentsPage() {
 
                   {/* Recurrence end date */}
                   <div>
-                    <label htmlFor="appointment-recurrence-end-date" className="label">Recurrence End Date</label>
+                    <label htmlFor="appointment-recurrence-end-date" className="label">Recurrence end date</label>
                     <input id="appointment-recurrence-end-date"
                       type="date"
                       value={editing.recurrenceEndDate || ''}
@@ -550,7 +550,7 @@ export function CalendarAppointmentsPage() {
                   data-testid="save-appointment"
                 >
                   {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {editing.id ? 'Save Changes' : 'Create Appointment'}
+                  {editing.id ? 'Save changes' : 'Create appointment'}
                 </button>
               </div>
             </div>

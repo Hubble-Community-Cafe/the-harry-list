@@ -67,14 +67,14 @@ describe('EmailTemplatesPage', () => {
   it('should render email templates section', async () => {
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText('Email Templates')).toBeDefined();
+      expect(screen.getByText('Email templates')).toBeDefined();
     });
   });
 
   it('should render PDF attachments section', async () => {
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText('PDF Attachments')).toBeDefined();
+      expect(screen.getByText('PDF attachments')).toBeDefined();
     });
   });
 
@@ -98,7 +98,7 @@ describe('EmailTemplatesPage', () => {
   it('should have upload form with name input and upload button', async () => {
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText('PDF Attachments')).toBeDefined();
+      expect(screen.getByText('PDF attachments')).toBeDefined();
     });
 
     const nameInput = screen.getByPlaceholderText('Display name (e.g. Catering Menu 2026)');
@@ -150,7 +150,7 @@ describe('EmailTemplatesPage', () => {
 
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText('PDF Attachments')).toBeDefined();
+      expect(screen.getByText('PDF attachments')).toBeDefined();
     });
 
     // The upload form should still be visible
@@ -174,7 +174,7 @@ describe('EmailTemplatesPage', () => {
       renderPage();
 
       await waitFor(() => {
-        expect(screen.getByText('PDF Attachments')).toBeDefined();
+        expect(screen.getByText('PDF attachments')).toBeDefined();
         expect(screen.getByText('Catering Menu')).toBeDefined();
       });
 

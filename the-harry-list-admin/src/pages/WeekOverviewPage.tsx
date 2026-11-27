@@ -151,10 +151,10 @@ export function WeekOverviewPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
           <div>
-            <h1 className="text-2xl font-title font-bold text-white tracking-tight">Week Overview</h1>
+            <h1 className="text-2xl font-title font-bold text-white tracking-tight">Week overview</h1>
             <p className="text-dark-400 font-light">Quick overview of the week's reservations</p>
           </div>
-          <HelpGuide title="Week Overview Guide" sections={weekOverviewGuide} />
+          <HelpGuide title="Week overview guide" sections={weekOverviewGuide} />
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -165,7 +165,7 @@ export function WeekOverviewPage() {
               aria-label="Filter by status"
               className="select-field pl-9 pr-8 text-sm min-w-[140px]"
             >
-              <option value="ALL">All Statuses</option>
+              <option value="ALL">All statuses</option>
               <option value="PENDING">Pending</option>
               <option value="CONFIRMED">Confirmed</option>
               <option value="REJECTED">Rejected</option>
@@ -180,7 +180,7 @@ export function WeekOverviewPage() {
               aria-label="Filter by location"
               className="select-field pl-9 pr-8 text-sm min-w-[140px]"
             >
-              <option value="ALL">All Locations</option>
+              <option value="ALL">All locations</option>
               <option value="HUBBLE">Hubble</option>
               <option value="METEOR">Meteor</option>
             </select>

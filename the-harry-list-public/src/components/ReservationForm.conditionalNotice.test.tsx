@@ -24,7 +24,7 @@ const PRE_ORDER = 'Groups of 8 or more at Meteor: please send your menu choices 
 const mockOptions: FormOptions = {
   specialActivities: [
     { value: 'GRADUATION', displayName: 'Graduation / PhD Defense' },
-    { value: 'EAT_A_LA_CARTE', displayName: 'Eat a la Carte' },
+    { value: 'EAT_A_LA_CARTE', displayName: 'Eat a la carte' },
   ],
   invoiceTypes: [],
   locations: [
@@ -58,7 +58,7 @@ async function goToStep2(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByPlaceholderText('John Doe'), 'Jane Smith');
   await user.type(screen.getByPlaceholderText('john@example.com'), 'jane@example.com');
   await user.click(screen.getByRole('button', { name: 'Continue' }));
-  await waitFor(() => expect(screen.getByText('Event Details')).toBeInTheDocument());
+  await waitFor(() => expect(screen.getByText('Event details')).toBeInTheDocument());
 }
 
 // Set the count in one change, so no intermediate count (e.g. 1 while typing "12")
@@ -67,7 +67,7 @@ function setGuests(value: string) {
   fireEvent.change(screen.getByRole('spinbutton'), { target: { value } });
 }
 
-const alaCarte = () => screen.getByRole('checkbox', { name: 'Eat a la Carte' });
+const alaCarte = () => screen.getByRole('checkbox', { name: 'Eat a la carte' });
 
 describe('ReservationForm conditional activity notices', () => {
   beforeEach(() => {

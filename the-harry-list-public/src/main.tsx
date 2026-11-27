@@ -8,7 +8,7 @@ import { installTranslationCrashGuard, installChunkReload, initSentry } from 'th
 
 declare const __APP_VERSION__: string;
 
-// Must run before React renders — see translationCrashGuard for details.
+// Must run before React renders: see translationCrashGuard for details.
 installTranslationCrashGuard();
 // A tab opened before a deploy reloads once to fetch the new build when a lazy chunk is gone.
 installChunkReload();

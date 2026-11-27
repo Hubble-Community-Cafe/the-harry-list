@@ -49,7 +49,7 @@ export function PrivacyPolicy({ open, onClose }: PrivacyPolicyProps) {
             <ShieldCheck className="w-5 h-5 text-hubble-400" />
           </div>
           <h2 id="privacy-policy-title" className="dialog-title">
-            Privacy Policy
+            Privacy policy
           </h2>
         </div>
 

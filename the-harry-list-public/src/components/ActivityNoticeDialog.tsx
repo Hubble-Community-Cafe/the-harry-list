@@ -9,7 +9,7 @@ import { Modal } from 'the-harry-list-shared';
  * A notice limited to a location or group size appears as soon as those also match, which
  * can be after the activity was already selected.
  *
- * The title is intentionally fixed ("Please Note") — only the message is configurable in
+ * The title is intentionally fixed ("Please note"): only the message is configurable in
  * the admin Settings, which keeps every notice consistent.
  *
  * Dismissing without choosing (Escape, backdrop click) counts as "deselect": we never
@@ -48,7 +48,7 @@ export function ActivityNoticeDialog({ message, onConfirm, onDecline }: Activity
             <AlertTriangle aria-hidden="true" className="w-5 h-5" />
           </div>
           <h2 id="activity-notice-title" className="dialog-title">
-            Please Note
+            Please note
           </h2>
         </div>
 

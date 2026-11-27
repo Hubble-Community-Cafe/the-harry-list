@@ -30,7 +30,7 @@ test.describe('admin: status-change email with custom message', () => {
     });
     await clearMailbox(request);
 
-    const customMessage = 'Looking forward to hosting you — please arrive 15 minutes early.';
+    const customMessage = 'Looking forward to hosting you: please arrive 15 minutes early.';
     const res = await request.patch(
       `${BACKEND_URL}/api/admin/reservations/${reservation.id}/status`,
       {

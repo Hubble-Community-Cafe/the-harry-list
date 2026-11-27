@@ -19,7 +19,7 @@ export interface MailpitMessage extends MailpitMessageSummary {
   Text: string;
 }
 
-/** Delete all captured messages — call in beforeEach to isolate email assertions. */
+/** Delete all captured messages: call in beforeEach to isolate email assertions. */
 export async function clearMailbox(request: APIRequestContext): Promise<void> {
   await request.delete(`${MAILPIT_URL}/api/v1/messages`);
 }

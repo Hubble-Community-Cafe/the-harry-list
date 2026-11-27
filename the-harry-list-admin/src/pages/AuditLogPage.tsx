@@ -73,7 +73,7 @@ export function AuditLogPage() {
       <div>
         <h1 className="text-2xl font-title font-bold text-white flex items-center gap-2">
           <History className="w-6 h-6 text-hubble-400" />
-          Audit Log
+          Audit log
         </h1>
         <p className="text-dark-400 font-light">A record of who changed what across the admin panel</p>
       </div>
@@ -173,13 +173,13 @@ export function AuditLogPage() {
                     <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-dark-700 text-dark-300">
                       {humanize(entry.entityType)}
                     </span>
-                    <span className="text-white text-sm">{entry.entityLabel || `#${entry.entityId ?? '—'}`}</span>
+                    <span className="text-white text-sm">{entry.entityLabel || (entry.entityId != null ? `#${entry.entityId}` : 'Unknown')}</span>
                   </div>
                   <time className="text-xs text-dark-500">{new Date(entry.createdAt).toLocaleString()}</time>
                 </div>
                 <div className="text-sm text-dark-300 mt-1">
                   <span className="text-white">{entry.actorName || entry.actorEmail || 'system'}</span>
-                  {entry.summary && <span className="text-dark-400"> — {entry.summary}</span>}
+                  {entry.summary && <span className="text-dark-400">: {entry.summary}</span>}
                 </div>
                 {entry.changes.length > 0 && (
                   <ul className="mt-2 space-y-1">

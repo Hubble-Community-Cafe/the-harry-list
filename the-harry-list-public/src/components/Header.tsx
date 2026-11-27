@@ -12,7 +12,7 @@ export function Header() {
           <div className="flex items-center gap-3">
             <img
               src="/logo.svg"
-              alt="The Harry List Logo"
+              alt="The Harry List logo"
               className="w-10 h-10 rounded-xl"
             />
             <div>
@@ -20,7 +20,7 @@ export function Header() {
                 The Harry List
               </h1>
               <p className="text-xs text-dark-400 hidden sm:block">
-                Event Reservations
+                Event reservations
               </p>
             </div>
           </div>

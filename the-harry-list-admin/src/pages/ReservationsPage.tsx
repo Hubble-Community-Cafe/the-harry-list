@@ -100,7 +100,7 @@ export function ReservationsPage() {
           <h1 className="text-2xl font-title font-bold text-white tracking-tight">Reservations</h1>
           <p className="text-dark-400 font-light">Manage all reservation requests</p>
         </div>
-        <HelpGuide title="Reservations Guide" sections={reservationsGuide} />
+        <HelpGuide title="Reservations guide" sections={reservationsGuide} />
       </div>
 
       {/* Filters */}
@@ -130,7 +130,7 @@ export function ReservationsPage() {
             >
               {statusOptions.map((status) => (
                 <option key={status} value={status}>
-                  {status === 'ALL' ? 'All Statuses' : statusLabel(status)}
+                  {status === 'ALL' ? 'All statuses' : statusLabel(status)}
                 </option>
               ))}
             </select>
@@ -147,7 +147,7 @@ export function ReservationsPage() {
             >
               {locationOptions.map((location) => (
                 <option key={location} value={location}>
-                  {location === 'ALL' ? 'All Locations' : locationLabel(location)}
+                  {location === 'ALL' ? 'All locations' : locationLabel(location)}
                 </option>
               ))}
             </select>
@@ -171,7 +171,7 @@ export function ReservationsPage() {
         Showing {sortedReservations.length} of {reservations.length} reservations
       </div>
 
-      {/* Reservations List */}
+      {/* Reservations list */}
       <div className="space-y-6">
         {groupedByDay.length === 0 ? (
           <div className="card text-center py-12">

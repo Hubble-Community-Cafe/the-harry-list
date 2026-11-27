@@ -146,7 +146,7 @@ describe('WeekOverviewPage', () => {
   it('renders the page title after loading', async () => {
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText('Week Overview')).toBeInTheDocument();
+      expect(screen.getByText('Week overview')).toBeInTheDocument();
     });
   });
 
@@ -212,7 +212,7 @@ describe('WeekOverviewPage', () => {
       expect(screen.getByText('Hubble Birthday')).toBeInTheDocument();
     });
 
-    const locationSelect = screen.getByDisplayValue('All Locations');
+    const locationSelect = screen.getByDisplayValue('All locations');
     fireEvent.change(locationSelect, { target: { value: 'HUBBLE' } });
 
     await waitFor(() => {
@@ -228,7 +228,7 @@ describe('WeekOverviewPage', () => {
       expect(screen.getByText('Meteor Meeting')).toBeInTheDocument();
     });
 
-    const locationSelect = screen.getByDisplayValue('All Locations');
+    const locationSelect = screen.getByDisplayValue('All locations');
     fireEvent.change(locationSelect, { target: { value: 'METEOR' } });
 
     await waitFor(() => {
@@ -304,7 +304,7 @@ describe('WeekOverviewPage', () => {
       expect(screen.getByText('Hubble Birthday')).toBeInTheDocument();
     });
 
-    const statusSelect = screen.getByDisplayValue('All Statuses');
+    const statusSelect = screen.getByDisplayValue('All statuses');
     fireEvent.change(statusSelect, { target: { value: 'PENDING' } });
 
     await waitFor(() => {
@@ -320,7 +320,7 @@ describe('WeekOverviewPage', () => {
       expect(screen.getByText('Meteor Meeting')).toBeInTheDocument();
     });
 
-    const statusSelect = screen.getByDisplayValue('All Statuses');
+    const statusSelect = screen.getByDisplayValue('All statuses');
     fireEvent.change(statusSelect, { target: { value: 'CONFIRMED' } });
 
     await waitFor(() => {
@@ -337,9 +337,9 @@ describe('WeekOverviewPage', () => {
     });
 
     // Filter to CONFIRMED + HUBBLE => only Wednesday Workshop
-    const statusSelect = screen.getByDisplayValue('All Statuses');
+    const statusSelect = screen.getByDisplayValue('All statuses');
     fireEvent.change(statusSelect, { target: { value: 'CONFIRMED' } });
-    const locationSelect = screen.getByDisplayValue('All Locations');
+    const locationSelect = screen.getByDisplayValue('All locations');
     fireEvent.change(locationSelect, { target: { value: 'HUBBLE' } });
 
     await waitFor(() => {

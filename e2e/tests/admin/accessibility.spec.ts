@@ -70,25 +70,25 @@ for (const theme of THEMES) {
 
     await page.goto(`/reservations/${seeded.id}`);
     await page.getByTestId('edit-reservation').click();
-    await expect(page.getByRole('dialog', { name: 'Edit Reservation' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Edit reservation' })).toBeVisible();
     await expectNoA11yViolations(page, testInfo, `${theme} edit reservation dialog`);
     await page.keyboard.press('Escape');
 
     await page.goto('/calendar-appointments');
-    await page.getByRole('button', { name: 'Add Appointment' }).click();
-    await expect(page.getByRole('dialog', { name: 'New Appointment' })).toBeVisible();
+    await page.getByRole('button', { name: 'Add appointment' }).click();
+    await expect(page.getByRole('dialog', { name: 'New appointment' })).toBeVisible();
     await expectNoA11yViolations(page, testInfo, `${theme} appointment dialog`);
     await page.keyboard.press('Escape');
 
     await page.goto('/settings');
-    await page.getByRole('button', { name: 'Add Constraint' }).click();
-    await expect(page.getByRole('dialog', { name: 'New Constraint' })).toBeVisible();
+    await page.getByRole('button', { name: 'Add constraint' }).click();
+    await expect(page.getByRole('dialog', { name: 'New constraint' })).toBeVisible();
     await expectNoA11yViolations(page, testInfo, `${theme} constraint dialog`);
     await page.keyboard.press('Escape');
 
-    await page.getByRole('button', { name: /Blocked Periods/ }).click();
-    await page.getByRole('button', { name: 'Add Blocked Period' }).click();
-    await expect(page.getByRole('dialog', { name: 'New Blocked Period' })).toBeVisible();
+    await page.getByRole('button', { name: /Blocked periods/ }).click();
+    await page.getByRole('button', { name: 'Add blocked period' }).click();
+    await expect(page.getByRole('dialog', { name: 'New blocked period' })).toBeVisible();
     await expectNoA11yViolations(page, testInfo, `${theme} blocked period dialog`);
     await page.keyboard.press('Escape');
 
@@ -155,7 +155,7 @@ test('keyboard: a dialog keeps focus inside, closes on Escape and returns focus 
   const opener = page.getByTestId('edit-reservation');
   await opener.focus();
   await page.keyboard.press('Enter');
-  const dialog = page.getByRole('dialog', { name: 'Edit Reservation' });
+  const dialog = page.getByRole('dialog', { name: 'Edit reservation' });
   await expect(dialog).toBeVisible();
   expect(await dialog.evaluate((el) => el.contains(document.activeElement))).toBe(true);
 

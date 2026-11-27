@@ -94,7 +94,7 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
             onClick={onNewReservation}
             className="btn-primary"
           >
-            Make Another Reservation
+            Make another reservation
           </button>
           <a
             href="https://hubble.cafe"

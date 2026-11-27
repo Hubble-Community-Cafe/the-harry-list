@@ -39,7 +39,7 @@ describe('App: parts that load on demand', () => {
 describe('App: hero', () => {
   it('names the page as one sentence, with each café in its own flat colour', () => {
     render(<App />);
-    const hero = screen.getByRole('heading', { level: 1, name: 'Reserve Your Spot at Hubble & Meteor' });
+    const hero = screen.getByRole('heading', { level: 1, name: 'Reserve your spot at Hubble & Meteor' });
     expect(hero).toHaveClass('font-title');
     expect(screen.getByText('Hubble', { selector: 'h1 span' })).toHaveClass('text-hubble-400');
     expect(screen.getByText('Meteor', { selector: 'h1 span' })).toHaveClass('text-meteor-400');

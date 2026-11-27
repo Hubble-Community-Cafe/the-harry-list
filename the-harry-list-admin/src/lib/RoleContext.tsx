@@ -52,7 +52,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Bumping this re-runs the load effect — used by refetch() and msal:accountChanged.
+  // Bumping this re-runs the load effect: used by refetch() and msal:accountChanged.
   const [reloadCounter, setReloadCounter] = useState(0);
 
   const refetch = useCallback(() => setReloadCounter(c => c + 1), []);

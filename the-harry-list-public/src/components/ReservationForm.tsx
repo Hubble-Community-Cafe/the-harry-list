@@ -386,7 +386,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       {currentStep === 1 && (
         <div className="mb-6 bg-dark-800/80 border border-dark-700 rounded-xl p-5">
           <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-            <span className="text-lg">📋</span> Please Note
+            <span className="text-lg">📋</span> Please note
           </h3>
           <ul className="text-xs text-dark-300 space-y-1.5">
             <li>• This is a <span className="text-white font-medium">request form</span>: there are no obligations for you or us</li>
@@ -435,7 +435,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
       })} className="card">
         {/* Keyed on currentStep so React remounts this wrapper on every step
             change, replaying the entrance animation. The navigation buttons
-            sit outside it deliberately — they are persistent chrome. */}
+            sit outside it deliberately: they are persistent chrome. */}
         <div key={currentStep} className="animate-step">
         {/* Step 1: Contact Information */}
         {currentStep === 1 && <ContactStep />}
@@ -518,7 +518,7 @@ export function ReservationForm({ onSuccess, onOpenPrivacy }: ReservationFormPro
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  Submit Reservation
+                  Submit reservation
                 </>
               )}
             </button>
