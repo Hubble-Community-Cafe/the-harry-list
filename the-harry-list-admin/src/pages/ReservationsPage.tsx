@@ -245,8 +245,8 @@ export function ReservationsPage() {
                                   }}
                                   className={`relative z-10 inline-flex items-center gap-1 min-h-6 px-2 py-0.5 rounded text-xs font-medium transition-colors ${
                                     reservation.cateringArranged
-                                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                                      ? 'border notice-success'
+                                      : 'border notice-warning'
                                   }`}
                                   title={reservation.cateringArranged ? 'Catering arranged ✓ (click to undo)' : 'Catering requested (click to mark as arranged)'}
                                 >
@@ -256,8 +256,8 @@ export function ReservationsPage() {
                                 ) : (
                                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
                                     reservation.cateringArranged
-                                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                                      ? 'border notice-success'
+                                      : 'border notice-warning'
                                   }`}>
                                   <UtensilsCrossed className="w-3 h-3" />
                                   {reservation.cateringArranged ? 'Catering arranged' : 'Catering to arrange'}
@@ -292,7 +292,7 @@ export function ReservationsPage() {
                       </div>
                     </div>
                     {cateringError?.id === reservation.id && (
-                      <p role="alert" data-testid="catering-error" className="relative z-10 mt-3 text-sm text-red-400">
+                      <p role="alert" data-testid="catering-error" className="relative z-10 mt-3 text-sm notice-text-error">
                         {cateringError.message}
                       </p>
                     )}

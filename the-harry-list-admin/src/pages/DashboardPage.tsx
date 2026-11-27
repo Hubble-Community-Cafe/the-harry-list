@@ -92,7 +92,7 @@ export function DashboardPage() {
 
         <div className="card">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-yellow-500/20">
+            <div className="p-2 rounded-lg status-pending">
               <Clock className="w-5 h-5 status-text-pending" />
             </div>
             <div>
@@ -104,7 +104,7 @@ export function DashboardPage() {
 
         <div className="card">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-500/20">
+            <div className="p-2 rounded-lg status-confirmed">
               <CheckCircle className="w-5 h-5 status-text-confirmed" />
             </div>
             <div>

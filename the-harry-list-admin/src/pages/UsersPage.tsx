@@ -7,7 +7,7 @@ import { roleLabel } from '../lib/labels';
 const ROLE_OPTIONS = ['VIEWER', 'EDITOR', 'ADMIN'] as const;
 
 const ROLE_STYLES: Record<string, string> = {
-  ADMIN: 'bg-red-500/20 text-red-400',
+  ADMIN: 'notice-warning',
   EDITOR: 'bg-hubble-500/20 text-hubble-400',
   VIEWER: 'bg-dark-700 text-dark-300',
 };

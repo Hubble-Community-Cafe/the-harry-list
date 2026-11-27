@@ -44,8 +44,8 @@ export function ActivityNoticeDialog({ message, onConfirm, onDecline }: Activity
       className="relative max-w-md p-6"
     >
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-amber-500/20">
-            <AlertTriangle className="w-5 h-5 text-amber-400" />
+          <div className="p-2 rounded-lg notice-warning">
+            <AlertTriangle aria-hidden="true" className="w-5 h-5" />
           </div>
           <h2 id="activity-notice-title" className="dialog-title">
             Please Note

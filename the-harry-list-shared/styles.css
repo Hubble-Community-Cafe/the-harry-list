@@ -316,25 +316,17 @@ body {
 }
 
 /* Preserve white text on dark/colored backgrounds */
-.light .bg-red-500,
-.light .bg-green-500,
-.light .bg-blue-500,
 .light .bg-hubble-500,
 .light .bg-hubble-600,
 .light .bg-meteor-500,
-.light .bg-meteor-600,
 .light .bg-\[\#2f2f2f\],
 .light .bg-dark-500 {
   color: #ffffff;
 }
 
-.light .bg-red-500 .text-white,
-.light .bg-green-500 .text-white,
-.light .bg-blue-500 .text-white,
 .light .bg-hubble-500 .text-white,
 .light .bg-hubble-600 .text-white,
 .light .bg-meteor-500 .text-white,
-.light .bg-meteor-600 .text-white,
 .light .bg-dark-500 .text-white {
   color: #ffffff;
 }
@@ -476,26 +468,6 @@ body {
   background-color: rgba(26, 107, 124, 0.12);
 }
 
-.light .bg-hubble-500\/30 {
-  background-color: rgba(26, 107, 124, 0.18);
-}
-
-.light .hover\:bg-hubble-500\/30:hover {
-  background-color: rgba(26, 107, 124, 0.18);
-}
-
-.light .bg-green-500\/20 {
-  background-color: rgba(34, 139, 34, 0.1);
-}
-
-.light .bg-yellow-500\/20 {
-  background-color: rgba(180, 130, 0, 0.1);
-}
-
-.light .bg-red-500\/20 {
-  background-color: rgba(200, 40, 40, 0.08);
-}
-
 .light .bg-meteor-500\/10 {
   background-color: rgba(5, 56, 38, 0.06);
 }
@@ -504,59 +476,12 @@ body {
   background-color: rgba(5, 56, 38, 0.1);
 }
 
-.light .bg-red-500\/10 {
-  background-color: rgba(200, 40, 40, 0.06);
-}
-
-.light .hover\:bg-red-500\/10:hover {
-  background-color: rgba(200, 40, 40, 0.08);
-}
-
-.light .bg-orange-500\/20 {
-  background-color: rgba(200, 100, 0, 0.1);
-}
-
-.light .bg-dark-500\/20 {
-  background-color: rgba(122, 143, 152, 0.15);
-}
-
-/* Status text colors — slightly deeper for light mode contrast */
-.light .text-green-400,
-.light [class*="text-green-400/"] {
-  color: #147c3b; /* 4.6:1 on its tinted badge backgrounds (WCAG AA); was #15803d */
-}
-
 /* Border tints for light mode */
 .light .border-meteor-500\/30 {
   border-color: rgba(5, 56, 38, 0.2);
 }
 
-.light .border-green-500\/30 {
-  border-color: rgba(34, 139, 34, 0.2);
-}
-
-/* Form error messages: .error-text applies text-red-400 inside a component class, which the
-   .light .text-red-400 override below does not reach, so it needs its own light colour. */
-.light .error-text {
-  color: #bf1f1f;
-}
-
 /* Status text colors — deeper for light mode contrast */
-.light .text-amber-400,
-.light [class*="text-amber-400/"] {
-  color: #af5109; /* 4.6:1 on its tinted badge backgrounds (WCAG AA); was #b45309 */
-}
-
-.light .text-orange-400,
-.light [class*="text-orange-400/"] {
-  color: #c2410c;
-}
-
-.light .text-red-400,
-.light [class*="text-red-400/"] {
-  color: #bf1f1f; /* 4.6:1 on its tinted badge backgrounds (WCAG AA); was #dc2626 */
-}
-
 .light .text-hubble-300,
 .light [class*="text-hubble-300/"] {
   color: #1a6b7c;
@@ -596,24 +521,6 @@ body {
   background-color: #2b3840;
 }
 
-/* Gradient backgrounds for decorative elements */
-.light .bg-hubble-600\/20 {
-  background-color: rgba(15, 77, 100, 0.08);
-}
-
-.light .bg-meteor-600\/20 {
-  background-color: rgba(4, 45, 30, 0.06);
-}
-
-/* Shadow adjustments */
-.light .shadow-2xl {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-
-.light .shadow-lg {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
 /* Ring offset */
 .light .focus\:ring-offset-dark-950:focus {
   --tw-ring-offset-color: #f5f7fa;
@@ -621,10 +528,6 @@ body {
 
 /* Card, checkbox and badge borders and the select chevron: still needed in light mode
    (a pixel comparison shows them changing without these). */
-.light .border-orange-500\/30 {
-  border-color: rgba(200, 100, 0, 0.2);
-}
-
 .light .border-hubble-500\/50 {
   border-color: rgba(26, 107, 124, 0.35);
 }
@@ -836,6 +739,8 @@ body.dark {
 
   /* The same tone as text only, for a label or hint outside a box. */
   .notice-text-error { color: var(--status-rejected-fg); }
+  .notice-text-success { color: var(--status-confirmed-fg); }
+  .notice-text-info { color: var(--notice-info-fg); }
   .notice-text-warning { color: var(--status-pending-fg); }
   .notice-text-neutral { color: var(--status-cancelled-fg); }
 
@@ -848,7 +753,8 @@ body.dark {
   }
 
   .error-text {
-    @apply text-sm text-red-400 mt-1;
+    @apply text-sm mt-1;
+    color: var(--status-rejected-fg);
   }
 }
 
@@ -990,4 +896,31 @@ body.dark {
 label:has(> input.sr-only:focus-visible) {
   outline: 2px solid var(--color-hubble-400);
   outline-offset: 2px;
+}
+
+/* Hover states in the notice tones. Utilities (not components) so they beat the resting
+   text-dark-400 utility on the same element. */
+@utility hover-danger {
+  &:hover {
+    color: var(--status-rejected-fg);
+    background-color: var(--status-rejected-bg);
+  }
+}
+
+@utility hover-danger-text {
+  &:hover {
+    color: var(--status-rejected-fg);
+  }
+}
+
+@utility hover-warning {
+  &:hover {
+    border-color: color-mix(in srgb, var(--status-pending-fg) 40%, transparent);
+    background-color: var(--status-pending-bg);
+  }
+}
+
+/* The left edge of a calendar appointment card (week overview), in the info teal. */
+@utility edge-info {
+  border-left-color: var(--notice-info-fg);
 }

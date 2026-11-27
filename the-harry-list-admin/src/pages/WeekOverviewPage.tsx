@@ -233,7 +233,7 @@ export function WeekOverviewPage() {
           <div className="text-xs text-dark-400">Confirmed</div>
         </div>
         <div className="card !p-4">
-          <div className={`text-2xl font-bold ${cateringNeeded > 0 ? 'text-orange-400' : 'text-dark-500'}`}>{cateringNeeded}</div>
+          <div className={`text-2xl font-bold ${cateringNeeded > 0 ? 'notice-text-warning' : 'text-dark-500'}`}>{cateringNeeded}</div>
           <div className="text-xs text-dark-400">Catering to arrange</div>
         </div>
       </div>
@@ -388,8 +388,8 @@ function WeekReservationCard({
             onClick={() => onCateringToggle(reservation.id, !reservation.cateringArranged)}
             className={`relative z-10 flex items-center gap-0.5 min-h-6 text-[10px] font-medium px-1.5 py-0.5 rounded transition-colors ${
               reservation.cateringArranged
-                ? 'bg-green-500/20 text-green-400'
-                : 'bg-orange-500/20 text-orange-400'
+                ? 'notice-success'
+                : 'notice-warning'
             }`}
             title={reservation.cateringArranged ? 'Catering arranged (click to undo)' : 'Catering needed (click to mark arranged)'}
           >
@@ -399,8 +399,8 @@ function WeekReservationCard({
         ) : (
           <span className={`flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded ${
               reservation.cateringArranged
-                ? 'bg-green-500/20 text-green-400'
-                : 'bg-orange-500/20 text-orange-400'
+                ? 'notice-success'
+                : 'notice-warning'
             }`}>
             <UtensilsCrossed className="w-3 h-3" />
             <span className="sr-only">Catering </span>
@@ -409,7 +409,7 @@ function WeekReservationCard({
         ))}
       </div>
       {cateringError && (
-        <p role="alert" data-testid="catering-error" className="relative z-10 mt-1 text-[11px] text-red-400">
+        <p role="alert" data-testid="catering-error" className="relative z-10 mt-1 text-[11px] notice-text-error">
           {cateringError}
         </p>
       )}
@@ -423,11 +423,11 @@ function WeekAppointmentCard({ appointment }: { appointment: CalendarAppointment
   return (
     <Link
       to="/calendar-appointments"
-      className="block rounded-lg bg-dark-800/80 hover:bg-dark-800 border-l-2 border-l-indigo-400 p-2 transition-colors"
+      className="block rounded-lg bg-dark-800/80 hover:bg-dark-800 border-l-2 edge-info p-2 transition-colors"
     >
       {/* Appointment badge */}
       <div className="mb-1">
-        <span className="inline-block text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400">
+        <span className="inline-block text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded notice-info">
           Appointment
         </span>
       </div>

@@ -168,7 +168,7 @@ export function Layout() {
                   {user?.username || 'Logged in'}
                   {role && (
                     <span className={`text-[9px] font-semibold px-1 py-0.5 rounded ${
-                      role === 'ADMIN' ? 'bg-red-500/20 text-red-400' :
+                      role === 'ADMIN' ? 'notice-warning' :
                       role === 'EDITOR' ? 'bg-hubble-500/20 text-hubble-400' :
                       'bg-dark-700 text-dark-400'
                     }`}>{roleLabel(role)}</span>
@@ -178,7 +178,7 @@ export function Layout() {
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 w-full px-4 py-3 mt-2 rounded-xl text-sm font-medium text-dark-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
+              className="flex items-center gap-3 w-full px-4 py-3 mt-2 rounded-xl text-sm font-medium text-dark-400 hover-danger transition-all"
             >
               <LogOut className="w-5 h-5" />
               Sign Out

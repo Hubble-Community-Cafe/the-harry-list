@@ -350,13 +350,13 @@ export function SettingsPage() {
                       aria-label={`Constraint enabled: ${c.message}`}
                     >
                       {c.enabled
-                        ? <ToggleRight className="w-5 h-5 text-green-400" />
+                        ? <ToggleRight className="w-5 h-5 notice-text-success" />
                         : <ToggleLeft className="w-5 h-5 text-dark-500" />
                       }
                     </button>
                     <button
                       onClick={() => c.id && setDeleteTarget({ type: 'constraint', id: c.id })}
-                      className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="p-1.5 rounded-lg text-dark-400 hover-danger transition-colors"
                       title="Delete"
                       aria-label={`Delete constraint: ${c.message}`}
                     >
@@ -400,16 +400,16 @@ export function SettingsPage() {
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className={`text-xs font-mono px-2 py-0.5 rounded bg-dark-800 ${bp.softBlock ? 'text-amber-400' : 'text-red-400'}`}>
+                      <span className={`text-xs font-mono px-2 py-0.5 rounded bg-dark-800 ${bp.softBlock ? 'notice-text-warning' : 'notice-text-error'}`}>
                         {bp.startDate} — {bp.endDate}
                       </span>
                       {bp.softBlock && (
-                        <span data-testid="soft-block-badge" className="text-xs font-medium px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                        <span data-testid="soft-block-badge" className="text-xs font-medium px-2 py-0.5 rounded border notice-warning">
                           Soft block
                         </span>
                       )}
                       {bp.location && (
-                        <span className="text-xs font-mono px-2 py-0.5 rounded bg-dark-800 text-amber-400">
+                        <span className="text-xs font-mono px-2 py-0.5 rounded bg-dark-800 notice-text-warning">
                           {locationLabel(bp.location)}
                         </span>
                       )}
@@ -442,13 +442,13 @@ export function SettingsPage() {
                       aria-label={`Blocked period enabled: ${bp.reason}`}
                     >
                       {bp.enabled
-                        ? <ToggleRight className="w-5 h-5 text-green-400" />
+                        ? <ToggleRight className="w-5 h-5 notice-text-success" />
                         : <ToggleLeft className="w-5 h-5 text-dark-500" />
                       }
                     </button>
                     <button
                       onClick={() => bp.id && setDeleteTarget({ type: 'period', id: bp.id })}
-                      className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="p-1.5 rounded-lg text-dark-400 hover-danger transition-colors"
                       title="Delete"
                       aria-label={`Delete blocked period: ${bp.reason}`}
                     >
@@ -827,7 +827,7 @@ export function SettingsPage() {
                       title="Toggle soft block"
                     >
                       {editingPeriod.softBlock
-                        ? <ToggleRight className="w-6 h-6 text-amber-400" />
+                        ? <ToggleRight className="w-6 h-6 notice-text-warning" />
                         : <ToggleLeft className="w-6 h-6 text-dark-500" />}
                     </button>
                     <span className="text-sm text-white">
@@ -886,7 +886,7 @@ export function SettingsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="card !p-4">
               <div className="text-xs text-dark-500 mb-1">Status</div>
-              <div className={`text-sm font-semibold ${retention.enabled ? 'text-green-400' : 'text-dark-400'}`}>
+              <div className={`text-sm font-semibold ${retention.enabled ? 'notice-text-success' : 'text-dark-400'}`}>
                 {retention.enabled ? 'Enabled' : 'Disabled'}
               </div>
             </div>
@@ -904,7 +904,7 @@ export function SettingsPage() {
             </div>
             <div className="card !p-4">
               <div className="text-xs text-dark-500 mb-1">Eligible for Removal</div>
-              <div className={`text-sm font-semibold ${retention.eligibleForDeletion > 0 ? 'text-amber-400' : 'text-white'}`}>
+              <div className={`text-sm font-semibold ${retention.eligibleForDeletion > 0 ? 'notice-text-warning' : 'text-white'}`}>
                 {retention.eligibleForDeletion} reservations
               </div>
             </div>

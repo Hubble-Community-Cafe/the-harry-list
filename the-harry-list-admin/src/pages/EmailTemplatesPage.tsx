@@ -202,8 +202,8 @@ export function EmailTemplatesPage() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center">
-        <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
-        <p className="text-red-400 mb-2">{error}</p>
+        <AlertCircle aria-hidden="true" className="w-12 h-12 notice-text-error mb-4" />
+        <p className="notice-text-error mb-2">{error}</p>
         <button onClick={loadTemplates} className="text-hubble-400 hover:text-hubble-300 text-sm underline">
           Try again
         </button>
@@ -360,7 +360,7 @@ export function EmailTemplatesPage() {
                     <button
                       onClick={() => resetTemplate(template.templateType)}
                       disabled={resetting || !template.customized}
-                      className="flex items-center gap-2 text-sm text-dark-400 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="flex items-center gap-2 text-sm text-dark-400 hover-danger-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
                       <RotateCcw className="w-4 h-4" />
                       Reset to default
@@ -368,7 +368,7 @@ export function EmailTemplatesPage() {
 
                     <div className="flex items-center gap-3">
                       {saveSuccess && (
-                        <span className="flex items-center gap-1.5 text-sm text-green-400">
+                        <span className="flex items-center gap-1.5 text-sm notice-text-success">
                           <CheckCircle className="w-4 h-4" />
                           Saved
                         </span>
@@ -429,7 +429,7 @@ export function EmailTemplatesPage() {
             </button>
           </div>
           {attachmentError && (
-            <div className="flex items-center gap-2 text-sm text-red-400 mt-3">
+            <div className="flex items-center gap-2 text-sm notice-text-error mt-3">
               <AlertCircle className="w-4 h-4 shrink-0" />
               {attachmentError}
             </div>
@@ -453,7 +453,7 @@ export function EmailTemplatesPage() {
                 key={attachment.id}
                 className="card !px-5 !py-3 flex items-center gap-4"
               >
-                <FileText className="w-5 h-5 text-orange-400 shrink-0" />
+                <FileText aria-hidden="true" className="w-5 h-5 notice-text-error shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-white truncate">{attachment.name}</div>
                   <div className="text-xs text-dark-500 truncate">
@@ -465,7 +465,7 @@ export function EmailTemplatesPage() {
                   onClick={() => handleToggleAttachmentActive(attachment.id, !attachment.active)}
                   className={`text-xs font-medium px-3 py-1 rounded-lg transition-colors ${
                     attachment.active
-                      ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                      ? 'notice-success hover:opacity-80'
                       : 'bg-dark-700 text-dark-400 hover:bg-dark-600'
                   }`}
                 >
@@ -473,7 +473,7 @@ export function EmailTemplatesPage() {
                 </button>
                 <button
                   onClick={() => handleDeleteAttachment(attachment.id)}
-                  className="p-1.5 rounded-lg text-dark-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                  className="p-1.5 rounded-lg text-dark-500 hover-danger transition-colors"
                   title="Delete attachment"
                 >
                   <Trash2 className="w-4 h-4" />

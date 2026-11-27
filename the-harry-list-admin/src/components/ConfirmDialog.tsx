@@ -43,8 +43,8 @@ export function ConfirmDialog({
     >
         <div className="p-6 space-y-4">
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-red-500/10 shrink-0">
-              <AlertTriangle className="w-5 h-5 text-red-400" />
+            <div className="p-2 rounded-lg notice-error shrink-0">
+              <AlertTriangle aria-hidden="true" className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
               <h2 id={`${id}-title`} className="dialog-title">{title}</h2>

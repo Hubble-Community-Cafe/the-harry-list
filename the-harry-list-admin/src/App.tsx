@@ -48,8 +48,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4">
         <div className="card !p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ShieldX className="w-8 h-8 text-red-400" />
+          <div className="w-16 h-16 notice-error rounded-full flex items-center justify-center mx-auto mb-4">
+            <ShieldX aria-hidden="true" className="w-8 h-8" />
           </div>
           <h1 className="text-xl font-bold text-white mb-2">Access Denied</h1>
           <p className="text-dark-400 mb-6">
@@ -80,8 +80,8 @@ function App() {
   return (
     <ErrorBoundary
       icon={
-        <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <AlertTriangle className="w-8 h-8 text-amber-400" />
+        <div className="w-16 h-16 notice-warning rounded-full flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle aria-hidden="true" className="w-8 h-8" />
         </div>
       }
     >

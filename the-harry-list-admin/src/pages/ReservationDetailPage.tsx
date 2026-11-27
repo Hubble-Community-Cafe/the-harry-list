@@ -728,8 +728,8 @@ export function ReservationDetailPage() {
                   }}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     reservation.cateringArranged
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
-                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/30 hover:bg-orange-500/30'
+                      ? 'border notice-success hover:opacity-80'
+                      : 'border notice-warning hover:opacity-80'
                   }`}
                 >
                   <UtensilsCrossed className="w-3 h-3" />
@@ -738,8 +738,8 @@ export function ReservationDetailPage() {
                 ) : (
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
                     reservation.cateringArranged
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                      ? 'border notice-success'
+                      : 'border notice-warning'
                   }`}>
                   <UtensilsCrossed className="w-3 h-3" />
                   {reservation.cateringArranged ? 'Arranged ✓' : 'Not arranged yet'}
@@ -809,9 +809,9 @@ export function ReservationDetailPage() {
                     {entry.changes.map((change, i) => (
                       <li key={i} className="text-xs text-dark-400">
                         <span className="text-dark-300">{fieldLabel(change.field)}</span>:{' '}
-                        <span className="line-through text-red-400/70">{changeValueLabel(change.field, change.oldValue)}</span>
+                        <span className="line-through notice-text-error">{changeValueLabel(change.field, change.oldValue)}</span>
                         {' → '}
-                        <span className="text-green-400/80">{changeValueLabel(change.field, change.newValue)}</span>
+                        <span className="notice-text-success">{changeValueLabel(change.field, change.newValue)}</span>
                       </li>
                     ))}
                   </ul>
@@ -838,7 +838,7 @@ export function ReservationDetailPage() {
         >
             <div className="flex items-center justify-between p-6 border-b border-dark-700">
               <h2 id="catering-email-title" className="dialog-title flex items-center gap-2">
-                <UtensilsCrossed className="w-5 h-5 text-orange-400" />
+                <UtensilsCrossed aria-hidden="true" className="w-5 h-5 notice-text-warning" />
                 Send Catering Options
               </h2>
               <button onClick={() => setShowCateringEmail(false)} aria-label="Close" className="text-dark-400 hover:text-white">
@@ -905,7 +905,7 @@ export function ReservationDetailPage() {
                             }}
                             className="w-4 h-4 rounded border-dark-600 bg-dark-700 text-hubble-500"
                           />
-                          <FileText className="w-4 h-4 text-red-400" />
+                          <FileText aria-hidden="true" className="w-4 h-4 notice-text-error" />
                           <span className="text-sm text-white">{att.name}</span>
                           <span className="text-xs text-dark-500">({att.filename})</span>
                         </label>
@@ -1338,19 +1338,15 @@ function InfoRow({ icon: Icon, label, value }: { icon?: typeof Users; label: str
   );
 }
 
-// Surfaces the inside/outside seating area as a colored badge so staff can see it at a
-// glance, without having to open the editor.
+// Surfaces the inside/outside seating area as a badge so staff can see it at a glance, without
+// having to open the editor. A fact, not a state: the icon and word carry it, in neutral teal.
 function SeatingAreaBadge({ area }: { area: string }) {
   const isInside = area === 'INSIDE';
   const Icon = isInside ? Home : Sun;
   return (
     <span
       data-testid="seating-area-badge"
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
-        isInside
-          ? 'bg-green-500/20 text-green-400 border-green-500/30'
-          : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-      }`}
+      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border notice-info"
     >
       <Icon className="w-3 h-3" />
       {isInside ? 'Inside' : 'Outside'}

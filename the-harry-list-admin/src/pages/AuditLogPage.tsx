@@ -186,9 +186,9 @@ export function AuditLogPage() {
                     {entry.changes.map((change, i) => (
                       <li key={i} className="text-xs text-dark-400">
                         <span className="text-dark-300">{fieldLabel(change.field)}</span>:{' '}
-                        <span className="line-through text-red-400/70">{changeValueLabel(change.field, change.oldValue)}</span>
+                        <span className="line-through notice-text-error">{changeValueLabel(change.field, change.oldValue)}</span>
                         {' → '}
-                        <span className="text-green-400/80">{changeValueLabel(change.field, change.newValue)}</span>
+                        <span className="notice-text-success">{changeValueLabel(change.field, change.newValue)}</span>
                       </li>
                     ))}
                   </ul>

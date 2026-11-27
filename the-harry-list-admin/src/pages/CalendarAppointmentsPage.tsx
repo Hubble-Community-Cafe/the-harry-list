@@ -241,7 +241,7 @@ export function CalendarAppointmentsPage() {
                   </span>
                   {/* All-day or time badge */}
                   {appointment.allDay ? (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 flex items-center gap-1">
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded notice-info flex items-center gap-1">
                       <Sun className="w-3 h-3" />
                       All day
                     </span>
@@ -255,7 +255,7 @@ export function CalendarAppointmentsPage() {
                   {appointment.recurrenceType !== 'NONE' && (
                     <span
                       data-testid="appointment-recurrence"
-                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 flex items-center gap-1"
+                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded notice-info flex items-center gap-1"
                     >
                       <Repeat className="w-3 h-3" />
                       {recurrenceSummary(appointment)}
@@ -291,13 +291,13 @@ export function CalendarAppointmentsPage() {
                   aria-label={`Appointment enabled: ${appointment.title}`}
                 >
                   {appointment.enabled
-                    ? <ToggleRight className="w-5 h-5 text-green-400" />
+                    ? <ToggleRight className="w-5 h-5 notice-text-success" />
                     : <ToggleLeft className="w-5 h-5 text-dark-500" />
                   }
                 </button>
                 <button
                   onClick={() => appointment.id && setDeleteTarget(appointment.id)}
-                  className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10"
+                  className="p-1.5 rounded-lg text-dark-400 hover-danger"
                   title="Delete"
                   aria-label={`Delete appointment: ${appointment.title}`}
                 >
@@ -380,7 +380,7 @@ export function CalendarAppointmentsPage() {
                   data-testid="appointment-allday-toggle"
                 >
                   {editing.allDay
-                    ? <ToggleRight className="w-6 h-6 text-amber-400" />
+                    ? <ToggleRight className="w-6 h-6 notice-text-success" />
                     : <ToggleLeft className="w-6 h-6 text-dark-500" />
                   }
                 </button>
