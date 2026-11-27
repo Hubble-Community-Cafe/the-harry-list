@@ -4,15 +4,15 @@ package com.pimvanleeuwen.the_harry_list_backend.model;
  * Types of dynamic form constraints that can be managed by staff.
  */
 public enum FormConstraintType {
-    ACTIVITY_CONFLICT("Activity Conflict"),
-    LOCATION_LOCK("Location Lock"),
-    SEATING_LOCK("Seating Lock"),
-    TIME_RESTRICTION("Time Restriction"),
-    ADVANCE_BOOKING("Advance Booking"),
-    GUEST_LIMIT("Guest Limit"),
-    GUEST_MINIMUM("Guest Minimum"),
+    ACTIVITY_CONFLICT("Activity conflict"),
+    LOCATION_LOCK("Location lock"),
+    SEATING_LOCK("Seating lock"),
+    TIME_RESTRICTION("Time restriction"),
+    ADVANCE_BOOKING("Advance notice"),
+    GUEST_LIMIT("Guest limit"),
+    GUEST_MINIMUM("Guest minimum"),
     /** Advisory only: shows a message when the trigger activity is selected (no enforcement). */
-    ACTIVITY_NOTICE("Activity Notice");
+    ACTIVITY_NOTICE("Activity notice");
 
     private final String displayName;
 

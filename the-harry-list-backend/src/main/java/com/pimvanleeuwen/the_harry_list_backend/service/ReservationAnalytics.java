@@ -62,7 +62,7 @@ public final class ReservationAnalytics {
         return "4_gt_4wk";
     }
 
-    /** The enriched reservation-created line. Contains only coarse buckets — no PII. */
+    /** The enriched reservation-created line. Contains only coarse buckets: no PII. */
     public static String reservationCreatedLine(Reservation r) {
         return "APP_ANALYTICS event=reservation_created"
                 + " bar=" + bar(r.getLocation())
@@ -72,7 +72,7 @@ public final class ReservationAnalytics {
                 + " lead=" + lead(r.getCreatedAt(), r.getEventDate());
     }
 
-    /** The status-change line. Contains only the new status and the bar — no PII. */
+    /** The status-change line. Contains only the new status and the bar: no PII. */
     public static String reservationStatusChangedLine(ReservationStatus status, BarLocation location) {
         return "APP_ANALYTICS event=reservation_status_changed"
                 + " status=" + status.name()

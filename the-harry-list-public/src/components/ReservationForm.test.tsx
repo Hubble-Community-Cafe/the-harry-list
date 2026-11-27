@@ -22,7 +22,7 @@ import { fetchFormOptions, fetchFormConstraints, fetchBlockedPeriods, submitRese
 
 const mockOptions: FormOptions = {
   specialActivities: [
-    { value: 'GRADUATION', displayName: 'Graduation / PhD Defense' },
+    { value: 'GRADUATION', displayName: 'Graduation / PhD defense' },
     { value: 'EAT_A_LA_CARTE', displayName: 'Eat a la carte' },
     { value: 'EAT_CATERING', displayName: 'Catering' },
     { value: 'CATERING_CORONA_ROOM', displayName: 'Catering for Corona Room event' },
@@ -93,7 +93,7 @@ const mockConstraints: FormConstraint[] = [
     constraintType: 'ADVANCE_BOOKING',
     triggerActivity: 'EAT_CATERING',
     numericValue: 14,
-    message: 'Catering requires 14 days advance booking.',
+    message: "Catering needs at least 14 days' notice.",
     enabled: true,
   },
   {
@@ -213,7 +213,7 @@ describe('ReservationForm', () => {
       await waitFor(() => expect(screen.getByText('Event details')).toBeInTheDocument());
 
       expect(screen.queryByRole('checkbox', { name: /Private Event/i })).not.toBeInTheDocument();
-      expect(screen.getByRole('checkbox', { name: 'Graduation / PhD Defense' })).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: 'Graduation / PhD defense' })).toBeInTheDocument();
     });
   });
 
@@ -408,7 +408,7 @@ describe('ReservationForm', () => {
       await waitForFormLoaded();
       await goToStep2(user);
 
-      expect(screen.getByRole('checkbox', { name: 'Graduation / PhD Defense' })).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: 'Graduation / PhD defense' })).toBeInTheDocument();
       expect(screen.getByRole('checkbox', { name: 'Eat a la carte' })).toBeInTheDocument();
       expect(screen.getByRole('checkbox', { name: 'Catering for Corona Room event' })).toBeInTheDocument();
     });
@@ -484,7 +484,7 @@ describe('ReservationForm', () => {
       expect(guestInput).toHaveValue(7);
     });
 
-    it('shows advance booking notice for catering', async () => {
+    it('shows the advance notice for catering', async () => {
       const { user } = renderForm();
       await waitForFormLoaded();
       await goToStep2(user);
@@ -578,7 +578,7 @@ describe('ReservationForm', () => {
       await waitForFormLoaded();
       await goToStep2(user);
 
-      const graduation = screen.getByRole('checkbox', { name: 'Graduation / PhD Defense' });
+      const graduation = screen.getByRole('checkbox', { name: 'Graduation / PhD defense' });
       await user.click(graduation);
 
       // The activity is NOT selected yet: the dialog decides.
@@ -601,7 +601,7 @@ describe('ReservationForm', () => {
       await waitForFormLoaded();
       await goToStep2(user);
 
-      const graduation = screen.getByRole('checkbox', { name: 'Graduation / PhD Defense' });
+      const graduation = screen.getByRole('checkbox', { name: 'Graduation / PhD defense' });
       await user.click(graduation);
       await screen.findByTestId('activity-notice-dialog');
 
@@ -618,7 +618,7 @@ describe('ReservationForm', () => {
       await waitForFormLoaded();
       await goToStep2(user);
 
-      const graduation = screen.getByRole('checkbox', { name: 'Graduation / PhD Defense' });
+      const graduation = screen.getByRole('checkbox', { name: 'Graduation / PhD defense' });
       await user.click(graduation);
       await screen.findByTestId('activity-notice-dialog');
 
@@ -635,7 +635,7 @@ describe('ReservationForm', () => {
       await waitForFormLoaded();
       await goToStep2(user);
 
-      const graduation = screen.getByRole('checkbox', { name: 'Graduation / PhD Defense' });
+      const graduation = screen.getByRole('checkbox', { name: 'Graduation / PhD defense' });
       await user.click(graduation);
       await user.click(await screen.findByTestId('activity-notice-confirm'));
       await waitFor(() => expect(graduation).toHaveAttribute('aria-checked', 'true'));

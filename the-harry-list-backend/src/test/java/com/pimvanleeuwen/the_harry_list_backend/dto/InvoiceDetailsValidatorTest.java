@@ -42,9 +42,9 @@ class InvoiceDetailsValidatorTest {
 
     @Test
     void tueAndFontysNeedACostCenter() {
-        assertEquals(Map.of("costCenter", "Kostenplaats is required"),
+        assertEquals(Map.of("costCenter", "Cost centre (kostenplaats) is required"),
                 invoiceErrors(PaymentOption.INVOICE, InvoiceType.TUE, " ", null, null));
-        assertEquals(Map.of("costCenter", "Kostenplaats is required"),
+        assertEquals(Map.of("costCenter", "Cost centre (kostenplaats) is required"),
                 invoiceErrors(PaymentOption.INVOICE, InvoiceType.FONTYS, null, null, null));
         assertTrue(invoiceErrors(PaymentOption.INVOICE, InvoiceType.TUE, "12345", null, null).isEmpty());
     }

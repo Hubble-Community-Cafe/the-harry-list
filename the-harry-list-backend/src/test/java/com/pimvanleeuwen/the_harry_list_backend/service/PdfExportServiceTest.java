@@ -55,7 +55,7 @@ class PdfExportServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Uses the real recurrence resolver — its behaviour is covered by its own unit test.
+        // Uses the real recurrence resolver: its behaviour is covered by its own unit test.
         pdfExportService = new PdfExportService(
                 reservationRepository,
                 calendarAppointmentRepository,
@@ -218,7 +218,7 @@ class PdfExportServiceTest {
     @Test
     void generateDailyReport_includesRecurringAppointmentOnAnOccurrence() throws Exception {
         givenStored(List.of());
-        // Weekly appointment starting two weeks before the report date — should recur onto it
+        // Weekly appointment starting two weeks before the report date: should recur onto it
         CalendarAppointment weekly = appointment("Weekly Standup", null,
                 LocalTime.of(9, 0), LocalTime.of(9, 30), BarLocation.HUBBLE);
         weekly.setDate(REPORT_DATE.minusWeeks(2));

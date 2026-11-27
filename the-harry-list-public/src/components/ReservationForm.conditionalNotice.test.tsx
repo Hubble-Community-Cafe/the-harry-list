@@ -23,7 +23,7 @@ const PRE_ORDER = 'Groups of 8 or more at Meteor: please send your menu choices 
 
 const mockOptions: FormOptions = {
   specialActivities: [
-    { value: 'GRADUATION', displayName: 'Graduation / PhD Defense' },
+    { value: 'GRADUATION', displayName: 'Graduation / PhD defense' },
     { value: 'EAT_A_LA_CARTE', displayName: 'Eat a la carte' },
   ],
   invoiceTypes: [],

@@ -23,7 +23,7 @@ public class AppointmentRecurrenceService {
     /**
      * Whether {@code appointment} has an occurrence on {@code date}, honoring its start
      * date, optional recurrence end date, and recurrence pattern. Does not consider the
-     * {@code enabled} flag or location — callers decide visibility.
+     * {@code enabled} flag or location: callers decide visibility.
      */
     public boolean occursOn(CalendarAppointment appointment, LocalDate date) {
         if (appointment == null || date == null || appointment.getDate() == null) {

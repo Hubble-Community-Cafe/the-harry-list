@@ -446,7 +446,7 @@ class ConstraintValidationServiceTest {
 
     @Test
     void validate_shouldNotEnforceActivityNotice() {
-        // ACTIVITY_NOTICE is advisory only — the frontend shows the message, but it must
+        // ACTIVITY_NOTICE is advisory only: the frontend shows the message, but it must
         // never block a submission even when its trigger activity is selected.
         FormConstraint notice = FormConstraint.builder()
                 .constraintType(FormConstraintType.ACTIVITY_NOTICE)

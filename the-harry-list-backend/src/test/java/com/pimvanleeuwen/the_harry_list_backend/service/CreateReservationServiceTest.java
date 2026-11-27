@@ -109,7 +109,7 @@ class CreateReservationServiceTest {
         // When
         createReservationService.create(sampleDto);
 
-        // Then — exactly one line, in the enriched PII-free contract format.
+        // Then: exactly one line, in the enriched PII-free contract format.
         List<ILoggingEvent> events = analyticsAppender.list;
         assertEquals(1, events.size(), "Exactly one analytics line per reservation");
         assertEquals(
@@ -130,7 +130,7 @@ class CreateReservationServiceTest {
         // When
         createReservationService.create(sampleDto);
 
-        // Then — only the bar changes; the rest of the buckets stay as configured.
+        // Then: only the bar changes; the rest of the buckets stay as configured.
         assertEquals(
                 "APP_ANALYTICS event=reservation_created bar=NO_PREFERENCE dow=7_Sun slot=2_afternoon guests=3_50_100 lead=3_wk3_4",
                 analyticsAppender.list.get(0).getFormattedMessage());
@@ -148,7 +148,7 @@ class CreateReservationServiceTest {
         // When
         createReservationService.create(sampleDto);
 
-        // Then — no name/email/phone in any analytics or service log line.
+        // Then: no name/email/phone in any analytics or service log line.
         assertNoPii(analyticsAppender);
         assertNoPii(serviceAppender);
     }

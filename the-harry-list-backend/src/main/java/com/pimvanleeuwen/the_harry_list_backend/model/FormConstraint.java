@@ -46,7 +46,7 @@ public class FormConstraint {
     @Column(name = "trigger_activity", nullable = false, length = 30)
     private String triggerActivity;
 
-    /** Target value — meaning depends on type:
+    /** Target value: meaning depends on type:
      *  ACTIVITY_CONFLICT: the conflicting activity (e.g. EAT_A_LA_CARTE)
      *  LOCATION_LOCK: the locked location (e.g. HUBBLE)
      *  SEATING_LOCK: the locked seating (e.g. INSIDE)
@@ -60,7 +60,7 @@ public class FormConstraint {
     @Column(name = "target_value", length = 50)
     private String targetValue;
 
-    /** Numeric parameter — meaning depends on type:
+    /** Numeric parameter: meaning depends on type:
      *  ADVANCE_BOOKING: minimum days ahead
      *  GUEST_LIMIT: maximum number of guests
      *  TIME_RESTRICTION: unused

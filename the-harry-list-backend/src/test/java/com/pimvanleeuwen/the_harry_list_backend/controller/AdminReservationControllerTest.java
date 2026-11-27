@@ -292,7 +292,7 @@ class AdminReservationControllerTest {
     @Test
     @WithMockUser(roles = "EDITOR")
     void updateStatus_shouldNotEmitAnalyticsWhenReopenedToPending() throws Exception {
-        // A rejected reservation moved back to PENDING is internal churn — no analytics line.
+        // A rejected reservation moved back to PENDING is internal churn: no analytics line.
         sampleReservation.setStatus(ReservationStatus.REJECTED);
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(sampleReservation));
         when(reservationRepository.saveAndFlush(any())).thenReturn(sampleReservation);

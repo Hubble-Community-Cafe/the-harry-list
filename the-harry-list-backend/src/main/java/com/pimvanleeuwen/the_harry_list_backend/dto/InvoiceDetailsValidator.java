@@ -20,7 +20,7 @@ public class InvoiceDetailsValidator implements ConstraintValidator<ValidInvoice
         }
         boolean valid = true;
         if ((type == InvoiceType.TUE || type == InvoiceType.FONTYS) && isBlank(request.getCostCenter())) {
-            valid = reject(context, "costCenter", "Kostenplaats is required");
+            valid = reject(context, "costCenter", "Cost centre (kostenplaats) is required");
         }
         if (type == InvoiceType.EXTERNAL) {
             if (isBlank(request.getInvoiceName())) {

@@ -7,7 +7,7 @@ package com.pimvanleeuwen.the_harry_list_backend.model;
 public enum BarLocation {
     HUBBLE("Hubble Community Café"),
     METEOR("Meteor Community Café"),
-    NO_PREFERENCE("No Preference");
+    NO_PREFERENCE("No preference");
 
     private final String displayName;
 

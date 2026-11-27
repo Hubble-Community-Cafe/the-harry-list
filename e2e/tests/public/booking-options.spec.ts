@@ -30,7 +30,7 @@ test.describe('public: booking with many options', () => {
     // Step 2: merged details: activity + special activity + location/seating (Hubble, outside).
     await form.expectStep('Event details');
     await form.fillActivity({ title: 'Graduation drinks', date: '2030-09-18', guests: 40 });
-    await form.toggleActivity('Graduation / PhD Defense');
+    await form.toggleActivity('Graduation / PhD defense');
     await form.selectLocation('HUBBLE');
     await form.selectSeating('OUTSIDE');
     await form.continue();

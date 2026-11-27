@@ -28,13 +28,13 @@ import java.util.Map;
  * Test-only helper endpoints used by the end-to-end suite to seed and reset state
  * without going through Azure-authenticated admin APIs.
  *
- * <p>Gated to the {@code e2e} Spring profile — these endpoints never exist in dev or
+ * <p>Gated to the {@code e2e} Spring profile: these endpoints never exist in dev or
  * production. {@link E2eSecurityConfig} permits {@code /test/**} only under that profile.</p>
  */
 @RestController
 @RequestMapping("/test")
 @Profile("e2e")
-@Tag(name = "E2E Test Support", description = "Seed/reset helpers — e2e profile only")
+@Tag(name = "E2E Test Support", description = "Seed/reset helpers: e2e profile only")
 public class TestSupportController {
 
     private final ReservationRepository reservationRepository;

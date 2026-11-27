@@ -108,7 +108,7 @@ public class EmailMessages {
         vars.put("eventDate", reservation.getEventDate().format(DATE_FORMATTER));
         vars.put("startTime", reservation.getStartTime().format(TIME_FORMATTER));
         vars.put("endTime", reservation.getEndTime().format(TIME_FORMATTER));
-        vars.put("location", reservation.getLocation() != null ? reservation.getLocation().getDisplayName() : "No Preference");
+        vars.put("location", reservation.getLocation() != null ? reservation.getLocation().getDisplayName() : "No preference");
         vars.put("expectedGuests", String.valueOf(reservation.getExpectedGuests()));
         vars.put("barName", barName);
         return vars;
@@ -125,7 +125,7 @@ public class EmailMessages {
         vars.put("eventDate", reservation.getEventDate().format(DATE_FORMATTER));
         vars.put("startTime", reservation.getStartTime().format(TIME_FORMATTER));
         vars.put("endTime", reservation.getEndTime().format(TIME_FORMATTER));
-        vars.put("location", reservation.getLocation() != null ? reservation.getLocation().getDisplayName() : "No Preference");
+        vars.put("location", reservation.getLocation() != null ? reservation.getLocation().getDisplayName() : "No preference");
         vars.put("expectedGuests", String.valueOf(reservation.getExpectedGuests()));
         vars.put("payment", reservation.getPaymentOption() != null
                 ? reservation.getPaymentOption().getDisplayName() : "Not provided");

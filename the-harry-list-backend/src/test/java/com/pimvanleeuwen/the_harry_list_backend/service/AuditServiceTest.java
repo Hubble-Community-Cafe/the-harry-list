@@ -137,7 +137,7 @@ class AuditServiceTest {
         setJwtAuthentication("oid-123", "staff@example.com", "Staff");
         when(auditLogRepository.save(any())).thenThrow(new RuntimeException("db down"));
 
-        // Must not propagate — auditing can never break the underlying operation.
+        // Must not propagate: auditing can never break the underlying operation.
         assertDoesNotThrow(() -> auditService.recordDelete(
                 AuditEntityType.RESERVATION, 1L, "label", "deleted"));
     }

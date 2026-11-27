@@ -7,7 +7,7 @@ const sources = import.meta.glob(['../**/*.{ts,tsx}', '!../**/*.test.{ts,tsx}', 
   eager: true,
 }) as Record<string, string>;
 
-const EM_DASH = '—';
+const EM_DASH = '\u2014';
 
 describe('housestyle copy', () => {
   it('finds sources to check', () => {

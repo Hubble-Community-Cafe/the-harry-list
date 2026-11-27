@@ -133,7 +133,7 @@ public class Reservation {
     private InvoiceType invoiceType;
 
     /** TU/e or Fontys cost center number (kostenplaats) */
-    @Size(max = 100, message = "Cost center must not exceed 100 characters")
+    @Size(max = 100, message = "Cost centre must not exceed 100 characters")
     @Column(name = "cost_center")
     private String costCenter;
 

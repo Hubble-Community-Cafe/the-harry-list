@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * Public controller for reservation submissions.
- * No authentication required — anyone can submit a reservation request.
+ * No authentication required: anyone can submit a reservation request.
  * After submission, users cannot view or edit their reservation.
  * Protected by self-hosted ALTCHA proof-of-work to prevent bot submissions.
  */
@@ -45,7 +45,7 @@ public class PublicReservationController {
         description = "Submit a new reservation request. No login required. " +
                       "Requires a valid ALTCHA proof-of-work payload for bot protection. " +
                       "After submission, you will receive a confirmation with your reservation ID. " +
-                      "You cannot view or edit the reservation — staff will contact you via email."
+                      "You cannot view or edit the reservation; staff will contact you via email."
     )
     public ResponseEntity<ReservationSubmissionResponse> submitReservation(@Valid @RequestBody PublicReservationRequest request) {
         if (!altchaService.verify(request.getAltcha())) {

@@ -490,7 +490,7 @@ When the email notification is on, every status dialog and the edit form shows a
     title: 'Catering email',
     screenshot: '/screenshots/reservation-catering-email.png',
     screenshotAlt: 'Catering email dialog with attachment checkboxes',
-    content: `## Sending Catering Options
+    content: `## Sending catering options
 
 For reservations that include catering activities, you'll see a **"Send catering options"** button.
 

@@ -33,13 +33,13 @@ import java.util.List;
  * <p>Production security ({@link SecurityConfig}, gated to {@code !e2e}) validates real
  * Azure AD JWTs, which cannot be minted in a headless test environment. This configuration
  * instead derives the principal from simple request headers and then lets the real
- * {@link RoleAuthorizationFilter} resolve the role from the database — so authorization,
+ * {@link RoleAuthorizationFilter} resolve the role from the database: so authorization,
  * RBAC and audit-actor attribution all behave exactly as in production.</p>
  *
  * <p>To authenticate, an e2e request sends:</p>
  * <ul>
- *   <li>{@code X-Test-Oid} — the Azure object id of a (seeded) admin user (required)</li>
- *   <li>{@code X-Test-Email}, {@code X-Test-Name} — optional display fields</li>
+ *   <li>{@code X-Test-Oid}: the Azure object id of a (seeded) admin user (required)</li>
+ *   <li>{@code X-Test-Email}, {@code X-Test-Name}: optional display fields</li>
  * </ul>
  *
  * <p>This config never loads outside {@code e2e}, so it has no effect on production.</p>
@@ -138,7 +138,7 @@ public class E2eSecurityConfig {
                         .expiresAt(now.plusSeconds(3600))
                         .build();
 
-                // No authorities yet — RoleAuthorizationFilter enriches from the DB role.
+                // No authorities yet: RoleAuthorizationFilter enriches from the DB role.
                 SecurityContextHolder.getContext().setAuthentication(
                         new JwtAuthenticationToken(jwt, List.of()));
             }

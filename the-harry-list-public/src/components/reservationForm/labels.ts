@@ -1,6 +1,6 @@
 // Guest-facing names and one-line explanations of the special activities.
 export const SPECIAL_ACTIVITY_LABELS: Record<string, string> = {
-  GRADUATION: 'Graduation / PhD Defense', // matches the backend's SpecialActivity name, which the form shows
+  GRADUATION: 'Graduation / PhD defense',
   EAT_A_LA_CARTE: 'Eat a la carte',
   EAT_CATERING: 'Catering',
   CATERING_CORONA_ROOM: 'Catering for Corona Room event',

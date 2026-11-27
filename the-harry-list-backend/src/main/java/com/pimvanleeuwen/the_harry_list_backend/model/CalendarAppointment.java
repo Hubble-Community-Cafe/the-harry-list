@@ -13,7 +13,7 @@ import java.time.LocalTime;
 
 /**
  * A custom calendar appointment that appears in ICS calendar feeds.
- * Simpler than a reservation — used for staff notes, reminders, and recurring events.
+ * Simpler than a reservation: used for staff notes, reminders, and recurring events.
  */
 @Entity
 @Table(name = "calendar_appointments")
