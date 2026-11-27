@@ -51,7 +51,6 @@ RUN echo '#!/bin/sh' > /docker-entrypoint.d/40-inject-config.sh && \
     echo '  AZURE_CLIENT_ID: "${AZURE_CLIENT_ID:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '  AZURE_TENANT_ID: "${AZURE_TENANT_ID:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '  REDIRECT_URI: "${REDIRECT_URI:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
-    echo '  ALLOWED_GROUP_ID: "${ALLOWED_GROUP_ID:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '  SENTRY_DSN: "${SENTRY_DSN:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '  E2E_AUTH_OID: "${E2E_AUTH_OID:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \
     echo '  E2E_AUTH_EMAIL: "${E2E_AUTH_EMAIL:-}",' >> /docker-entrypoint.d/40-inject-config.sh && \

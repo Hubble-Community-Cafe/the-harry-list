@@ -4,10 +4,9 @@ import { useIsAuthenticated } from '@azure/msal-react';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { Layout } from './components/Layout';
-import { useGroupAuthorization } from './lib/useGroupAuthorization';
 import { isE2E } from './lib/e2eAuth';
 import { ThemeProvider, ErrorBoundary } from 'the-harry-list-shared';
-import { RoleProvider } from './lib/RoleContext';
+import { RoleProvider, useRole } from './lib/RoleContext';
 import { AlertTriangle, Loader2, ShieldX } from 'lucide-react';
 
 // Every page except the Dashboard (the landing page) and Login loads on demand, in its own chunk,
@@ -24,15 +23,14 @@ const WeekOverviewPage = lazy(() => import('./pages/WeekOverviewPage').then((mod
 const AuditLogPage = lazy(() => import('./pages/AuditLogPage').then((mod) => ({ default: mod.AuditLogPage })));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const isMsalAuthenticated = useIsAuthenticated();
-  const { isLoading: isCheckingGroup, isAuthorized, error: groupError } = useGroupAuthorization();
+  // e2e runs sign in through X-Test-* headers instead of MSAL.
+  const isAuthenticated = useIsAuthenticated() || isE2E();
+  // The backend decides access: /api/admin/users/me answers 403 NOT_IN_STAFF_GROUP for anyone
+  // outside the staff group. Checking it there (not with a Graph lookup in the browser) means one
+  // check, on the same token every other request uses.
+  const { isLoading: isCheckingAccess, accessDenied } = useRole();
 
-  // e2e runs bypass MSAL/group checks; backend RBAC still applies via X-Test-* headers.
-  const e2e = isE2E();
-  const isAuthenticated = isMsalAuthenticated || e2e;
-
-  // Show loading while checking group membership
-  if (isAuthenticated && !e2e && isCheckingGroup) {
+  if (isAuthenticated && isCheckingAccess) {
     return (
       <div className="min-h-screen bg-dark-950 flex items-center justify-center">
         <div className="text-center">
@@ -43,8 +41,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Show unauthorized message if user is not in the allowed group
-  if (isAuthenticated && !e2e && !isAuthorized) {
+  if (isAuthenticated && accessDenied) {
     return (
       <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4">
         <div className="card !p-8 max-w-md w-full text-center">
@@ -53,7 +50,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
           </div>
           <h1 className="text-xl font-bold text-white mb-2">Access denied</h1>
           <p className="text-dark-400 mb-6">
-            {groupError || 'You are not authorized to access this application. Please contact an administrator to request access.'}
+            You are not authorized to access this application. Please contact an administrator to request access.
           </p>
           <button
             onClick={() => {

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useIsAuthenticated } from '@azure/msal-react';
-import { fetchCurrentUser, type AdminUser } from './api';
+import { fetchCurrentUser, NotInStaffGroupError, type AdminUser } from './api';
 import { isE2E } from './e2eAuth';
 
 type AdminRole = 'VIEWER' | 'EDITOR' | 'ADMIN';
@@ -10,6 +10,8 @@ interface RoleContextValue {
   role: AdminRole | null;
   isLoading: boolean;
   error: string | null;
+  /** True when the backend refused the user because they are not in the staff group. */
+  accessDenied: boolean;
   refetch: () => void;
 }
 
@@ -18,6 +20,7 @@ const RoleContext = createContext<RoleContextValue>({
   role: null,
   isLoading: true,
   error: null,
+  accessDenied: false,
   refetch: () => {},
 });
 
@@ -37,6 +40,8 @@ async function fetchCurrentUserWithRetry(): Promise<AdminUser> {
     try {
       return await fetchCurrentUser();
     } catch (e) {
+      // A staff-group refusal will not change on a retry.
+      if (e instanceof NotInStaffGroupError) throw e;
       lastError = e;
       if (attempt < ROLE_FETCH_ATTEMPTS) {
         await new Promise(resolve => setTimeout(resolve, 500 * attempt));
@@ -52,6 +57,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [accessDenied, setAccessDenied] = useState(false);
   // Bumping this re-runs the load effect: used by refetch() and msal:accountChanged.
   const [reloadCounter, setReloadCounter] = useState(0);
 
@@ -76,10 +82,17 @@ export function RoleProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         setUser(currentUser);
         setError(null);
+        setAccessDenied(false);
       })
       .catch(e => {
+        if (cancelled) return;
+        if (e instanceof NotInStaffGroupError) {
+          setUser(null);
+          setAccessDenied(true);
+          return;
+        }
         console.error('Failed to fetch current user role:', e);
-        if (!cancelled) setError('Failed to load user role');
+        setError('Failed to load user role');
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -100,6 +113,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       role: user?.role as AdminRole | null,
       isLoading,
       error,
+      accessDenied,
       refetch,
     }}>
       {children}

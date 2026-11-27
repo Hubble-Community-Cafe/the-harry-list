@@ -26,6 +26,14 @@ export class ForbiddenError extends Error {
   }
 }
 
+/** The backend refused the user outright: they are not in the staff group for this app. */
+export class NotInStaffGroupError extends ForbiddenError {
+  constructor() {
+    super('You are not a member of the staff group for this application');
+    this.name = 'NotInStaffGroupError';
+  }
+}
+
 // MSAL instance for getting tokens
 let msalInstance: PublicClientApplication | null = null;
 
@@ -112,6 +120,12 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
   }
 
   if (response.status === 403) {
+    // The staff-group refusal is expected for outsiders and already logged by the backend, so it
+    // is not reported to Sentry. Any other 403 is a role the UI should not have offered.
+    const body = await response.clone().json().catch(() => null);
+    if (body?.code === 'NOT_IN_STAFF_GROUP') {
+      throw new NotInStaffGroupError();
+    }
     const err = new ForbiddenError('You do not have permission to perform this action');
     Sentry.captureException(err, { level: 'warning', extra: { url, method: options?.method || 'GET' } });
     throw err;

@@ -96,7 +96,6 @@ services:
       - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
       - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
       - REDIRECT_URI=http://localhost:5174
-      - ALLOWED_GROUP_ID=${ALLOWED_GROUP_ID:-}
       # Sentry error monitoring (leave empty to disable)
       - SENTRY_DSN=${SENTRY_DSN_ADMIN:-}
 

@@ -169,6 +169,7 @@ faster layers.
 | Status-change email + custom message | n/a | `AdminReservationControllerTest` | `admin/status-email` |
 | Editable email templates | n/a | `EmailTemplateServiceTest` | `admin/email-template` |
 | RBAC (viewer/editor/admin), incl. staff reservation endpoints and the backend staff-group check | `usePermissions` | filter tests, `ReservationControllerTest`, `EndpointAuthorizationGuardTest` | `admin/rbac` |
+| Admin access follows the backend staff-group check: outsiders see Access denied, members the app (no Graph lookup in the browser) | `RoleContext`, `api` 403 handling | `RoleAuthorizationFilterTest` | `admin/access-denied` |
 | API error responses: one problem+json shape (`detail`, validation `errors`) | shared `apiErrorMessage`, public `lib/api` | `AdminReservationControllerTest`, `PublicReservationControllerTest`, `AdminEmailAttachmentControllerTest`, filter tests | `admin/rbac` |
 | Audit log | `AuditDiff`/`AuditService` | controller tests | `admin/audit-log` |
 | Catering-only export (#280) | n/a | `PdfExportServiceTest` | `admin/catering-export` |
