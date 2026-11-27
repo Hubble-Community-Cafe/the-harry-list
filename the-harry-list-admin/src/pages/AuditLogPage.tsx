@@ -3,6 +3,7 @@ import { Loader2, AlertCircle, History, ChevronLeft, ChevronRight, Filter } from
 import { fetchAuditLog } from '../lib/api';
 import type { AuditAction, AuditEntityType, AuditLogEntry } from '../types/audit';
 import { changeValueLabel, fieldLabel, humanize } from '../lib/labels';
+import { AuditActionBadge } from '../components/AuditActionBadge';
 
 const ENTITY_TYPES: AuditEntityType[] = [
   'RESERVATION', 'BLOCKED_PERIOD', 'CALENDAR_APPOINTMENT',
@@ -165,7 +166,7 @@ export function AuditLogPage() {
         <>
           <div className="space-y-3">
             {entries.map(entry => (
-              <div key={entry.id} className="bg-dark-900 border border-dark-800 rounded-xl p-4">
+              <div key={entry.id} className="card !p-4">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     <AuditActionBadge action={entry.action} />
@@ -222,20 +223,4 @@ export function AuditLogPage() {
       )}
     </div>
   );
-}
-
-function AuditActionBadge({ action }: { action: string }) {
-  const config: Record<string, { label: string; color: string; bg: string }> = {
-    CREATE: { label: 'Created', color: 'text-green-400', bg: 'bg-green-500/20' },
-    UPDATE: { label: 'Updated', color: 'text-blue-400', bg: 'bg-blue-500/20' },
-    DELETE: { label: 'Deleted', color: 'text-red-400', bg: 'bg-red-500/20' },
-    STATUS_CHANGE: { label: 'Status changed', color: 'text-amber-400', bg: 'bg-amber-500/20' },
-    NOTES_UPDATED: { label: 'Notes updated', color: 'text-hubble-400', bg: 'bg-hubble-500/20' },
-    CATERING_ARRANGED: { label: 'Catering', color: 'text-orange-400', bg: 'bg-orange-500/20' },
-    EMAIL_SENT: { label: 'Email sent', color: 'text-meteor-400', bg: 'bg-meteor-500/20' },
-    ROLE_CHANGED: { label: 'Role changed', color: 'text-red-400', bg: 'bg-red-500/20' },
-    TOGGLE: { label: 'Toggled', color: 'text-dark-300', bg: 'bg-dark-700' },
-  };
-  const { label, color, bg } = config[action] || { label: action, color: 'text-dark-300', bg: 'bg-dark-700' };
-  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${bg} ${color}`}>{label}</span>;
 }

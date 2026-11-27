@@ -39,16 +39,15 @@ export function ActivityNoticeDialog({ message, onConfirm, onDecline }: Activity
       onClose={onDecline}
       closeOnBackdrop
       initialFocusRef={confirmRef}
-      overlayClassName="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-overlay"
       backdropTestId="activity-notice-dialog-backdrop"
       testId="activity-notice-dialog"
-      className="relative w-full max-w-md rounded-2xl border border-dark-700 bg-dark-900 p-6 shadow-2xl animate-modal"
+      className="relative max-w-md p-6"
     >
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 rounded-lg bg-amber-500/20">
             <AlertTriangle className="w-5 h-5 text-amber-400" />
           </div>
-          <h2 id="activity-notice-title" className="text-xl font-title font-semibold text-white tracking-tight">
+          <h2 id="activity-notice-title" className="dialog-title">
             Please Note
           </h2>
         </div>

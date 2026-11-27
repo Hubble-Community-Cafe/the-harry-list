@@ -118,3 +118,12 @@ describe('Modal placement', () => {
     expect(dialog.parentElement?.parentElement).toBe(document.body);
   });
 });
+
+describe('Modal look', () => {
+  it('gives every dialog the shared backdrop and panel, plus its own size classes', () => {
+    render(<Modal labelledBy="t" onClose={vi.fn()} className="max-w-sm"><h2 id="t">Shared look</h2></Modal>);
+    const dialog = screen.getByRole('dialog', { name: 'Shared look' });
+    expect(dialog).toHaveClass('dialog-panel', 'animate-modal', 'max-w-sm');
+    expect(dialog.parentElement).toHaveClass('dialog-backdrop', 'animate-overlay');
+  });
+});

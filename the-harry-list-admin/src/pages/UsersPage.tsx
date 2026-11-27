@@ -72,7 +72,7 @@ export function UsersTab() {
       )}
 
       {/* Role Legend */}
-      <div className="bg-dark-900 border border-dark-800 rounded-xl p-4">
+      <div className="card !p-4">
         <div className="flex items-center gap-2 mb-3">
           <Shield className="w-4 h-4 text-dark-400" />
           <span className="text-sm font-medium text-dark-300">Role Permissions</span>
@@ -102,7 +102,7 @@ export function UsersTab() {
             return (
               <div
                 key={user.id}
-                className="bg-dark-900 border border-dark-800 rounded-xl p-4 flex items-center gap-4"
+                className="card !p-4 flex items-center gap-4"
               >
                 {/* Avatar */}
                 <div className="w-10 h-10 rounded-full bg-hubble-500/20 flex items-center justify-center shrink-0">

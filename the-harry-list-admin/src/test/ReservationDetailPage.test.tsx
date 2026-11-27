@@ -495,7 +495,7 @@ describe('ReservationDetailPage: unsaved edits', () => {
   it('closes with Cancel at once even after a change, since Cancel is an explicit discard', async () => {
     await openEditor();
     changeGuests();
-    const editor = screen.getByRole('heading', { name: 'Edit Reservation' }).closest('.fixed') as HTMLElement;
+    const editor = screen.getByRole('heading', { name: 'Edit Reservation' }).closest('[role="dialog"]') as HTMLElement;
     fireEvent.click(within(editor).getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByTestId('edit-save')).not.toBeInTheDocument();
     expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument();

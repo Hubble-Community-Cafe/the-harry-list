@@ -39,8 +39,7 @@ export function ConfirmDialog({
       // While the action runs, the question stays open: Escape does nothing.
       onClose={loading ? () => {} : onCancel}
       initialFocusRef={cancelRef}
-      overlayClassName="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 animate-overlay"
-      className="bg-dark-900 border border-dark-700 rounded-xl w-full max-w-sm animate-modal"
+      className="max-w-sm"
     >
         <div className="p-6 space-y-4">
           <div className="flex items-start gap-3">
@@ -48,7 +47,7 @@ export function ConfirmDialog({
               <AlertTriangle className="w-5 h-5 text-red-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h2 id={`${id}-title`} className="text-white font-semibold">{title}</h2>
+              <h2 id={`${id}-title`} className="dialog-title">{title}</h2>
               <p id={`${id}-message`} className="text-sm text-dark-400 mt-1">{message}</p>
             </div>
             <button onClick={onCancel} aria-label="Close" className="text-dark-400 hover:text-white shrink-0" disabled={loading}>

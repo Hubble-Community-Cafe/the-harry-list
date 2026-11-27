@@ -437,7 +437,7 @@ describe('FormSettingsPage', () => {
     const openNewConstraint = async () => {
       renderWithRouter(<FormSettingsPage />);
       fireEvent.click(await screen.findByText('Add Constraint'));
-      const dialog = (await screen.findByText('New Constraint')).closest('.fixed') as HTMLElement;
+      const dialog = (await screen.findByText('New Constraint')).closest('[role="dialog"]') as HTMLElement;
       return dialog;
     };
 

@@ -63,9 +63,9 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
         {/* Sender / spam-folder notice */}
         <div
           data-testid="sender-notice"
-          className="bg-meteor-950/50 border border-meteor-800/50 rounded-xl p-4 mb-4 text-left"
+          className="notice-peach mb-4 text-left"
         >
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-meteor-300 mb-2">
+          <h3 className="notice-peach-title flex items-center gap-2 text-sm font-semibold mb-2">
             <MailWarning className="w-4 h-4 shrink-0" />
             Check your inbox (and spam folder)
           </h3>

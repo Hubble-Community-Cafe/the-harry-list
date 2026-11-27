@@ -467,12 +467,11 @@ export function SettingsPage() {
         <Modal
           labelledBy="constraint-title"
           onClose={() => confirmDiscard(() => setEditingConstraint(null))}
-          overlayClassName="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-          className="bg-dark-900 border border-dark-700 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+          className="max-w-lg max-h-[90vh] overflow-y-auto"
         >
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 id="constraint-title" className="text-lg font-bold text-white">
+                <h2 id="constraint-title" className="dialog-title">
                   {editingConstraint.id ? 'Edit Constraint' : 'New Constraint'}
                 </h2>
                 <button
@@ -695,12 +694,11 @@ export function SettingsPage() {
         <Modal
           labelledBy="blocked-period-title"
           onClose={() => confirmDiscard(() => setEditingPeriod(null))}
-          overlayClassName="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-          className="bg-dark-900 border border-dark-700 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+          className="max-w-lg max-h-[90vh] overflow-y-auto"
         >
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 id="blocked-period-title" className="text-lg font-bold text-white">
+                <h2 id="blocked-period-title" className="dialog-title">
                   {editingPeriod.id ? 'Edit Blocked Period' : 'New Blocked Period'}
                 </h2>
                 <button
@@ -886,25 +884,25 @@ export function SettingsPage() {
           </p>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-dark-900 border border-dark-800 rounded-xl p-4">
+            <div className="card !p-4">
               <div className="text-xs text-dark-500 mb-1">Status</div>
               <div className={`text-sm font-semibold ${retention.enabled ? 'text-green-400' : 'text-dark-400'}`}>
                 {retention.enabled ? 'Enabled' : 'Disabled'}
               </div>
             </div>
-            <div className="bg-dark-900 border border-dark-800 rounded-xl p-4">
+            <div className="card !p-4">
               <div className="text-xs text-dark-500 mb-1">Retention Period</div>
               <div className="text-sm font-semibold text-white">
                 {retention.enabled ? `${retention.retentionDays} days` : '—'}
               </div>
             </div>
-            <div className="bg-dark-900 border border-dark-800 rounded-xl p-4">
+            <div className="card !p-4">
               <div className="text-xs text-dark-500 mb-1">Cutoff Date</div>
               <div className="text-sm font-semibold text-white">
                 {retention.cutoffDate ?? '—'}
               </div>
             </div>
-            <div className="bg-dark-900 border border-dark-800 rounded-xl p-4">
+            <div className="card !p-4">
               <div className="text-xs text-dark-500 mb-1">Eligible for Removal</div>
               <div className={`text-sm font-semibold ${retention.eligibleForDeletion > 0 ? 'text-amber-400' : 'text-white'}`}>
                 {retention.eligibleForDeletion} reservations

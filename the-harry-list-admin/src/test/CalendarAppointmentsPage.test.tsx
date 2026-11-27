@@ -332,7 +332,7 @@ describe('CalendarAppointmentsPage', () => {
       renderPage();
       await waitFor(() => expect(screen.getByText('Staff Meeting')).toBeInTheDocument());
       fireEvent.click(screen.getByText('Add Appointment'));
-      return screen.getByText('New Appointment').closest('.fixed') as HTMLElement;
+      return screen.getByText('New Appointment').closest('[role="dialog"]') as HTMLElement;
     };
 
     it('closes the appointment dialog with X at once when nothing changed', async () => {

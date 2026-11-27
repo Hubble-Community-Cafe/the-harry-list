@@ -97,7 +97,7 @@ export function CalendarPage() {
     return (
       <div
         key={feed.id}
-        className="bg-dark-900 border border-dark-800 rounded-xl overflow-hidden"
+        className="card !p-0 overflow-hidden"
       >
         {/* Header */}
         <div className={`px-4 py-3 border-b border-dark-800 flex items-center justify-between ${isHubble ? 'bg-hubble-500/10' : 'bg-meteor-500/10'}`}>
@@ -259,7 +259,7 @@ export function CalendarPage() {
 
       {/* Optional Parameters */}
       {parameters.length > 0 && (
-        <div className="bg-dark-900 border border-dark-800 rounded-xl p-5">
+        <div className="card !p-5">
           <h3 className="font-semibold text-white mb-4">Additional URL Parameters</h3>
           <p className="text-sm text-dark-400 mb-4">You can append these parameters to customize the feed further:</p>
           <div className="grid gap-4 md:grid-cols-2">

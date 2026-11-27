@@ -112,3 +112,17 @@ for (const [theme, edge] of [['dark', 'rgb(85, 122, 134)'], ['light', 'rgb(127, 
     await expect(page.getByTestId('contact-name')).toHaveCSS('border-top-color', edge);
   });
 }
+
+for (const [theme, title, panel] of [['dark', 'rgb(255, 255, 255)', 'rgb(10, 34, 42)'], ['light', 'rgb(26, 36, 40)', 'rgb(255, 255, 255)']] as const) {
+  test(`dialog titles stand out from the dialog panel (${theme})`, async ({ page, request }) => {
+    // Guards the shared .dialog-title: it once stayed white on the white light-mode panel, which
+    // axe only reported as "needs review", not as a violation.
+    await resetBackend(request);
+    await useTheme(page, theme);
+    const form = new ReservationFormPage(page);
+    await form.goto();
+    await form.openPrivacyFromFooter();
+    await expect(form.privacyDialog()).toHaveCSS('background-color', panel);
+    await expect(page.getByRole('heading', { name: 'Privacy Policy' })).toHaveCSS('color', title);
+  });
+}

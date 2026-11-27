@@ -23,6 +23,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { activityLabel, changeValueLabel, fieldLabel, invoiceTypeLabel, locationLabel, paymentLabel } from '../lib/labels';
 import { reservationDetailGuide } from '../lib/guideContent';
 import { StatusBadge } from '../components/StatusBadge';
+import { AuditActionBadge } from '../components/AuditActionBadge';
 
 // Pre-filled (editable) default shown when rejecting a reservation. Staff can edit or clear it.
 const DEFAULT_REJECTION_MESSAGE =
@@ -627,7 +628,7 @@ export function ReservationDetailPage() {
                 <div className="text-xs text-dark-500">Email</div>
                 <a
                   href={`mailto:${reservation.email}?subject=${encodeURIComponent(`Re: Your reservation "${reservation.eventTitle}"`)}`}
-                  className="text-blue-400 hover:text-blue-300 transition-colors"
+                  className="underline text-hubble-400 hover:text-hubble-300 transition-colors"
                 >
                   {reservation.email}
                 </a>
@@ -833,11 +834,10 @@ export function ReservationDetailPage() {
         <Modal
           labelledBy="catering-email-title"
           onClose={() => setShowCateringEmail(false)}
-          overlayClassName="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+          className="max-w-2xl max-h-[90vh] overflow-y-auto"
         >
             <div className="flex items-center justify-between p-6 border-b border-dark-700">
-              <h2 id="catering-email-title" className="text-xl font-title font-semibold text-white flex items-center gap-2">
+              <h2 id="catering-email-title" className="dialog-title flex items-center gap-2">
                 <UtensilsCrossed className="w-5 h-5 text-orange-400" />
                 Send Catering Options
               </h2>
@@ -961,11 +961,10 @@ export function ReservationDetailPage() {
         <Modal
           labelledBy="edit-reservation-title"
           onClose={() => confirmDiscard(() => setIsEditing(false))}
-          overlayClassName="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+          className="max-w-3xl max-h-[90vh] overflow-y-auto"
         >
             <div className="flex items-center justify-between p-6 border-b border-dark-700">
-              <h2 id="edit-reservation-title" className="text-xl font-title font-semibold text-white tracking-tight">Edit Reservation</h2>
+              <h2 id="edit-reservation-title" className="dialog-title">Edit Reservation</h2>
               <button
                 onClick={() => confirmDiscard(() => setIsEditing(false))}
                 aria-label="Close editor"
@@ -1357,18 +1356,4 @@ function SeatingAreaBadge({ area }: { area: string }) {
       {isInside ? 'Inside' : 'Outside'}
     </span>
   );
-}
-
-function AuditActionBadge({ action }: { action: string }) {
-  const config: Record<string, { label: string; color: string; bg: string }> = {
-    CREATE: { label: 'Created', color: 'text-green-400', bg: 'bg-green-500/20' },
-    UPDATE: { label: 'Updated', color: 'text-blue-400', bg: 'bg-blue-500/20' },
-    DELETE: { label: 'Deleted', color: 'text-red-400', bg: 'bg-red-500/20' },
-    STATUS_CHANGE: { label: 'Status changed', color: 'text-amber-400', bg: 'bg-amber-500/20' },
-    NOTES_UPDATED: { label: 'Notes updated', color: 'text-hubble-400', bg: 'bg-hubble-500/20' },
-    CATERING_ARRANGED: { label: 'Catering', color: 'text-orange-400', bg: 'bg-orange-500/20' },
-    EMAIL_SENT: { label: 'Email sent', color: 'text-meteor-400', bg: 'bg-meteor-500/20' },
-  };
-  const { label, color, bg } = config[action] || { label: action, color: 'text-dark-300', bg: 'bg-dark-700' };
-  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${bg} ${color}`}>{label}</span>;
 }

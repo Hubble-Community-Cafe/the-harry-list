@@ -59,7 +59,7 @@ export function ExportPage() {
       </div>
 
       {/* Export Card */}
-      <div className="bg-dark-900 border border-dark-800 rounded-xl overflow-hidden max-w-xl">
+      <div className="card !p-0 overflow-hidden max-w-xl">
         <div className="px-5 py-4 border-b border-dark-800 bg-hubble-500/10">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-hubble-500/20 text-hubble-400">

@@ -180,6 +180,9 @@ html {
   --field-border: #557a86;
   --field-placeholder: var(--color-dark-400);
 
+  /* The dimmed page behind a dialog. */
+  --backdrop: rgb(0 0 0 / 0.6);
+
   /* Reservation status (StatusBadge, week cards). Housestyle colours: pending in the warm peach
      accent, confirmed in Meteor green, rejected red, cancelled in the tan neutral. Text is at
      least 5.9:1 on its tint over a card in both themes. */
@@ -287,6 +290,8 @@ body {
 
   --field-border: #7f8f98;
   --field-placeholder: #66757c;
+
+  --backdrop: rgb(0 0 0 / 0.35);
 
   --status-pending-fg: #8a4b12;
   --status-pending-bg: rgb(255 188 125 / 0.28);
@@ -402,6 +407,15 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
+.light .dialog-panel {
+  background-color: #ffffff;
+}
+
+/* .dialog-title applies text-white itself, so the .text-white flip above does not reach it. */
+.light .dialog-title {
+  color: #1a2428;
+}
+
 .light .card:hover {
   border-color: #cdd5da;
 }
@@ -441,11 +455,7 @@ body {
   border-color: #cdd5da;
 }
 
-/* Modal overlays */
-.light .bg-black\/60 {
-  background-color: rgba(0, 0, 0, 0.35);
-}
-
+/* The mobile sidebar overlay (dialogs use --backdrop) */
 .light .bg-black\/50 {
   background-color: rgba(0, 0, 0, 0.25);
 }
@@ -485,12 +495,6 @@ body {
 
 .light .bg-hubble-950\/50 {
   background-color: rgba(3, 15, 20, 0.04);
-}
-
-.light .bg-meteor-950\/50 {
-  /* meteor-950 is a near-black gray; in light mode use a faint meteor-green tint
-     to match the hubble-950/50 notice instead of rendering a dark grey block */
-  background-color: rgba(5, 56, 38, 0.05);
 }
 
 .light .bg-meteor-500\/10 {
@@ -852,6 +856,33 @@ body.dark {
   .card {
     /* A solid surface: no frosted glass (housestyle). */
     @apply rounded-2xl border border-dark-800 bg-dark-900 p-6 shadow-2xl;
+  }
+
+  /* Dialogs: one backdrop, panel and title for every Modal in both apps. The panel is the card
+     surface lifted one step (a firmer edge, white in light mode). */
+  .dialog-backdrop {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+    background-color: var(--backdrop);
+  }
+
+  .dialog-panel {
+    @apply w-full rounded-2xl border border-dark-700 bg-dark-900 shadow-2xl;
+  }
+
+  .dialog-title {
+    @apply font-title text-xl font-semibold tracking-tight text-white;
+  }
+
+  /* A heads-up box in the warm café peach (the pending status colours): something to act on,
+     not an error. */
+  .notice-peach {
+    @apply rounded-xl border p-4;
+    background-color: var(--status-pending-bg);
+    border-color: color-mix(in srgb, var(--status-pending-fg) 35%, transparent);
+  }
+
+  .notice-peach-title {
+    color: var(--status-pending-fg);
   }
 
   .label {

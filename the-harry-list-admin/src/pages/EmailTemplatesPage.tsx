@@ -228,7 +228,7 @@ export function EmailTemplatesPage() {
 
       {/* Info card */}
       {canEditEmailTemplates && (
-      <div className="bg-dark-900 border border-dark-800 rounded-2xl p-5">
+      <div className="card !p-5">
         <p className="text-sm text-dark-300">
           Use <code className="bg-dark-800 text-hubble-400 px-1.5 py-0.5 rounded font-mono text-xs">{'{{variable}}'}</code> placeholders in your templates.
           Available variables are listed per template. Templates not yet customised use the built-in default.
@@ -244,7 +244,7 @@ export function EmailTemplatesPage() {
           return (
             <div
               key={template.templateType}
-              className="bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden"
+              className="card !p-0 overflow-hidden"
             >
               {/* Card header */}
               <button
@@ -402,7 +402,7 @@ export function EmailTemplatesPage() {
         <p className="text-dark-400 font-light text-sm mb-4">Manage PDF files that can be attached to catering option emails</p>
 
         {/* Upload form */}
-        <div className="bg-dark-900 border border-dark-800 rounded-2xl p-5 mb-4">
+        <div className="card !p-5 mb-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
@@ -442,7 +442,7 @@ export function EmailTemplatesPage() {
             <Loader2 className="w-6 h-6 text-hubble-400 animate-spin" />
           </div>
         ) : attachments.length === 0 ? (
-          <div className="bg-dark-900 border border-dark-800 rounded-2xl p-8 text-center">
+          <div className="card !p-8 text-center">
             <FileText className="w-10 h-10 text-dark-600 mx-auto mb-3" />
             <p className="text-dark-400 text-sm">No PDF attachments uploaded yet</p>
           </div>
@@ -451,7 +451,7 @@ export function EmailTemplatesPage() {
             {attachments.map((attachment) => (
               <div
                 key={attachment.id}
-                className="bg-dark-900 border border-dark-800 rounded-xl px-5 py-3 flex items-center gap-4"
+                className="card !px-5 !py-3 flex items-center gap-4"
               >
                 <FileText className="w-5 h-5 text-orange-400 shrink-0" />
                 <div className="flex-1 min-w-0">
