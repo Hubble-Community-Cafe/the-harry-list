@@ -182,7 +182,7 @@ export function ExportPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="flex items-center gap-2 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+            <div className="flex items-center gap-2 px-4 py-3 border rounded-lg text-sm notice-error">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               {error}
             </div>

@@ -81,8 +81,8 @@ describe('SuccessMessage', () => {
     expect(notice).toHaveTextContent(/spam/i);
     // Falls back to the default sender address when no runtime config is injected.
     expect(notice).toHaveTextContent('noreply@ducksandbears.cafe');
-    // A peach heads-up box, not the grey Meteor-ink block it used to be.
-    expect(notice).toHaveClass('notice-peach');
+    // A peach warning notice, not the grey Meteor-ink block it used to be.
+    expect(notice).toHaveClass('notice-warning');
     expect(notice.className).not.toMatch(/meteor-9/);
   });
 

@@ -322,9 +322,9 @@ export function ReservationDetailPage() {
 
   if (error || !reservation) {
     return (
-      <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-6 text-center">
-        <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-        <p className="text-red-400">{error || 'Reservation not found'}</p>
+      <div className="border rounded-xl p-6 text-center notice-error">
+        <AlertCircle aria-hidden="true" className="w-8 h-8 mx-auto mb-2" />
+        <p>{error || 'Reservation not found'}</p>
         <Link to="/reservations" className="btn-primary mt-4 inline-flex">
           Back to Reservations
         </Link>
@@ -362,13 +362,13 @@ export function ReservationDetailPage() {
 
         {/* Result of the last action. role=status/alert so screen readers hear it too. */}
         {actionNotice && (
-          <p role="status" data-testid="action-notice" className="mb-4 flex items-start gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-400">
+          <p role="status" data-testid="action-notice" className="mb-4 flex items-start gap-2 rounded-lg border px-3 py-2 text-sm notice-success">
             <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
             {actionNotice}
           </p>
         )}
         {actionError && (
-          <p role="alert" data-testid="action-error" className="mb-4 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+          <p role="alert" data-testid="action-error" className="mb-4 flex items-start gap-2 rounded-lg border px-3 py-2 text-sm notice-error">
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
             {actionError}
           </p>
@@ -495,8 +495,8 @@ export function ReservationDetailPage() {
 
         {/* Confirm Reservation Dialog */}
         {showConfirmDialog && (
-          <div className="mt-4 p-4 rounded-xl bg-green-500/10 border border-green-500/50">
-            <p className="text-green-400 mb-3">Are you sure you want to confirm this reservation? {sendEmail && 'A confirmation email will be sent to the customer.'}</p>
+          <div className="mt-4 p-4 rounded-xl border notice-success">
+            <p className="mb-3">Are you sure you want to confirm this reservation? {sendEmail && 'A confirmation email will be sent to the customer.'}</p>
             <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
             <div className="flex gap-3 mt-3">
               <button
@@ -523,8 +523,8 @@ export function ReservationDetailPage() {
 
         {/* Reject Reservation Dialog */}
         {showRejectDialog && (
-          <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/50">
-            <p className="text-red-400 mb-3">Are you sure you want to reject this reservation? {sendEmail && 'A rejection email will be sent to the customer.'}</p>
+          <div className="mt-4 p-4 rounded-xl border notice-error">
+            <p className="mb-3">Are you sure you want to reject this reservation? {sendEmail && 'A rejection email will be sent to the customer.'}</p>
             <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
             <div className="flex gap-3 mt-3">
               <button
@@ -551,8 +551,8 @@ export function ReservationDetailPage() {
 
         {/* Cancel Reservation Dialog */}
         {showCancelDialog && (
-          <div className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/50">
-            <p className="text-amber-400 mb-3">Are you sure you want to cancel this reservation? {sendEmail && 'A cancellation email will be sent to the customer.'}</p>
+          <div className="mt-4 p-4 rounded-xl border notice-neutral">
+            <p className="mb-3">Are you sure you want to cancel this reservation? {sendEmail && 'A cancellation email will be sent to the customer.'}</p>
             <EmailMessageField value={actionMessage} onChange={setActionMessage} show={sendEmail} />
             <div className="flex gap-3 mt-3">
               <button
@@ -579,8 +579,8 @@ export function ReservationDetailPage() {
 
         {/* Reopen (Rejected or Cancelled -> Pending) Dialog */}
         {showReopenDialog && (
-          <div className="mt-4 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/50">
-            <p className="text-yellow-400 mb-3">
+          <div className="mt-4 p-4 rounded-xl border notice-warning">
+            <p className="mb-3">
               Move this {reservation.status === 'CANCELLED' ? 'cancelled' : 'rejected'} reservation back
               to <strong>Pending</strong>? You'll be able to
               edit the date, location and other details, then confirm or reject it again.
@@ -771,8 +771,8 @@ export function ReservationDetailPage() {
             </div>
           )}
           {reservation.internalNotes && (
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-              <div className="text-xs font-semibold text-yellow-400 mb-1">Internal Notes (staff only)</div>
+            <div className="border rounded-lg p-3 notice-neutral">
+              <div className="text-xs font-semibold mb-1">Internal Notes (staff only)</div>
               <p className="text-sm text-white whitespace-pre-wrap">{reservation.internalNotes}</p>
             </div>
           )}
@@ -856,8 +856,8 @@ export function ReservationDetailPage() {
                 {cateringEmailStatus && (
                   <div className={`p-3 rounded-lg border ${
                     cateringEmailStatus.type === 'success'
-                      ? 'bg-green-500/10 border-green-500/50 text-green-400'
-                      : 'bg-red-500/10 border-red-500/50 text-red-400'
+                      ? 'notice-success'
+                      : 'notice-error'
                   }`}>
                     {cateringEmailStatus.message}
                   </div>
@@ -1282,7 +1282,7 @@ export function ReservationDetailPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="edit-internal-notes" className="label">Internal Notes <span className="text-yellow-400 text-xs">(staff only, not sent to customer)</span></label>
+                    <label htmlFor="edit-internal-notes" className="label">Internal Notes <span className="notice-text-neutral text-xs">(staff only, not sent to customer)</span></label>
                     <textarea id="edit-internal-notes"
                       value={editData.internalNotes || ''}
                       onChange={(e) => setEditData({ ...editData, internalNotes: e.target.value })}
@@ -1295,7 +1295,7 @@ export function ReservationDetailPage() {
             </div>
 
             {editError && (
-              <p role="alert" data-testid="edit-error" className="mx-6 mt-4 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+              <p role="alert" data-testid="edit-error" className="mx-6 mt-4 flex items-start gap-2 rounded-lg border px-3 py-2 text-sm notice-error">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                 Not saved: {editError}
               </p>

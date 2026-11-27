@@ -88,7 +88,7 @@ export function SummaryStep({ activityNotices, submitError, setAltchaPayload, on
                       <div
                         key={notice.id}
                         data-testid="summary-activity-notice"
-                        className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 flex items-start gap-2"
+                        className="text-xs border rounded-lg px-3 py-2 flex items-start gap-2 notice-warning"
                       >
                         <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                         <span>{notice.message}</span>
@@ -167,7 +167,7 @@ export function SummaryStep({ activityNotices, submitError, setAltchaPayload, on
 
           {/* Submit Error */}
           {submitError && (
-            <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-4 text-red-400">
+            <div className="border rounded-xl p-4 notice-error">
               {submitError}
             </div>
           )}

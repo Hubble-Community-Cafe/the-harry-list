@@ -183,6 +183,10 @@ html {
   /* The dimmed page behind a dialog. */
   --backdrop: rgb(0 0 0 / 0.6);
 
+  /* Info notices in Hubble teal (the other notice tones reuse the --status-* colours). */
+  --notice-info-fg: #7dd3db;
+  --notice-info-bg: rgb(62 187 198 / 0.12);
+
   /* Reservation status (StatusBadge, week cards). Housestyle colours: pending in the warm peach
      accent, confirmed in Meteor green, rejected red, cancelled in the tan neutral. Text is at
      least 5.9:1 on its tint over a card in both themes. */
@@ -292,6 +296,9 @@ body {
   --field-placeholder: #66757c;
 
   --backdrop: rgb(0 0 0 / 0.35);
+
+  --notice-info-fg: #155e6d;
+  --notice-info-bg: rgb(26 107 124 / 0.1);
 
   --status-pending-fg: #8a4b12;
   --status-pending-bg: rgb(255 188 125 / 0.28);
@@ -481,20 +488,12 @@ body {
   background-color: rgba(34, 139, 34, 0.1);
 }
 
-.light .bg-green-500\/10 {
-  background-color: rgba(34, 139, 34, 0.07);
-}
-
 .light .bg-yellow-500\/20 {
   background-color: rgba(180, 130, 0, 0.1);
 }
 
 .light .bg-red-500\/20 {
   background-color: rgba(200, 40, 40, 0.08);
-}
-
-.light .bg-hubble-950\/50 {
-  background-color: rgba(3, 15, 20, 0.04);
 }
 
 .light .bg-meteor-500\/10 {
@@ -513,18 +512,6 @@ body {
   background-color: rgba(200, 40, 40, 0.08);
 }
 
-.light .bg-blue-500\/20 {
-  background-color: rgba(37, 99, 235, 0.1);
-}
-
-.light .bg-blue-500\/10 {
-  background-color: rgba(37, 99, 235, 0.07);
-}
-
-.light .bg-amber-500\/10 {
-  background-color: rgba(180, 130, 0, 0.07);
-}
-
 .light .bg-orange-500\/20 {
   background-color: rgba(200, 100, 0, 0.1);
 }
@@ -534,51 +521,18 @@ body {
 }
 
 /* Status text colors — slightly deeper for light mode contrast */
-.light .text-yellow-400,
-.light [class*="text-yellow-400/"] {
-  color: #896000; /* 4.6:1 on its tinted badge backgrounds (WCAG AA); was #a37200 */
-}
-
 .light .text-green-400,
 .light [class*="text-green-400/"] {
   color: #147c3b; /* 4.6:1 on its tinted badge backgrounds (WCAG AA); was #15803d */
 }
 
 /* Border tints for light mode */
-.light .border-hubble-800\/50 {
-  border-color: rgba(9, 45, 59, 0.12);
-}
-
 .light .border-meteor-500\/30 {
   border-color: rgba(5, 56, 38, 0.2);
 }
 
 .light .border-green-500\/30 {
   border-color: rgba(34, 139, 34, 0.2);
-}
-
-.light .border-green-500\/50 {
-  border-color: rgba(34, 139, 34, 0.3);
-}
-
-.light .border-meteor-800\/50 {
-  border-color: rgba(2, 22, 16, 0.12);
-}
-
-.light .border-red-500\/20 {
-  border-color: rgba(200, 40, 40, 0.15);
-}
-
-.light .border-amber-500\/50 {
-  border-color: rgba(180, 130, 0, 0.3);
-}
-
-.light .border-blue-500\/20 {
-  border-color: rgba(37, 99, 235, 0.15);
-}
-
-.light .border-amber-500\/20 {
-  border-color: rgba(180, 130, 0, 0.15);
 }
 
 /* Form error messages: .error-text applies text-red-400 inside a component class, which the
@@ -601,11 +555,6 @@ body {
 .light .text-red-400,
 .light [class*="text-red-400/"] {
   color: #bf1f1f; /* 4.6:1 on its tinted badge backgrounds (WCAG AA); was #dc2626 */
-}
-
-.light .text-blue-400,
-.light [class*="text-blue-400/"] {
-  color: #2563eb;
 }
 
 .light .text-hubble-300,
@@ -672,14 +621,6 @@ body {
 
 /* Card, checkbox and badge borders and the select chevron: still needed in light mode
    (a pixel comparison shows them changing without these). */
-.light .border-red-500\/30 {
-  border-color: rgba(200, 40, 40, 0.2);
-}
-
-.light .border-red-500\/50 {
-  border-color: rgba(200, 40, 40, 0.3);
-}
-
 .light .border-orange-500\/30 {
   border-color: rgba(200, 100, 0, 0.2);
 }
@@ -873,17 +814,30 @@ body.dark {
     @apply font-title text-xl font-semibold tracking-tight text-white;
   }
 
-  /* A heads-up box in the warm café peach (the pending status colours): something to act on,
-     not an error. */
-  .notice-peach {
-    @apply rounded-xl border p-4;
-    background-color: var(--status-pending-bg);
-    border-color: color-mix(in srgb, var(--status-pending-fg) 35%, transparent);
+  /* Notice boxes: text colour, tint and edge for each tone; size and layout stay in the markup
+     (add `border`). The tones reuse the status colours: error red, warning peach, success
+     Meteor green, neutral tan (staff-only notes), plus Hubble teal for info. Text inside a
+     notice that sets its own colour (text-dark-400, text-white) keeps it. */
+  .notice-error { --notice-fg: var(--status-rejected-fg); --notice-bg: var(--status-rejected-bg); }
+  .notice-warning { --notice-fg: var(--status-pending-fg); --notice-bg: var(--status-pending-bg); }
+  .notice-success { --notice-fg: var(--status-confirmed-fg); --notice-bg: var(--status-confirmed-bg); }
+  .notice-neutral { --notice-fg: var(--status-cancelled-fg); --notice-bg: var(--status-cancelled-bg); }
+  .notice-info { --notice-fg: var(--notice-info-fg); --notice-bg: var(--notice-info-bg); }
+
+  .notice-error,
+  .notice-warning,
+  .notice-success,
+  .notice-neutral,
+  .notice-info {
+    color: var(--notice-fg);
+    background-color: var(--notice-bg);
+    border-color: color-mix(in srgb, var(--notice-fg) 35%, transparent);
   }
 
-  .notice-peach-title {
-    color: var(--status-pending-fg);
-  }
+  /* The same tone as text only, for a label or hint outside a box. */
+  .notice-text-error { color: var(--status-rejected-fg); }
+  .notice-text-warning { color: var(--status-pending-fg); }
+  .notice-text-neutral { color: var(--status-cancelled-fg); }
 
   .label {
     @apply block text-sm font-medium text-dark-300 mb-2;

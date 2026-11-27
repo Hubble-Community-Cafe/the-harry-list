@@ -117,7 +117,7 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
                     <div
                       key={notice.id}
                       data-testid="activity-notice"
-                      className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 flex items-start gap-2"
+                      className="text-xs border rounded-lg px-3 py-2 flex items-start gap-2 notice-warning"
                     >
                       <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                       <span>{notice.message}</span>
@@ -170,18 +170,18 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
               </div>
               <FieldError errors={errors} name="expectedGuests" />
               {guestLimitWarning && (
-                <div id="guest-limit-notice" role="alert" tabIndex={-1} className="mt-2 outline-none text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
+                <div id="guest-limit-notice" role="alert" tabIndex={-1} className="mt-2 outline-none text-xs border rounded-lg px-3 py-2 flex items-start gap-2 notice-error">
                   <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                   <span>{guestLimitWarning}</span>
                 </div>
               )}
               {locationConflict ? (
-                <div id="location-conflict-notice" role="alert" tabIndex={-1} className="mt-2 outline-none text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-start gap-2">
+                <div id="location-conflict-notice" role="alert" tabIndex={-1} className="mt-2 outline-none text-xs border rounded-lg px-3 py-2 flex items-start gap-2 notice-error">
                   <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                   <span>{locationConflict}</span>
                 </div>
               ) : (watchExpectedGuests < 8 && watchExpectedGuests >= 1) ? (
-                <div className="mt-2 text-xs text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
+                <div className="mt-2 text-xs border rounded-lg px-3 py-2 notice-info">
                   Reservations under 8 guests are only available at Meteor. Location will be set automatically.
                 </div>
               ) : null}
@@ -194,7 +194,7 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
             <div className="form-group">
               <label htmlFor="eventDate" className="label">Event Date *</label>
               {requiresAdvanceBooking && (
-                <div className="mb-2 text-xs text-blue-400/80 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
+                <div className="mb-2 text-xs border rounded-lg px-3 py-2 notice-info">
                   ℹ️ Selected activities require at least <strong>{advanceBookingDays} days</strong> advance booking.
                 </div>
               )}
@@ -223,7 +223,7 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
               </select>
               <FieldError errors={errors} name="startTime" />
               {startTimeWarning && (
-                <div className="mt-2 text-xs text-amber-400/80 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+                <div className="mt-2 text-xs border rounded-lg px-3 py-2 notice-warning">
                   <p>⚠️ <span className="font-medium">Note:</span> {startTimeWarning}</p>
                 </div>
               )}
@@ -260,7 +260,7 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
             const lockConstraint = constraints.find(c =>
               c.constraintType === 'LOCATION_LOCK' && watchSpecialActivities.includes(c.triggerActivity));
             return lockConstraint ? (
-              <div className="text-xs text-blue-400/80 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
+              <div className="text-xs border rounded-lg px-3 py-2 notice-info">
                 {lockConstraint.message}
               </div>
             ) : null;
@@ -386,7 +386,7 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
           <div className="form-group">
             <p id="seatingArea-label" className="label">Seating Area *</p>
             {seatingLocked && (
-              <div className="mb-3 text-xs text-blue-400/80 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
+              <div className="mb-3 text-xs border rounded-lg px-3 py-2 notice-info">
                 Seating is fixed to {seatingLocked === 'INSIDE' ? 'Inside' : 'Outside'} based on selected activities.
               </div>
             )}
@@ -431,9 +431,9 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
             <FieldError errors={errors} name="seatingArea" />
             {/* Weather disclaimer */}
             {(watch('seatingArea') === 'INSIDE' || watch('seatingArea') === 'OUTSIDE') && (
-              <div className="mt-3 text-xs text-amber-400/80 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 space-y-1">
+              <div className="mt-3 text-xs border rounded-lg px-3 py-2 space-y-1 notice-warning">
                 <p>⚠️ <span className="font-medium">Important location information:</span></p>
-                <ul className="list-disc list-inside space-y-0.5 text-amber-400/70">
+                <ul className="list-disc list-inside space-y-0.5">
                   <li>You cannot change your location after confirmation</li>
                   <li>Terrace reservations do not guarantee a spot inside in case of bad weather</li>
                   <li>Inside reservations do not replace outside reservations in case of good weather</li>
@@ -462,10 +462,10 @@ export function DetailsStep({ formOptions, constraints, rules, activityNotices, 
           {rules.needsLongReservationReason && (
             <div className="form-group">
               <label htmlFor="longReservationReason" className="label flex items-center gap-2">
-                <AlertTriangle aria-hidden="true" className="w-4 h-4 text-amber-400" />
+                <AlertTriangle aria-hidden="true" className="w-4 h-4 notice-text-warning" />
                 Reason for Long Reservation *
               </label>
-              <p id="longReservationReason-hint" className="text-xs text-amber-400/80 mb-2">
+              <p id="longReservationReason-hint" className="text-xs notice-text-warning mb-2">
                 Your reservation is {Math.floor(durationMinutes / 60)}h{durationMinutes % 60 > 0 ? ` ${durationMinutes % 60}m` : ''} long.
                 Reservations over 3 hours require a reason.
               </p>

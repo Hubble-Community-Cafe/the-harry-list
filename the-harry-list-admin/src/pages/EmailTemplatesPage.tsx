@@ -343,10 +343,10 @@ export function EmailTemplatesPage() {
                       </button>
                     </div>
                     {testResult && (
-                      <div className={`flex items-center gap-2 text-sm rounded-lg px-3 py-2 ${
-                        testResult.status === 'sent' ? 'bg-green-500/10 text-green-400' :
-                        testResult.status === 'disabled' ? 'bg-dark-800 text-dark-400' :
-                        'bg-red-500/10 text-red-400'
+                      <div className={`flex items-center gap-2 text-sm rounded-lg border px-3 py-2 ${
+                        testResult.status === 'sent' ? 'notice-success' :
+                        testResult.status === 'disabled' ? 'border-dark-700 bg-dark-800 text-dark-400' :
+                        'notice-error'
                       }`}>
                         {testResult.status === 'sent' && <CheckCircle className="w-4 h-4 shrink-0" />}
                         {testResult.status === 'error' && <AlertCircle className="w-4 h-4 shrink-0" />}

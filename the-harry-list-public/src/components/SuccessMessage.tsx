@@ -63,9 +63,9 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
         {/* Sender / spam-folder notice */}
         <div
           data-testid="sender-notice"
-          className="notice-peach mb-4 text-left"
+          className="notice-warning rounded-xl border p-4 mb-4 text-left"
         >
-          <h3 className="notice-peach-title flex items-center gap-2 text-sm font-semibold mb-2">
+          <h3 className="flex items-center gap-2 text-sm font-semibold mb-2">
             <MailWarning className="w-4 h-4 shrink-0" />
             Check your inbox (and spam folder)
           </h3>
@@ -78,8 +78,8 @@ export function SuccessMessage({ result, onNewReservation }: SuccessMessageProps
         </div>
 
         {/* Important notice */}
-        <div className="bg-hubble-950/50 border border-hubble-800/50 rounded-xl p-4 mb-8 text-left">
-          <h3 className="text-sm font-semibold text-hubble-300 mb-2">
+        <div className="notice-info rounded-xl border p-4 mb-8 text-left">
+          <h3 className="text-sm font-semibold mb-2">
             ⚠️ Important Notice
           </h3>
           <p className="text-sm text-dark-400">

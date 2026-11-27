@@ -203,11 +203,11 @@ export function CalendarAppointmentsPage() {
 
       {/* Error */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-          <span className="text-red-400 text-sm">{error}</span>
+        <div className="border rounded-lg p-4 flex items-center gap-3 notice-error">
+          <AlertCircle aria-hidden="true" className="w-5 h-5 shrink-0" />
+          <span className="text-sm">{error}</span>
           <button onClick={() => setError(null)} aria-label="Dismiss error" className="ml-auto">
-            <X className="w-4 h-4 text-red-400" />
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}

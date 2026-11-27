@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ReservationFormPage } from '../../pages/ReservationFormPage';
-import { resetBackend } from '../../fixtures/backend';
+import { resetBackend, seedBlockedPeriod } from '../../fixtures/backend';
 import { THEMES, useTheme, expectNoA11yViolations } from '../../fixtures/a11y';
 
 /**
@@ -124,5 +124,34 @@ for (const [theme, title, panel] of [['dark', 'rgb(255, 255, 255)', 'rgb(10, 34,
     await form.openPrivacyFromFooter();
     await expect(form.privacyDialog()).toHaveCSS('background-color', panel);
     await expect(page.getByRole('heading', { name: 'Privacy Policy' })).toHaveCSS('color', title);
+  });
+}
+
+const NOTICE_TONES = {
+  dark: { info: 'rgb(125, 211, 219)', warning: 'rgb(255, 188, 125)', error: 'rgb(244, 163, 163)' },
+  light: { info: 'rgb(21, 94, 109)', warning: 'rgb(138, 75, 18)', error: 'rgb(161, 42, 42)' },
+};
+
+for (const theme of THEMES) {
+  test(`notices use the shared housestyle tones (${theme})`, async ({ page, request }) => {
+    // Info in Hubble teal, warnings in peach, errors in red: the shared notice tokens, not raw
+    // Tailwind blue, amber and red.
+    await resetBackend(request);
+    await seedBlockedPeriod(request, { location: 'HUBBLE', startDate: '2030-12-01', endDate: '2030-12-03', reason: 'Maintenance', publicMessage: 'Closed for maintenance.', softBlock: false });
+    await useTheme(page, theme);
+    const form = new ReservationFormPage(page);
+    await form.goto();
+    await form.fillContact({ name: 'Nora Notice', email: 'nora.notice@example.com' });
+    await form.continue();
+
+    await form.setGuests(5);
+    await expect(page.getByText('Reservations under 8 guests are only available at Meteor.', { exact: false })).toHaveCSS('color', NOTICE_TONES[theme].info);
+    await form.selectSeating('INSIDE');
+    await expect(page.getByText('Important location information:')).toHaveCSS('color', NOTICE_TONES[theme].warning);
+
+    await form.setGuests(20);
+    await form.selectLocation('HUBBLE');
+    await page.getByTestId('event-date').fill('2030-12-02');
+    await expect(form.blockedNotice()).toHaveCSS('color', NOTICE_TONES[theme].error);
   });
 }
